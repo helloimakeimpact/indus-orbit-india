@@ -3,6 +3,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/contexts/AuthContext";
 
 import appCss from "../styles.css?url";
+import logo from "../assets/indus-orbit-logo.png?url";
 
 function NotFoundComponent() {
   return (
@@ -37,6 +38,10 @@ export const Route = createRootRoute({
       { property: "og:type", content: "website" },
     ],
     links: [
+      {
+        rel: "icon",
+        href: logo,
+      },
       {
         rel: "stylesheet",
         href: appCss,
