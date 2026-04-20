@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteShell } from "@/components/site/SiteShell";
 import heroImg from "@/assets/hero-india-dawn.jpg";
-import { ArrowRight, Sparkles, Users, Globe2 } from "lucide-react";
+import lotusImg from "@/assets/lotus-pixel.png";
+import { ArrowRight, Sparkles, Users, Globe2, Sunrise } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
