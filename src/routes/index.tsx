@@ -43,13 +43,13 @@ function HomePage() {
         <div className="absolute inset-x-0 bottom-0 px-4 pb-10 md:pb-16">
           <div className="mx-auto max-w-6xl">
             <div className="max-w-xl rounded-3xl glass-card p-6 md:p-8 animate-fade-up">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--indigo-night)]/70">
-                The General Intelligence of India
+              <p className="font-display text-xs font-medium tracking-[0.18em] uppercase text-[var(--indigo-night)]/70">
+                The General Intelligence Company Of India
               </p>
-              <h1 className="mt-3 font-display text-4xl font-medium leading-[1.05] text-balance text-[var(--indigo-night)] md:text-5xl">
-                Building the intelligence layer for India's next billion builders.
+              <h1 className="mt-3 font-display text-4xl font-light leading-[1.05] text-balance text-[var(--indigo-night)] md:text-5xl">
+                Building the intelligence layer for India's builders.
               </h1>
-              <p className="mt-4 text-sm text-foreground/75 md:text-base">
+              <p className="mt-4 text-sm font-light text-foreground/75 md:text-base">
                 Indus Orbit is a research and product company creating AI tools
                 and human networks that bring India's youth, industry experts,
                 founders, investors and the diaspora into one orbit.
