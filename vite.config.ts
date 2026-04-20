@@ -6,4 +6,8 @@
 // You can pass additional config via defineConfig({ vite: { ... } }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
-export default defineConfig();
+export default defineConfig({
+  // Disabling SSR/Cloudflare to allow standard SPA deployment on Netlify
+  ssr: false,
+  cloudflare: false,
+});
