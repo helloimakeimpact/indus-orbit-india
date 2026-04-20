@@ -1,13 +1,23 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, LogOut, User as UserIcon, LayoutDashboard, ShieldCheck } from "lucide-react";
 import logo from "@/assets/indus-orbit-logo.png";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const links = [
   { to: "/about", label: "About" },
   { to: "/our-work", label: "Our Work" },
   { to: "/writing", label: "Writing" },
+  { to: "/members", label: "Members" },
   { to: "/contact", label: "Contact" },
 ] as const;
 
@@ -29,14 +39,60 @@ function ClockChip() {
     return () => clearInterval(id);
   }, []);
   return (
-    <span className="hidden md:inline-flex items-center rounded-full bg-foreground/5 px-3 py-1 text-[11px] font-medium tracking-wider uppercase text-foreground/70">
+    <span className="hidden lg:inline-flex items-center rounded-full bg-foreground/5 px-3 py-1 text-[11px] font-medium tracking-wider uppercase text-foreground/70">
       {time}
     </span>
   );
 }
 
+function UserMenu() {
+  const { user, isAdmin, signOut } = useAuth();
+  const navigate = useNavigate();
+  if (!user) return null;
+  const initial = (user.email ?? "?").charAt(0).toUpperCase();
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          aria-label="Account menu"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[var(--indigo-night)] text-sm font-semibold text-[var(--parchment)] hover:bg-[var(--saffron)] hover:text-[var(--indigo-night)] transition"
+        >
+          {initial}
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-52">
+        <DropdownMenuLabel className="truncate text-xs text-muted-foreground">
+          {user.email}
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => navigate({ to: "/dashboard" })}>
+          <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => navigate({ to: "/profile" })}>
+          <UserIcon className="mr-2 h-4 w-4" /> Profile
+        </DropdownMenuItem>
+        {isAdmin && (
+          <DropdownMenuItem onClick={() => navigate({ to: "/admin" })}>
+            <ShieldCheck className="mr-2 h-4 w-4" /> Admin
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onClick={async () => {
+            await signOut();
+            navigate({ to: "/" });
+          }}
+        >
+          <LogOut className="mr-2 h-4 w-4" /> Sign out
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 export function SiteNav({ tone = "light" }: { tone?: "light" | "dark" }) {
   const [open, setOpen] = useState(false);
+  const { user } = useAuth();
   const dark = tone === "dark";
   return (
     <header className="fixed inset-x-0 top-4 z-50 px-4">
@@ -68,12 +124,16 @@ export function SiteNav({ tone = "light" }: { tone?: "light" | "dark" }) {
 
         <div className="flex items-center gap-3">
           <ClockChip />
-          <Link
-            to="/contact"
-            className="hidden sm:inline-flex items-center rounded-full bg-[var(--indigo-night)] px-4 py-2 text-xs font-semibold uppercase tracking-wider text-[var(--parchment)] transition hover:bg-[var(--saffron)] hover:text-[var(--indigo-night)]"
-          >
-            Join the Orbit
-          </Link>
+          {user ? (
+            <UserMenu />
+          ) : (
+            <Link
+              to="/auth"
+              className="hidden sm:inline-flex items-center rounded-full bg-[var(--indigo-night)] px-4 py-2 text-xs font-semibold uppercase tracking-wider text-[var(--parchment)] transition hover:bg-[var(--saffron)] hover:text-[var(--indigo-night)]"
+            >
+              Join the Orbit
+            </Link>
+          )}
           <button
             type="button"
             aria-label="Toggle menu"
@@ -98,13 +158,15 @@ export function SiteNav({ tone = "light" }: { tone?: "light" | "dark" }) {
                 {l.label}
               </Link>
             ))}
-            <Link
-              to="/contact"
-              onClick={() => setOpen(false)}
-              className="mt-1 rounded-2xl bg-[var(--indigo-night)] px-4 py-3 text-center text-sm font-semibold text-[var(--parchment)]"
-            >
-              Join the Orbit
-            </Link>
+            {!user && (
+              <Link
+                to="/auth"
+                onClick={() => setOpen(false)}
+                className="mt-1 rounded-2xl bg-[var(--indigo-night)] px-4 py-3 text-center text-sm font-semibold text-[var(--parchment)]"
+              >
+                Join the Orbit
+              </Link>
+            )}
           </nav>
         </div>
       )}
