@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteShell } from "@/components/site/SiteShell";
 import workImg from "@/assets/work-citylights.jpg";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/our-work")({
   head: () => ({
@@ -31,36 +32,42 @@ const items = [
     title: "Youth × Mentor matchmaking",
     author: "Orbit Labs",
     body: "An AI-assisted way to pair first-generation builders with the right industry veteran — by craft, geography and stage, not just résumé.",
+    gradient: "from-[var(--indigo-night)] via-[var(--indigo-night)]/80 to-[var(--saffron)]/70",
   },
   {
     tag: "Product",
     title: "Agent toolkit for Indian SMBs",
     author: "Orbit Build",
     body: "A set of agentic tools that let small Indian businesses run sales, ops and support workflows in their own language and on their own infra.",
+    gradient: "from-[var(--monsoon)]/80 via-[var(--indigo-night)]/90 to-[var(--indigo-night)]",
   },
   {
     tag: "Bridge",
     title: "NRI ↔ India bridge program",
     author: "Orbit Bridge",
     body: "A working group connecting NRIs with vetted Indian founders, opportunities and giving missions — making the diaspora a real engine, not a sentiment.",
+    gradient: "from-[var(--gold)]/80 via-[var(--saffron)]/70 to-[var(--indigo-night)]/90",
   },
   {
     tag: "Research",
     title: "How India actually adopts AI",
     author: "Orbit Research",
     body: "An ongoing study of how AI tools are entering Indian classrooms, kirana stores, clinics and panchayats — and what to build next.",
+    gradient: "from-[var(--indigo-night)]/90 via-[var(--monsoon)]/60 to-[var(--gold)]/50",
   },
   {
     tag: "Network",
     title: "Industry expert circles",
     author: "Orbit Labs",
     body: "Small, invite-only circles of senior operators across BFSI, manufacturing, retail and health — giving back time and judgement to the next generation.",
+    gradient: "from-[var(--saffron)]/60 via-[var(--indigo-night)]/80 to-[var(--indigo-night)]",
   },
   {
     tag: "Product",
     title: "Vernacular agent runtime",
     author: "Orbit Build",
     body: "A runtime for agents that speak, listen and act in Indian languages first — built around the textures of how Indians actually communicate.",
+    gradient: "from-[var(--saffron)]/70 via-[var(--gold)]/60 to-[var(--indigo-night)]",
   },
 ];
 
@@ -96,7 +103,7 @@ function WorkPage() {
                 key={it.title}
                 className="group flex flex-col overflow-hidden rounded-3xl border border-border bg-card transition hover:-translate-y-1 hover:shadow-xl"
               >
-                <div className="aspect-[4/3] w-full bg-gradient-to-br from-[var(--indigo-night)] via-[var(--indigo-night)]/80 to-[var(--saffron)]/70" />
+                <div className={cn("aspect-[4/3] w-full bg-gradient-to-br", it.gradient)} />
                 <div className="flex flex-1 flex-col p-6">
                   <span className="inline-flex w-fit rounded-full bg-foreground/5 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-foreground/60">
                     {it.tag}

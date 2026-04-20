@@ -25,13 +25,14 @@ export const Route = createFileRoute("/writing")({
 
 type Tag = "All" | "Announcements" | "Research" | "Vision";
 
-const posts: Array<{ title: string; excerpt: string; author: string; tag: Exclude<Tag, "All"> }> = [
+const posts: Array<{ title: string; excerpt: string; author: string; tag: Exclude<Tag, "All">; gradient: string }> = [
   {
     title: "Announcing Indus Orbit",
     excerpt:
       "Why we are building a general intelligence company designed around India's people, industries and ambitions.",
     author: "The Orbit",
     tag: "Announcements",
+    gradient: "from-[var(--saffron)]/70 via-[var(--gold)]/60 to-[var(--indigo-night)]",
   },
   {
     title: "An orbit, not a pyramid",
@@ -39,6 +40,7 @@ const posts: Array<{ title: string; excerpt: string; author: string; tag: Exclud
       "Most ecosystems are drawn as pyramids with a few founders at the top. India looks more like an orbit — and that changes what we build.",
     author: "Founders",
     tag: "Vision",
+    gradient: "from-[var(--indigo-night)] via-[var(--indigo-night)]/80 to-[var(--saffron)]/70",
   },
   {
     title: "What Indian SMBs actually want from agents",
@@ -46,6 +48,7 @@ const posts: Array<{ title: string; excerpt: string; author: string; tag: Exclud
       "Field notes from twelve cities and forty businesses on where AI is genuinely useful — and where it is in the way.",
     author: "Orbit Research",
     tag: "Research",
+    gradient: "from-[var(--monsoon)]/80 via-[var(--indigo-night)]/90 to-[var(--indigo-night)]",
   },
   {
     title: "The diaspora as an engine, not an audience",
@@ -53,6 +56,7 @@ const posts: Array<{ title: string; excerpt: string; author: string; tag: Exclud
       "How NRIs can move from cheering India on to actively compounding it — and the rails we are building to make that easier.",
     author: "Orbit Bridge",
     tag: "Vision",
+    gradient: "from-[var(--gold)]/80 via-[var(--saffron)]/70 to-[var(--indigo-night)]/90",
   },
   {
     title: "Vernacular first, English second",
@@ -60,6 +64,7 @@ const posts: Array<{ title: string; excerpt: string; author: string; tag: Exclud
       "Why the next billion users will not switch to English to use AI — and what that demands from the runtime.",
     author: "Orbit Build",
     tag: "Research",
+    gradient: "from-[var(--indigo-night)]/90 via-[var(--monsoon)]/60 to-[var(--gold)]/50",
   },
   {
     title: "We are hiring across product, research and partnerships",
@@ -67,6 +72,7 @@ const posts: Array<{ title: string; excerpt: string; author: string; tag: Exclud
       "A small, deliberate team in Delhi and Bengaluru. If you care about India and intelligence, we'd love to hear from you.",
     author: "The Orbit",
     tag: "Announcements",
+    gradient: "from-[var(--saffron)]/60 via-[var(--indigo-night)]/80 to-[var(--indigo-night)]",
   },
 ];
 
@@ -117,7 +123,7 @@ function WritingPage() {
                 key={p.title}
                 className="group flex flex-col overflow-hidden rounded-3xl border border-border bg-card transition hover:-translate-y-1 hover:shadow-xl"
               >
-                <div className="aspect-[16/10] w-full bg-gradient-to-br from-[var(--saffron)]/70 via-[var(--gold)]/60 to-[var(--indigo-night)]" />
+                <div className={cn("aspect-[16/10] w-full bg-gradient-to-br", p.gradient)} />
                 <div className="flex flex-1 flex-col p-6">
                   <span className="inline-flex w-fit rounded-full bg-foreground/5 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-foreground/60">
                     {p.tag}
