@@ -42,7 +42,7 @@ function HomePage() {
         <div className="absolute inset-0 bg-gradient-to-b from-[var(--indigo-night)]/30 via-transparent to-[var(--indigo-night)]/85" />
 
         {/* Big pixel-art title overlay (outside the card) */}
-        <div className="absolute inset-x-0 top-[18%] md:top-[14%] px-6 text-center">
+        <div className="absolute inset-x-0 top-[24%] md:top-[20%] px-6 text-center">
           <h1 className="font-display text-glow text-[var(--parchment)] leading-[1.05] tracking-tight text-balance text-4xl sm:text-5xl md:text-7xl lg:text-[5.5rem] font-light">
             The General Intelligence
             <br />
@@ -273,7 +273,11 @@ function OrbitDiagram() {
             const ly = cy + (ry + labelOffset) * Math.sin(rad);
             const anchor = lx < cx - 4 ? "end" : lx > cx + 4 ? "start" : "middle";
             return (
-              <g key={n.label}>
+              <g
+                key={n.label}
+                className="animate-counter-orbit"
+                style={{ transformOrigin: `${x}px ${y}px` }}
+              >
                 <circle cx={x} cy={y} r="6" fill={n.color} />
                 <circle cx={x} cy={y} r="11" fill={n.color} fillOpacity="0.18" />
                 <text

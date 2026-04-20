@@ -219,4 +219,11 @@
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
   }
+  .animate-counter-orbit {
+    animation: counter-orbit 18s linear infinite;
+  }
+  @keyframes counter-orbit {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(-360deg); }
+  }
 }
