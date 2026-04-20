@@ -21,7 +21,7 @@ const links = [
   { to: "/contact", label: "Contact" },
 ] as const;
 
-function ClockChip() {
+function ClockChip({ dark }: { dark: boolean }) {
   const [time, setTime] = useState("");
   useEffect(() => {
     const tick = () => {
@@ -39,7 +39,14 @@ function ClockChip() {
     return () => clearInterval(id);
   }, []);
   return (
-    <span className="hidden lg:inline-flex items-center rounded-full bg-foreground/5 px-3 py-1 text-[11px] font-medium tracking-wider uppercase text-foreground/70">
+    <span
+      className={cn(
+        "hidden md:inline-flex items-center rounded-full px-3 py-1 text-[11px] font-semibold tracking-wider uppercase",
+        dark
+          ? "bg-[var(--parchment)]/10 text-[var(--parchment)]"
+          : "bg-[var(--indigo-night)]/5 text-[var(--indigo-night)]/80",
+      )}
+    >
       {time}
     </span>
   );
@@ -129,7 +136,7 @@ export function SiteNav({ tone = "light" }: { tone?: "light" | "dark" }) {
         </nav>
 
         <div className="flex items-center gap-3">
-          <ClockChip />
+          <ClockChip dark={dark} />
           {user ? (
             <UserMenu />
           ) : (
