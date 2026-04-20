@@ -262,35 +262,35 @@ function OrbitDiagram() {
           Orbit
         </text>
 
-        {/* Planets */}
-        {nodes.map((n) => {
-          const rad = (n.angle * Math.PI) / 180;
-          const x = cx + rx * Math.cos(rad);
-          const y = cy + ry * Math.sin(rad);
-          // Push label outward radially
-          const labelOffset = 16;
-          const lx = cx + (rx + labelOffset) * Math.cos(rad);
-          const ly = cy + (ry + labelOffset) * Math.sin(rad);
-          // Anchor based on which side of the ellipse
-          const anchor = lx < cx - 4 ? "end" : lx > cx + 4 ? "start" : "middle";
-          return (
-            <g key={n.label}>
-              <circle cx={x} cy={y} r="6" fill={n.color} />
-              <circle cx={x} cy={y} r="11" fill={n.color} fillOpacity="0.18" />
-              <text
-                x={lx}
-                y={ly + 4}
-                textAnchor={anchor}
-                fontFamily="Inter, sans-serif"
-                fontSize="12"
-                fontWeight="600"
-                fill="rgba(255,245,225,0.92)"
-              >
-                {n.label}
-              </text>
-            </g>
-          );
-        })}
+        {/* Planets — animated rotation around the sun */}
+        <g style={{ transformOrigin: `${cx}px ${cy}px` }} className="animate-orbit">
+          {nodes.map((n) => {
+            const rad = (n.angle * Math.PI) / 180;
+            const x = cx + rx * Math.cos(rad);
+            const y = cy + ry * Math.sin(rad);
+            const labelOffset = 16;
+            const lx = cx + (rx + labelOffset) * Math.cos(rad);
+            const ly = cy + (ry + labelOffset) * Math.sin(rad);
+            const anchor = lx < cx - 4 ? "end" : lx > cx + 4 ? "start" : "middle";
+            return (
+              <g key={n.label}>
+                <circle cx={x} cy={y} r="6" fill={n.color} />
+                <circle cx={x} cy={y} r="11" fill={n.color} fillOpacity="0.18" />
+                <text
+                  x={lx}
+                  y={ly + 4}
+                  textAnchor={anchor}
+                  fontFamily="Inter, sans-serif"
+                  fontSize="12"
+                  fontWeight="600"
+                  fill="rgba(255,245,225,0.92)"
+                >
+                  {n.label}
+                </text>
+              </g>
+            );
+          })}
+        </g>
       </svg>
     </div>
   );
