@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteShell } from "@/components/site/SiteShell";
 import heroImg from "@/assets/hero-india-dawn.jpg";
-import { ArrowRight, Sparkles, Users, Globe2 } from "lucide-react";
+import lotusImg from "@/assets/lotus-pixel.png";
+import { ArrowRight, Sparkles, Users, Globe2, Sunrise } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -30,7 +31,7 @@ function HomePage() {
   return (
     <SiteShell navTone="dark">
       {/* HERO */}
-      <section className="relative h-[100svh] min-h-[640px] w-full overflow-hidden">
+      <section className="relative h-[115svh] min-h-[820px] w-full overflow-hidden">
         <img
           src={heroImg}
           alt="Pixel-art dawn over an Indian city skyline with banyan tree and Himalayas"
@@ -38,28 +39,43 @@ function HomePage() {
           height={1080}
           className="absolute inset-0 h-full w-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-[var(--indigo-night)]/40 via-transparent to-[var(--indigo-night)]/80" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[var(--indigo-night)]/30 via-transparent to-[var(--indigo-night)]/85" />
 
+        {/* Big pixel-art title overlay (outside the card) */}
+        <div className="absolute inset-x-0 top-[18%] md:top-[14%] px-6 text-center">
+          <h1 className="font-display text-glow text-[var(--parchment)] leading-[1.05] tracking-tight text-balance text-4xl sm:text-5xl md:text-7xl lg:text-[5.5rem] font-light">
+            The General Intelligence
+            <br />
+            Company Of India
+          </h1>
+        </div>
+
+        {/* Bottom-right tagline note */}
+        <div className="hidden md:flex absolute bottom-12 right-10 max-w-[260px] flex-col items-end gap-2 text-right text-[var(--parchment)]/85">
+          <Sunrise className="h-5 w-5 text-[var(--saffron)]" aria-hidden />
+          <p className="text-sm leading-snug">
+            India's next chapter is being written in code — we're orbiting the people writing it.
+          </p>
+        </div>
+
+        {/* Hero card (bottom-left) */}
         <div className="absolute inset-x-0 bottom-0 px-4 pb-10 md:pb-16">
           <div className="mx-auto max-w-6xl">
-            <div className="max-w-xl rounded-3xl glass-card p-6 md:p-8 animate-fade-up">
-              <p className="font-display text-xs font-medium tracking-[0.18em] uppercase text-[var(--indigo-night)]/70">
-                The General Intelligence Company Of India
-              </p>
-              <h1 className="mt-3 font-display text-4xl font-light leading-[1.05] text-balance text-[var(--indigo-night)] md:text-5xl">
+            <div className="max-w-md rounded-3xl glass-card p-6 md:p-7 animate-fade-up">
+              <h2 className="font-display text-3xl font-light leading-[1.1] text-balance text-[var(--indigo-night)] md:text-4xl">
                 Building the intelligence layer for India's builders.
-              </h1>
-              <p className="mt-4 text-sm font-light text-foreground/75 md:text-base">
-                Indus Orbit is a research and product company creating AI tools
-                and human networks that bring India's youth, industry experts,
+              </h2>
+              <p className="mt-4 text-sm font-light text-foreground/75">
+                Indus Orbit is a research and product company creating AI
+                tools and human networks that bring India's youth, experts,
                 founders, investors and the diaspora into one orbit.
               </p>
-              <div className="mt-6 flex flex-wrap items-center gap-3">
+              <div className="mt-5 flex flex-wrap items-center gap-3">
                 <Link
                   to="/about"
                   className="inline-flex items-center gap-2 rounded-full bg-[var(--indigo-night)] px-5 py-2.5 text-sm font-semibold text-[var(--parchment)] hover:bg-[var(--saffron)] hover:text-[var(--indigo-night)] transition"
                 >
-                  Our story <ArrowRight className="h-4 w-4" />
+                  Get to know us <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link
                   to="/contact"
@@ -73,8 +89,25 @@ function HomePage() {
         </div>
       </section>
 
+      {/* LOTUS DIVIDER */}
+      <section className="relative px-6 pt-20 pb-8 md:pt-28">
+        <div className="mx-auto flex max-w-5xl flex-col items-center text-center">
+          <img
+            src={lotusImg}
+            alt="Pixel-art lotus in bloom"
+            width={420}
+            height={420}
+            loading="lazy"
+            className="pixelated h-auto w-[260px] md:w-[360px] drop-shadow-[0_20px_40px_rgba(0,0,0,0.15)]"
+          />
+          <p className="mt-6 max-w-xl text-base text-foreground/70 md:text-lg">
+            A lotus rises from still water — slow, deliberate, unmistakably of this place. So does what we're building.
+          </p>
+        </div>
+      </section>
+
       {/* STATEMENT */}
-      <section className="px-6 py-24 md:py-32">
+      <section className="px-6 py-20 md:py-28">
         <div className="mx-auto max-w-4xl text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">
             A different kind of AI company

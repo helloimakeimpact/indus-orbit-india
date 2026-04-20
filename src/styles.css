@@ -169,6 +169,17 @@
   .font-display {
     font-family: var(--font-display);
   }
+  .pixelated {
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+  }
+  .text-glow {
+    text-shadow:
+      0 0 18px rgba(255, 240, 210, 0.55),
+      0 0 36px rgba(255, 220, 180, 0.35),
+      0 2px 0 rgba(20, 16, 60, 0.35);
+  }
   .glass-card {
     background: color-mix(in oklab, var(--parchment) 78%, transparent);
     backdrop-filter: blur(14px) saturate(140%);

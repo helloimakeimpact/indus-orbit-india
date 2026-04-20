@@ -13,31 +13,30 @@ export function CookieBanner() {
   }, []);
   if (!visible) return null;
   return (
-    <div className="fixed inset-x-4 bottom-4 z-50 mx-auto max-w-2xl rounded-2xl glass-card p-4 shadow-xl md:flex md:items-center md:gap-4">
-      <p className="text-sm text-foreground/80">
-        A few cookies, so things grow and flow just right. We use them to
-        understand how the site is used.
+    <div className="fixed bottom-3 right-3 z-50 flex max-w-sm items-center gap-2 rounded-full glass-card px-3 py-1.5 shadow-lg">
+      <span aria-hidden className="text-[11px]">🍪</span>
+      <p className="text-[11px] text-foreground/75">
+        <span className="underline decoration-foreground/30 underline-offset-2">A few cookies</span>, so things grow and flow just right.
       </p>
-      <div className="mt-3 flex justify-end gap-2 md:mt-0">
-        <button
-          onClick={() => {
-            try { localStorage.setItem(KEY, "dismiss"); } catch { /* noop */ }
-            setVisible(false);
-          }}
-          className="rounded-full px-3 py-1.5 text-xs font-medium text-foreground/70 hover:bg-foreground/5"
-        >
-          Dismiss
-        </button>
-        <button
-          onClick={() => {
-            try { localStorage.setItem(KEY, "accept"); } catch { /* noop */ }
-            setVisible(false);
-          }}
-          className="rounded-full bg-[var(--indigo-night)] px-4 py-1.5 text-xs font-semibold text-[var(--parchment)]"
-        >
-          Sounds good
-        </button>
-      </div>
+      <button
+        onClick={() => {
+          try { localStorage.setItem(KEY, "dismiss"); } catch { /* noop */ }
+          setVisible(false);
+        }}
+        className="rounded-full px-2 py-0.5 text-[11px] font-medium text-foreground/60 hover:bg-foreground/5"
+      >
+        Decline
+      </button>
+      <span className="text-foreground/30 text-[11px]">/</span>
+      <button
+        onClick={() => {
+          try { localStorage.setItem(KEY, "accept"); } catch { /* noop */ }
+          setVisible(false);
+        }}
+        className="rounded-full px-2 py-0.5 text-[11px] font-semibold text-[var(--indigo-night)] hover:bg-foreground/5"
+      >
+        Accept
+      </button>
     </div>
   );
 }
