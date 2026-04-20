@@ -161,38 +161,106 @@ function HomePage() {
 
 function OrbitDiagram() {
   const nodes = [
-    { label: "Youth", angle: 0 },
-    { label: "Experts", angle: 72 },
-    { label: "Founders", angle: 144 },
-    { label: "Investors", angle: 216 },
-    { label: "Diaspora", angle: 288 },
+    { label: "Youth", angle: 200, color: "#60a5fa" },
+    { label: "Founders", angle: 320, color: "#f87171" },
+    { label: "Experts", angle: 30, color: "#fbbf24" },
+    { label: "Investors", angle: 100, color: "#34d399" },
+    { label: "Diaspora", angle: 250, color: "#a78bfa" },
   ];
+  // Ellipse parameters (in viewBox 400x400 units)
+  const cx = 200;
+  const cy = 200;
+  const rx = 150;
+  const ry = 110;
+
   return (
-    <div className="relative mx-auto aspect-square w-full max-w-md">
-      <div className="absolute inset-0 rounded-full border border-[var(--parchment)]/15" />
-      <div className="absolute inset-8 rounded-full border border-[var(--parchment)]/10" />
-      <div className="absolute inset-16 rounded-full border border-[var(--parchment)]/10" />
-      <div className="absolute left-1/2 top-1/2 h-20 w-20 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--saffron)] text-[var(--indigo-night)] flex items-center justify-center font-display text-sm font-semibold shadow-[0_0_60px_rgba(255,180,80,0.4)]">
-        Indus
-        <br />
-        Orbit
-      </div>
-      <div className="absolute inset-0 animate-orbit">
+    <div className="relative mx-auto w-full max-w-md">
+      <svg
+        viewBox="0 0 400 400"
+        className="h-auto w-full"
+        role="img"
+        aria-label="Indus Orbit network: Youth, Founders, Experts, Investors and Diaspora orbiting a central sun"
+      >
+        <defs>
+          <radialGradient id="sunGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#ffb454" stopOpacity="0.9" />
+            <stop offset="40%" stopColor="#ff9933" stopOpacity="0.35" />
+            <stop offset="100%" stopColor="#ff9933" stopOpacity="0" />
+          </radialGradient>
+          <radialGradient id="sunCore" cx="40%" cy="40%" r="60%">
+            <stop offset="0%" stopColor="#ffd28a" />
+            <stop offset="100%" stopColor="#f59e0b" />
+          </radialGradient>
+        </defs>
+
+        {/* Orbit ring */}
+        <ellipse
+          cx={cx}
+          cy={cy}
+          rx={rx}
+          ry={ry}
+          fill="none"
+          stroke="rgba(255,255,255,0.18)"
+          strokeWidth="1"
+        />
+
+        {/* Sun glow */}
+        <circle cx={cx} cy={cy} r="90" fill="url(#sunGlow)" />
+        {/* Sun core */}
+        <circle cx={cx} cy={cy} r="34" fill="url(#sunCore)" />
+        <text
+          x={cx}
+          y={cy - 2}
+          textAnchor="middle"
+          fontFamily="Fraunces, serif"
+          fontSize="11"
+          fontWeight="600"
+          fill="#1a1f4d"
+        >
+          Indus
+        </text>
+        <text
+          x={cx}
+          y={cy + 11}
+          textAnchor="middle"
+          fontFamily="Fraunces, serif"
+          fontSize="11"
+          fontWeight="600"
+          fill="#1a1f4d"
+        >
+          Orbit
+        </text>
+
+        {/* Planets */}
         {nodes.map((n) => {
-          const r = 45;
-          const x = 50 + r * Math.cos((n.angle * Math.PI) / 180);
-          const y = 50 + r * Math.sin((n.angle * Math.PI) / 180);
+          const rad = (n.angle * Math.PI) / 180;
+          const x = cx + rx * Math.cos(rad);
+          const y = cy + ry * Math.sin(rad);
+          // Push label outward radially
+          const labelOffset = 16;
+          const lx = cx + (rx + labelOffset) * Math.cos(rad);
+          const ly = cy + (ry + labelOffset) * Math.sin(rad);
+          // Anchor based on which side of the ellipse
+          const anchor = lx < cx - 4 ? "end" : lx > cx + 4 ? "start" : "middle";
           return (
-            <div
-              key={n.label}
-              className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--parchment)]/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-[var(--parchment)] backdrop-blur"
-              style={{ left: `${x}%`, top: `${y}%` }}
-            >
-              {n.label}
-            </div>
+            <g key={n.label}>
+              <circle cx={x} cy={y} r="6" fill={n.color} />
+              <circle cx={x} cy={y} r="11" fill={n.color} fillOpacity="0.18" />
+              <text
+                x={lx}
+                y={ly + 4}
+                textAnchor={anchor}
+                fontFamily="Inter, sans-serif"
+                fontSize="12"
+                fontWeight="600"
+                fill="rgba(255,245,225,0.92)"
+              >
+                {n.label}
+              </text>
+            </g>
           );
         })}
-      </div>
+      </svg>
     </div>
   );
 }
