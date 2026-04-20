@@ -58,14 +58,14 @@ function HomePage() {
           </p>
         </div>
 
-        {/* Hero card (bottom-left) */}
-        <div className="absolute inset-x-0 bottom-0 px-4 pb-10 md:pb-16">
+        {/* Hero card (bottom-left) — lifted up & more transparent */}
+        <div className="absolute inset-x-0 bottom-24 md:bottom-32 px-4">
           <div className="mx-auto max-w-6xl">
-            <div className="max-w-md rounded-3xl glass-card p-6 md:p-7 animate-fade-up">
-              <h2 className="font-display text-3xl font-light leading-[1.1] text-balance text-[var(--indigo-night)] md:text-4xl">
+            <div className="max-w-md rounded-3xl glass-card-soft p-6 md:p-7 animate-fade-up">
+              <h2 className="font-display text-3xl font-light leading-[1.1] text-balance text-[var(--parchment)] md:text-4xl">
                 Building the intelligence layer for India's builders.
               </h2>
-              <p className="mt-4 text-sm font-light text-foreground/75">
+              <p className="mt-4 text-sm font-light text-[var(--parchment)]/85">
                 Indus Orbit is a research and product company creating AI
                 tools and human networks that bring India's youth, experts,
                 founders, investors and the diaspora into one orbit.
@@ -73,13 +73,13 @@ function HomePage() {
               <div className="mt-5 flex flex-wrap items-center gap-3">
                 <Link
                   to="/about"
-                  className="inline-flex items-center gap-2 rounded-full bg-[var(--indigo-night)] px-5 py-2.5 text-sm font-semibold text-[var(--parchment)] hover:bg-[var(--saffron)] hover:text-[var(--indigo-night)] transition"
+                  className="inline-flex items-center gap-2 rounded-full bg-[var(--saffron)] px-5 py-2.5 text-sm font-semibold text-[var(--indigo-night)] hover:bg-[var(--parchment)] transition"
                 >
                   Get to know us <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link
                   to="/contact"
-                  className="inline-flex items-center gap-2 rounded-full border border-[var(--indigo-night)]/20 px-5 py-2.5 text-sm font-medium text-[var(--indigo-night)] hover:bg-[var(--indigo-night)]/5"
+                  className="inline-flex items-center gap-2 rounded-full border border-[var(--parchment)]/40 px-5 py-2.5 text-sm font-medium text-[var(--parchment)] hover:bg-[var(--parchment)]/10"
                 >
                   Get in touch
                 </Link>
@@ -89,36 +89,34 @@ function HomePage() {
         </div>
       </section>
 
-      {/* LOTUS DIVIDER */}
-      <section className="relative px-6 pt-20 pb-8 md:pt-28">
-        <div className="mx-auto flex max-w-5xl flex-col items-center text-center">
-          <img
-            src={lotusImg}
-            alt="Pixel-art lotus in bloom"
-            width={420}
-            height={420}
-            loading="lazy"
-            className="pixelated h-auto w-[260px] md:w-[360px] drop-shadow-[0_20px_40px_rgba(0,0,0,0.15)]"
-          />
-          <p className="mt-6 max-w-xl text-base text-foreground/70 md:text-lg">
-            A lotus rises from still water — slow, deliberate, unmistakably of this place. So does what we're building.
-          </p>
-        </div>
-      </section>
-
-      {/* STATEMENT */}
-      <section className="px-6 py-20 md:py-28">
-        <div className="mx-auto max-w-4xl text-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">
-            A different kind of AI company
-          </p>
-          <h2 className="mt-5 font-display text-4xl font-medium leading-tight text-balance md:text-6xl">
-            AI should connect people, not isolate them.
-          </h2>
-          <p className="mt-6 text-lg text-foreground/70 text-balance">
-            By building the right tools and the right networks, we can lift
-            India together — across cities, generations and industries.
-          </p>
+      {/* LOTUS + STATEMENT (combined two-column) */}
+      <section className="relative px-6 py-20 md:py-28">
+        <div className="mx-auto grid max-w-6xl items-center gap-12 md:grid-cols-2 md:gap-16">
+          <div className="flex justify-center md:justify-start">
+            <img
+              src={lotusImg}
+              alt="Pixel-art lotus in bloom"
+              width={420}
+              height={420}
+              loading="lazy"
+              className="pixelated h-auto w-[240px] md:w-[360px] drop-shadow-[0_20px_40px_rgba(0,0,0,0.15)]"
+            />
+          </div>
+          <div className="text-center md:text-left">
+            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">
+              A different kind of AI company
+            </p>
+            <h2 className="mt-5 font-display text-4xl font-light leading-tight text-balance md:text-5xl">
+              AI should connect people, not isolate them.
+            </h2>
+            <p className="mt-6 text-lg text-foreground/70 text-balance">
+              By building the right tools and the right networks, we can lift
+              India together — across cities, generations and industries.
+            </p>
+            <p className="mt-4 text-sm text-foreground/60 italic">
+              A lotus rises from still water — slow, deliberate, unmistakably of this place. So does what we're building.
+            </p>
+          </div>
         </div>
       </section>
 

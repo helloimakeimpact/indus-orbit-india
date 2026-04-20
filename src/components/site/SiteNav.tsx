@@ -103,9 +103,13 @@ export function SiteNav({ tone = "light" }: { tone?: "light" | "dark" }) {
         )}
       >
         <Link to="/" className="flex items-center gap-2.5">
-          <span className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-black/5">
-            <img src={logo} alt="Indus Orbit" width={32} height={32} className="h-8 w-8" />
-          </span>
+          <img
+            src={logo}
+            alt="Indus Orbit"
+            width={48}
+            height={48}
+            className="pixelated h-12 w-12"
+          />
           <span className="font-display text-lg font-medium tracking-tight">
             Indus Orbit
           </span>
