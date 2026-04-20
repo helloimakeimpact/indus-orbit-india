@@ -102,9 +102,9 @@ export function SiteNav({ tone = "light" }: { tone?: "light" | "dark" }) {
           dark ? "glass-dark" : "glass-card",
         )}
       >
-        <Link to="/" className="flex items-center gap-2">
-          <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-white shadow-sm ring-1 ring-black/5">
-            <img src={logo} alt="Indus Orbit" width={22} height={22} className="h-5 w-5" />
+        <Link to="/" className="flex items-center gap-2.5">
+          <span className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-black/5">
+            <img src={logo} alt="Indus Orbit" width={32} height={32} className="h-8 w-8" />
           </span>
           <span className="font-display text-lg font-medium tracking-tight">
             Indus Orbit
