@@ -38,10 +38,6 @@ const signInSchema = z.object({
   password: z.string().min(8, "At least 8 characters").max(72),
 });
 
-const signUpSchema = signInSchema.extend({
-  displayName: z.string().trim().min(1, "Required").max(80),
-});
-
 function AuthPage() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
