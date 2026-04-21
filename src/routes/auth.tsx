@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,8 +7,18 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import logo from "@/assets/indus-orbit-logo.png";
+import { ArrowLeft, ArrowRight } from "lucide-react";
+import {
+  SEGMENT_LIST,
+  SEGMENT_META,
+  type Segment,
+  type SegmentDetails,
+} from "@/components/auth/segments";
+import { SegmentDetailsForm } from "@/components/auth/SegmentDetailsForm";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -16,6 +26,9 @@ export const Route = createFileRoute("/auth")({
       { title: "Sign in — Indus Orbit" },
       { name: "description", content: "Sign in or create your Indus Orbit member account." },
     ],
+  }),
+  validateSearch: (s: Record<string, unknown>) => ({
+    tab: s.tab === "signup" ? "signup" : "signin",
   }),
   component: AuthPage,
 });
@@ -32,6 +45,7 @@ const signUpSchema = signInSchema.extend({
 function AuthPage() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
+  const search = Route.useSearch();
 
   useEffect(() => {
     if (!loading && user) {
@@ -41,33 +55,31 @@ function AuthPage() {
 
   return (
     <div className="min-h-screen bg-[var(--indigo-night)] text-[var(--parchment)] flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-2xl">
         <Link to="/" className="flex items-center justify-center gap-2 mb-8">
           <img src={logo} alt="Indus Orbit" width={36} height={36} className="h-9 w-9" />
           <span className="font-display text-xl font-semibold">Indus Orbit</span>
         </Link>
 
         <div className="rounded-3xl bg-[var(--parchment)] text-foreground p-8 shadow-2xl">
-          <Tabs defaultValue="signin">
+          <Tabs defaultValue={search.tab}>
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="signin">Sign in</TabsTrigger>
-              <TabsTrigger value="signup">Sign up</TabsTrigger>
+              <TabsTrigger value="signup">Join the Orbit</TabsTrigger>
             </TabsList>
             <TabsContent value="signin" className="mt-6">
               <SignInForm />
+              <div className="my-6 flex items-center gap-3">
+                <div className="h-px flex-1 bg-border" />
+                <span className="text-xs uppercase tracking-wider text-muted-foreground">or</span>
+                <div className="h-px flex-1 bg-border" />
+              </div>
+              <GoogleButton />
             </TabsContent>
             <TabsContent value="signup" className="mt-6">
-              <SignUpForm />
+              <SignUpWizard />
             </TabsContent>
           </Tabs>
-
-          <div className="my-6 flex items-center gap-3">
-            <div className="h-px flex-1 bg-border" />
-            <span className="text-xs uppercase tracking-wider text-muted-foreground">or</span>
-            <div className="h-px flex-1 bg-border" />
-          </div>
-
-          <GoogleButton />
         </div>
 
         <p className="mt-6 text-center text-sm text-[var(--parchment)]/70">
