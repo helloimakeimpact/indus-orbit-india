@@ -25,10 +25,16 @@ export type Database = {
           headline: string | null
           id: string
           is_public: boolean
+          is_verified: boolean
           linkedin_url: string | null
           orbit_segment: Database["public"]["Enums"]["orbit_segment"] | null
+          region: string | null
+          segment_details: Json
+          timezone: string | null
           updated_at: string
           user_id: string
+          verified_at: string | null
+          verified_by: string | null
           website_url: string | null
         }
         Insert: {
@@ -41,10 +47,16 @@ export type Database = {
           headline?: string | null
           id?: string
           is_public?: boolean
+          is_verified?: boolean
           linkedin_url?: string | null
           orbit_segment?: Database["public"]["Enums"]["orbit_segment"] | null
+          region?: string | null
+          segment_details?: Json
+          timezone?: string | null
           updated_at?: string
           user_id: string
+          verified_at?: string | null
+          verified_by?: string | null
           website_url?: string | null
         }
         Update: {
@@ -57,10 +69,16 @@ export type Database = {
           headline?: string | null
           id?: string
           is_public?: boolean
+          is_verified?: boolean
           linkedin_url?: string | null
           orbit_segment?: Database["public"]["Enums"]["orbit_segment"] | null
+          region?: string | null
+          segment_details?: Json
+          timezone?: string | null
           updated_at?: string
           user_id?: string
+          verified_at?: string | null
+          verified_by?: string | null
           website_url?: string | null
         }
         Relationships: []
@@ -101,7 +119,14 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "member"
-      orbit_segment: "youth" | "founder" | "expert" | "investor" | "diaspora"
+      orbit_segment:
+        | "youth"
+        | "founder"
+        | "expert"
+        | "investor"
+        | "diaspora"
+        | "partner"
+        | "researcher"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -230,7 +255,15 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "member"],
-      orbit_segment: ["youth", "founder", "expert", "investor", "diaspora"],
+      orbit_segment: [
+        "youth",
+        "founder",
+        "expert",
+        "investor",
+        "diaspora",
+        "partner",
+        "researcher",
+      ],
     },
   },
 } as const
