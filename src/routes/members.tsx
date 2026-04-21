@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { SiteShell } from "@/components/site/SiteShell";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
+import { SEGMENT_LIST, SEGMENT_META, type Segment } from "@/components/auth/segments";
+import { VerifiedBadge } from "@/components/auth/VerifiedBadge";
 
 export const Route = createFileRoute("/members")({
   head: () => ({
@@ -22,30 +24,35 @@ type Profile = {
   headline: string | null;
   city: string | null;
   country: string | null;
-  orbit_segment: string | null;
+  orbit_segment: Segment | null;
   linkedin_url: string | null;
   website_url: string | null;
+  is_verified: boolean;
 };
 
-const SEGMENTS = ["all", "youth", "founder", "expert", "investor", "diaspora"] as const;
+const FILTERS = ["all", ...SEGMENT_LIST] as const;
+type Filter = (typeof FILTERS)[number];
 
 function MembersPage() {
   const [members, setMembers] = useState<Profile[]>([]);
-  const [filter, setFilter] = useState<(typeof SEGMENTS)[number]>("all");
+  const [filter, setFilter] = useState<Filter>("all");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setLoading(true);
     let q = supabase
       .from("profiles")
-      .select("id, display_name, headline, city, country, orbit_segment, linkedin_url, website_url")
+      .select("id, display_name, headline, city, country, orbit_segment, linkedin_url, website_url, is_verified")
       .eq("is_public", true);
     if (filter !== "all") {
-      q = q.eq("orbit_segment", filter);
+      q = q.eq("orbit_segment", filter as never);
     }
-    q.order("created_at", { ascending: false }).then(({ data }) => {
-      setMembers((data as Profile[] | null) ?? []);
-      setLoading(false);
-    });
+    q.order("is_verified", { ascending: false })
+      .order("created_at", { ascending: false })
+      .then(({ data }) => {
+        setMembers((data as unknown as Profile[] | null) ?? []);
+        setLoading(false);
+      });
   }, [filter]);
 
   return (
@@ -59,7 +66,7 @@ function MembersPage() {
           </p>
 
           <div className="mt-8 flex flex-wrap gap-2">
-            {SEGMENTS.map((s) => (
+            {FILTERS.map((s) => (
               <button
                 key={s}
                 onClick={() => setFilter(s)}
@@ -69,7 +76,7 @@ function MembersPage() {
                     : "border-border hover:bg-foreground/5"
                 }`}
               >
-                {s}
+                {s === "all" ? "All" : SEGMENT_META[s].label}
               </button>
             ))}
           </div>
@@ -83,8 +90,13 @@ function MembersPage() {
               {members.map((m) => (
                 <article key={m.id} className="rounded-3xl border border-border bg-card p-6">
                   <div className="flex items-start justify-between gap-3">
-                    <h3 className="font-display text-lg font-semibold">{m.display_name ?? "Member"}</h3>
-                    {m.orbit_segment && <Badge variant="secondary" className="capitalize">{m.orbit_segment}</Badge>}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="font-display text-lg font-semibold">{m.display_name ?? "Member"}</h3>
+                      {m.is_verified && <VerifiedBadge />}
+                    </div>
+                    {m.orbit_segment && (
+                      <Badge variant="secondary">{SEGMENT_META[m.orbit_segment].label}</Badge>
+                    )}
                   </div>
                   {m.headline && <p className="mt-1 text-sm text-foreground/80">{m.headline}</p>}
                   {(m.city || m.country) && (

@@ -142,6 +142,7 @@ export function SiteNav({ tone = "light" }: { tone?: "light" | "dark" }) {
           ) : (
             <Link
               to="/auth"
+              search={{ tab: "signup" }}
               className="hidden sm:inline-flex items-center rounded-full bg-[var(--indigo-night)] px-4 py-2 text-xs font-semibold uppercase tracking-wider text-[var(--parchment)] transition hover:bg-[var(--saffron)] hover:text-[var(--indigo-night)]"
             >
               Join the Orbit
@@ -174,6 +175,7 @@ export function SiteNav({ tone = "light" }: { tone?: "light" | "dark" }) {
             {!user && (
               <Link
                 to="/auth"
+                search={{ tab: "signup" }}
                 onClick={() => setOpen(false)}
                 className="mt-1 rounded-2xl bg-[var(--indigo-night)] px-4 py-3 text-center text-sm font-semibold text-[var(--parchment)]"
               >
