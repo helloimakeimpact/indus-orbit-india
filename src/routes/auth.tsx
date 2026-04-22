@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,18 +7,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import logo from "@/assets/indus-orbit-logo.png";
-import { ArrowLeft, ArrowRight } from "lucide-react";
-import {
-  SEGMENT_LIST,
-  SEGMENT_META,
-  type Segment,
-  type SegmentDetails,
-} from "@/components/auth/segments";
-import { SegmentDetailsForm } from "@/components/auth/SegmentDetailsForm";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -38,6 +28,12 @@ const signInSchema = z.object({
   password: z.string().min(8, "At least 8 characters").max(72),
 });
 
+const signUpSchema = z.object({
+  displayName: z.string().trim().min(1, "Required").max(80),
+  email: z.string().trim().email("Enter a valid email").max(255),
+  password: z.string().min(8, "At least 8 characters").max(72),
+});
+
 function AuthPage() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
@@ -45,13 +41,13 @@ function AuthPage() {
 
   useEffect(() => {
     if (!loading && user) {
-      navigate({ to: "/dashboard" });
+      navigate({ to: "/onboarding" });
     }
   }, [user, loading, navigate]);
 
   return (
     <div className="min-h-screen bg-[var(--indigo-night)] text-[var(--parchment)] flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-2xl">
+      <div className="w-full max-w-md">
         <Link to="/" className="flex items-center justify-center gap-2 mb-8">
           <img src={logo} alt="Indus Orbit" width={36} height={36} className="h-9 w-9" />
           <span className="font-display text-xl font-semibold">Indus Orbit</span>
@@ -65,15 +61,16 @@ function AuthPage() {
             </TabsList>
             <TabsContent value="signin" className="mt-6">
               <SignInForm />
-              <div className="my-6 flex items-center gap-3">
-                <div className="h-px flex-1 bg-border" />
-                <span className="text-xs uppercase tracking-wider text-muted-foreground">or</span>
-                <div className="h-px flex-1 bg-border" />
-              </div>
+              <Divider />
               <GoogleButton />
             </TabsContent>
             <TabsContent value="signup" className="mt-6">
-              <SignUpWizard />
+              <SignUpForm />
+              <Divider />
+              <GoogleButton />
+              <p className="mt-4 text-center text-xs text-muted-foreground">
+                After you sign up, we'll ask a few quick questions to set up your profile.
+              </p>
             </TabsContent>
           </Tabs>
         </div>
@@ -82,6 +79,16 @@ function AuthPage() {
           <Link to="/" className="hover:underline">← Back to home</Link>
         </p>
       </div>
+    </div>
+  );
+}
+
+function Divider() {
+  return (
+    <div className="my-6 flex items-center gap-3">
+      <div className="h-px flex-1 bg-border" />
+      <span className="text-xs uppercase tracking-wider text-muted-foreground">or</span>
+      <div className="h-px flex-1 bg-border" />
     </div>
   );
 }
@@ -143,243 +150,55 @@ function SignInForm() {
   );
 }
 
-const basicsSchema = z.object({
-  displayName: z.string().trim().min(1, "Required").max(80),
-  email: z.string().trim().email("Enter a valid email").max(255),
-  password: z.string().min(8, "At least 8 characters").max(72),
-  city: z.string().trim().max(80).optional().or(z.literal("")),
-  country: z.string().trim().max(80).optional().or(z.literal("")),
-  region: z.string().trim().max(80).optional().or(z.literal("")),
-});
-
-const storySchema = z.object({
-  headline: z.string().trim().max(120).optional().or(z.literal("")),
-  bio: z.string().trim().max(1000).optional().or(z.literal("")),
-  linkedin_url: z.string().trim().url("Must be a URL").max(255).optional().or(z.literal("")),
-  website_url: z.string().trim().url("Must be a URL").max(255).optional().or(z.literal("")),
-});
-
-function SignUpWizard() {
-  const navigate = useNavigate();
-  const [step, setStep] = useState(1);
+function SignUpForm() {
+  const [displayName, setDisplayName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const [segment, setSegment] = useState<Segment | null>(null);
-  const [basics, setBasics] = useState({
-    displayName: "",
-    email: "",
-    password: "",
-    city: "",
-    country: "",
-    region: "",
-  });
-  const [details, setDetails] = useState<SegmentDetails>({});
-  const [story, setStory] = useState({ headline: "", bio: "", linkedin_url: "", website_url: "" });
-
-  const tz = useMemo(() => {
-    try { return Intl.DateTimeFormat().resolvedOptions().timeZone; } catch { return ""; }
-  }, []);
-
-  const totalSteps = 4;
-  const progress = (step / totalSteps) * 100;
-
-  function next() {
-    if (step === 1 && !segment) {
-      toast.error("Pick which part of the orbit you belong to");
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const parsed = signUpSchema.safeParse({ displayName, email, password });
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0].message);
       return;
     }
-    if (step === 2) {
-      const r = basicsSchema.safeParse(basics);
-      if (!r.success) {
-        toast.error(r.error.issues[0].message);
-        return;
-      }
-    }
-    setStep((s) => Math.min(totalSteps, s + 1));
-  }
-
-  async function submit() {
-    const r = storySchema.safeParse(story);
-    if (!r.success) {
-      toast.error(r.error.issues[0].message);
-      return;
-    }
-    if (!segment) return;
     setBusy(true);
-    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-      email: basics.email.trim(),
-      password: basics.password,
+    const { error } = await supabase.auth.signUp({
+      email: parsed.data.email,
+      password: parsed.data.password,
       options: {
-        emailRedirectTo: `${window.location.origin}/dashboard`,
-        data: { display_name: basics.displayName.trim() },
+        emailRedirectTo: `${window.location.origin}/onboarding`,
+        data: { display_name: parsed.data.displayName },
       },
     });
-    if (signUpError) {
-      setBusy(false);
-      toast.error(signUpError.message);
+    setBusy(false);
+    if (error) {
+      toast.error(error.message);
       return;
     }
-    const userId = signUpData.user?.id;
-    if (userId) {
-      // The handle_new_user trigger created a base profile row.
-      // Update it with everything the wizard collected.
-      await supabase
-        .from("profiles")
-        .update({
-          display_name: basics.displayName.trim(),
-          headline: story.headline || null,
-          bio: story.bio || null,
-          city: basics.city || null,
-          country: basics.country || null,
-          linkedin_url: story.linkedin_url || null,
-          website_url: story.website_url || null,
-          orbit_segment: segment,
-          ...({
-            region: basics.region || null,
-            timezone: tz || null,
-            segment_details: details,
-          } as Record<string, unknown>),
-        } as never)
-        .eq("user_id", userId);
-    }
-    setBusy(false);
-    toast.success("Welcome to the Orbit. Check your email if confirmation is required.");
-    navigate({ to: "/dashboard" });
+    toast.success("Account created. Let's set up your profile.");
   }
 
   return (
-    <div>
-      <div className="mb-6 flex items-center justify-between">
-        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-          Step {step} of {totalSteps}
-        </p>
-        <p className="text-xs text-muted-foreground">
-          {step === 1 && "Who you are"}
-          {step === 2 && "Account basics"}
-          {step === 3 && "Tell us more"}
-          {step === 4 && "Your story"}
-        </p>
+    <form onSubmit={onSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="su-name">Your name</Label>
+        <Input id="su-name" value={displayName} onChange={(e) => setDisplayName(e.target.value)} required />
       </div>
-      <Progress value={progress} className="mb-7 h-1.5 bg-foreground/10 [&>div]:bg-[var(--saffron)]" />
-
-      {step === 1 && (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {SEGMENT_LIST.map((s) => {
-            const meta = SEGMENT_META[s];
-            const Icon = meta.icon;
-            const active = segment === s;
-            return (
-              <button
-                key={s}
-                type="button"
-                onClick={() => setSegment(s)}
-                className={`flex flex-col items-start gap-2 rounded-2xl border p-4 text-left transition ${
-                  active
-                    ? "border-[var(--saffron)] bg-[var(--saffron)]/10"
-                    : "border-border hover:border-[var(--saffron)]/60 hover:bg-foreground/5"
-                }`}
-              >
-                <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[var(--indigo-night)] text-[var(--parchment)]">
-                  <Icon className="h-4 w-4" />
-                </span>
-                <span className="font-display text-sm font-semibold">{meta.label}</span>
-                <span className="text-xs leading-snug text-muted-foreground">{meta.blurb}</span>
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      {step === 2 && (
-        <div className="space-y-4">
-          <Field label="Your name" required>
-            <Input value={basics.displayName} onChange={(e) => setBasics({ ...basics, displayName: e.target.value })} />
-          </Field>
-          <Field label="Email" required>
-            <Input type="email" value={basics.email} onChange={(e) => setBasics({ ...basics, email: e.target.value })} />
-          </Field>
-          <Field label="Password" required>
-            <Input type="password" value={basics.password} onChange={(e) => setBasics({ ...basics, password: e.target.value })} />
-            <p className="mt-1 text-xs text-muted-foreground">At least 8 characters.</p>
-          </Field>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="City">
-              <Input value={basics.city} onChange={(e) => setBasics({ ...basics, city: e.target.value })} />
-            </Field>
-            <Field label="Country">
-              <Input value={basics.country} onChange={(e) => setBasics({ ...basics, country: e.target.value })} />
-            </Field>
-          </div>
-          <Field label="Region (optional)">
-            <Input placeholder="e.g. South Asia, North America" value={basics.region} onChange={(e) => setBasics({ ...basics, region: e.target.value })} />
-          </Field>
-          {tz && <p className="text-xs text-muted-foreground">We'll save your timezone as <span className="font-medium">{tz}</span>.</p>}
-        </div>
-      )}
-
-      {step === 3 && segment && (
-        <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            A few questions tuned to <span className="font-semibold text-foreground">{SEGMENT_META[segment].label}</span>. All optional — share what feels right.
-          </p>
-          <SegmentDetailsForm segment={segment} value={details} onChange={setDetails} />
-        </div>
-      )}
-
-      {step === 4 && (
-        <div className="space-y-4">
-          <Field label="Headline">
-            <Input placeholder="Founder · NeoBank for India" value={story.headline} onChange={(e) => setStory({ ...story, headline: e.target.value })} />
-          </Field>
-          <Field label="Short bio">
-            <Textarea rows={4} value={story.bio} onChange={(e) => setStory({ ...story, bio: e.target.value })} />
-          </Field>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="LinkedIn URL">
-              <Input value={story.linkedin_url} onChange={(e) => setStory({ ...story, linkedin_url: e.target.value })} />
-            </Field>
-            <Field label="Website URL">
-              <Input value={story.website_url} onChange={(e) => setStory({ ...story, website_url: e.target.value })} />
-            </Field>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            After you join, an Indus Orbit admin will review your profile. Verified stakeholders get a saffron badge.
-          </p>
-        </div>
-      )}
-
-      <div className="mt-7 flex items-center justify-between">
-        <Button
-          type="button"
-          variant="outline"
-          disabled={step === 1 || busy}
-          onClick={() => setStep((s) => Math.max(1, s - 1))}
-        >
-          <ArrowLeft className="mr-1 h-4 w-4" /> Back
-        </Button>
-        {step < totalSteps ? (
-          <Button type="button" onClick={next} className="bg-[var(--indigo-night)] text-[var(--parchment)] hover:bg-[var(--indigo-night)]/90">
-            Continue <ArrowRight className="ml-1 h-4 w-4" />
-          </Button>
-        ) : (
-          <Button type="button" onClick={submit} disabled={busy} className="bg-[var(--saffron)] text-[var(--indigo-night)] hover:bg-[var(--indigo-night)] hover:text-[var(--parchment)]">
-            {busy ? "Joining…" : "Join the Orbit"}
-          </Button>
-        )}
+      <div className="space-y-2">
+        <Label htmlFor="su-email">Email</Label>
+        <Input id="su-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
       </div>
-    </div>
-  );
-}
-
-function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
-  return (
-    <div className="space-y-2">
-      <Label className="text-sm">
-        {label}
-        {required && <span className="text-destructive"> *</span>}
-      </Label>
-      {children}
-    </div>
+      <div className="space-y-2">
+        <Label htmlFor="su-password">Password</Label>
+        <Input id="su-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+        <p className="text-xs text-muted-foreground">At least 8 characters.</p>
+      </div>
+      <Button type="submit" disabled={busy} className="w-full bg-[var(--saffron)] text-[var(--indigo-night)] hover:bg-[var(--indigo-night)] hover:text-[var(--parchment)]">
+        {busy ? "Creating account…" : "Create account"}
+      </Button>
+    </form>
   );
 }
 
@@ -389,7 +208,7 @@ function GoogleButton() {
     setBusy(true);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/dashboard` },
+      options: { redirectTo: `${window.location.origin}/onboarding` },
     });
     if (error) {
       toast.error(error.message);
