@@ -20,14 +20,12 @@ import { SEGMENT_LIST, SEGMENT_META, type Segment, type SegmentDetails } from "@
 import { SegmentDetailsForm } from "@/components/auth/SegmentDetailsForm";
 import { VerifiedBadge } from "@/components/auth/VerifiedBadge";
 
-export const Route = createFileRoute("/_authenticated/profile")({
-  head: () => ({
-    meta: [{ title: "Your profile — Indus Orbit" }, { name: "robots", content: "noindex" }],
-  }),
+export const Route = createFileRoute("/app/profile")({
+  head: () => ({ meta: [{ title: "Your profile — Indus Orbit" }, { name: "robots", content: "noindex" }] }),
   component: ProfilePage,
 });
 
-const profileSchema = z.object({
+const schema = z.object({
   display_name: z.string().trim().min(1, "Required").max(80),
   headline: z.string().trim().max(120).optional().or(z.literal("")),
   bio: z.string().trim().max(1000).optional().or(z.literal("")),
@@ -40,12 +38,11 @@ const profileSchema = z.object({
   orbit_segment: z.enum(SEGMENT_LIST as unknown as [Segment, ...Segment[]]).nullable(),
   is_public: z.boolean(),
 });
-
-type ProfileForm = z.infer<typeof profileSchema>;
+type Form = z.infer<typeof schema>;
 
 function ProfilePage() {
   const { user } = useAuth();
-  const [form, setForm] = useState<ProfileForm>({
+  const [form, setForm] = useState<Form>({
     display_name: "",
     headline: "",
     bio: "",
@@ -58,8 +55,8 @@ function ProfilePage() {
     orbit_segment: null,
     is_public: false,
   });
-  const [segmentDetails, setSegmentDetails] = useState<SegmentDetails>({});
-  const [isVerified, setIsVerified] = useState(false);
+  const [details, setDetails] = useState<SegmentDetails>({});
+  const [verified, setVerified] = useState(false);
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -86,8 +83,8 @@ function ProfilePage() {
             orbit_segment: (d.orbit_segment as Segment | null) ?? null,
             is_public: Boolean(d.is_public),
           });
-          setSegmentDetails((d.segment_details as SegmentDetails) ?? {});
-          setIsVerified(Boolean(d.is_verified));
+          setDetails((d.segment_details as SegmentDetails) ?? {});
+          setVerified(Boolean(d.is_verified));
         }
         setLoading(false);
       });
@@ -96,11 +93,8 @@ function ProfilePage() {
   async function onSave(e: React.FormEvent) {
     e.preventDefault();
     if (!user) return;
-    const parsed = profileSchema.safeParse(form);
-    if (!parsed.success) {
-      toast.error(parsed.error.issues[0].message);
-      return;
-    }
+    const parsed = schema.safeParse(form);
+    if (!parsed.success) { toast.error(parsed.error.issues[0].message); return; }
     setBusy(true);
     const { error } = await supabase
       .from("profiles")
@@ -114,8 +108,7 @@ function ProfilePage() {
         website_url: parsed.data.website_url || null,
         orbit_segment: parsed.data.orbit_segment,
         is_public: parsed.data.is_public,
-        // new columns — types file lags the migration
-        ...({ region: parsed.data.region || null, timezone: parsed.data.timezone || null, segment_details: segmentDetails } as Record<string, unknown>),
+        ...({ region: parsed.data.region || null, timezone: parsed.data.timezone || null, segment_details: details } as Record<string, unknown>),
       } as never)
       .eq("user_id", user.id);
     setBusy(false);
@@ -123,18 +116,16 @@ function ProfilePage() {
     else toast.success("Profile saved");
   }
 
-  if (loading) {
-    return <div className="mx-auto max-w-3xl px-6 py-12 text-muted-foreground">Loading…</div>;
-  }
+  if (loading) return <p className="text-muted-foreground">Loading…</p>;
 
   return (
-    <div className="mx-auto max-w-3xl px-6 py-12">
+    <div className="mx-auto max-w-3xl">
       <div className="flex items-center gap-3">
         <h1 className="font-display text-3xl font-medium">Your profile</h1>
-        {isVerified && <VerifiedBadge size="md" />}
+        {verified && <VerifiedBadge size="md" />}
       </div>
       <p className="mt-2 text-sm text-muted-foreground">
-        Tell the Orbit who you are. Your profile only appears in the public directory if you toggle it on. Verification is granted by Indus Orbit admins.
+        Tell the Orbit who you are. Toggle "Public" to appear in the directory. Verification is granted by admins.
       </p>
 
       <form onSubmit={onSave} className="mt-8 space-y-6 rounded-3xl border border-border bg-card p-6 md:p-8">
@@ -143,49 +134,31 @@ function ProfilePage() {
             <Input value={form.display_name} onChange={(e) => setForm({ ...form, display_name: e.target.value })} />
           </Field>
           <Field label="Orbit segment">
-            <Select
-              value={form.orbit_segment ?? ""}
-              onValueChange={(v) => setForm({ ...form, orbit_segment: (v || null) as Segment | null })}
-            >
+            <Select value={form.orbit_segment ?? ""} onValueChange={(v) => setForm({ ...form, orbit_segment: (v || null) as Segment | null })}>
               <SelectTrigger><SelectValue placeholder="Choose…" /></SelectTrigger>
               <SelectContent>
-                {SEGMENT_LIST.map((s) => (
-                  <SelectItem key={s} value={s}>{SEGMENT_META[s].label}</SelectItem>
-                ))}
+                {SEGMENT_LIST.map((s) => (<SelectItem key={s} value={s}>{SEGMENT_META[s].label}</SelectItem>))}
               </SelectContent>
             </Select>
           </Field>
         </div>
         <Field label="Headline">
-          <Input placeholder="Founder · NeoBank for India"
-            value={form.headline} onChange={(e) => setForm({ ...form, headline: e.target.value })} />
+          <Input placeholder="Founder · NeoBank for India" value={form.headline} onChange={(e) => setForm({ ...form, headline: e.target.value })} />
         </Field>
         <Field label="Bio">
           <Textarea rows={4} value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} />
         </Field>
         <div className="grid gap-4 md:grid-cols-2">
-          <Field label="City">
-            <Input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
-          </Field>
-          <Field label="Country">
-            <Input value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })} />
-          </Field>
+          <Field label="City"><Input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} /></Field>
+          <Field label="Country"><Input value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })} /></Field>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
-          <Field label="Region">
-            <Input placeholder="e.g. South Asia" value={form.region} onChange={(e) => setForm({ ...form, region: e.target.value })} />
-          </Field>
-          <Field label="Timezone">
-            <Input placeholder="e.g. Asia/Kolkata" value={form.timezone} onChange={(e) => setForm({ ...form, timezone: e.target.value })} />
-          </Field>
+          <Field label="Region"><Input value={form.region} onChange={(e) => setForm({ ...form, region: e.target.value })} /></Field>
+          <Field label="Timezone"><Input value={form.timezone} onChange={(e) => setForm({ ...form, timezone: e.target.value })} /></Field>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
-          <Field label="LinkedIn URL">
-            <Input value={form.linkedin_url} onChange={(e) => setForm({ ...form, linkedin_url: e.target.value })} />
-          </Field>
-          <Field label="Website URL">
-            <Input value={form.website_url} onChange={(e) => setForm({ ...form, website_url: e.target.value })} />
-          </Field>
+          <Field label="LinkedIn URL"><Input value={form.linkedin_url} onChange={(e) => setForm({ ...form, linkedin_url: e.target.value })} /></Field>
+          <Field label="Website URL"><Input value={form.website_url} onChange={(e) => setForm({ ...form, website_url: e.target.value })} /></Field>
         </div>
 
         {form.orbit_segment && (
@@ -194,15 +167,9 @@ function ProfilePage() {
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--saffron)]">
                 {SEGMENT_META[form.orbit_segment].label} details
               </p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Helps the Orbit understand how to connect you with the right people.
-              </p>
+              <p className="mt-1 text-xs text-muted-foreground">Helps the Orbit connect you with the right people.</p>
             </div>
-            <SegmentDetailsForm
-              segment={form.orbit_segment}
-              value={segmentDetails}
-              onChange={setSegmentDetails}
-            />
+            <SegmentDetailsForm segment={form.orbit_segment} value={details} onChange={setDetails} />
           </div>
         )}
 
