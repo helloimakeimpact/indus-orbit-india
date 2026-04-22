@@ -7,7 +7,7 @@ import { SEGMENT_META, type Segment } from "@/components/auth/segments";
 import { VerifiedBadge } from "@/components/auth/VerifiedBadge";
 import { SegmentHomeModules } from "@/components/app/SegmentHomeModules";
 
-export const Route = createFileRoute("/_app/")({
+export const Route = createFileRoute("/app/")({
   head: () => ({
     meta: [{ title: "Home — Indus Orbit" }, { name: "robots", content: "noindex" }],
   }),

@@ -23,7 +23,7 @@ import {
 import { SEGMENT_LIST, SEGMENT_META, type Segment } from "@/components/auth/segments";
 import { VerifiedBadge } from "@/components/auth/VerifiedBadge";
 
-export const Route = createFileRoute("/_app/admin/members")({
+export const Route = createFileRoute("/app/admin/members")({
   head: () => ({ meta: [{ title: "Members admin — Indus Orbit" }, { name: "robots", content: "noindex" }] }),
   component: AdminMembers,
 });

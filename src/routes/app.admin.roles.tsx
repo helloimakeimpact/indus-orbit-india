@@ -17,7 +17,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-export const Route = createFileRoute("/_app/admin/roles")({
+export const Route = createFileRoute("/app/admin/roles")({
   head: () => ({ meta: [{ title: "Roles admin — Indus Orbit" }, { name: "robots", content: "noindex" }] }),
   component: AdminRoles,
 });

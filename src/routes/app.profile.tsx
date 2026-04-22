@@ -20,7 +20,7 @@ import { SEGMENT_LIST, SEGMENT_META, type Segment, type SegmentDetails } from "@
 import { SegmentDetailsForm } from "@/components/auth/SegmentDetailsForm";
 import { VerifiedBadge } from "@/components/auth/VerifiedBadge";
 
-export const Route = createFileRoute("/_app/profile")({
+export const Route = createFileRoute("/app/profile")({
   head: () => ({ meta: [{ title: "Your profile — Indus Orbit" }, { name: "robots", content: "noindex" }] }),
   component: ProfilePage,
 });

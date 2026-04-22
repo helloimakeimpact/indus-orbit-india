@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { SEGMENT_LIST, SEGMENT_META, type Segment } from "@/components/auth/segments";
 import { VerifiedBadge } from "@/components/auth/VerifiedBadge";
 
-export const Route = createFileRoute("/_app/directory")({
+export const Route = createFileRoute("/app/directory")({
   head: () => ({ meta: [{ title: "Directory — Indus Orbit" }, { name: "robots", content: "noindex" }] }),
   validateSearch: (s: Record<string, unknown>) => ({
     segment: typeof s.segment === "string" && (SEGMENT_LIST as string[]).includes(s.segment) ? (s.segment as Segment) : undefined,
