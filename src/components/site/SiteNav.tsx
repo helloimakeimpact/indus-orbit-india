@@ -72,14 +72,14 @@ function UserMenu() {
           {user.email}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => navigate({ to: "/dashboard" })}>
-          <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard
+        <DropdownMenuItem onClick={() => navigate({ to: "/app" })}>
+          <LayoutDashboard className="mr-2 h-4 w-4" /> Workspace
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => navigate({ to: "/profile" })}>
+        <DropdownMenuItem onClick={() => navigate({ to: "/app/profile" })}>
           <UserIcon className="mr-2 h-4 w-4" /> Profile
         </DropdownMenuItem>
         {isAdmin && (
-          <DropdownMenuItem onClick={() => navigate({ to: "/admin" })}>
+          <DropdownMenuItem onClick={() => navigate({ to: "/app/admin/members" })}>
             <ShieldCheck className="mr-2 h-4 w-4" /> Admin
           </DropdownMenuItem>
         )}
