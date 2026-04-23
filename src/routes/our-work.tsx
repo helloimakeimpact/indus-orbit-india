@@ -71,6 +71,50 @@ const items = [
   },
 ];
 
+const featured = [
+  {
+    name: "JRI.ai — Just Resolve It",
+    tag: "Venture",
+    tagline: "AI-native business setup, operations & compliance for India.",
+    body: "India's growth is bottlenecked by heavy compliance, the absence of cost-effective operations tooling, and the time and money lost to unresolved disputes. JRI.ai brings business setup, day-to-day operations, compliance and dispute resolution into a single AI-assisted platform — so founders, SMBs and citizens can get on with building, not paperwork. A Connection-pillar venture: lowering the cost of trust and operating in India.",
+    href: "https://jri.ai/",
+    gradient: "from-[var(--monsoon)]/80 via-[var(--indigo-night)]/90 to-[var(--saffron)]/60",
+  },
+  {
+    name: "India Muse",
+    tag: "Venture",
+    tagline: "Modern Indian luxury, staged for the world.",
+    body: "An editorial house carrying India's craft, couture and celebrations to a global audience — based in Paris, working across campaigns, runways and milestones with a painterly soul. A Society-pillar venture: putting India on the stage instead of in the backdrop.",
+    href: "https://indiamuse.com/",
+    gradient: "from-[var(--gold)]/80 via-[var(--saffron)]/70 to-[var(--indigo-night)]/90",
+  },
+];
+
+function StatusPill({
+  tone,
+  children,
+}: {
+  tone: "external" | "orbit" | "soon";
+  children: React.ReactNode;
+}) {
+  const styles =
+    tone === "external"
+      ? "bg-[var(--saffron)] text-[var(--indigo-night)]"
+      : tone === "orbit"
+        ? "bg-[var(--indigo-night)] text-[var(--parchment)]"
+        : "bg-[var(--gold)] text-[var(--indigo-night)]";
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider",
+        styles,
+      )}
+    >
+      {children}
+    </span>
+  );
+}
+
 function WorkPage() {
   return (
     <SiteShell navTone="dark">
