@@ -141,7 +141,7 @@ function WorkPage() {
 
       <section className="px-6 py-20">
         <div className="mx-auto max-w-6xl">
-          <div className="grid gap-8 md:grid-cols-2">
+          <div className="grid gap-7 md:grid-cols-2 lg:grid-cols-3">
             {featured.map((f) => (
               <a
                 key={f.name}
@@ -150,35 +150,28 @@ function WorkPage() {
                 rel="noopener noreferrer"
                 className="group flex flex-col overflow-hidden rounded-3xl border border-border bg-card transition hover:-translate-y-1 hover:shadow-xl"
               >
-                <div className={cn("relative aspect-[16/9] w-full bg-gradient-to-br", f.gradient)}>
+                <div className={cn("relative aspect-[4/3] w-full bg-gradient-to-br", f.gradient)}>
                   <div className="absolute right-4 top-4">
                     <StatusPill tone="external">External ↗</StatusPill>
                   </div>
                 </div>
-                <div className="flex flex-1 flex-col p-7 md:p-8">
+                <div className="flex flex-1 flex-col p-6">
                   <span className="inline-flex w-fit rounded-full bg-foreground/5 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-foreground/60">
                     {f.tag}
                   </span>
-                  <h3 className="mt-4 font-display text-3xl font-medium leading-tight">
+                  <h3 className="mt-4 font-display text-2xl font-medium leading-tight">
                     {f.name}
                   </h3>
                   <p className="mt-2 text-sm font-medium text-[var(--indigo-night)]/80">
                     {f.tagline}
                   </p>
-                  <p className="mt-4 text-sm leading-relaxed text-foreground/70">{f.body}</p>
+                  <p className="mt-3 text-sm text-foreground/70">{f.body}</p>
                   <p className="mt-6 text-xs uppercase tracking-wider text-foreground/50 transition group-hover:text-[var(--indigo-night)]">
                     Visit {new URL(f.href).hostname.replace(/^www\./, "")} →
                   </p>
                 </div>
               </a>
             ))}
-          </div>
-
-          <h2 className="mt-20 font-display text-2xl font-medium md:text-3xl">More from the orbit</h2>
-          <p className="mt-2 max-w-2xl text-sm text-foreground/60">
-            Initiatives building inside Indus Orbit — all rolling out soon.
-          </p>
-          <div className="mt-8 grid gap-7 md:grid-cols-2 lg:grid-cols-3">
             {items.map((it) => (
               <article
                 key={it.title}
