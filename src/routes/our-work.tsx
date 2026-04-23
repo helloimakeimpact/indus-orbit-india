@@ -71,6 +71,50 @@ const items = [
   },
 ];
 
+const featured = [
+  {
+    name: "JRI.ai — Just Resolve It",
+    tag: "Venture",
+    tagline: "AI-native business setup, operations & compliance for India.",
+    body: "India's growth is bottlenecked by heavy compliance, the absence of cost-effective operations tooling, and the time and money lost to unresolved disputes. JRI.ai brings business setup, day-to-day operations, compliance and dispute resolution into a single AI-assisted platform — so founders, SMBs and citizens can get on with building, not paperwork. A Connection-pillar venture: lowering the cost of trust and operating in India.",
+    href: "https://jri.ai/",
+    gradient: "from-[var(--monsoon)]/80 via-[var(--indigo-night)]/90 to-[var(--saffron)]/60",
+  },
+  {
+    name: "India Muse",
+    tag: "Venture",
+    tagline: "Modern Indian luxury, staged for the world.",
+    body: "An editorial house carrying India's craft, couture and celebrations to a global audience — based in Paris, working across campaigns, runways and milestones with a painterly soul. A Society-pillar venture: putting India on the stage instead of in the backdrop.",
+    href: "https://indiamuse.com/",
+    gradient: "from-[var(--gold)]/80 via-[var(--saffron)]/70 to-[var(--indigo-night)]/90",
+  },
+];
+
+function StatusPill({
+  tone,
+  children,
+}: {
+  tone: "external" | "orbit" | "soon";
+  children: React.ReactNode;
+}) {
+  const styles =
+    tone === "external"
+      ? "bg-[var(--saffron)] text-[var(--indigo-night)]"
+      : tone === "orbit"
+        ? "bg-[var(--indigo-night)] text-[var(--parchment)]"
+        : "bg-[var(--gold)] text-[var(--indigo-night)]";
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider",
+        styles,
+      )}
+    >
+      {children}
+    </span>
+  );
+}
+
 function WorkPage() {
   return (
     <SiteShell navTone="dark">
@@ -97,13 +141,55 @@ function WorkPage() {
 
       <section className="px-6 py-20">
         <div className="mx-auto max-w-6xl">
-          <div className="grid gap-7 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-8 md:grid-cols-2">
+            {featured.map((f) => (
+              <a
+                key={f.name}
+                href={f.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex flex-col overflow-hidden rounded-3xl border border-border bg-card transition hover:-translate-y-1 hover:shadow-xl"
+              >
+                <div className={cn("relative aspect-[16/9] w-full bg-gradient-to-br", f.gradient)}>
+                  <div className="absolute right-4 top-4">
+                    <StatusPill tone="external">External ↗</StatusPill>
+                  </div>
+                </div>
+                <div className="flex flex-1 flex-col p-7 md:p-8">
+                  <span className="inline-flex w-fit rounded-full bg-foreground/5 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-foreground/60">
+                    {f.tag}
+                  </span>
+                  <h3 className="mt-4 font-display text-3xl font-medium leading-tight">
+                    {f.name}
+                  </h3>
+                  <p className="mt-2 text-sm font-medium text-[var(--indigo-night)]/80">
+                    {f.tagline}
+                  </p>
+                  <p className="mt-4 text-sm leading-relaxed text-foreground/70">{f.body}</p>
+                  <p className="mt-6 text-xs uppercase tracking-wider text-foreground/50 transition group-hover:text-[var(--indigo-night)]">
+                    Visit {new URL(f.href).hostname.replace(/^www\./, "")} →
+                  </p>
+                </div>
+              </a>
+            ))}
+          </div>
+
+          <h2 className="mt-20 font-display text-2xl font-medium md:text-3xl">More from the orbit</h2>
+          <p className="mt-2 max-w-2xl text-sm text-foreground/60">
+            Initiatives building inside Indus Orbit — all rolling out soon.
+          </p>
+          <div className="mt-8 grid gap-7 md:grid-cols-2 lg:grid-cols-3">
             {items.map((it) => (
               <article
                 key={it.title}
                 className="group flex flex-col overflow-hidden rounded-3xl border border-border bg-card transition hover:-translate-y-1 hover:shadow-xl"
               >
-                <div className={cn("aspect-[4/3] w-full bg-gradient-to-br", it.gradient)} />
+                <div className={cn("relative aspect-[4/3] w-full bg-gradient-to-br", it.gradient)}>
+                  <div className="absolute right-3 top-3 flex flex-wrap justify-end gap-1.5">
+                    <StatusPill tone="orbit">On Indus Orbit</StatusPill>
+                    <StatusPill tone="soon">Coming soon</StatusPill>
+                  </div>
+                </div>
                 <div className="flex flex-1 flex-col p-6">
                   <span className="inline-flex w-fit rounded-full bg-foreground/5 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-foreground/60">
                     {it.tag}
