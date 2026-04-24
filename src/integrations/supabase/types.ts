@@ -14,6 +14,174 @@ export type Database = {
   }
   public: {
     Tables: {
+      asks_offers: {
+        Row: {
+          author_id: string
+          body: string
+          created_at: string
+          expires_at: string
+          id: string
+          kind: string
+          region: string | null
+          sector: string | null
+          segment_target: Database["public"]["Enums"]["orbit_segment"][]
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          body: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          kind: string
+          region?: string | null
+          sector?: string | null
+          segment_target?: Database["public"]["Enums"]["orbit_segment"][]
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          body?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          kind?: string
+          region?: string | null
+          sector?: string | null
+          segment_target?: Database["public"]["Enums"]["orbit_segment"][]
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      audit_log: {
+        Row: {
+          action: string
+          actor_id: string
+          created_at: string
+          id: string
+          metadata: Json
+          reason: string | null
+          target_id: string | null
+          target_type: string
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          reason?: string | null
+          target_id?: string | null
+          target_type: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          reason?: string | null
+          target_id?: string | null
+          target_type?: string
+        }
+        Relationships: []
+      }
+      connection_requests: {
+        Row: {
+          created_at: string
+          id: string
+          note: string
+          reason: string
+          recipient_id: string
+          responded_at: string | null
+          sender_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          note: string
+          reason: string
+          recipient_id: string
+          responded_at?: string | null
+          sender_id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          note?: string
+          reason?: string
+          recipient_id?: string
+          responded_at?: string | null
+          sender_id?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      endorsements: {
+        Row: {
+          created_at: string
+          endorsee_id: string
+          endorser_id: string
+          id: string
+          note: string | null
+          segment: Database["public"]["Enums"]["orbit_segment"]
+        }
+        Insert: {
+          created_at?: string
+          endorsee_id: string
+          endorser_id: string
+          id?: string
+          note?: string | null
+          segment: Database["public"]["Enums"]["orbit_segment"]
+        }
+        Update: {
+          created_at?: string
+          endorsee_id?: string
+          endorser_id?: string
+          id?: string
+          note?: string | null
+          segment?: Database["public"]["Enums"]["orbit_segment"]
+        }
+        Relationships: []
+      }
+      member_suspensions: {
+        Row: {
+          actor_id: string
+          id: string
+          lifted_at: string | null
+          lifted_by: string | null
+          reason: string
+          suspended_at: string
+          user_id: string
+        }
+        Insert: {
+          actor_id: string
+          id?: string
+          lifted_at?: string | null
+          lifted_by?: string | null
+          reason: string
+          suspended_at?: string
+          user_id: string
+        }
+        Update: {
+          actor_id?: string
+          id?: string
+          lifted_at?: string | null
+          lifted_by?: string | null
+          reason?: string
+          suspended_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -83,6 +251,45 @@ export type Database = {
         }
         Relationships: []
       }
+      reports: {
+        Row: {
+          created_at: string
+          id: string
+          reason: string
+          reporter_id: string
+          resolution_note: string | null
+          resolved_at: string | null
+          resolver_id: string | null
+          status: string
+          target_id: string
+          target_type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reason: string
+          reporter_id: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolver_id?: string | null
+          status?: string
+          target_id: string
+          target_type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reason?: string
+          reporter_id?: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolver_id?: string | null
+          status?: string
+          target_id?: string
+          target_type?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -104,6 +311,33 @@ export type Database = {
         }
         Relationships: []
       }
+      verification_decisions: {
+        Row: {
+          actor_id: string
+          created_at: string
+          decision: string
+          id: string
+          profile_id: string
+          reason: string | null
+        }
+        Insert: {
+          actor_id: string
+          created_at?: string
+          decision: string
+          id?: string
+          profile_id: string
+          reason?: string | null
+        }
+        Update: {
+          actor_id?: string
+          created_at?: string
+          decision?: string
+          id?: string
+          profile_id?: string
+          reason?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -116,6 +350,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_suspended: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "member"
