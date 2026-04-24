@@ -38,7 +38,12 @@ function NavList({ pathname, onNavigate }: { pathname: string; onNavigate?: () =
             Admin
           </p>
           {ADMIN_ITEMS.map((item) => (
-            <NavRow key={item.to} item={item} active={pathname.startsWith(item.to)} onClick={onNavigate} />
+            <NavRow
+              key={item.to}
+              item={item}
+              active={item.to === "/app/admin" ? pathname === "/app/admin" : pathname.startsWith(item.to)}
+              onClick={onNavigate}
+            />
           ))}
         </>
       )}
