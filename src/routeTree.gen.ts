@@ -22,6 +22,8 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppProfileRouteImport } from './routes/app.profile'
 import { Route as AppDirectoryRouteImport } from './routes/app.directory'
+import { Route as AppConnectRouteImport } from './routes/app.connect'
+import { Route as AppBoardRouteImport } from './routes/app.board'
 import { Route as AppAdminIndexRouteImport } from './routes/app.admin.index'
 import { Route as AppAdminRolesRouteImport } from './routes/app.admin.roles'
 import { Route as AppAdminReportsRouteImport } from './routes/app.admin.reports'
@@ -94,6 +96,16 @@ const AppDirectoryRoute = AppDirectoryRouteImport.update({
   path: '/directory',
   getParentRoute: () => AppRoute,
 } as any)
+const AppConnectRoute = AppConnectRouteImport.update({
+  id: '/connect',
+  path: '/connect',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppBoardRoute = AppBoardRouteImport.update({
+  id: '/board',
+  path: '/board',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAdminIndexRoute = AppAdminIndexRouteImport.update({
   id: '/admin/',
   path: '/admin/',
@@ -136,6 +148,8 @@ export interface FileRoutesByFullPath {
   '/our-work': typeof OurWorkRoute
   '/reset-password': typeof ResetPasswordRoute
   '/writing': typeof WritingRoute
+  '/app/board': typeof AppBoardRoute
+  '/app/connect': typeof AppConnectRoute
   '/app/directory': typeof AppDirectoryRoute
   '/app/profile': typeof AppProfileRoute
   '/app/': typeof AppIndexRoute
@@ -156,6 +170,8 @@ export interface FileRoutesByTo {
   '/our-work': typeof OurWorkRoute
   '/reset-password': typeof ResetPasswordRoute
   '/writing': typeof WritingRoute
+  '/app/board': typeof AppBoardRoute
+  '/app/connect': typeof AppConnectRoute
   '/app/directory': typeof AppDirectoryRoute
   '/app/profile': typeof AppProfileRoute
   '/app': typeof AppIndexRoute
@@ -178,6 +194,8 @@ export interface FileRoutesById {
   '/our-work': typeof OurWorkRoute
   '/reset-password': typeof ResetPasswordRoute
   '/writing': typeof WritingRoute
+  '/app/board': typeof AppBoardRoute
+  '/app/connect': typeof AppConnectRoute
   '/app/directory': typeof AppDirectoryRoute
   '/app/profile': typeof AppProfileRoute
   '/app/': typeof AppIndexRoute
@@ -201,6 +219,8 @@ export interface FileRouteTypes {
     | '/our-work'
     | '/reset-password'
     | '/writing'
+    | '/app/board'
+    | '/app/connect'
     | '/app/directory'
     | '/app/profile'
     | '/app/'
@@ -221,6 +241,8 @@ export interface FileRouteTypes {
     | '/our-work'
     | '/reset-password'
     | '/writing'
+    | '/app/board'
+    | '/app/connect'
     | '/app/directory'
     | '/app/profile'
     | '/app'
@@ -242,6 +264,8 @@ export interface FileRouteTypes {
     | '/our-work'
     | '/reset-password'
     | '/writing'
+    | '/app/board'
+    | '/app/connect'
     | '/app/directory'
     | '/app/profile'
     | '/app/'
@@ -359,6 +383,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDirectoryRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/connect': {
+      id: '/app/connect'
+      path: '/connect'
+      fullPath: '/app/connect'
+      preLoaderRoute: typeof AppConnectRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/board': {
+      id: '/app/board'
+      path: '/board'
+      fullPath: '/app/board'
+      preLoaderRoute: typeof AppBoardRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/admin/': {
       id: '/app/admin/'
       path: '/admin'
@@ -405,6 +443,8 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppRouteChildren {
+  AppBoardRoute: typeof AppBoardRoute
+  AppConnectRoute: typeof AppConnectRoute
   AppDirectoryRoute: typeof AppDirectoryRoute
   AppProfileRoute: typeof AppProfileRoute
   AppIndexRoute: typeof AppIndexRoute
@@ -417,6 +457,8 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppBoardRoute: AppBoardRoute,
+  AppConnectRoute: AppConnectRoute,
   AppDirectoryRoute: AppDirectoryRoute,
   AppProfileRoute: AppProfileRoute,
   AppIndexRoute: AppIndexRoute,

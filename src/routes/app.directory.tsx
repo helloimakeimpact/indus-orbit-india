@@ -1,7 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { Flag, Send, ThumbsUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
+import { ReachOutDialog } from "@/components/connect/ReachOutDialog";
+import { EndorseDialog } from "@/components/connect/EndorseDialog";
+import { ReportDialog } from "@/components/connect/ReportDialog";
 import { SEGMENT_LIST, SEGMENT_META, type Segment } from "@/components/auth/segments";
 import { VerifiedBadge } from "@/components/auth/VerifiedBadge";
 
@@ -18,6 +24,7 @@ type Filter = (typeof FILTERS)[number];
 
 type Profile = {
   id: string;
+  user_id: string;
   display_name: string | null;
   headline: string | null;
   city: string | null;
@@ -30,9 +37,15 @@ type Profile = {
 
 function DirectoryPage() {
   const search = Route.useSearch();
+  const { user } = useAuth();
+  const [meVerified, setMeVerified] = useState(false);
   const [filter, setFilter] = useState<Filter>(search.segment ?? "all");
   const [members, setMembers] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reachOut, setReachOut] = useState<Profile | null>(null);
+  const [endorse, setEndorse] = useState<Profile | null>(null);
+  const [report, setReport] = useState<Profile | null>(null);
+  const [endorseCounts, setEndorseCounts] = useState<Record<string, number>>({});
 
   useEffect(() => {
     if (search.segment) setFilter(search.segment);
@@ -42,16 +55,32 @@ function DirectoryPage() {
     setLoading(true);
     let q = supabase
       .from("profiles")
-      .select("id, display_name, headline, city, country, orbit_segment, linkedin_url, website_url, is_verified")
+      .select("id, user_id, display_name, headline, city, country, orbit_segment, linkedin_url, website_url, is_verified")
       .eq("is_public", true);
     if (filter !== "all") q = q.eq("orbit_segment", filter as never);
     q.order("is_verified", { ascending: false })
       .order("created_at", { ascending: false })
-      .then(({ data }) => {
-        setMembers((data as unknown as Profile[] | null) ?? []);
+      .then(async ({ data }) => {
+        const list = (data as unknown as Profile[] | null) ?? [];
+        setMembers(list);
         setLoading(false);
+        const ids = list.map((m) => m.user_id);
+        if (ids.length) {
+          const { data: ends } = await supabase.from("endorsements").select("endorsee_id").in("endorsee_id", ids);
+          const counts: Record<string, number> = {};
+          for (const e of (ends as { endorsee_id: string }[] | null) ?? []) {
+            counts[e.endorsee_id] = (counts[e.endorsee_id] ?? 0) + 1;
+          }
+          setEndorseCounts(counts);
+        }
       });
   }, [filter]);
+
+  useEffect(() => {
+    if (!user) { setMeVerified(false); return; }
+    supabase.from("profiles").select("is_verified").eq("user_id", user.id).maybeSingle()
+      .then(({ data }) => setMeVerified(Boolean(data?.is_verified)));
+  }, [user]);
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -102,9 +131,62 @@ function DirectoryPage() {
                 {m.linkedin_url && <a href={m.linkedin_url} target="_blank" rel="noreferrer" className="text-[var(--indigo-night)] hover:underline">LinkedIn</a>}
                 {m.website_url && <a href={m.website_url} target="_blank" rel="noreferrer" className="text-[var(--indigo-night)] hover:underline">Website</a>}
               </div>
+              {(endorseCounts[m.user_id] ?? 0) > 0 && (
+                <p className="mt-3 text-xs text-muted-foreground">
+                  ★ {endorseCounts[m.user_id]} endorsement{endorseCounts[m.user_id] === 1 ? "" : "s"}
+                </p>
+              )}
+              {user && user.id !== m.user_id && (
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <Button size="sm" onClick={() => setReachOut(m)}>
+                    <Send className="mr-1 h-3.5 w-3.5" /> Reach out
+                  </Button>
+                  {meVerified && (
+                    <Button size="sm" variant="outline" onClick={() => setEndorse(m)}>
+                      <ThumbsUp className="mr-1 h-3.5 w-3.5" /> Endorse
+                    </Button>
+                  )}
+                  <button
+                    onClick={() => setReport(m)}
+                    className="ml-auto text-muted-foreground hover:text-foreground"
+                    aria-label="Report"
+                  >
+                    <Flag className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
             </article>
           ))}
         </div>
+      )}
+
+      {reachOut && (
+        <ReachOutDialog
+          open={!!reachOut}
+          onOpenChange={(o) => !o && setReachOut(null)}
+          recipientId={reachOut.user_id}
+          recipientName={reachOut.display_name ?? "Member"}
+          senderId={user?.id ?? null}
+        />
+      )}
+      {endorse && (
+        <EndorseDialog
+          open={!!endorse}
+          onOpenChange={(o) => !o && setEndorse(null)}
+          endorseeId={endorse.user_id}
+          endorseeName={endorse.display_name ?? "Member"}
+          endorserId={user?.id ?? null}
+          defaultSegment={endorse.orbit_segment}
+        />
+      )}
+      {report && (
+        <ReportDialog
+          open={!!report}
+          onOpenChange={(o) => !o && setReport(null)}
+          targetType="profile"
+          targetId={report.id}
+          reporterId={user?.id ?? null}
+        />
       )}
     </div>
   );
