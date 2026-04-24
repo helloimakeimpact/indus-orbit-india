@@ -22,8 +22,12 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppProfileRouteImport } from './routes/app.profile'
 import { Route as AppDirectoryRouteImport } from './routes/app.directory'
+import { Route as AppAdminIndexRouteImport } from './routes/app.admin.index'
 import { Route as AppAdminRolesRouteImport } from './routes/app.admin.roles'
+import { Route as AppAdminReportsRouteImport } from './routes/app.admin.reports'
+import { Route as AppAdminQueueRouteImport } from './routes/app.admin.queue'
 import { Route as AppAdminMembersRouteImport } from './routes/app.admin.members'
+import { Route as AppAdminAuditRouteImport } from './routes/app.admin.audit'
 
 const WritingRoute = WritingRouteImport.update({
   id: '/writing',
@@ -90,14 +94,34 @@ const AppDirectoryRoute = AppDirectoryRouteImport.update({
   path: '/directory',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAdminIndexRoute = AppAdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAdminRolesRoute = AppAdminRolesRouteImport.update({
   id: '/admin/roles',
   path: '/admin/roles',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAdminReportsRoute = AppAdminReportsRouteImport.update({
+  id: '/admin/reports',
+  path: '/admin/reports',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdminQueueRoute = AppAdminQueueRouteImport.update({
+  id: '/admin/queue',
+  path: '/admin/queue',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAdminMembersRoute = AppAdminMembersRouteImport.update({
   id: '/admin/members',
   path: '/admin/members',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdminAuditRoute = AppAdminAuditRouteImport.update({
+  id: '/admin/audit',
+  path: '/admin/audit',
   getParentRoute: () => AppRoute,
 } as any)
 
@@ -115,8 +139,12 @@ export interface FileRoutesByFullPath {
   '/app/directory': typeof AppDirectoryRoute
   '/app/profile': typeof AppProfileRoute
   '/app/': typeof AppIndexRoute
+  '/app/admin/audit': typeof AppAdminAuditRoute
   '/app/admin/members': typeof AppAdminMembersRoute
+  '/app/admin/queue': typeof AppAdminQueueRoute
+  '/app/admin/reports': typeof AppAdminReportsRoute
   '/app/admin/roles': typeof AppAdminRolesRoute
+  '/app/admin/': typeof AppAdminIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -131,8 +159,12 @@ export interface FileRoutesByTo {
   '/app/directory': typeof AppDirectoryRoute
   '/app/profile': typeof AppProfileRoute
   '/app': typeof AppIndexRoute
+  '/app/admin/audit': typeof AppAdminAuditRoute
   '/app/admin/members': typeof AppAdminMembersRoute
+  '/app/admin/queue': typeof AppAdminQueueRoute
+  '/app/admin/reports': typeof AppAdminReportsRoute
   '/app/admin/roles': typeof AppAdminRolesRoute
+  '/app/admin': typeof AppAdminIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -149,8 +181,12 @@ export interface FileRoutesById {
   '/app/directory': typeof AppDirectoryRoute
   '/app/profile': typeof AppProfileRoute
   '/app/': typeof AppIndexRoute
+  '/app/admin/audit': typeof AppAdminAuditRoute
   '/app/admin/members': typeof AppAdminMembersRoute
+  '/app/admin/queue': typeof AppAdminQueueRoute
+  '/app/admin/reports': typeof AppAdminReportsRoute
   '/app/admin/roles': typeof AppAdminRolesRoute
+  '/app/admin/': typeof AppAdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -168,8 +204,12 @@ export interface FileRouteTypes {
     | '/app/directory'
     | '/app/profile'
     | '/app/'
+    | '/app/admin/audit'
     | '/app/admin/members'
+    | '/app/admin/queue'
+    | '/app/admin/reports'
     | '/app/admin/roles'
+    | '/app/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -184,8 +224,12 @@ export interface FileRouteTypes {
     | '/app/directory'
     | '/app/profile'
     | '/app'
+    | '/app/admin/audit'
     | '/app/admin/members'
+    | '/app/admin/queue'
+    | '/app/admin/reports'
     | '/app/admin/roles'
+    | '/app/admin'
   id:
     | '__root__'
     | '/'
@@ -201,8 +245,12 @@ export interface FileRouteTypes {
     | '/app/directory'
     | '/app/profile'
     | '/app/'
+    | '/app/admin/audit'
     | '/app/admin/members'
+    | '/app/admin/queue'
+    | '/app/admin/reports'
     | '/app/admin/roles'
+    | '/app/admin/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -311,11 +359,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDirectoryRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/admin/': {
+      id: '/app/admin/'
+      path: '/admin'
+      fullPath: '/app/admin/'
+      preLoaderRoute: typeof AppAdminIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/admin/roles': {
       id: '/app/admin/roles'
       path: '/admin/roles'
       fullPath: '/app/admin/roles'
       preLoaderRoute: typeof AppAdminRolesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/admin/reports': {
+      id: '/app/admin/reports'
+      path: '/admin/reports'
+      fullPath: '/app/admin/reports'
+      preLoaderRoute: typeof AppAdminReportsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/admin/queue': {
+      id: '/app/admin/queue'
+      path: '/admin/queue'
+      fullPath: '/app/admin/queue'
+      preLoaderRoute: typeof AppAdminQueueRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/admin/members': {
@@ -325,6 +394,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminMembersRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/admin/audit': {
+      id: '/app/admin/audit'
+      path: '/admin/audit'
+      fullPath: '/app/admin/audit'
+      preLoaderRoute: typeof AppAdminAuditRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
@@ -332,16 +408,24 @@ interface AppRouteChildren {
   AppDirectoryRoute: typeof AppDirectoryRoute
   AppProfileRoute: typeof AppProfileRoute
   AppIndexRoute: typeof AppIndexRoute
+  AppAdminAuditRoute: typeof AppAdminAuditRoute
   AppAdminMembersRoute: typeof AppAdminMembersRoute
+  AppAdminQueueRoute: typeof AppAdminQueueRoute
+  AppAdminReportsRoute: typeof AppAdminReportsRoute
   AppAdminRolesRoute: typeof AppAdminRolesRoute
+  AppAdminIndexRoute: typeof AppAdminIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppDirectoryRoute: AppDirectoryRoute,
   AppProfileRoute: AppProfileRoute,
   AppIndexRoute: AppIndexRoute,
+  AppAdminAuditRoute: AppAdminAuditRoute,
   AppAdminMembersRoute: AppAdminMembersRoute,
+  AppAdminQueueRoute: AppAdminQueueRoute,
+  AppAdminReportsRoute: AppAdminReportsRoute,
   AppAdminRolesRoute: AppAdminRolesRoute,
+  AppAdminIndexRoute: AppAdminIndexRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
