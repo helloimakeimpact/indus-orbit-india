@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/sheet";
 import { SEGMENT_LIST, SEGMENT_META, type Segment } from "@/components/auth/segments";
 import { VerifiedBadge } from "@/components/auth/VerifiedBadge";
+import { SuspendDialog } from "@/components/admin/SuspendDialog";
 
 export const Route = createFileRoute("/app/admin/members")({
   head: () => ({ meta: [{ title: "Members admin — Indus Orbit" }, { name: "robots", content: "noindex" }] }),
@@ -50,12 +51,15 @@ type Filter = (typeof FILTERS)[number];
 
 function AdminMembers() {
   const { isAdmin, loading } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [rows, setRows] = useState<Row[]>([]);
   const [busy, setBusy] = useState(true);
   const [filter, setFilter] = useState<Filter>("all");
   const [search, setSearch] = useState("");
   const [active, setActive] = useState<Row | null>(null);
+  const [suspendTarget, setSuspendTarget] = useState<Row | null>(null);
+  const [suspendedIds, setSuspendedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!loading && !isAdmin) {
@@ -68,6 +72,11 @@ function AdminMembers() {
     setBusy(true);
     const { data } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
     setRows((data as unknown as Row[] | null) ?? []);
+    const { data: susp } = await supabase
+      .from("member_suspensions")
+      .select("user_id")
+      .is("lifted_at", null);
+    setSuspendedIds(new Set(((susp as { user_id: string }[] | null) ?? []).map((s) => s.user_id)));
     setBusy(false);
   }
 
@@ -175,6 +184,46 @@ function AdminMembers() {
                       <Switch checked={r.is_public} onCheckedChange={async (v) => { if (await patch(r, { is_public: v })) { toast.success(v ? "Listed" : "Hidden"); load(); } }} />
                     </td>
                     <td className="p-4 text-right">
+                      {suspendedIds.has(r.user_id) ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={async () => {
+                            const { data: rec } = await supabase
+                              .from("member_suspensions")
+                              .select("id")
+                              .eq("user_id", r.user_id)
+                              .is("lifted_at", null)
+                              .maybeSingle();
+                            if (!rec || !user) return;
+                            const { error } = await supabase
+                              .from("member_suspensions")
+                              .update({ lifted_at: new Date().toISOString(), lifted_by: user.id })
+                              .eq("id", (rec as { id: string }).id);
+                            if (error) return toast.error(error.message);
+                            await supabase.from("audit_log").insert({
+                              actor_id: user.id,
+                              action: "member.unsuspend",
+                              target_type: "profile",
+                              target_id: r.user_id,
+                            });
+                            toast.success("Suspension lifted");
+                            load();
+                          }}
+                          className="mr-2"
+                        >
+                          Unsuspend
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="mr-2"
+                          onClick={() => setSuspendTarget(r)}
+                        >
+                          Suspend
+                        </Button>
+                      )}
                       <Button size="sm" variant="outline" onClick={() => setActive(r)}>Details</Button>
                     </td>
                   </tr>
@@ -213,6 +262,17 @@ function AdminMembers() {
           )}
         </SheetContent>
       </Sheet>
+
+      {suspendTarget && (
+        <SuspendDialog
+          open={!!suspendTarget}
+          onOpenChange={(o) => !o && setSuspendTarget(null)}
+          userId={suspendTarget.user_id}
+          userName={suspendTarget.display_name ?? "Member"}
+          actorId={user?.id ?? null}
+          onDone={load}
+        />
+      )}
     </div>
   );
 }

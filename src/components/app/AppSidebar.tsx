@@ -1,6 +1,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useState } from "react";
-import { Home, Users, User as UserIcon, Shield, UserCog, LogOut, Menu, X } from "lucide-react";
+import { Home, Users, User as UserIcon, Shield, UserCog, LogOut, Menu, X, Send, Megaphone, LayoutDashboard, ClipboardList, Flag, ScrollText } from "lucide-react";
 import logo from "@/assets/indus-orbit-logo.png";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
@@ -11,10 +11,16 @@ type Item = { to: string; label: string; icon: typeof Home; admin?: boolean };
 const ITEMS: Item[] = [
   { to: "/app", label: "Home", icon: Home },
   { to: "/app/directory", label: "Directory", icon: Users },
+  { to: "/app/connect", label: "Connect", icon: Send },
+  { to: "/app/board", label: "Board", icon: Megaphone },
   { to: "/app/profile", label: "My profile", icon: UserIcon },
 ];
 
 const ADMIN_ITEMS: Item[] = [
+  { to: "/app/admin", label: "Dashboard", icon: LayoutDashboard, admin: true },
+  { to: "/app/admin/queue", label: "Queue", icon: ClipboardList, admin: true },
+  { to: "/app/admin/reports", label: "Reports", icon: Flag, admin: true },
+  { to: "/app/admin/audit", label: "Audit log", icon: ScrollText, admin: true },
   { to: "/app/admin/members", label: "Members", icon: Shield, admin: true },
   { to: "/app/admin/roles", label: "Roles", icon: UserCog, admin: true },
 ];
@@ -32,7 +38,12 @@ function NavList({ pathname, onNavigate }: { pathname: string; onNavigate?: () =
             Admin
           </p>
           {ADMIN_ITEMS.map((item) => (
-            <NavRow key={item.to} item={item} active={pathname.startsWith(item.to)} onClick={onNavigate} />
+            <NavRow
+              key={item.to}
+              item={item}
+              active={item.to === "/app/admin" ? pathname === "/app/admin" : pathname.startsWith(item.to)}
+              onClick={onNavigate}
+            />
           ))}
         </>
       )}
