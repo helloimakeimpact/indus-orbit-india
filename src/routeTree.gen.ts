@@ -20,11 +20,14 @@ import { Route as AppRouteImport } from './routes/app'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as RedeemCodeRouteImport } from './routes/redeem.$code'
+import { Route as AppVouchRouteImport } from './routes/app.vouch'
 import { Route as AppProfileRouteImport } from './routes/app.profile'
 import { Route as AppDirectoryRouteImport } from './routes/app.directory'
 import { Route as AppConnectRouteImport } from './routes/app.connect'
 import { Route as AppBoardRouteImport } from './routes/app.board'
 import { Route as AppAdminIndexRouteImport } from './routes/app.admin.index'
+import { Route as AppAdminVouchesRouteImport } from './routes/app.admin.vouches'
 import { Route as AppAdminRolesRouteImport } from './routes/app.admin.roles'
 import { Route as AppAdminReportsRouteImport } from './routes/app.admin.reports'
 import { Route as AppAdminQueueRouteImport } from './routes/app.admin.queue'
@@ -86,6 +89,16 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppRoute,
 } as any)
+const RedeemCodeRoute = RedeemCodeRouteImport.update({
+  id: '/redeem/$code',
+  path: '/redeem/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppVouchRoute = AppVouchRouteImport.update({
+  id: '/vouch',
+  path: '/vouch',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppProfileRoute = AppProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -109,6 +122,11 @@ const AppBoardRoute = AppBoardRouteImport.update({
 const AppAdminIndexRoute = AppAdminIndexRouteImport.update({
   id: '/admin/',
   path: '/admin/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdminVouchesRoute = AppAdminVouchesRouteImport.update({
+  id: '/admin/vouches',
+  path: '/admin/vouches',
   getParentRoute: () => AppRoute,
 } as any)
 const AppAdminRolesRoute = AppAdminRolesRouteImport.update({
@@ -152,12 +170,15 @@ export interface FileRoutesByFullPath {
   '/app/connect': typeof AppConnectRoute
   '/app/directory': typeof AppDirectoryRoute
   '/app/profile': typeof AppProfileRoute
+  '/app/vouch': typeof AppVouchRoute
+  '/redeem/$code': typeof RedeemCodeRoute
   '/app/': typeof AppIndexRoute
   '/app/admin/audit': typeof AppAdminAuditRoute
   '/app/admin/members': typeof AppAdminMembersRoute
   '/app/admin/queue': typeof AppAdminQueueRoute
   '/app/admin/reports': typeof AppAdminReportsRoute
   '/app/admin/roles': typeof AppAdminRolesRoute
+  '/app/admin/vouches': typeof AppAdminVouchesRoute
   '/app/admin/': typeof AppAdminIndexRoute
 }
 export interface FileRoutesByTo {
@@ -174,12 +195,15 @@ export interface FileRoutesByTo {
   '/app/connect': typeof AppConnectRoute
   '/app/directory': typeof AppDirectoryRoute
   '/app/profile': typeof AppProfileRoute
+  '/app/vouch': typeof AppVouchRoute
+  '/redeem/$code': typeof RedeemCodeRoute
   '/app': typeof AppIndexRoute
   '/app/admin/audit': typeof AppAdminAuditRoute
   '/app/admin/members': typeof AppAdminMembersRoute
   '/app/admin/queue': typeof AppAdminQueueRoute
   '/app/admin/reports': typeof AppAdminReportsRoute
   '/app/admin/roles': typeof AppAdminRolesRoute
+  '/app/admin/vouches': typeof AppAdminVouchesRoute
   '/app/admin': typeof AppAdminIndexRoute
 }
 export interface FileRoutesById {
@@ -198,12 +222,15 @@ export interface FileRoutesById {
   '/app/connect': typeof AppConnectRoute
   '/app/directory': typeof AppDirectoryRoute
   '/app/profile': typeof AppProfileRoute
+  '/app/vouch': typeof AppVouchRoute
+  '/redeem/$code': typeof RedeemCodeRoute
   '/app/': typeof AppIndexRoute
   '/app/admin/audit': typeof AppAdminAuditRoute
   '/app/admin/members': typeof AppAdminMembersRoute
   '/app/admin/queue': typeof AppAdminQueueRoute
   '/app/admin/reports': typeof AppAdminReportsRoute
   '/app/admin/roles': typeof AppAdminRolesRoute
+  '/app/admin/vouches': typeof AppAdminVouchesRoute
   '/app/admin/': typeof AppAdminIndexRoute
 }
 export interface FileRouteTypes {
@@ -223,12 +250,15 @@ export interface FileRouteTypes {
     | '/app/connect'
     | '/app/directory'
     | '/app/profile'
+    | '/app/vouch'
+    | '/redeem/$code'
     | '/app/'
     | '/app/admin/audit'
     | '/app/admin/members'
     | '/app/admin/queue'
     | '/app/admin/reports'
     | '/app/admin/roles'
+    | '/app/admin/vouches'
     | '/app/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -245,12 +275,15 @@ export interface FileRouteTypes {
     | '/app/connect'
     | '/app/directory'
     | '/app/profile'
+    | '/app/vouch'
+    | '/redeem/$code'
     | '/app'
     | '/app/admin/audit'
     | '/app/admin/members'
     | '/app/admin/queue'
     | '/app/admin/reports'
     | '/app/admin/roles'
+    | '/app/admin/vouches'
     | '/app/admin'
   id:
     | '__root__'
@@ -268,12 +301,15 @@ export interface FileRouteTypes {
     | '/app/connect'
     | '/app/directory'
     | '/app/profile'
+    | '/app/vouch'
+    | '/redeem/$code'
     | '/app/'
     | '/app/admin/audit'
     | '/app/admin/members'
     | '/app/admin/queue'
     | '/app/admin/reports'
     | '/app/admin/roles'
+    | '/app/admin/vouches'
     | '/app/admin/'
   fileRoutesById: FileRoutesById
 }
@@ -288,6 +324,7 @@ export interface RootRouteChildren {
   OurWorkRoute: typeof OurWorkRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   WritingRoute: typeof WritingRoute
+  RedeemCodeRoute: typeof RedeemCodeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -369,6 +406,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/redeem/$code': {
+      id: '/redeem/$code'
+      path: '/redeem/$code'
+      fullPath: '/redeem/$code'
+      preLoaderRoute: typeof RedeemCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/vouch': {
+      id: '/app/vouch'
+      path: '/vouch'
+      fullPath: '/app/vouch'
+      preLoaderRoute: typeof AppVouchRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/profile': {
       id: '/app/profile'
       path: '/profile'
@@ -402,6 +453,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/app/admin/'
       preLoaderRoute: typeof AppAdminIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/admin/vouches': {
+      id: '/app/admin/vouches'
+      path: '/admin/vouches'
+      fullPath: '/app/admin/vouches'
+      preLoaderRoute: typeof AppAdminVouchesRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/admin/roles': {
@@ -447,12 +505,14 @@ interface AppRouteChildren {
   AppConnectRoute: typeof AppConnectRoute
   AppDirectoryRoute: typeof AppDirectoryRoute
   AppProfileRoute: typeof AppProfileRoute
+  AppVouchRoute: typeof AppVouchRoute
   AppIndexRoute: typeof AppIndexRoute
   AppAdminAuditRoute: typeof AppAdminAuditRoute
   AppAdminMembersRoute: typeof AppAdminMembersRoute
   AppAdminQueueRoute: typeof AppAdminQueueRoute
   AppAdminReportsRoute: typeof AppAdminReportsRoute
   AppAdminRolesRoute: typeof AppAdminRolesRoute
+  AppAdminVouchesRoute: typeof AppAdminVouchesRoute
   AppAdminIndexRoute: typeof AppAdminIndexRoute
 }
 
@@ -461,12 +521,14 @@ const AppRouteChildren: AppRouteChildren = {
   AppConnectRoute: AppConnectRoute,
   AppDirectoryRoute: AppDirectoryRoute,
   AppProfileRoute: AppProfileRoute,
+  AppVouchRoute: AppVouchRoute,
   AppIndexRoute: AppIndexRoute,
   AppAdminAuditRoute: AppAdminAuditRoute,
   AppAdminMembersRoute: AppAdminMembersRoute,
   AppAdminQueueRoute: AppAdminQueueRoute,
   AppAdminReportsRoute: AppAdminReportsRoute,
   AppAdminRolesRoute: AppAdminRolesRoute,
+  AppAdminVouchesRoute: AppAdminVouchesRoute,
   AppAdminIndexRoute: AppAdminIndexRoute,
 }
 
@@ -483,6 +545,7 @@ const rootRouteChildren: RootRouteChildren = {
   OurWorkRoute: OurWorkRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   WritingRoute: WritingRoute,
+  RedeemCodeRoute: RedeemCodeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

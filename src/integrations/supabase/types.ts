@@ -338,6 +338,182 @@ export type Database = {
         }
         Relationships: []
       }
+      vouch_codes: {
+        Row: {
+          code: string
+          created_at: string
+          expires_at: string
+          id: string
+          issuer_id: string
+          redeemed_at: string | null
+          redeemer_id: string | null
+          status: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          issuer_id: string
+          redeemed_at?: string | null
+          redeemer_id?: string | null
+          status?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          issuer_id?: string
+          redeemed_at?: string | null
+          redeemer_id?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      vouch_events: {
+        Row: {
+          channel: string
+          code_id: string | null
+          created_at: string
+          id: string
+          issuer_id: string
+          recipient_id: string | null
+        }
+        Insert: {
+          channel: string
+          code_id?: string | null
+          created_at?: string
+          id?: string
+          issuer_id: string
+          recipient_id?: string | null
+        }
+        Update: {
+          channel?: string
+          code_id?: string | null
+          created_at?: string
+          id?: string
+          issuer_id?: string
+          recipient_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vouch_events_code_id_fkey"
+            columns: ["code_id"]
+            isOneToOne: false
+            referencedRelation: "vouch_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vouch_requests: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          requester_id: string
+          responded_at: string | null
+          status: string
+          target_verifier_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          requester_id: string
+          responded_at?: string | null
+          status?: string
+          target_verifier_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          requester_id?: string
+          responded_at?: string | null
+          status?: string
+          target_verifier_id?: string | null
+        }
+        Relationships: []
+      }
+      vouch_role_overrides: {
+        Row: {
+          id: string
+          quota: number
+          role: Database["public"]["Enums"]["app_role"]
+          segment: Database["public"]["Enums"]["orbit_segment"] | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          id?: string
+          quota: number
+          role: Database["public"]["Enums"]["app_role"]
+          segment?: Database["public"]["Enums"]["orbit_segment"] | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          id?: string
+          quota?: number
+          role?: Database["public"]["Enums"]["app_role"]
+          segment?: Database["public"]["Enums"]["orbit_segment"] | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      vouch_settings: {
+        Row: {
+          code_ttl_days: number
+          default_quota: number
+          id: string
+          updated_at: string
+          updated_by: string | null
+          window_days: number
+        }
+        Insert: {
+          code_ttl_days?: number
+          default_quota?: number
+          id?: string
+          updated_at?: string
+          updated_by?: string | null
+          window_days?: number
+        }
+        Update: {
+          code_ttl_days?: number
+          default_quota?: number
+          id?: string
+          updated_at?: string
+          updated_by?: string | null
+          window_days?: number
+        }
+        Relationships: []
+      }
+      vouch_user_overrides: {
+        Row: {
+          quota: number
+          reason: string | null
+          updated_at: string
+          updated_by: string | null
+          user_id: string
+        }
+        Insert: {
+          quota: number
+          reason?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          user_id: string
+        }
+        Update: {
+          quota?: number
+          reason?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -351,6 +527,9 @@ export type Database = {
         Returns: boolean
       }
       is_suspended: { Args: { _user_id: string }; Returns: boolean }
+      vouch_effective_quota: { Args: { _user_id: string }; Returns: number }
+      vouch_remaining: { Args: { _user_id: string }; Returns: number }
+      vouch_used_in_window: { Args: { _user_id: string }; Returns: number }
     }
     Enums: {
       app_role: "admin" | "member"

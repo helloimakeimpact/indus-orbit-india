@@ -19,6 +19,7 @@ import {
 import { SEGMENT_LIST, SEGMENT_META, type Segment, type SegmentDetails } from "@/components/auth/segments";
 import { SegmentDetailsForm } from "@/components/auth/SegmentDetailsForm";
 import { VerifiedBadge } from "@/components/auth/VerifiedBadge";
+import { VerificationCard } from "@/components/auth/VerificationCard";
 
 export const Route = createFileRoute("/app/profile")({
   head: () => ({ meta: [{ title: "Your profile — Indus Orbit" }, { name: "robots", content: "noindex" }] }),
@@ -125,8 +126,10 @@ function ProfilePage() {
         {verified && <VerifiedBadge size="md" />}
       </div>
       <p className="mt-2 text-sm text-muted-foreground">
-        Tell the Orbit who you are. Toggle "Public" to appear in the directory. Verification is granted by admins.
+        Tell the Orbit who you are. Toggle "Public" to appear in the directory.
       </p>
+
+      {!verified && <VerificationCard onChanged={() => setVerified(true)} />}
 
       <form onSubmit={onSave} className="mt-8 space-y-6 rounded-3xl border border-border bg-card p-6 md:p-8">
         <div className="grid gap-4 md:grid-cols-2">

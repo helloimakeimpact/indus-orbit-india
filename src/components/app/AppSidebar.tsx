@@ -1,6 +1,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useState } from "react";
-import { Home, Users, User as UserIcon, Shield, UserCog, LogOut, Menu, X, Send, Megaphone, LayoutDashboard, ClipboardList, Flag, ScrollText } from "lucide-react";
+import { Home, Users, User as UserIcon, Shield, UserCog, LogOut, Menu, X, Send, Megaphone, LayoutDashboard, ClipboardList, Flag, ScrollText, ShieldCheck, KeyRound } from "lucide-react";
 import logo from "@/assets/indus-orbit-logo.png";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
@@ -13,12 +13,14 @@ const ITEMS: Item[] = [
   { to: "/app/directory", label: "Directory", icon: Users },
   { to: "/app/connect", label: "Connect", icon: Send },
   { to: "/app/board", label: "Board", icon: Megaphone },
+  { to: "/app/vouch", label: "Vouch", icon: ShieldCheck },
   { to: "/app/profile", label: "My profile", icon: UserIcon },
 ];
 
 const ADMIN_ITEMS: Item[] = [
   { to: "/app/admin", label: "Dashboard", icon: LayoutDashboard, admin: true },
   { to: "/app/admin/queue", label: "Queue", icon: ClipboardList, admin: true },
+  { to: "/app/admin/vouches", label: "Vouches", icon: KeyRound, admin: true },
   { to: "/app/admin/reports", label: "Reports", icon: Flag, admin: true },
   { to: "/app/admin/audit", label: "Audit log", icon: ScrollText, admin: true },
   { to: "/app/admin/members", label: "Members", icon: Shield, admin: true },
