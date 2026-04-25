@@ -1,135 +1,249 @@
+## Indus Orbit — Phase 3 Plan: Verification Codes + Roadmap Catch-up
 
-
-## Indus Orbit — System Analysis & Feature Roadmap
-
-A deep look at the current authenticated system, then a concrete set of features mapped to **roles**, the three Indus Orbit pillars (**Connection · Synergy · Society**), and **admin control surfaces**. This is an analysis & proposal — no code yet. Pick what to build and I'll plan/ship it next.
-
----
-
-### 1. What exists today (honest baseline)
-
-**Identity model**
-- `auth.users` (Supabase) ↔ `profiles` (1:1 via `user_id`). Trigger `handle_new_user` auto-creates an empty profile + assigns `member` role.
-- Two orthogonal axes:
-  - `orbit_segment` enum on `profiles` — *who you are* (youth, founder, expert, investor, diaspora, partner, researcher).
-  - `app_role` enum on `user_roles` — *what you can do* (admin, member). Checked via `has_role()` SECURITY DEFINER.
-- Verification: `is_verified` + `verified_at` + `verified_by`, gated by the `guard_profile_verification` trigger so only admins can flip it.
-- Visibility: `is_public` toggles directory listing.
-
-**Routes (post-auth)**
-- `/onboarding` — 4-step wizard (segment → location → segment-specific Q's → story). Required before `/app/*`.
-- `/app` — segment-aware home (greeting, completeness ring, 2 module cards from `SegmentHomeModules`).
-- `/app/directory` — public profile grid, filterable by segment.
-- `/app/profile` — edit own profile.
-- `/app/admin/members` — admin verify / segment / public toggle.
-- `/app/admin/roles` — promote/demote admins.
-
-**What's missing (the honest gaps)**
-1. **No actual connections.** The product *names* segments but doesn't let them act on each other. A founder finds an investor card → there's no "intro," "request," or even "save."
-2. **No content/signal from members.** No asks, offers, updates, or check-ins. The orbit is a static directory, not a living network.
-3. **No structured value exchange.** Experts say "I can give X hours/month" in onboarding, but nothing surfaces that, books it, or tracks it.
-4. **Admin tools are CRUD-only.** No queue, no triage, no reasons for verification, no audit trail, no analytics, no moderation.
-5. **One role tier.** `admin` vs `member` — no chapter leads, moderators, or curators, even though the segment model is built for community scaling.
-6. **Segment data is a black box.** `segment_details` JSONB is collected, never re-surfaced anywhere (matching, search, recommendations).
+This plan does three things:
+1. **Audit** what's actually built vs the System Analysis & Feature Roadmap.
+2. **Design** the verification-code / vouching system you described (with admin-controlled global + per-role + per-user quotas, every 28 days).
+3. **Lay out** the next slice of features to bring the orbit to "alive."
 
 ---
 
-### 2. The mental model going forward
+### 1. Implementation status vs the Roadmap
 
-Every feature is sorted by **two questions**:
-- **Pillar** — does this serve **Connection** (introductions, intros, mentorship), **Synergy** (collaboration, ventures, capital), or **Society** (visibility of Indian craft, diaspora bridges, public good)?
-- **Admin control** — does it work *without* admin oversight (member-driven, RLS-only), *with* admin oversight (queue/approve), or *admin-only* (governance, analytics)?
+#### Phase 1 — Admin Governance (DONE)
 
-This keeps the platform from becoming yet another LinkedIn clone — every feature has an Indus Orbit reason to exist.
+| Item | Status | Where |
+|---|---|---|
+| Verification queue with reasons + decision log | Done | `/app/admin/queue`, `verification_decisions` |
+| Audit log + admin viewer | Done | `/app/admin/audit`, `audit_log` |
+| Admin analytics (members, verified %, segments, week-over-week) | Done | `/app/admin` |
+| Soft-suspend with reason + RLS enforcement | Done | `/app/admin/members`, `member_suspensions`, `is_suspended()` |
+| Reports & moderation queue | Done | `/app/admin/reports`, `reports` |
+| Roles management (promote/demote admin) | Done (pre-existing) | `/app/admin/roles` |
 
----
+#### Phase 2 — Connection (DONE)
 
-### 3. Proposed features (grouped by pillar, with admin posture)
+| Item | Status | Where |
+|---|---|---|
+| C1 Connection requests | Done | `/app/connect`, `connection_requests` |
+| C3 Endorsements (verified-only) | Done | `EndorseDialog`, `endorsements` |
+| C4 Ask & Offer board (30-day expiry, filters, report) | Done | `/app/board`, `asks_offers` |
+| Reach-out + Report from directory cards | Done | `/app/directory` |
 
-#### Pillar I — **Connection**
+#### Phase 3 — Synergy (NOT STARTED)
+S1 Mentor slots · S2 Investor signals · S3 India Missions · S4 Research–Practice bridge.
 
-| # | Feature | What it does | Roles involved | Admin posture |
-|---|---|---|---|---|
-| C1 | **Connection requests** | Member → Member "Reach out" with a 280-char note + reason chip (intro, advice, collab, capital). Sender sees status; recipient accepts/declines. | Everyone | **Without admin** (RLS-only). Admin can read for moderation, can revoke a member's send privilege. |
-| C2 | **Warm intros** | Verified member can introduce two others ("I think you should meet"). Both parties opt-in before contact info is shared. | Verified members; admins always | **Without admin**. Admin can audit. |
-| C3 | **Endorsements** | Lightweight "X vouches for Y as a Founder / Expert / etc." Public on profile, capped (e.g. 5 endorsements visible). | Verified → anyone | **Without admin**. Reportable. |
-| C4 | **Ask & Offer board** | Short posts: "Looking for a CTO in Bengaluru" / "Offering 5h/mo to early fintech founders." Expires in 30 days. Filter by segment + sector + region. | Everyone posts; everyone responds | **With admin** light-touch — flagged posts go to a moderation queue. |
+#### Phase 4 — Society & Scale (NOT STARTED)
+Y1 Spotlights · Y2 Chapters + `chapter_lead` role · Y3 Stories · Y4 Events board.
 
-#### Pillar II — **Synergy**
-
-| # | Feature | What it does | Roles involved | Admin posture |
-|---|---|---|---|---|
-| S1 | **Mentor slots** | Experts publish recurring slots ("2 × 30-min/week"). Founders/Youth book. Auto-tracks hours pledged vs. delivered. | Expert ↔ Founder/Youth | **Without admin**. Disputes go to admin. |
-| S2 | **Investor signals** | Founders mark "raising / not raising," sector, stage, geography. Investors get a filtered feed; can express interest privately. | Founder ↔ Investor | **Without admin**. Admin sees aggregate stats only. |
-| S3 | **India Missions** | Time-bounded campaigns where Diaspora members commit (capital, mentorship, hiring) toward a cohort of founders. | Diaspora + Founder + Admin curators | **Admin-curated** — admins create missions, set theme, open/close. |
-| S4 | **Research–Practice bridge** | Researchers post open problems; founders/experts can claim or comment. | Researcher + everyone | **Without admin**. Admin can feature one per week. |
-
-#### Pillar III — **Society**
-
-| # | Feature | What it does | Roles involved | Admin posture |
-|---|---|---|---|---|
-| Y1 | **Member spotlights** | Weekly editorial pick — verified profile featured on public `/members` and inside `/app`. | Admin selects | **Admin-only** (curatorial). |
-| Y2 | **Chapters (regional)** | Region rollups (e.g. "Indus Orbit · Paris," "· Bengaluru"). Members in that region see local asks, events, leads. | Everyone in region; chapter lead curates | **Admin + new role `chapter_lead`** — scoped admin powers per region only. |
-| Y3 | **Stories** | Long-form posts by members about craft, mission, India ↔ world bridges. Approved before publishing. | Anyone submits, admin/editor approves | **With admin** — submission queue with approve/feature/decline. |
-| Y4 | **Events board** | Member-submitted events (talks, hackathons, salons). Verified by admin before public listing. | Anyone submits | **With admin** approval. |
+#### Cross-cutting gaps still open
+- Only two role tiers (`admin`, `member`). No `chapter_lead`, `editor`, `verifier`.
+- No member-driven path to **become** verified — admin-only flip today.
+- `segment_details` JSON is collected at onboarding, never re-surfaced for matching/search.
+- No notifications (email or in-app) for accepted requests, endorsements, decisions.
 
 ---
 
-### 4. Admin governance layer (cross-cutting)
+### 2. The Verification Code system (your new ask)
 
-Right now admin = "edit a row." This rebuilds it as actual **governance**.
+#### Concept
 
-| Capability | What it does |
+Verification today = an admin flips a switch. We add a **second, member-driven path**: any verified member can mint a small number of **vouching codes** that, when redeemed, instantly verify the recipient. This is the "trust web" — Indus Orbit grows by who its trusted members vouch for, with admin holding the global throttle.
+
+Two surfaces are unified:
+- **Generate code** → a 10-char code the holder can hand to someone (or paste into a request).
+- **Vouch directly** → pick a member, click "Vouch", same accounting.
+
+Both consume from the same 28-day budget.
+
+#### Default policy (overridable)
+
+| Who | Default budget per 28 days |
 |---|---|
-| **Verification queue** | Pending profiles ranked by completeness; admin sees segment_details, can approve / decline-with-reason / request-more-info. Decision is logged. |
-| **Audit log** | Every privileged action (verify, demote, feature, decline, role change) writes a row: who, what, when, reason. Read-only for admins. |
-| **Reports & moderation** | Members can report a profile / post / message. Queue with status (open / actioned / dismissed) and resolution note. |
-| **Admin analytics** | Live dashboard: members by segment, by region, verified %, week-over-week growth, active connections, pending queue depths. |
-| **Role tiers** | Add `chapter_lead` (region-scoped moderation) and `editor` (Stories/Spotlights only). Keeps `admin` reserved for full-trust. |
-| **Member controls** | Soft-suspend (hide from directory + block sends) and unsuspend, with reason logged. Hard-delete stays a manual SQL operation. |
+| Verified member (any segment) | 5 vouches/codes |
+| Unverified member | 0 (cannot vouch) |
+| Admin | unlimited (logged) |
 
----
+Admin can override at three levels (highest wins):
+1. **Per-user override** — give Riya 20 this period.
+2. **Per-role override** — all `expert`s get 10 this period.
+3. **Global default** — bump the platform default from 5 → 8.
 
-### 5. Suggested phasing (so we don't ship a half-network)
+#### Workflow
 
 ```text
-Phase 1 — Make admin actually administer
-  • Verification queue with reason + decision log
-  • Audit log table + admin-only viewer
-  • Admin analytics dashboard
-  • Soft-suspend with reason
-  → Establishes trust + governance before we open up member→member actions.
+Member A (verified)
+  └─ /app/vouch
+       ├─ "Generate code"  → 10-char code, expires in 14 days, single-use
+       │     copies to clipboard, shareable link /redeem/<code>
+       └─ "Vouch directly" → search → confirm → recipient is verified now
+                                 (audit_log entry written)
 
-Phase 2 — Light up Connection
-  • Connection requests (C1)
-  • Endorsements (C3)
-  • Ask & Offer board (C4) + reports (moderation)
-  → The orbit starts feeling alive. Minimal admin load.
+Member B (unverified)
+  └─ /app/profile  → "Have a code?" field
+       └─ valid + not expired + budget intact on issuer
+            → B becomes verified, code marked redeemed
+            → B can also "Request vouch" from admin or any verified member
 
-Phase 3 — Unlock Synergy
-  • Mentor slots (S1)
-  • Investor signals (S2)
-  • India Missions (S3) — admin-curated campaigns
-  → The platform starts producing measurable value (hours, intros, capital signals).
+Admin
+  └─ /app/admin/vouches
+       ├─ Global default budget (1 input)
+       ├─ Per-role overrides (table)
+       ├─ Per-user overrides (search + add)
+       ├─ Active codes (issuer, code, status, expires)
+       └─ Recent vouch events (who → who, when, channel)
+```
 
-Phase 4 — Society & Scale
-  • Chapters + chapter_lead role (Y2)
-  • Stories editor + queue (Y3)
-  • Events board (Y4)
-  • Member spotlights (Y1)
-  → Indus Orbit becomes a publishing + community surface, not just a network.
+#### Quota enforcement (the important bit)
+
+A SQL function `vouch_budget_remaining(_user_id)` returns:
+```
+GREATEST(effective_quota(_user_id) - count_used_in_window(_user_id, 28d), 0)
+```
+- Window = trailing 28 days from now (rolling, not calendar).
+- A "use" = either an issued code (whether redeemed or not) **or** a direct vouch.
+- Issued-but-expired-unredeemed codes still count (prevents code-spam to dodge quota). Admin can manually credit back via override.
+
+`effective_quota(_user_id)`:
+```
+COALESCE(per_user_override, per_role_override(role), global_default)
+```
+Admins always return a sentinel "unlimited" (we use a high number like 9999).
+
+#### Database (new tables)
+
+```text
+vouch_settings
+  id (singleton row, key='global')
+  default_quota int       -- starts at 5
+  code_ttl_days int       -- starts at 14
+  window_days int         -- starts at 28
+  updated_at, updated_by
+
+vouch_role_overrides
+  segment orbit_segment   -- nullable; we may want per-segment too
+  role app_role           -- 'member' | 'admin'
+  quota int
+  updated_at, updated_by
+  (PK: role + segment combo)
+
+vouch_user_overrides
+  user_id (PK)
+  quota int               -- absolute override for this 28d window
+  reason text
+  updated_at, updated_by
+
+vouch_codes
+  id, code (10-char unique), issuer_id
+  created_at, expires_at, redeemed_at, redeemer_id
+  status: 'active' | 'redeemed' | 'expired' | 'revoked'
+
+vouch_events
+  id, issuer_id, recipient_id
+  channel: 'code' | 'direct'
+  code_id (nullable, FK to vouch_codes)
+  created_at
+  (this is the "use" record that drives the 28d window count)
+
+vouch_requests
+  id, requester_id, target_verifier_id (nullable = "any admin")
+  message text
+  status: 'open' | 'fulfilled' | 'declined' | 'expired'
+  created_at, responded_at
+```
+
+#### RLS & security
+
+- `vouch_settings`, `vouch_role_overrides`, `vouch_user_overrides`: admin-only read/write.
+- `vouch_codes`: issuer can read their own; redeemer can read by code (server fn does the lookup, RLS on `code` lookup uses anon-safe read by exact match); admins read all.
+- `vouch_events`: issuer + recipient + admin can read.
+- `vouch_requests`: requester + target + admin can read.
+- All vouch-issuance and redemption goes through **`createServerFn`** so we can:
+  - Atomically check quota + insert event + flip `profiles.is_verified` in one transaction (via `supabaseAdmin`).
+  - Avoid a client-side race on the 5/period ceiling.
+  - Write to `audit_log` with `action='verification.vouched'` or `'verification.code_redeemed'`.
+
+#### `guard_profile_verification` update
+
+Today only admins can flip `is_verified`. We extend it to also allow the `supabaseAdmin` server function (it already bypasses RLS), but keep the trigger so direct client updates from members still fail. The vouching path always goes through the server fn.
+
+#### UI surfaces
+
+| Route | Audience | What |
+|---|---|---|
+| `/app/vouch` | Verified members + admins | Budget pill ("3 of 5 left, resets in 12 days"), Generate Code button, Vouch Directly search, list of my active codes & recent vouches |
+| `/app/profile` (small addition) | Unverified members | "Have a code?" input + "Request a vouch" button |
+| `/app/admin/vouches` | Admin only | Global default, role overrides, user overrides, active codes table, vouch events feed |
+| `/redeem/$code` | Public | Renders code state; if logged-in unverified member, one-click redeem → verified |
+
+#### Sidebar additions
+- "Vouch" under main nav (visible to all verified members and admins)
+- "Vouches" under Admin section
+
+#### Counts and edge cases handled
+- Issuing a code decrements remaining immediately (not on redemption) — prevents minting 100 codes at once.
+- Code expiry is 14 days; if unredeemed, the slot does NOT auto-return (admin can refund via per-user override).
+- A member cannot vouch for themselves (server fn check).
+- Already-verified recipients can still receive codes; the server fn no-ops the verification flip but still logs the event (so issuer pays the budget — explicitly chosen so spammy auto-vouching costs the issuer).
+- Suspended members cannot issue or redeem (uses existing `is_suspended()`).
+- Admin issuance is logged but doesn't decrement (their quota is effectively unlimited).
+
+---
+
+### 3. What ships in this plan (concrete deliverables)
+
+**Migration**
+- 6 new tables above + indexes (`vouch_codes(code) UNIQUE`, `vouch_events(issuer_id, created_at)`, `vouch_events(recipient_id)`).
+- SQL functions: `vouch_effective_quota(uuid)`, `vouch_used_in_window(uuid)`, `vouch_remaining(uuid)`.
+- Update `guard_profile_verification` to allow service-role updates (for server-fn path).
+- Seed `vouch_settings` row with `default_quota=5, code_ttl_days=14, window_days=28`.
+
+**Server functions** (`src/server/vouch.ts`)
+- `issueCode()` — checks quota, generates 10-char code, inserts into `vouch_codes` + `vouch_events`, returns code + share URL.
+- `redeemCode({code})` — validates state, flips recipient's `is_verified`, marks code redeemed, writes audit log.
+- `vouchDirectly({recipient_id})` — same as redeem but skips code, single transaction.
+- `requestVouch({target_id?, message})` — inserts `vouch_requests` row.
+- `getMyVouchStatus()` — returns `{remaining, quota, window_resets_at, recent_events, my_active_codes}`.
+
+**Routes**
+- `src/routes/app.vouch.tsx` — member surface
+- `src/routes/app.admin.vouches.tsx` — admin governance surface
+- `src/routes/redeem.$code.tsx` — public redemption page
+- Small additions to `src/routes/app.profile.tsx` (code input + request-vouch button) and `src/components/app/AppSidebar.tsx` (two new entries).
+
+**Components**
+- `IssueCodeButton`, `VouchDirectlyDialog`, `VouchBudgetPill`, `MyCodesTable`, `RequestVouchDialog`, `AdminVouchSettingsForm`, `AdminVouchOverridesTable`, `AdminVouchEventsFeed`.
+
+**Out of scope for this slice** (planned next)
+- Phase 3 Synergy features (mentor slots, investor signals, missions, research bridge).
+- `chapter_lead` / `editor` role tiers.
+- Email notifications for vouches/requests.
+- Re-surfacing `segment_details` in directory search.
+
+---
+
+### 4. Order of execution
+
+```text
+1. Migration (tables, functions, trigger update, seed row)
+2. Server fns (issueCode, redeemCode, vouchDirectly, requestVouch, getMyVouchStatus)
+3. /app/vouch page + sidebar entry
+4. /redeem/$code public page
+5. Profile additions (code input, request-vouch dialog)
+6. /app/admin/vouches + sidebar entry
+7. Audit-log integration verification (manual smoke test of every action)
 ```
 
 ---
 
-### 6. What I need from you
+### 5. Open questions before I build
 
-Pick the path you want me to plan in detail next:
+If you're happy with the defaults below, I'll proceed; otherwise tell me which to change:
 
-- **(A) Phase 1 only** — admin governance first (queue + audit + analytics + suspend). Smallest, highest-trust. Recommended.
-- **(B) Phase 1 + Phase 2** — governance + first Connection primitive (requests + asks/offers).
-- **(C) Connection-first** — skip governance for now, ship C1 + C4 to make the orbit feel alive immediately.
-- **(D) Custom** — tell me which numbered features (C1, S2, Y2, etc.) you want and I'll plan that exact set.
+- **Window length**: 28 days rolling (your spec). ✅
+- **Default budget**: 5 issuances+vouches combined. ✅
+- **Code TTL**: 14 days. Reasonable?
+- **Self-vouch / re-vouch**: blocked / no-op-but-charged. Reasonable?
+- **Unverified members vouching**: not allowed (your spec). ✅
+- **Per-segment overrides**: included alongside per-role. Useful or noise?
 
-Once you pick, the next message will be a concrete `<lov-plan>` with schema, RLS, routes, and components.
-
+Approve this plan and I'll ship the full vouch system end-to-end, then come back with a Phase 3 plan for Synergy features.
