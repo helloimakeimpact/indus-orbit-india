@@ -20,6 +20,8 @@ import { Route as AppRouteImport } from './routes/app'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as RedeemCodeRouteImport } from './routes/redeem.$code'
+import { Route as AppVouchRouteImport } from './routes/app.vouch'
 import { Route as AppProfileRouteImport } from './routes/app.profile'
 import { Route as AppDirectoryRouteImport } from './routes/app.directory'
 import { Route as AppConnectRouteImport } from './routes/app.connect'
@@ -84,6 +86,16 @@ const IndexRoute = IndexRouteImport.update({
 const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AppRoute,
+} as any)
+const RedeemCodeRoute = RedeemCodeRouteImport.update({
+  id: '/redeem/$code',
+  path: '/redeem/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppVouchRoute = AppVouchRouteImport.update({
+  id: '/vouch',
+  path: '/vouch',
   getParentRoute: () => AppRoute,
 } as any)
 const AppProfileRoute = AppProfileRouteImport.update({
@@ -152,6 +164,8 @@ export interface FileRoutesByFullPath {
   '/app/connect': typeof AppConnectRoute
   '/app/directory': typeof AppDirectoryRoute
   '/app/profile': typeof AppProfileRoute
+  '/app/vouch': typeof AppVouchRoute
+  '/redeem/$code': typeof RedeemCodeRoute
   '/app/': typeof AppIndexRoute
   '/app/admin/audit': typeof AppAdminAuditRoute
   '/app/admin/members': typeof AppAdminMembersRoute
@@ -174,6 +188,8 @@ export interface FileRoutesByTo {
   '/app/connect': typeof AppConnectRoute
   '/app/directory': typeof AppDirectoryRoute
   '/app/profile': typeof AppProfileRoute
+  '/app/vouch': typeof AppVouchRoute
+  '/redeem/$code': typeof RedeemCodeRoute
   '/app': typeof AppIndexRoute
   '/app/admin/audit': typeof AppAdminAuditRoute
   '/app/admin/members': typeof AppAdminMembersRoute
@@ -198,6 +214,8 @@ export interface FileRoutesById {
   '/app/connect': typeof AppConnectRoute
   '/app/directory': typeof AppDirectoryRoute
   '/app/profile': typeof AppProfileRoute
+  '/app/vouch': typeof AppVouchRoute
+  '/redeem/$code': typeof RedeemCodeRoute
   '/app/': typeof AppIndexRoute
   '/app/admin/audit': typeof AppAdminAuditRoute
   '/app/admin/members': typeof AppAdminMembersRoute
@@ -223,6 +241,8 @@ export interface FileRouteTypes {
     | '/app/connect'
     | '/app/directory'
     | '/app/profile'
+    | '/app/vouch'
+    | '/redeem/$code'
     | '/app/'
     | '/app/admin/audit'
     | '/app/admin/members'
@@ -245,6 +265,8 @@ export interface FileRouteTypes {
     | '/app/connect'
     | '/app/directory'
     | '/app/profile'
+    | '/app/vouch'
+    | '/redeem/$code'
     | '/app'
     | '/app/admin/audit'
     | '/app/admin/members'
@@ -268,6 +290,8 @@ export interface FileRouteTypes {
     | '/app/connect'
     | '/app/directory'
     | '/app/profile'
+    | '/app/vouch'
+    | '/redeem/$code'
     | '/app/'
     | '/app/admin/audit'
     | '/app/admin/members'
@@ -288,6 +312,7 @@ export interface RootRouteChildren {
   OurWorkRoute: typeof OurWorkRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   WritingRoute: typeof WritingRoute
+  RedeemCodeRoute: typeof RedeemCodeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -369,6 +394,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/redeem/$code': {
+      id: '/redeem/$code'
+      path: '/redeem/$code'
+      fullPath: '/redeem/$code'
+      preLoaderRoute: typeof RedeemCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/vouch': {
+      id: '/app/vouch'
+      path: '/vouch'
+      fullPath: '/app/vouch'
+      preLoaderRoute: typeof AppVouchRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/profile': {
       id: '/app/profile'
       path: '/profile'
@@ -447,6 +486,7 @@ interface AppRouteChildren {
   AppConnectRoute: typeof AppConnectRoute
   AppDirectoryRoute: typeof AppDirectoryRoute
   AppProfileRoute: typeof AppProfileRoute
+  AppVouchRoute: typeof AppVouchRoute
   AppIndexRoute: typeof AppIndexRoute
   AppAdminAuditRoute: typeof AppAdminAuditRoute
   AppAdminMembersRoute: typeof AppAdminMembersRoute
@@ -461,6 +501,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppConnectRoute: AppConnectRoute,
   AppDirectoryRoute: AppDirectoryRoute,
   AppProfileRoute: AppProfileRoute,
+  AppVouchRoute: AppVouchRoute,
   AppIndexRoute: AppIndexRoute,
   AppAdminAuditRoute: AppAdminAuditRoute,
   AppAdminMembersRoute: AppAdminMembersRoute,
@@ -483,6 +524,7 @@ const rootRouteChildren: RootRouteChildren = {
   OurWorkRoute: OurWorkRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   WritingRoute: WritingRoute,
+  RedeemCodeRoute: RedeemCodeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
