@@ -6,6 +6,7 @@ type AuthContextValue = {
   session: Session | null;
   user: User | null;
   isAdmin: boolean;
+  userSegment: string | null;
   loading: boolean;
   signOut: () => Promise<void>;
 };
@@ -16,6 +17,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [userSegment, setUserSegment] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -47,13 +49,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   async function checkAdmin(userId: string) {
-    const { data } = await supabase
+    const { data: roleData } = await supabase
       .from("user_roles")
       .select("role")
       .eq("user_id", userId)
       .eq("role", "admin")
       .maybeSingle();
-    setIsAdmin(!!data);
+    setIsAdmin(!!roleData);
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("orbit_segment")
+      .eq("user_id", userId)
+      .maybeSingle();
+    setUserSegment(profile?.orbit_segment ?? null);
   }
 
   async function signOut() {
@@ -61,7 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ session, user, isAdmin, loading, signOut }}>
+    <AuthContext.Provider value={{ session, user, isAdmin, userSegment, loading, signOut }}>
       {children}
     </AuthContext.Provider>
   );

@@ -68,6 +68,16 @@ export function SegmentDetailsForm({
           <Field label="What are you looking for?">
             <Input value={get("looking_for")} onChange={(e) => set("looking_for", e.target.value)} placeholder="mentors, hires, capital, distribution" />
           </Field>
+          <Field label="Fundraising Status">
+            <Select value={get("fundraising")} onValueChange={(v) => set("fundraising", v)}>
+              <SelectTrigger><SelectValue placeholder="Choose…" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="actively_raising">Actively raising</SelectItem>
+                <SelectItem value="planning_to_raise">Planning to raise soon</SelectItem>
+                <SelectItem value="not_raising">Not raising</SelectItem>
+              </SelectContent>
+            </Select>
+          </Field>
         </>
       );
     case "expert":

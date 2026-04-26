@@ -6,6 +6,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { SEGMENT_META, type Segment } from "@/components/auth/segments";
 import { VerifiedBadge } from "@/components/auth/VerifiedBadge";
 import { SegmentHomeModules } from "@/components/app/SegmentHomeModules";
+import { getSpotlights } from "@/server/society.functions";
+import { Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/app/")({
   head: () => ({
@@ -27,6 +29,7 @@ type ProfileBits = {
 function AppHome() {
   const { user } = useAuth();
   const [profile, setProfile] = useState<ProfileBits | null>(null);
+  const [spotlights, setSpotlights] = useState<any[]>([]);
 
   useEffect(() => {
     if (!user) return;
@@ -36,6 +39,8 @@ function AppHome() {
       .eq("user_id", user.id)
       .maybeSingle()
       .then(({ data }) => setProfile(data as unknown as ProfileBits | null));
+      
+    getSpotlights().then(setSpotlights).catch(console.error);
   }, [user]);
 
   const completeness = (() => {
@@ -88,6 +93,25 @@ function AppHome() {
             </Link>
           )}
         </div>
+      )}
+
+      {spotlights.length > 0 && (
+        <section className="mt-10">
+          <div className="flex items-center gap-2 mb-4">
+            <Sparkles className="h-5 w-5 text-[var(--saffron)]" />
+            <h2 className="font-display text-xl font-medium">Member Spotlight</h2>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            {spotlights.map((s) => (
+              <div key={s.id} className="rounded-3xl border border-[var(--saffron)]/30 bg-card p-6 relative overflow-hidden group hover:border-[var(--saffron)]/60 transition">
+                <div className="absolute top-0 right-0 h-24 w-24 bg-[var(--saffron)]/10 rounded-bl-full -mr-4 -mt-4" />
+                <h3 className="font-display text-lg font-semibold">{s.profiles?.display_name}</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">{s.profiles?.headline}</p>
+                <div className="mt-4 text-sm leading-relaxed text-foreground/90 italic">"{s.writeup}"</div>
+              </div>
+            ))}
+          </div>
+        </section>
       )}
 
       {profile?.orbit_segment && (

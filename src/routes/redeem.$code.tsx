@@ -1,7 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -29,7 +28,6 @@ function RedeemPage() {
   const [issuerName, setIssuerName] = useState<string>("");
   const [busy, setBusy] = useState(true);
   const [done, setDone] = useState(false);
-  const redeemFn = useServerFn(redeemCode);
 
   useEffect(() => {
     (async () => {
@@ -53,7 +51,7 @@ function RedeemPage() {
 
   async function onRedeem() {
     try {
-      await redeemFn({ data: { code: code.toUpperCase() } });
+      await redeemCode(code.toUpperCase());
       toast.success("You're now verified.");
       setDone(true);
     } catch (e) {

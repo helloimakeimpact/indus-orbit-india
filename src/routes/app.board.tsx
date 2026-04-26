@@ -28,7 +28,7 @@ export const Route = createFileRoute("/app/board")({
 type Post = {
   id: string;
   author_id: string;
-  kind: "ask" | "offer";
+  kind: "ask" | "offer" | "open_problem";
   title: string;
   body: string;
   segment_target: Segment[];
@@ -44,7 +44,7 @@ function BoardPage() {
   const [rows, setRows] = useState<Post[]>([]);
   const [authors, setAuthors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(true);
-  const [kind, setKind] = useState<"all" | "ask" | "offer">("all");
+  const [kind, setKind] = useState<"all" | "ask" | "offer" | "open_problem">("all");
   const [seg, setSeg] = useState<Segment | "all">("all");
   const [composeOpen, setComposeOpen] = useState(false);
   const [reportTarget, setReportTarget] = useState<Post | null>(null);
@@ -90,7 +90,7 @@ function BoardPage() {
       </div>
 
       <div className="mt-6 flex flex-wrap gap-2">
-        {(["all", "ask", "offer"] as const).map((k) => (
+        {(["all", "ask", "offer", "open_problem"] as const).map((k) => (
           <button
             key={k}
             onClick={() => setKind(k)}
@@ -101,7 +101,7 @@ function BoardPage() {
                 : "border-border hover:bg-foreground/5",
             )}
           >
-            {k === "all" ? "All" : k}
+            {k === "all" ? "All" : k === "open_problem" ? "Research Problems" : k}
           </button>
         ))}
         <span className="mx-1 self-center text-muted-foreground">·</span>
@@ -137,7 +137,9 @@ function BoardPage() {
           {rows.map((p) => (
             <article key={p.id} className="rounded-3xl border border-border bg-card p-6">
               <div className="flex items-center justify-between">
-                <Badge variant={p.kind === "ask" ? "default" : "secondary"}>{p.kind}</Badge>
+                <Badge variant={p.kind === "ask" ? "default" : p.kind === "open_problem" ? "destructive" : "secondary"}>
+                  {p.kind === "open_problem" ? "open problem" : p.kind}
+                </Badge>
                 {user && user.id !== p.author_id && (
                   <button
                     onClick={() => setReportTarget(p)}
@@ -193,7 +195,8 @@ function ComposeDialog({
   userId: string | null;
   onPosted: () => void;
 }) {
-  const [kind, setKind] = useState<"ask" | "offer">("ask");
+  const { userSegment } = useAuth();
+  const [kind, setKind] = useState<"ask" | "offer" | "open_problem">("ask");
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [region, setRegion] = useState("");
@@ -235,17 +238,17 @@ function ComposeDialog({
           <DialogDescription>Stays live for 30 days. Members can reply and admins can moderate.</DialogDescription>
         </DialogHeader>
         <div className="flex gap-2">
-          {(["ask", "offer"] as const).map((k) => (
+          {(["ask", "offer", ...(userSegment === "researcher" ? ["open_problem"] : [])] as const).map((k) => (
             <button
               key={k}
               type="button"
-              onClick={() => setKind(k)}
+              onClick={() => setKind(k as "ask" | "offer" | "open_problem")}
               className={cn(
                 "rounded-full border px-3 py-1 text-xs uppercase tracking-wider",
                 kind === k ? "border-[var(--indigo-night)] bg-[var(--indigo-night)] text-[var(--parchment)]" : "border-border",
               )}
             >
-              {k}
+              {k === "open_problem" ? "Research Problem" : k}
             </button>
           ))}
         </div>

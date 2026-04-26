@@ -1,10 +1,11 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Mail, Copy, MessageSquare } from "lucide-react";
 
 export const Route = createFileRoute("/app/connect")({
   head: () => ({ meta: [{ title: "Connect — Indus Orbit" }, { name: "robots", content: "noindex" }] }),
@@ -29,9 +30,11 @@ const TABS = [
 
 function ConnectPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [tab, setTab] = useState<(typeof TABS)[number]["key"]>("incoming");
   const [rows, setRows] = useState<Req[]>([]);
   const [names, setNames] = useState<Record<string, string>>({});
+  const [emails, setEmails] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(true);
 
   async function load() {
@@ -56,6 +59,18 @@ function ConnectPage() {
         map[p.user_id] = p.display_name ?? "Member";
       }
       setNames(map);
+
+      // Fetch emails for accepted requests
+      const emailMap: Record<string, string> = {};
+      const acceptedRequests = list.filter(r => r.status === "accepted");
+      await Promise.all(
+        acceptedRequests.map(async (r) => {
+          const id = tab === "incoming" ? r.sender_id : r.recipient_id;
+          const { data: emailData } = await supabase.rpc("get_connection_email", { target_user_id: id });
+          if (emailData) emailMap[id] = emailData;
+        })
+      );
+      setEmails(emailMap);
     }
     setBusy(false);
   }
@@ -65,9 +80,26 @@ function ConnectPage() {
   async function respond(r: Req, status: "accepted" | "declined" | "withdrawn") {
     const { error } = await supabase.from("connection_requests").update({ status }).eq("id", r.id);
     if (error) return toast.error(error.message);
+    
+    // Send notification if accepted
+    if (status === "accepted" && tab === "incoming") {
+      await supabase.from("notifications").insert({
+        user_id: r.sender_id,
+        category: "connect_requests",
+        type: "connect_requests",
+        message: `${user?.email} has accepted your connection request.`,
+        link: "/app/connect"
+      });
+    }
+    
     toast.success(`Request ${status}`);
     load();
   }
+
+  const handleCopyEmail = (email: string) => {
+    navigator.clipboard.writeText(email);
+    toast.success("Email copied to clipboard");
+  };
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -131,6 +163,31 @@ function ConnectPage() {
                 {tab === "outgoing" && r.status === "pending" && (
                   <div className="mt-4">
                     <Button variant="outline" onClick={() => respond(r, "withdrawn")}>Withdraw</Button>
+                  </div>
+                )}
+                {r.status === "accepted" && emails[otherId] && (
+                  <div className="mt-6 flex items-center justify-between rounded-2xl bg-[var(--indigo-night)]/5 p-4 border border-[var(--indigo-night)]/10">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wider text-[var(--indigo-night)]">Contact Information</p>
+                      <p className="mt-1 font-medium">{emails[otherId]}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button size="icon" variant="outline" onClick={() => handleCopyEmail(emails[otherId])}>
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        className="bg-[var(--indigo-night)] text-[var(--parchment)] hover:bg-[var(--indigo-night)]/90"
+                        onClick={() => { window.location.href = `mailto:${emails[otherId]}`; }}
+                      >
+                        <Mail className="mr-2 h-4 w-4" /> Email
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => navigate({ to: '/app/messages', search: { user: otherId } })}
+                      >
+                        <MessageSquare className="mr-2 h-4 w-4" /> Message
+                      </Button>
+                    </div>
                   </div>
                 )}
               </article>

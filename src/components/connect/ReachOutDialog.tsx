@@ -52,11 +52,22 @@ export function ReachOutDialog({
       reason,
       note: trimmed,
     });
-    setBusy(false);
+    
     if (error) {
+      setBusy(false);
       if (error.code === "23505") return toast.error("You already have a pending request to this member");
       return toast.error(error.message);
     }
+
+    // Insert notification for the recipient
+    await supabase.from("notifications").insert({
+      user_id: recipientId,
+      type: "connection_request",
+      message: "You have a new connection request.",
+      link: "/app/connect",
+    });
+
+    setBusy(false);
     toast.success("Request sent");
     setNote("");
     onOpenChange(false);

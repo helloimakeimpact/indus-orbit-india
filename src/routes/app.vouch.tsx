@@ -2,7 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Copy, Plus, ShieldCheck, Sparkles, Send } from "lucide-react";
-import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -27,9 +26,6 @@ type Status = Awaited<ReturnType<typeof getMyVouchStatus>>;
 
 function VouchPage() {
   const { user, isAdmin } = useAuth();
-  const getStatus = useServerFn(getMyVouchStatus);
-  const issueCodeFn = useServerFn(issueCode);
-  const vouchFn = useServerFn(vouchDirectly);
   const [status, setStatus] = useState<Status | null>(null);
   const [busy, setBusy] = useState(true);
   const [issueOpen, setIssueOpen] = useState(false);
@@ -39,7 +35,7 @@ function VouchPage() {
   async function load() {
     setBusy(true);
     try {
-      const s = await getStatus();
+      const s = await getMyVouchStatus();
       setStatus(s);
     } catch (e) {
       toast.error((e as Error).message);
@@ -55,7 +51,7 @@ function VouchPage() {
 
   async function onIssue() {
     try {
-      const r = await issueCodeFn();
+      const r = await issueCode();
       toast.success("Code generated");
       setIssueOpen(false);
       await navigator.clipboard.writeText(r.code).catch(() => {});
@@ -200,7 +196,6 @@ function VouchPage() {
         open={directOpen}
         onOpenChange={setDirectOpen}
         onDone={load}
-        vouchFn={vouchFn}
       />
     </div>
   );
@@ -210,12 +205,10 @@ function DirectVouchDialog({
   open,
   onOpenChange,
   onDone,
-  vouchFn,
 }: {
   open: boolean;
   onOpenChange: (o: boolean) => void;
   onDone: () => void;
-  vouchFn: (args: { data: { recipientId: string } }) => Promise<{ ok: boolean; alreadyVerified: boolean }>;
 }) {
   const [q, setQ] = useState("");
   const [results, setResults] = useState<Array<{ user_id: string; display_name: string | null; is_verified: boolean }>>([]);
@@ -236,7 +229,7 @@ function DirectVouchDialog({
 
   async function vouch(uid: string) {
     try {
-      const r = await vouchFn({ data: { recipientId: uid } });
+      const r = await vouchDirectly(uid);
       toast.success(r.alreadyVerified ? "Already verified — vouch logged" : "Vouched and verified");
       onOpenChange(false);
       onDone();

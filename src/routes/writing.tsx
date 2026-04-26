@@ -1,7 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute } from '@tanstack/react-router'
+
+import { useState, useEffect } from "react";
 import { SiteShell } from "@/components/site/SiteShell";
 import { cn } from "@/lib/utils";
+import { getPublishedStories } from "@/server/society.functions";
 
 export const Route = createFileRoute("/writing")({
   head: () => ({
@@ -23,7 +25,7 @@ export const Route = createFileRoute("/writing")({
   component: WritingPage,
 });
 
-type Tag = "All" | "Announcements" | "Research" | "Vision";
+type Tag = "All" | "Announcements" | "Research" | "Vision" | "Community";
 
 const posts: Array<{ title: string; excerpt: string; author: string; tag: Exclude<Tag, "All">; gradient: string }> = [
   {
@@ -78,8 +80,23 @@ const posts: Array<{ title: string; excerpt: string; author: string; tag: Exclud
 
 function WritingPage() {
   const [active, setActive] = useState<Tag>("All");
-  const tags: Tag[] = ["All", "Announcements", "Research", "Vision"];
-  const filtered = active === "All" ? posts : posts.filter((p) => p.tag === active);
+  const [memberStories, setMemberStories] = useState<any[]>([]);
+  const tags: Tag[] = ["All", "Announcements", "Research", "Vision", "Community"];
+
+  useEffect(() => {
+    getPublishedStories().then(setMemberStories).catch(console.error);
+  }, []);
+
+  const dynamicPosts = memberStories.map(s => ({
+    title: s.title,
+    excerpt: s.content.substring(0, 100) + '...', // Simple excerpt extraction
+    author: s.profiles?.display_name || 'Member',
+    tag: "Community" as Exclude<Tag, "All">,
+    gradient: "from-[var(--saffron)]/40 via-[var(--indigo-night)]/50 to-[var(--monsoon)]/80" // default gradient
+  }));
+
+  const allPosts = [...dynamicPosts, ...posts];
+  const filtered = active === "All" ? allPosts : allPosts.filter((p) => p.tag === active);
 
   return (
     <SiteShell>

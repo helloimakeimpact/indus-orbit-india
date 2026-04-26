@@ -37,9 +37,19 @@ const schema = z.object({
   linkedin_url: z.string().trim().url("Must be a URL").max(255).optional().or(z.literal("")),
   website_url: z.string().trim().url("Must be a URL").max(255).optional().or(z.literal("")),
   orbit_segment: z.enum(SEGMENT_LIST as unknown as [Segment, ...Segment[]]).nullable(),
+  booking_url: z.string().trim().url("Must be a URL").max(255).optional().or(z.literal("")),
   is_public: z.boolean(),
+  notification_prefs: z.record(z.object({ in_app: z.boolean(), email: z.boolean() })).optional(),
 });
 type Form = z.infer<typeof schema>;
+
+const defaultPrefs = {
+  connect_requests: { in_app: true, email: true },
+  vouches: { in_app: true, email: true },
+  mentorship: { in_app: true, email: true },
+  mission_updates: { in_app: true, email: true },
+  system_alerts: { in_app: true, email: true }
+};
 
 function ProfilePage() {
   const { user } = useAuth();
@@ -54,7 +64,9 @@ function ProfilePage() {
     linkedin_url: "",
     website_url: "",
     orbit_segment: null,
+    booking_url: "",
     is_public: false,
+    notification_prefs: defaultPrefs,
   });
   const [details, setDetails] = useState<SegmentDetails>({});
   const [verified, setVerified] = useState(false);
@@ -82,7 +94,9 @@ function ProfilePage() {
             linkedin_url: (d.linkedin_url as string) ?? "",
             website_url: (d.website_url as string) ?? "",
             orbit_segment: (d.orbit_segment as Segment | null) ?? null,
+            booking_url: (d.booking_url as string) ?? "",
             is_public: Boolean(d.is_public),
+            notification_prefs: (d.notification_prefs as Form["notification_prefs"]) ?? defaultPrefs,
           });
           setDetails((d.segment_details as SegmentDetails) ?? {});
           setVerified(Boolean(d.is_verified));
@@ -108,7 +122,9 @@ function ProfilePage() {
         linkedin_url: parsed.data.linkedin_url || null,
         website_url: parsed.data.website_url || null,
         orbit_segment: parsed.data.orbit_segment,
+        booking_url: parsed.data.booking_url || null,
         is_public: parsed.data.is_public,
+        notification_prefs: parsed.data.notification_prefs,
         ...({ region: parsed.data.region || null, timezone: parsed.data.timezone || null, segment_details: details } as Record<string, unknown>),
       } as never)
       .eq("user_id", user.id);
@@ -173,6 +189,19 @@ function ProfilePage() {
               <p className="mt-1 text-xs text-muted-foreground">Helps the Orbit connect you with the right people.</p>
             </div>
             <SegmentDetailsForm segment={form.orbit_segment} value={details} onChange={setDetails} />
+            
+            {form.orbit_segment === "expert" && (
+              <div className="pt-4 border-t border-border">
+                <Field label="Mentorship Booking URL">
+                  <Input 
+                    placeholder="https://calendly.com/your-link" 
+                    value={form.booking_url} 
+                    onChange={(e) => setForm({ ...form, booking_url: e.target.value })} 
+                  />
+                  <p className="mt-1 text-xs text-muted-foreground">We will automatically use this link when you accept a mentorship request.</p>
+                </Field>
+              </div>
+            )}
           </div>
         )}
 
@@ -182,6 +211,44 @@ function ProfilePage() {
             <p className="text-sm text-muted-foreground">Other visitors can see your profile.</p>
           </div>
           <Switch checked={form.is_public} onCheckedChange={(v) => setForm({ ...form, is_public: v })} />
+        </div>
+
+        <div className="rounded-2xl border border-border bg-card overflow-hidden">
+          <div className="bg-muted/40 p-4 border-b border-border">
+            <h3 className="font-display text-lg font-medium">Notification Preferences</h3>
+            <p className="text-sm text-muted-foreground">Manage how you receive alerts and updates.</p>
+          </div>
+          <div className="divide-y divide-border">
+            {Object.entries(form.notification_prefs || defaultPrefs).map(([key, prefs]) => (
+              <div key={key} className="p-4 flex items-center justify-between">
+                <div>
+                  <p className="font-medium capitalize">{key.replace('_', ' ')}</p>
+                </div>
+                <div className="flex items-center gap-6">
+                  <div className="flex items-center gap-2">
+                    <Label className="text-xs uppercase text-muted-foreground">In-App</Label>
+                    <Switch 
+                      checked={prefs.in_app} 
+                      onCheckedChange={(v) => setForm(prev => ({
+                        ...prev, 
+                        notification_prefs: { ...prev.notification_prefs, [key]: { ...prefs, in_app: v } }
+                      }))} 
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Label className="text-xs uppercase text-muted-foreground">Email</Label>
+                    <Switch 
+                      checked={prefs.email} 
+                      onCheckedChange={(v) => setForm(prev => ({
+                        ...prev, 
+                        notification_prefs: { ...prev.notification_prefs, [key]: { ...prefs, email: v } }
+                      }))} 
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
         <Button type="submit" disabled={busy} className="bg-[var(--indigo-night)] text-[var(--parchment)] hover:bg-[var(--indigo-night)]/90">

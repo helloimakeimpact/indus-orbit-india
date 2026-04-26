@@ -1,10 +1,12 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { useState } from "react";
-import { Home, Users, User as UserIcon, Shield, UserCog, LogOut, Menu, X, Send, Megaphone, LayoutDashboard, ClipboardList, Flag, ScrollText, ShieldCheck, KeyRound } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Home, Users, User as UserIcon, Shield, UserCog, LogOut, Menu, X, Send, Megaphone, LayoutDashboard, ClipboardList, Flag, ScrollText, ShieldCheck, KeyRound, CalendarClock, TrendingUp, Globe2, BookOpen, MapPin, CalendarDays, Bell, MessageSquare } from "lucide-react";
 import logo from "@/assets/indus-orbit-logo.png";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { getUnreadNotificationCount } from "@/server/notification.functions";
+import { getUnreadMessageCount } from "@/server/messages.functions";
 
 type Item = { to: string; label: string; icon: typeof Home; admin?: boolean };
 
@@ -12,8 +14,14 @@ const ITEMS: Item[] = [
   { to: "/app", label: "Home", icon: Home },
   { to: "/app/directory", label: "Directory", icon: Users },
   { to: "/app/connect", label: "Connect", icon: Send },
+  { to: "/app/messages", label: "Messages", icon: MessageSquare },
   { to: "/app/board", label: "Board", icon: Megaphone },
+  { to: "/app/missions", label: "India Missions", icon: Globe2 },
+  { to: "/app/chapters", label: "Chapters", icon: MapPin },
+  { to: "/app/events", label: "Events", icon: CalendarDays },
+  { to: "/app/stories", label: "Stories", icon: BookOpen },
   { to: "/app/vouch", label: "Vouch", icon: ShieldCheck },
+  { to: "/app/mentor", label: "Mentorship", icon: CalendarClock },
   { to: "/app/profile", label: "My profile", icon: UserIcon },
 ];
 
@@ -28,11 +36,31 @@ const ADMIN_ITEMS: Item[] = [
 ];
 
 function NavList({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
-  const { isAdmin } = useAuth();
+  const { isAdmin, userSegment } = useAuth();
+  const [unreadMsgs, setUnreadMsgs] = useState(0);
+  
+  useEffect(() => {
+    getUnreadMessageCount().then(setUnreadMsgs).catch(() => {});
+    const id = setInterval(() => getUnreadMessageCount().then(setUnreadMsgs).catch(() => {}), 15000);
+    return () => clearInterval(id);
+  }, []);
+  
+  const navItems = [...ITEMS];
+  if (userSegment === "investor") {
+    const boardIndex = navItems.findIndex(i => i.to === "/app/board");
+    navItems.splice(boardIndex + 1, 0, { to: "/app/investor-feed", label: "Deal Flow", icon: TrendingUp });
+  }
+
   return (
     <nav className="flex flex-col gap-0.5">
-      {ITEMS.map((item) => (
-        <NavRow key={item.to} item={item} active={pathname === item.to} onClick={onNavigate} />
+      {navItems.map((item) => (
+        <NavRow
+          key={item.to}
+          item={item}
+          active={pathname === item.to}
+          onClick={onNavigate}
+          badgeCount={item.to === "/app/messages" ? unreadMsgs : 0}
+        />
       ))}
       {isAdmin && (
         <>
@@ -53,24 +81,31 @@ function NavList({ pathname, onNavigate }: { pathname: string; onNavigate?: () =
   );
 }
 
-function NavRow({ item, active, onClick }: { item: Item; active: boolean; onClick?: () => void }) {
+function NavRow({ item, active, onClick, badgeCount = 0 }: { item: Item; active: boolean; onClick?: () => void; badgeCount?: number }) {
   const Icon = item.icon;
   return (
     <Link
       to={item.to}
       onClick={onClick}
       className={cn(
-        "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition",
+        "group relative flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition",
         active
           ? "bg-[var(--parchment)]/10 text-[var(--parchment)]"
           : "text-[var(--parchment)]/70 hover:bg-[var(--parchment)]/5 hover:text-[var(--parchment)]",
       )}
     >
-      {active && (
-        <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-[var(--saffron)]" />
+      <div className="flex items-center gap-3">
+        {active && (
+          <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-[var(--saffron)]" />
+        )}
+        <Icon className="h-4 w-4" />
+        {item.label}
+      </div>
+      {badgeCount > 0 && (
+        <span className="flex h-5 items-center justify-center rounded-full bg-[var(--saffron)] px-2 text-[10px] font-bold text-[var(--indigo-night)]">
+          {badgeCount}
+        </span>
       )}
-      <Icon className="h-4 w-4" />
-      {item.label}
     </Link>
   );
 }

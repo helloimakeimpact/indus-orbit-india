@@ -21,17 +21,34 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as RedeemCodeRouteImport } from './routes/redeem.$code'
+import { Route as ProfileIdRouteImport } from './routes/profile.$id'
 import { Route as AppVouchRouteImport } from './routes/app.vouch'
+import { Route as AppStoriesRouteImport } from './routes/app.stories'
 import { Route as AppProfileRouteImport } from './routes/app.profile'
+import { Route as AppNotificationsRouteImport } from './routes/app.notifications'
+import { Route as AppMissionsRouteImport } from './routes/app.missions'
+import { Route as AppMessagesRouteImport } from './routes/app.messages'
+import { Route as AppMentorRouteImport } from './routes/app.mentor'
+import { Route as AppInvestorFeedRouteImport } from './routes/app.investor-feed'
+import { Route as AppEventsRouteImport } from './routes/app.events'
 import { Route as AppDirectoryRouteImport } from './routes/app.directory'
 import { Route as AppConnectRouteImport } from './routes/app.connect'
+import { Route as AppChaptersRouteImport } from './routes/app.chapters'
+import { Route as AppChapterAdminRouteImport } from './routes/app.chapter-admin'
 import { Route as AppBoardRouteImport } from './routes/app.board'
+import { Route as AppStoriesIndexRouteImport } from './routes/app.stories.index'
+import { Route as AppMissionsIndexRouteImport } from './routes/app.missions.index'
+import { Route as AppEventsIndexRouteImport } from './routes/app.events.index'
 import { Route as AppAdminIndexRouteImport } from './routes/app.admin.index'
+import { Route as AppStoriesIdRouteImport } from './routes/app.stories.$id'
+import { Route as AppMissionsMissionIdRouteImport } from './routes/app.missions.$missionId'
+import { Route as AppEventsIdRouteImport } from './routes/app.events.$id'
 import { Route as AppAdminVouchesRouteImport } from './routes/app.admin.vouches'
 import { Route as AppAdminRolesRouteImport } from './routes/app.admin.roles'
 import { Route as AppAdminReportsRouteImport } from './routes/app.admin.reports'
 import { Route as AppAdminQueueRouteImport } from './routes/app.admin.queue'
 import { Route as AppAdminMembersRouteImport } from './routes/app.admin.members'
+import { Route as AppAdminContentRouteImport } from './routes/app.admin.content'
 import { Route as AppAdminAuditRouteImport } from './routes/app.admin.audit'
 
 const WritingRoute = WritingRouteImport.update({
@@ -94,14 +111,54 @@ const RedeemCodeRoute = RedeemCodeRouteImport.update({
   path: '/redeem/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProfileIdRoute = ProfileIdRouteImport.update({
+  id: '/profile/$id',
+  path: '/profile/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppVouchRoute = AppVouchRouteImport.update({
   id: '/vouch',
   path: '/vouch',
   getParentRoute: () => AppRoute,
 } as any)
+const AppStoriesRoute = AppStoriesRouteImport.update({
+  id: '/stories',
+  path: '/stories',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppProfileRoute = AppProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppNotificationsRoute = AppNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMissionsRoute = AppMissionsRouteImport.update({
+  id: '/missions',
+  path: '/missions',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMessagesRoute = AppMessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMentorRoute = AppMentorRouteImport.update({
+  id: '/mentor',
+  path: '/mentor',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppInvestorFeedRoute = AppInvestorFeedRouteImport.update({
+  id: '/investor-feed',
+  path: '/investor-feed',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppEventsRoute = AppEventsRouteImport.update({
+  id: '/events',
+  path: '/events',
   getParentRoute: () => AppRoute,
 } as any)
 const AppDirectoryRoute = AppDirectoryRouteImport.update({
@@ -114,15 +171,55 @@ const AppConnectRoute = AppConnectRouteImport.update({
   path: '/connect',
   getParentRoute: () => AppRoute,
 } as any)
+const AppChaptersRoute = AppChaptersRouteImport.update({
+  id: '/chapters',
+  path: '/chapters',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppChapterAdminRoute = AppChapterAdminRouteImport.update({
+  id: '/chapter-admin',
+  path: '/chapter-admin',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppBoardRoute = AppBoardRouteImport.update({
   id: '/board',
   path: '/board',
   getParentRoute: () => AppRoute,
 } as any)
+const AppStoriesIndexRoute = AppStoriesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppStoriesRoute,
+} as any)
+const AppMissionsIndexRoute = AppMissionsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppMissionsRoute,
+} as any)
+const AppEventsIndexRoute = AppEventsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppEventsRoute,
+} as any)
 const AppAdminIndexRoute = AppAdminIndexRouteImport.update({
   id: '/admin/',
   path: '/admin/',
   getParentRoute: () => AppRoute,
+} as any)
+const AppStoriesIdRoute = AppStoriesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AppStoriesRoute,
+} as any)
+const AppMissionsMissionIdRoute = AppMissionsMissionIdRouteImport.update({
+  id: '/$missionId',
+  path: '/$missionId',
+  getParentRoute: () => AppMissionsRoute,
+} as any)
+const AppEventsIdRoute = AppEventsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AppEventsRoute,
 } as any)
 const AppAdminVouchesRoute = AppAdminVouchesRouteImport.update({
   id: '/admin/vouches',
@@ -149,6 +246,11 @@ const AppAdminMembersRoute = AppAdminMembersRouteImport.update({
   path: '/admin/members',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAdminContentRoute = AppAdminContentRouteImport.update({
+  id: '/admin/content',
+  path: '/admin/content',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAdminAuditRoute = AppAdminAuditRouteImport.update({
   id: '/admin/audit',
   path: '/admin/audit',
@@ -167,19 +269,36 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/writing': typeof WritingRoute
   '/app/board': typeof AppBoardRoute
+  '/app/chapter-admin': typeof AppChapterAdminRoute
+  '/app/chapters': typeof AppChaptersRoute
   '/app/connect': typeof AppConnectRoute
   '/app/directory': typeof AppDirectoryRoute
+  '/app/events': typeof AppEventsRouteWithChildren
+  '/app/investor-feed': typeof AppInvestorFeedRoute
+  '/app/mentor': typeof AppMentorRoute
+  '/app/messages': typeof AppMessagesRoute
+  '/app/missions': typeof AppMissionsRouteWithChildren
+  '/app/notifications': typeof AppNotificationsRoute
   '/app/profile': typeof AppProfileRoute
+  '/app/stories': typeof AppStoriesRouteWithChildren
   '/app/vouch': typeof AppVouchRoute
+  '/profile/$id': typeof ProfileIdRoute
   '/redeem/$code': typeof RedeemCodeRoute
   '/app/': typeof AppIndexRoute
   '/app/admin/audit': typeof AppAdminAuditRoute
+  '/app/admin/content': typeof AppAdminContentRoute
   '/app/admin/members': typeof AppAdminMembersRoute
   '/app/admin/queue': typeof AppAdminQueueRoute
   '/app/admin/reports': typeof AppAdminReportsRoute
   '/app/admin/roles': typeof AppAdminRolesRoute
   '/app/admin/vouches': typeof AppAdminVouchesRoute
+  '/app/events/$id': typeof AppEventsIdRoute
+  '/app/missions/$missionId': typeof AppMissionsMissionIdRoute
+  '/app/stories/$id': typeof AppStoriesIdRoute
   '/app/admin/': typeof AppAdminIndexRoute
+  '/app/events/': typeof AppEventsIndexRoute
+  '/app/missions/': typeof AppMissionsIndexRoute
+  '/app/stories/': typeof AppStoriesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -192,19 +311,33 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/writing': typeof WritingRoute
   '/app/board': typeof AppBoardRoute
+  '/app/chapter-admin': typeof AppChapterAdminRoute
+  '/app/chapters': typeof AppChaptersRoute
   '/app/connect': typeof AppConnectRoute
   '/app/directory': typeof AppDirectoryRoute
+  '/app/investor-feed': typeof AppInvestorFeedRoute
+  '/app/mentor': typeof AppMentorRoute
+  '/app/messages': typeof AppMessagesRoute
+  '/app/notifications': typeof AppNotificationsRoute
   '/app/profile': typeof AppProfileRoute
   '/app/vouch': typeof AppVouchRoute
+  '/profile/$id': typeof ProfileIdRoute
   '/redeem/$code': typeof RedeemCodeRoute
   '/app': typeof AppIndexRoute
   '/app/admin/audit': typeof AppAdminAuditRoute
+  '/app/admin/content': typeof AppAdminContentRoute
   '/app/admin/members': typeof AppAdminMembersRoute
   '/app/admin/queue': typeof AppAdminQueueRoute
   '/app/admin/reports': typeof AppAdminReportsRoute
   '/app/admin/roles': typeof AppAdminRolesRoute
   '/app/admin/vouches': typeof AppAdminVouchesRoute
+  '/app/events/$id': typeof AppEventsIdRoute
+  '/app/missions/$missionId': typeof AppMissionsMissionIdRoute
+  '/app/stories/$id': typeof AppStoriesIdRoute
   '/app/admin': typeof AppAdminIndexRoute
+  '/app/events': typeof AppEventsIndexRoute
+  '/app/missions': typeof AppMissionsIndexRoute
+  '/app/stories': typeof AppStoriesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -219,19 +352,36 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/writing': typeof WritingRoute
   '/app/board': typeof AppBoardRoute
+  '/app/chapter-admin': typeof AppChapterAdminRoute
+  '/app/chapters': typeof AppChaptersRoute
   '/app/connect': typeof AppConnectRoute
   '/app/directory': typeof AppDirectoryRoute
+  '/app/events': typeof AppEventsRouteWithChildren
+  '/app/investor-feed': typeof AppInvestorFeedRoute
+  '/app/mentor': typeof AppMentorRoute
+  '/app/messages': typeof AppMessagesRoute
+  '/app/missions': typeof AppMissionsRouteWithChildren
+  '/app/notifications': typeof AppNotificationsRoute
   '/app/profile': typeof AppProfileRoute
+  '/app/stories': typeof AppStoriesRouteWithChildren
   '/app/vouch': typeof AppVouchRoute
+  '/profile/$id': typeof ProfileIdRoute
   '/redeem/$code': typeof RedeemCodeRoute
   '/app/': typeof AppIndexRoute
   '/app/admin/audit': typeof AppAdminAuditRoute
+  '/app/admin/content': typeof AppAdminContentRoute
   '/app/admin/members': typeof AppAdminMembersRoute
   '/app/admin/queue': typeof AppAdminQueueRoute
   '/app/admin/reports': typeof AppAdminReportsRoute
   '/app/admin/roles': typeof AppAdminRolesRoute
   '/app/admin/vouches': typeof AppAdminVouchesRoute
+  '/app/events/$id': typeof AppEventsIdRoute
+  '/app/missions/$missionId': typeof AppMissionsMissionIdRoute
+  '/app/stories/$id': typeof AppStoriesIdRoute
   '/app/admin/': typeof AppAdminIndexRoute
+  '/app/events/': typeof AppEventsIndexRoute
+  '/app/missions/': typeof AppMissionsIndexRoute
+  '/app/stories/': typeof AppStoriesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -247,19 +397,36 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/writing'
     | '/app/board'
+    | '/app/chapter-admin'
+    | '/app/chapters'
     | '/app/connect'
     | '/app/directory'
+    | '/app/events'
+    | '/app/investor-feed'
+    | '/app/mentor'
+    | '/app/messages'
+    | '/app/missions'
+    | '/app/notifications'
     | '/app/profile'
+    | '/app/stories'
     | '/app/vouch'
+    | '/profile/$id'
     | '/redeem/$code'
     | '/app/'
     | '/app/admin/audit'
+    | '/app/admin/content'
     | '/app/admin/members'
     | '/app/admin/queue'
     | '/app/admin/reports'
     | '/app/admin/roles'
     | '/app/admin/vouches'
+    | '/app/events/$id'
+    | '/app/missions/$missionId'
+    | '/app/stories/$id'
     | '/app/admin/'
+    | '/app/events/'
+    | '/app/missions/'
+    | '/app/stories/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -272,19 +439,33 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/writing'
     | '/app/board'
+    | '/app/chapter-admin'
+    | '/app/chapters'
     | '/app/connect'
     | '/app/directory'
+    | '/app/investor-feed'
+    | '/app/mentor'
+    | '/app/messages'
+    | '/app/notifications'
     | '/app/profile'
     | '/app/vouch'
+    | '/profile/$id'
     | '/redeem/$code'
     | '/app'
     | '/app/admin/audit'
+    | '/app/admin/content'
     | '/app/admin/members'
     | '/app/admin/queue'
     | '/app/admin/reports'
     | '/app/admin/roles'
     | '/app/admin/vouches'
+    | '/app/events/$id'
+    | '/app/missions/$missionId'
+    | '/app/stories/$id'
     | '/app/admin'
+    | '/app/events'
+    | '/app/missions'
+    | '/app/stories'
   id:
     | '__root__'
     | '/'
@@ -298,19 +479,36 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/writing'
     | '/app/board'
+    | '/app/chapter-admin'
+    | '/app/chapters'
     | '/app/connect'
     | '/app/directory'
+    | '/app/events'
+    | '/app/investor-feed'
+    | '/app/mentor'
+    | '/app/messages'
+    | '/app/missions'
+    | '/app/notifications'
     | '/app/profile'
+    | '/app/stories'
     | '/app/vouch'
+    | '/profile/$id'
     | '/redeem/$code'
     | '/app/'
     | '/app/admin/audit'
+    | '/app/admin/content'
     | '/app/admin/members'
     | '/app/admin/queue'
     | '/app/admin/reports'
     | '/app/admin/roles'
     | '/app/admin/vouches'
+    | '/app/events/$id'
+    | '/app/missions/$missionId'
+    | '/app/stories/$id'
     | '/app/admin/'
+    | '/app/events/'
+    | '/app/missions/'
+    | '/app/stories/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -324,6 +522,7 @@ export interface RootRouteChildren {
   OurWorkRoute: typeof OurWorkRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   WritingRoute: typeof WritingRoute
+  ProfileIdRoute: typeof ProfileIdRoute
   RedeemCodeRoute: typeof RedeemCodeRoute
 }
 
@@ -413,6 +612,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RedeemCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/profile/$id': {
+      id: '/profile/$id'
+      path: '/profile/$id'
+      fullPath: '/profile/$id'
+      preLoaderRoute: typeof ProfileIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app/vouch': {
       id: '/app/vouch'
       path: '/vouch'
@@ -420,11 +626,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppVouchRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/stories': {
+      id: '/app/stories'
+      path: '/stories'
+      fullPath: '/app/stories'
+      preLoaderRoute: typeof AppStoriesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/profile': {
       id: '/app/profile'
       path: '/profile'
       fullPath: '/app/profile'
       preLoaderRoute: typeof AppProfileRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/notifications': {
+      id: '/app/notifications'
+      path: '/notifications'
+      fullPath: '/app/notifications'
+      preLoaderRoute: typeof AppNotificationsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/missions': {
+      id: '/app/missions'
+      path: '/missions'
+      fullPath: '/app/missions'
+      preLoaderRoute: typeof AppMissionsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/messages': {
+      id: '/app/messages'
+      path: '/messages'
+      fullPath: '/app/messages'
+      preLoaderRoute: typeof AppMessagesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/mentor': {
+      id: '/app/mentor'
+      path: '/mentor'
+      fullPath: '/app/mentor'
+      preLoaderRoute: typeof AppMentorRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/investor-feed': {
+      id: '/app/investor-feed'
+      path: '/investor-feed'
+      fullPath: '/app/investor-feed'
+      preLoaderRoute: typeof AppInvestorFeedRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/events': {
+      id: '/app/events'
+      path: '/events'
+      fullPath: '/app/events'
+      preLoaderRoute: typeof AppEventsRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/directory': {
@@ -441,6 +696,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppConnectRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/chapters': {
+      id: '/app/chapters'
+      path: '/chapters'
+      fullPath: '/app/chapters'
+      preLoaderRoute: typeof AppChaptersRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/chapter-admin': {
+      id: '/app/chapter-admin'
+      path: '/chapter-admin'
+      fullPath: '/app/chapter-admin'
+      preLoaderRoute: typeof AppChapterAdminRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/board': {
       id: '/app/board'
       path: '/board'
@@ -448,12 +717,54 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppBoardRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/stories/': {
+      id: '/app/stories/'
+      path: '/'
+      fullPath: '/app/stories/'
+      preLoaderRoute: typeof AppStoriesIndexRouteImport
+      parentRoute: typeof AppStoriesRoute
+    }
+    '/app/missions/': {
+      id: '/app/missions/'
+      path: '/'
+      fullPath: '/app/missions/'
+      preLoaderRoute: typeof AppMissionsIndexRouteImport
+      parentRoute: typeof AppMissionsRoute
+    }
+    '/app/events/': {
+      id: '/app/events/'
+      path: '/'
+      fullPath: '/app/events/'
+      preLoaderRoute: typeof AppEventsIndexRouteImport
+      parentRoute: typeof AppEventsRoute
+    }
     '/app/admin/': {
       id: '/app/admin/'
       path: '/admin'
       fullPath: '/app/admin/'
       preLoaderRoute: typeof AppAdminIndexRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/app/stories/$id': {
+      id: '/app/stories/$id'
+      path: '/$id'
+      fullPath: '/app/stories/$id'
+      preLoaderRoute: typeof AppStoriesIdRouteImport
+      parentRoute: typeof AppStoriesRoute
+    }
+    '/app/missions/$missionId': {
+      id: '/app/missions/$missionId'
+      path: '/$missionId'
+      fullPath: '/app/missions/$missionId'
+      preLoaderRoute: typeof AppMissionsMissionIdRouteImport
+      parentRoute: typeof AppMissionsRoute
+    }
+    '/app/events/$id': {
+      id: '/app/events/$id'
+      path: '/$id'
+      fullPath: '/app/events/$id'
+      preLoaderRoute: typeof AppEventsIdRouteImport
+      parentRoute: typeof AppEventsRoute
     }
     '/app/admin/vouches': {
       id: '/app/admin/vouches'
@@ -490,6 +801,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminMembersRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/admin/content': {
+      id: '/app/admin/content'
+      path: '/admin/content'
+      fullPath: '/app/admin/content'
+      preLoaderRoute: typeof AppAdminContentRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/admin/audit': {
       id: '/app/admin/audit'
       path: '/admin/audit'
@@ -500,14 +818,66 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AppEventsRouteChildren {
+  AppEventsIdRoute: typeof AppEventsIdRoute
+  AppEventsIndexRoute: typeof AppEventsIndexRoute
+}
+
+const AppEventsRouteChildren: AppEventsRouteChildren = {
+  AppEventsIdRoute: AppEventsIdRoute,
+  AppEventsIndexRoute: AppEventsIndexRoute,
+}
+
+const AppEventsRouteWithChildren = AppEventsRoute._addFileChildren(
+  AppEventsRouteChildren,
+)
+
+interface AppMissionsRouteChildren {
+  AppMissionsMissionIdRoute: typeof AppMissionsMissionIdRoute
+  AppMissionsIndexRoute: typeof AppMissionsIndexRoute
+}
+
+const AppMissionsRouteChildren: AppMissionsRouteChildren = {
+  AppMissionsMissionIdRoute: AppMissionsMissionIdRoute,
+  AppMissionsIndexRoute: AppMissionsIndexRoute,
+}
+
+const AppMissionsRouteWithChildren = AppMissionsRoute._addFileChildren(
+  AppMissionsRouteChildren,
+)
+
+interface AppStoriesRouteChildren {
+  AppStoriesIdRoute: typeof AppStoriesIdRoute
+  AppStoriesIndexRoute: typeof AppStoriesIndexRoute
+}
+
+const AppStoriesRouteChildren: AppStoriesRouteChildren = {
+  AppStoriesIdRoute: AppStoriesIdRoute,
+  AppStoriesIndexRoute: AppStoriesIndexRoute,
+}
+
+const AppStoriesRouteWithChildren = AppStoriesRoute._addFileChildren(
+  AppStoriesRouteChildren,
+)
+
 interface AppRouteChildren {
   AppBoardRoute: typeof AppBoardRoute
+  AppChapterAdminRoute: typeof AppChapterAdminRoute
+  AppChaptersRoute: typeof AppChaptersRoute
   AppConnectRoute: typeof AppConnectRoute
   AppDirectoryRoute: typeof AppDirectoryRoute
+  AppEventsRoute: typeof AppEventsRouteWithChildren
+  AppInvestorFeedRoute: typeof AppInvestorFeedRoute
+  AppMentorRoute: typeof AppMentorRoute
+  AppMessagesRoute: typeof AppMessagesRoute
+  AppMissionsRoute: typeof AppMissionsRouteWithChildren
+  AppNotificationsRoute: typeof AppNotificationsRoute
   AppProfileRoute: typeof AppProfileRoute
+  AppStoriesRoute: typeof AppStoriesRouteWithChildren
   AppVouchRoute: typeof AppVouchRoute
   AppIndexRoute: typeof AppIndexRoute
   AppAdminAuditRoute: typeof AppAdminAuditRoute
+  AppAdminContentRoute: typeof AppAdminContentRoute
   AppAdminMembersRoute: typeof AppAdminMembersRoute
   AppAdminQueueRoute: typeof AppAdminQueueRoute
   AppAdminReportsRoute: typeof AppAdminReportsRoute
@@ -518,12 +888,22 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppBoardRoute: AppBoardRoute,
+  AppChapterAdminRoute: AppChapterAdminRoute,
+  AppChaptersRoute: AppChaptersRoute,
   AppConnectRoute: AppConnectRoute,
   AppDirectoryRoute: AppDirectoryRoute,
+  AppEventsRoute: AppEventsRouteWithChildren,
+  AppInvestorFeedRoute: AppInvestorFeedRoute,
+  AppMentorRoute: AppMentorRoute,
+  AppMessagesRoute: AppMessagesRoute,
+  AppMissionsRoute: AppMissionsRouteWithChildren,
+  AppNotificationsRoute: AppNotificationsRoute,
   AppProfileRoute: AppProfileRoute,
+  AppStoriesRoute: AppStoriesRouteWithChildren,
   AppVouchRoute: AppVouchRoute,
   AppIndexRoute: AppIndexRoute,
   AppAdminAuditRoute: AppAdminAuditRoute,
+  AppAdminContentRoute: AppAdminContentRoute,
   AppAdminMembersRoute: AppAdminMembersRoute,
   AppAdminQueueRoute: AppAdminQueueRoute,
   AppAdminReportsRoute: AppAdminReportsRoute,
@@ -545,6 +925,7 @@ const rootRouteChildren: RootRouteChildren = {
   OurWorkRoute: OurWorkRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   WritingRoute: WritingRoute,
+  ProfileIdRoute: ProfileIdRoute,
   RedeemCodeRoute: RedeemCodeRoute,
 }
 export const routeTree = rootRouteImport

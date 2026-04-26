@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { SEGMENT_LIST, SEGMENT_META, type Segment } from "@/components/auth/segments";
 import { VerifiedBadge } from "@/components/auth/VerifiedBadge";
+import { getSpotlights } from "@/server/society.functions";
+import { Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/members")({
   head: () => ({
@@ -35,8 +37,13 @@ type Filter = (typeof FILTERS)[number];
 
 function MembersPage() {
   const [members, setMembers] = useState<Profile[]>([]);
+  const [spotlights, setSpotlights] = useState<any[]>([]);
   const [filter, setFilter] = useState<Filter>("all");
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getSpotlights().then(setSpotlights).catch(console.error);
+  }, []);
 
   useEffect(() => {
     setLoading(true);
@@ -80,6 +87,29 @@ function MembersPage() {
               </button>
             ))}
           </div>
+          
+          {spotlights.length > 0 && filter === "all" && (
+            <div className="mt-12 mb-8">
+              <div className="flex items-center gap-2 mb-6">
+                <Sparkles className="h-6 w-6 text-[var(--saffron)]" />
+                <h2 className="font-display text-2xl font-medium">Member Spotlights</h2>
+              </div>
+              <div className="grid gap-6 md:grid-cols-2">
+                {spotlights.map((s) => (
+                  <div key={s.id} className="rounded-3xl border-2 border-[var(--saffron)]/30 bg-card p-6 relative overflow-hidden group hover:border-[var(--saffron)]/60 transition shadow-sm">
+                    <div className="absolute top-0 right-0 h-32 w-32 bg-[var(--saffron)]/10 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />
+                    <div className="relative z-10">
+                      <h3 className="font-display text-xl font-semibold">{s.profiles?.display_name}</h3>
+                      <p className="text-sm text-muted-foreground mt-1">{s.profiles?.headline}</p>
+                      <div className="mt-5 text-base leading-relaxed text-foreground/90 italic border-l-4 border-[var(--saffron)] pl-4">
+                        "{s.writeup}"
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {loading ? (
             <p className="mt-12 text-muted-foreground">Loading…</p>

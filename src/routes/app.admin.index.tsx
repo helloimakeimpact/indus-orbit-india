@@ -4,6 +4,12 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { SEGMENT_LIST, SEGMENT_META, type Segment } from "@/components/auth/segments";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { createChapter } from "@/server/society.functions";
 
 export const Route = createFileRoute("/app/admin/")({
   head: () => ({ meta: [{ title: "Admin dashboard — Indus Orbit" }, { name: "robots", content: "noindex" }] }),
@@ -24,6 +30,7 @@ function AdminDashboard() {
   const { isAdmin, loading } = useAuth();
   const navigate = useNavigate();
   const [stats, setStats] = useState<Stats | null>(null);
+  const [creatingChapter, setCreatingChapter] = useState(false);
 
   useEffect(() => {
     if (!loading && !isAdmin) {
@@ -86,20 +93,36 @@ function AdminDashboard() {
               <p className="mt-2 font-display text-3xl">{stats.total - stats.verified}</p>
               <p className="mt-1 text-xs text-[var(--saffron)]">Open queue →</p>
             </Link>
+            <Link to="/app/admin/content" className="rounded-3xl border border-border bg-card p-6 transition hover:bg-foreground/5">
+              <p className="text-xs uppercase tracking-wider text-muted-foreground">Pending content</p>
+              <p className="mt-2 font-display text-3xl">-</p>
+              <p className="mt-1 text-xs text-[var(--saffron)]">Review →</p>
+            </Link>
             <Link to="/app/admin/reports" className="rounded-3xl border border-border bg-card p-6 transition hover:bg-foreground/5">
               <p className="text-xs uppercase tracking-wider text-muted-foreground">Open reports</p>
               <p className="mt-2 font-display text-3xl">{stats.pendingReports}</p>
               <p className="mt-1 text-xs text-[var(--saffron)]">Review →</p>
             </Link>
-            <div className="rounded-3xl border border-border bg-card p-6">
-              <p className="text-xs uppercase tracking-wider text-muted-foreground">Pending requests</p>
-              <p className="mt-2 font-display text-3xl">{stats.openRequests}</p>
-              <p className="mt-1 text-xs text-muted-foreground">across all members</p>
-            </div>
+          </div>
+          
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <Link to="/app/admin/roles" className="rounded-3xl border border-border bg-card p-6 transition hover:bg-foreground/5">
+              <p className="text-xs uppercase tracking-wider text-muted-foreground">Manage roles</p>
+              <p className="mt-1 text-xs text-[var(--saffron)]">Edit →</p>
+            </Link>
+            <Link to="/app/admin/vouches" className="rounded-3xl border border-border bg-card p-6 transition hover:bg-foreground/5">
+              <p className="text-xs uppercase tracking-wider text-muted-foreground">Vouch limits</p>
+              <p className="mt-1 text-xs text-[var(--saffron)]">Edit →</p>
+            </Link>
           </div>
 
           <div className="mt-6 rounded-3xl border border-border bg-card p-6">
-            <h2 className="font-display text-lg font-semibold">By segment</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="font-display text-xl font-medium">Segment breakdown</h2>
+              <Button variant="outline" size="sm" onClick={() => setCreatingChapter(true)}>
+                + Create Chapter
+              </Button>
+            </div>
             <div className="mt-4 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
               {SEGMENT_LIST.map((s) => (
                 <div key={s} className="rounded-xl border border-border p-3">
@@ -111,7 +134,62 @@ function AdminDashboard() {
           </div>
         </>
       )}
+
+      {creatingChapter && <CreateChapterDialog onClose={() => setCreatingChapter(false)} />}
     </div>
+  );
+}
+
+function CreateChapterDialog({ onClose }: { onClose: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const [form, setForm] = useState({ name: "", city: "", country: "", description: "" });
+
+  async function submit() {
+    if (!form.name) return toast.error("Name is required");
+    setBusy(true);
+    try {
+      await createChapter({ data: form });
+      toast.success("Chapter created successfully");
+      onClose();
+    } catch (err: any) {
+      toast.error(err.message);
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Dialog open={true} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Create New Chapter</DialogTitle>
+          <DialogDescription>Add a new chapter to the society.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label>Chapter Name *</Label>
+            <Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="e.g. Bangalore Builders" />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>City</Label>
+              <Input value={form.city} onChange={e => setForm({...form, city: e.target.value})} placeholder="e.g. Bangalore" />
+            </div>
+            <div className="space-y-2">
+              <Label>Country</Label>
+              <Input value={form.country} onChange={e => setForm({...form, country: e.target.value})} placeholder="e.g. India" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Description</Label>
+            <Textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} placeholder="What is this chapter about?" />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button onClick={submit} disabled={busy || !form.name}>{busy ? "Creating..." : "Create Chapter"}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 

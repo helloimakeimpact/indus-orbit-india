@@ -1,13 +1,15 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Flag, Send, ThumbsUp } from "lucide-react";
+import { Flag, Send, ThumbsUp, CalendarClock, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { ReachOutDialog } from "@/components/connect/ReachOutDialog";
 import { EndorseDialog } from "@/components/connect/EndorseDialog";
 import { ReportDialog } from "@/components/connect/ReportDialog";
+import { BookMentorDialog } from "@/components/connect/BookMentorDialog";
 import { SEGMENT_LIST, SEGMENT_META, type Segment } from "@/components/auth/segments";
 import { VerifiedBadge } from "@/components/auth/VerifiedBadge";
 
@@ -41,10 +43,12 @@ function DirectoryPage() {
   const [meVerified, setMeVerified] = useState(false);
   const [filter, setFilter] = useState<Filter>(search.segment ?? "all");
   const [members, setMembers] = useState<Profile[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [reachOut, setReachOut] = useState<Profile | null>(null);
   const [endorse, setEndorse] = useState<Profile | null>(null);
   const [report, setReport] = useState<Profile | null>(null);
+  const [bookMentor, setBookMentor] = useState<Profile | null>(null);
   const [endorseCounts, setEndorseCounts] = useState<Record<string, number>>({});
 
   useEffect(() => {
@@ -90,20 +94,31 @@ function DirectoryPage() {
         Public profiles across all stakeholder segments.
       </p>
 
-      <div className="mt-6 flex flex-wrap gap-2">
-        {FILTERS.map((s) => (
-          <button
-            key={s}
-            onClick={() => setFilter(s)}
-            className={`rounded-full border px-4 py-1.5 text-xs uppercase tracking-wider transition ${
-              filter === s
-                ? "border-[var(--indigo-night)] bg-[var(--indigo-night)] text-[var(--parchment)]"
-                : "border-border hover:bg-foreground/5"
-            }`}
-          >
-            {s === "all" ? "All" : SEGMENT_META[s as Segment].label}
-          </button>
-        ))}
+      <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap gap-2">
+          {FILTERS.map((s) => (
+            <button
+              key={s}
+              onClick={() => setFilter(s)}
+              className={`rounded-full border px-4 py-1.5 text-xs uppercase tracking-wider transition ${
+                filter === s
+                  ? "border-[var(--indigo-night)] bg-[var(--indigo-night)] text-[var(--parchment)]"
+                  : "border-border hover:bg-foreground/5"
+              }`}
+            >
+              {s === "all" ? "All" : SEGMENT_META[s as Segment].label}
+            </button>
+          ))}
+        </div>
+        <div className="relative w-full sm:w-64">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input 
+            placeholder="Search directory..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9 rounded-full bg-muted/50 border-border/50"
+          />
+        </div>
       </div>
 
       {loading ? (
@@ -112,11 +127,20 @@ function DirectoryPage() {
         <p className="mt-12 text-muted-foreground">No members in this segment yet.</p>
       ) : (
         <div className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {members.map((m) => (
+          {members
+            .filter(m => !searchQuery || 
+              m.display_name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+              m.headline?.toLowerCase().includes(searchQuery.toLowerCase())
+            )
+            .map((m) => (
             <article key={m.id} className="rounded-3xl border border-border bg-card p-6">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="font-display text-lg font-semibold">{m.display_name ?? "Member"}</h3>
+                  <h3 className="font-display text-lg font-semibold hover:text-[var(--indigo-night)] transition">
+                    <Link to="/profile/$id" params={{ id: m.user_id }}>
+                      {m.display_name ?? "Member"}
+                    </Link>
+                  </h3>
                   {m.is_verified && <VerifiedBadge />}
                 </div>
                 {m.orbit_segment && <Badge variant="secondary">{SEGMENT_META[m.orbit_segment].label}</Badge>}
@@ -144,6 +168,11 @@ function DirectoryPage() {
                   {meVerified && (
                     <Button size="sm" variant="outline" onClick={() => setEndorse(m)}>
                       <ThumbsUp className="mr-1 h-3.5 w-3.5" /> Endorse
+                    </Button>
+                  )}
+                  {meVerified && m.orbit_segment === "expert" && (
+                    <Button size="sm" variant="outline" onClick={() => setBookMentor(m)}>
+                      <CalendarClock className="mr-1 h-3.5 w-3.5" /> Book Session
                     </Button>
                   )}
                   <button
@@ -186,6 +215,14 @@ function DirectoryPage() {
           targetType="profile"
           targetId={report.id}
           reporterId={user?.id ?? null}
+        />
+      )}
+      {bookMentor && (
+        <BookMentorDialog
+          open={!!bookMentor}
+          onOpenChange={(o) => !o && setBookMentor(null)}
+          expertId={bookMentor.user_id}
+          expertName={bookMentor.display_name ?? "Member"}
         />
       )}
     </div>

@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { ShieldCheck, KeyRound, Send } from "lucide-react";
-import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,14 +19,12 @@ export function VerificationCard({ onChanged }: { onChanged: () => void }) {
   const [busy, setBusy] = useState(false);
   const [requestOpen, setRequestOpen] = useState(false);
   const [message, setMessage] = useState("");
-  const redeemFn = useServerFn(redeemCode);
-  const requestFn = useServerFn(requestVouch);
 
   async function onRedeem() {
     if (code.trim().length < 6) return toast.error("Enter your code");
     setBusy(true);
     try {
-      await redeemFn({ data: { code: code.trim().toUpperCase() } });
+      await redeemCode(code.trim().toUpperCase());
       toast.success("You're verified!");
       setCode("");
       onChanged();
@@ -41,7 +38,7 @@ export function VerificationCard({ onChanged }: { onChanged: () => void }) {
     if (message.trim().length < 10) return toast.error("Add a short message (10+ chars)");
     setBusy(true);
     try {
-      await requestFn({ data: { message: message.trim() } });
+      await requestVouch(message.trim());
       toast.success("Request sent to admins");
       setMessage("");
       setRequestOpen(false);
