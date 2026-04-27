@@ -78,7 +78,7 @@ function ReportsPage() {
   if (!isAdmin) return null;
 
   return (
-    <div className="mx-auto max-w-5xl">
+    <div className="mx-auto w-full max-w-7xl">
       <h1 className="font-display text-3xl font-medium">Reports</h1>
       <p className="mt-2 text-sm text-muted-foreground">Member-submitted flags on profiles, posts, requests, and endorsements.</p>
 

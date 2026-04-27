@@ -102,7 +102,7 @@ function ConnectPage() {
   };
 
   return (
-    <div className="mx-auto max-w-4xl">
+    <div className="mx-auto w-full max-w-7xl">
       <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">Connect</p>
       <h1 className="mt-2 font-display text-3xl font-medium md:text-4xl">Your conversations</h1>
       <p className="mt-2 max-w-2xl text-sm text-foreground/70">

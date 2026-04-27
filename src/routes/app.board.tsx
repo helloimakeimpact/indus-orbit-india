@@ -77,7 +77,7 @@ function BoardPage() {
   useEffect(() => { load(); }, [kind, seg]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div className="mx-auto max-w-5xl">
+    <div className="mx-auto w-full max-w-7xl">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">Board</p>

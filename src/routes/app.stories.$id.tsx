@@ -37,7 +37,7 @@ function StoryDetailPage() {
   if (!story) return <p className="mt-8 px-4 text-muted-foreground">Story not found or you do not have access.</p>;
 
   return (
-    <div className="mx-auto max-w-3xl pb-16">
+    <div className="mx-auto w-full max-w-7xl pb-16">
       <Link to="/app/stories" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-[var(--indigo-night)] mb-8 transition">
         <ArrowLeft className="mr-2 h-4 w-4" /> Back to Stories
       </Link>

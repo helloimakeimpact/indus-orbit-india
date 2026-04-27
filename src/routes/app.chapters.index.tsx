@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, useNavigate, Link } from '@tanstack/react-router'
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { getChapters, joinChapter } from "@/server/society.functions";
 
-export const Route = createFileRoute("/app/chapters")({
+export const Route = createFileRoute("/app/chapters/")({
   head: () => ({ meta: [{ title: "Chapters — Indus Orbit" }, { name: "robots", content: "noindex" }] }),
   component: ChaptersPage,
 });
@@ -48,7 +48,7 @@ function ChaptersPage() {
   if (busy) return <p className="mt-8 text-muted-foreground px-4">Loading chapters…</p>;
 
   return (
-    <div className="mx-auto max-w-5xl">
+    <div className="mx-auto w-full max-w-7xl">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">Society</p>
@@ -57,16 +57,23 @@ function ChaptersPage() {
             Connect with Indus Orbit members in your region. Local chapters organize IRL events and build tight-knit networks.
           </p>
         </div>
-        
-        {chapters.some(c => c.chapter_members?.some((m: any) => m.user_id === user?.id && m.role === 'lead')) && (
+        <div className="flex gap-2">
           <Button
-            variant="outline"
-            className="border-[var(--indigo-night)] text-[var(--indigo-night)]"
-            onClick={() => navigate({ to: '/app/chapter-admin' })}
+            className="bg-[var(--indigo-night)] text-[var(--parchment)] hover:bg-[var(--indigo-night)]/90"
+            onClick={() => navigate({ to: '/app/chapters/propose' })}
           >
-            Manage Chapters
+            Propose a Chapter
           </Button>
-        )}
+          {chapters.some(c => c.chapter_members?.some((m: any) => m.user_id === user?.id && m.role === 'lead')) && (
+            <Button
+              variant="outline"
+              className="border-[var(--indigo-night)] text-[var(--indigo-night)]"
+              onClick={() => navigate({ to: '/app/chapter-admin' })}
+            >
+              Manage Chapters
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="mt-8 grid gap-6 md:grid-cols-2">
@@ -85,7 +92,9 @@ function ChaptersPage() {
               <div key={c.id} className="rounded-3xl border border-border bg-card p-6 flex flex-col">
                 <div className="flex items-start justify-between">
                   <div>
-                    <h2 className="font-display text-2xl font-semibold">{c.name}</h2>
+                    <h2 className="font-display text-2xl font-semibold hover:text-[var(--saffron)] transition">
+                      <Link to="/app/chapters/$chapterId" params={{ chapterId: c.id }}>{c.name}</Link>
+                    </h2>
                     <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
                       <MapPin className="h-3.5 w-3.5" />
                       {[c.city, c.country].filter(Boolean).join(", ")}

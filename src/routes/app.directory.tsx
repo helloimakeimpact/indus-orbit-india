@@ -12,6 +12,8 @@ import { ReportDialog } from "@/components/connect/ReportDialog";
 import { BookMentorDialog } from "@/components/connect/BookMentorDialog";
 import { SEGMENT_LIST, SEGMENT_META, type Segment } from "@/components/auth/segments";
 import { VerifiedBadge } from "@/components/auth/VerifiedBadge";
+import { VerificationCard } from "@/components/auth/VerificationCard";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/app/directory")({
   head: () => ({ meta: [{ title: "Directory — Indus Orbit" }, { name: "robots", content: "noindex" }] }),
@@ -50,6 +52,7 @@ function DirectoryPage() {
   const [report, setReport] = useState<Profile | null>(null);
   const [bookMentor, setBookMentor] = useState<Profile | null>(null);
   const [endorseCounts, setEndorseCounts] = useState<Record<string, number>>({});
+  const [showVerificationPrompt, setShowVerificationPrompt] = useState(false);
 
   useEffect(() => {
     if (search.segment) setFilter(search.segment);
@@ -87,7 +90,7 @@ function DirectoryPage() {
   }, [user]);
 
   return (
-    <div className="mx-auto max-w-6xl">
+    <div className="mx-auto w-full max-w-7xl">
       <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">Directory</p>
       <h1 className="mt-2 font-display text-3xl font-medium md:text-4xl">Members of the Orbit</h1>
       <p className="mt-2 max-w-2xl text-sm text-foreground/70">
@@ -170,8 +173,8 @@ function DirectoryPage() {
                       <ThumbsUp className="mr-1 h-3.5 w-3.5" /> Endorse
                     </Button>
                   )}
-                  {meVerified && m.orbit_segment === "expert" && (
-                    <Button size="sm" variant="outline" onClick={() => setBookMentor(m)}>
+                  {user && (
+                    <Button size="sm" variant="outline" onClick={() => meVerified ? setBookMentor(m) : setShowVerificationPrompt(true)}>
                       <CalendarClock className="mr-1 h-3.5 w-3.5" /> Book Session
                     </Button>
                   )}
@@ -225,6 +228,17 @@ function DirectoryPage() {
           expertName={bookMentor.display_name ?? "Member"}
         />
       )}
+      <Dialog open={showVerificationPrompt} onOpenChange={setShowVerificationPrompt}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Verification Required</DialogTitle>
+            <DialogDescription>
+              You must be a verified member to book mentorship and networking sessions.
+            </DialogDescription>
+          </DialogHeader>
+          <VerificationCard onChanged={() => { setShowVerificationPrompt(false); window.location.reload(); }} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

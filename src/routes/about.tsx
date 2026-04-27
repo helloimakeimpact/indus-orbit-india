@@ -97,7 +97,7 @@ function AboutPage() {
       </section>
 
       <section className="px-6 pb-24">
-        <div className="mx-auto max-w-6xl">
+        <div className="mx-auto w-full max-w-7xl">
           <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">
             Three pillars
           </p>
@@ -122,7 +122,7 @@ function AboutPage() {
       </section>
 
       <section className="px-6 pb-24">
-        <div className="mx-auto max-w-6xl">
+        <div className="mx-auto w-full max-w-7xl">
           <h2 className="font-display text-3xl font-medium md:text-4xl">The team</h2>
           <p className="mt-3 max-w-2xl text-foreground/70">
             A small group of founders, researchers and builders splitting time

@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Globe2, Rocket, Plus, Users, ArrowRight } from "lucide-react";
+import { Globe2, Rocket, Plus, Users, ArrowRight, Crown } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createMission, getMissions, joinMission, updateMissionStatus } from "@/server/mission.functions";
+import { SEGMENT_META } from "@/components/auth/segments";
 
 export const Route = createFileRoute("/app/missions/")({
   head: () => ({ meta: [{ title: "India Missions — Indus Orbit" }, { name: "robots", content: "noindex" }] }),
@@ -52,7 +53,7 @@ function MissionsPage() {
   if (busy) return <p className="mt-8 text-muted-foreground px-4">Loading missions…</p>;
 
   return (
-    <div className="mx-auto max-w-5xl">
+    <div className="mx-auto w-full max-w-7xl">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">India Missions</p>
@@ -77,9 +78,23 @@ function MissionsPage() {
         ) : (
           missions.map((m) => {
             const hasJoined = m.mission_members?.some((mm: any) => mm.user_id === user?.id);
-            const diasporaCount = m.mission_members?.filter((mm: any) => mm.role === 'contributor').length || 0;
-            const founderCount = m.mission_members?.filter((mm: any) => mm.role === 'founder').length || 0;
-            
+            const segmentCounts = m.mission_members?.reduce((acc: any, mm: any) => {
+              const segment = mm.profiles?.orbit_segment || 'other';
+              acc[segment] = (acc[segment] || 0) + 1;
+              return acc;
+            }, {}) || {};
+
+            const segmentColors: Record<string, { bg: string, text: string }> = {
+              founder: { bg: 'bg-green-100', text: 'text-green-700' },
+              diaspora: { bg: 'bg-blue-100', text: 'text-blue-700' },
+              expert: { bg: 'bg-orange-100', text: 'text-orange-700' },
+              investor: { bg: 'bg-yellow-100', text: 'text-yellow-700' },
+              youth: { bg: 'bg-purple-100', text: 'text-purple-700' },
+              partner: { bg: 'bg-pink-100', text: 'text-pink-700' },
+              researcher: { bg: 'bg-teal-100', text: 'text-teal-700' },
+              other: { bg: 'bg-gray-100', text: 'text-gray-700' }
+            };
+
             return (
               <div key={m.id} className="rounded-3xl border border-border bg-card overflow-hidden">
                 <div className="bg-[var(--indigo-night)] p-6 text-[var(--parchment)] relative overflow-hidden">
@@ -101,25 +116,24 @@ function MissionsPage() {
                 </div>
                 
                 <div className="p-6 md:flex justify-between items-center bg-muted/20">
-                  <div className="flex gap-6 text-sm">
-                    <div className="flex items-center gap-2">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-700">
-                        <Globe2 className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <p className="font-semibold">{diasporaCount}</p>
-                        <p className="text-xs text-muted-foreground">Contributors</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100 text-green-700">
-                        <Rocket className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <p className="font-semibold">{founderCount}</p>
-                        <p className="text-xs text-muted-foreground">Founders</p>
-                      </div>
-                    </div>
+                  <div className="flex flex-wrap gap-6 text-sm">
+                    {Object.entries(segmentCounts).map(([segment, count]) => {
+                      const meta = segment !== 'other' ? SEGMENT_META[segment as keyof typeof SEGMENT_META] : null;
+                      const Icon = meta?.icon || Users;
+                      const colors = segmentColors[segment] || segmentColors.other;
+                      
+                      return (
+                        <div key={segment} className="flex items-center gap-2">
+                          <div className={`flex h-8 w-8 items-center justify-center rounded-full ${colors.bg} ${colors.text}`}>
+                            <Icon className="h-4 w-4" />
+                          </div>
+                          <div>
+                            <p className="font-semibold">{String(count)}</p>
+                            <p className="text-xs text-muted-foreground">{meta?.label || 'Other'}</p>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                   
                   <div className="mt-4 md:mt-0 flex gap-2">

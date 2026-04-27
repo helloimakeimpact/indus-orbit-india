@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { MapPin, Globe, Linkedin, ArrowLeft, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { SiteShell } from "@/components/site/SiteShell";
+import { AppShell } from "@/components/app/AppShell";
 import { Badge } from "@/components/ui/badge";
 import { VerifiedBadge } from "@/components/auth/VerifiedBadge";
 import { Button } from "@/components/ui/button";
@@ -37,36 +38,38 @@ function PublicProfilePage() {
     load();
   }, [id]);
 
+  const Shell = user ? AppShell : SiteShell;
+
   if (busy) {
     return (
-      <SiteShell>
+      <Shell>
         <div className="flex min-h-[50vh] items-center justify-center">
           <p className="text-muted-foreground">Loading profile…</p>
         </div>
-      </SiteShell>
+      </Shell>
     );
   }
 
   if (!profile) {
     return (
-      <SiteShell>
-        <div className="mx-auto max-w-3xl py-24 px-6 text-center">
+      <Shell>
+        <div className="mx-auto w-full max-w-7xl py-24 px-6 text-center">
           <h1 className="font-display text-4xl font-semibold mb-4">Profile Not Found</h1>
           <p className="text-muted-foreground mb-8">This member's profile is either private or does not exist.</p>
           <Button onClick={() => navigate({ to: '/members' })}>
             View Directory
           </Button>
         </div>
-      </SiteShell>
+      </Shell>
     );
   }
 
   const initial = (profile.display_name ?? "?").charAt(0).toUpperCase();
 
   return (
-    <SiteShell>
-      <div className="mx-auto max-w-4xl py-12 px-6 lg:px-8">
-        <Link to="/members" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-[var(--indigo-night)] mb-12 transition">
+    <Shell>
+      <div className="mx-auto w-full max-w-7xl py-12 px-6 lg:px-8">
+        <Link to={user ? "/app/directory" : "/members"} className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-[var(--indigo-night)] mb-12 transition">
           <ArrowLeft className="mr-2 h-4 w-4" /> Back to Directory
         </Link>
 
@@ -177,6 +180,6 @@ function PublicProfilePage() {
           senderId={user.id}
         />
       )}
-    </SiteShell>
+    </Shell>
   );
 }

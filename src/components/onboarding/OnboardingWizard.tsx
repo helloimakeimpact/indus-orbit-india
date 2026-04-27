@@ -16,6 +16,7 @@ import {
   type SegmentDetails,
 } from "@/components/auth/segments";
 import { SegmentDetailsForm } from "@/components/auth/SegmentDetailsForm";
+import { redeemCode } from "@/server/vouch.functions";
 
 const locationSchema = z.object({
   city: z.string().trim().max(80).optional().or(z.literal("")),
@@ -39,6 +40,7 @@ export function OnboardingWizard({ userId }: { userId: string }) {
   const [location, setLocation] = useState({ city: "", country: "", region: "" });
   const [details, setDetails] = useState<SegmentDetails>({});
   const [story, setStory] = useState({ headline: "", bio: "", linkedin_url: "", website_url: "" });
+  const [vouchCode, setVouchCode] = useState("");
 
   const tz = useMemo(() => {
     try { return Intl.DateTimeFormat().resolvedOptions().timeZone; } catch { return ""; }
@@ -83,7 +85,19 @@ export function OnboardingWizard({ userId }: { userId: string }) {
       .eq("user_id", userId);
     setBusy(false);
     if (error) { toast.error(error.message); return; }
-    toast.success("Welcome to the Orbit");
+
+    // If a vouch code was provided, attempt to redeem it silently
+    if (vouchCode.trim().length >= 6) {
+      try {
+        await redeemCode(vouchCode.trim());
+        toast.success("Welcome to the Orbit! Your vouch code was redeemed and you are now verified.");
+      } catch (e) {
+        toast.error(`Profile saved, but vouch code failed: ${(e as Error).message}`);
+      }
+    } else {
+      toast.success("Welcome to the Orbit");
+    }
+
     navigate({ to: "/app" });
   }
 
@@ -187,7 +201,22 @@ export function OnboardingWizard({ userId }: { userId: string }) {
               <Input value={story.website_url} onChange={(e) => setStory({ ...story, website_url: e.target.value })} />
             </Field>
           </div>
-          <p className="text-xs text-muted-foreground">
+          
+          <div className="pt-4 border-t border-border">
+            <Field label="Have a Vouch Code? (Optional)">
+              <Input 
+                placeholder="e.g. A1B2C3D4" 
+                value={vouchCode} 
+                onChange={(e) => setVouchCode(e.target.value.toUpperCase())} 
+                className="uppercase"
+              />
+              <p className="text-xs text-muted-foreground">
+                If you were invited by a verified member, enter your vouch code here to instantly verify your profile.
+              </p>
+            </Field>
+          </div>
+
+          <p className="text-xs text-muted-foreground mt-4">
             An Indus Orbit admin will review your profile. Verified stakeholders get a saffron badge.
           </p>
         </div>

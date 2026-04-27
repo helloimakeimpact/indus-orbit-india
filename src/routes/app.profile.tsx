@@ -20,6 +20,7 @@ import { SEGMENT_LIST, SEGMENT_META, type Segment, type SegmentDetails } from "@
 import { SegmentDetailsForm } from "@/components/auth/SegmentDetailsForm";
 import { VerifiedBadge } from "@/components/auth/VerifiedBadge";
 import { VerificationCard } from "@/components/auth/VerificationCard";
+import { CertificateDialog } from "@/components/profile/CertificateDialog";
 
 export const Route = createFileRoute("/app/profile")({
   head: () => ({ meta: [{ title: "Your profile — Indus Orbit" }, { name: "robots", content: "noindex" }] }),
@@ -136,10 +137,20 @@ function ProfilePage() {
   if (loading) return <p className="text-muted-foreground">Loading…</p>;
 
   return (
-    <div className="mx-auto max-w-3xl">
-      <div className="flex items-center gap-3">
-        <h1 className="font-display text-3xl font-medium">Your profile</h1>
-        {verified && <VerifiedBadge size="md" />}
+    <div className="mx-auto w-full max-w-7xl">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <h1 className="font-display text-3xl font-medium">Your profile</h1>
+          {verified && <VerifiedBadge size="md" />}
+        </div>
+        {verified && (
+          <CertificateDialog 
+            userId={user!.id}
+            isVerified={verified}
+            orbitSegment={form.orbit_segment}
+            displayName={form.display_name}
+          />
+        )}
       </div>
       <p className="mt-2 text-sm text-muted-foreground">
         Tell the Orbit who you are. Toggle "Public" to appear in the directory.

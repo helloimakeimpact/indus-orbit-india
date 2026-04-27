@@ -128,6 +128,56 @@ export type Database = {
           },
         ]
       }
+      chapter_proposals: {
+        Row: {
+          city: string | null
+          country: string | null
+          created_at: string | null
+          expected_size: number | null
+          id: string
+          proposed_name: string
+          proposer_background: string
+          proposer_id: string
+          rationale: string
+          status: string | null
+          target_audience: string | null
+        }
+        Insert: {
+          city?: string | null
+          country?: string | null
+          created_at?: string | null
+          expected_size?: number | null
+          id?: string
+          proposed_name: string
+          proposer_background: string
+          proposer_id: string
+          rationale: string
+          status?: string | null
+          target_audience?: string | null
+        }
+        Update: {
+          city?: string | null
+          country?: string | null
+          created_at?: string | null
+          expected_size?: number | null
+          id?: string
+          proposed_name?: string
+          proposer_background?: string
+          proposer_id?: string
+          rationale?: string
+          status?: string | null
+          target_audience?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chapter_proposals_proposer_id_fkey"
+            columns: ["proposer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       chapters: {
         Row: {
           city: string | null
@@ -252,6 +302,7 @@ export type Database = {
           link: string | null
           location: string | null
           location_type: string
+          mission_id: string | null
           organizer_id: string
           start_time: string
           status: string
@@ -266,6 +317,7 @@ export type Database = {
           link?: string | null
           location?: string | null
           location_type: string
+          mission_id?: string | null
           organizer_id: string
           start_time: string
           status?: string
@@ -280,6 +332,7 @@ export type Database = {
           link?: string | null
           location?: string | null
           location_type?: string
+          mission_id?: string | null
           organizer_id?: string
           start_time?: string
           status?: string
@@ -291,6 +344,13 @@ export type Database = {
             columns: ["chapter_id"]
             isOneToOne: false
             referencedRelation: "chapters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "missions"
             referencedColumns: ["id"]
           },
           {
@@ -434,6 +494,7 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          is_pinned: boolean | null
           mission_id: string
         }
         Insert: {
@@ -441,6 +502,7 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          is_pinned?: boolean | null
           mission_id: string
         }
         Update: {
@@ -448,9 +510,17 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          is_pinned?: boolean | null
           mission_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "mission_updates_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
           {
             foreignKeyName: "mission_updates_mission_id_fkey"
             columns: ["mission_id"]
@@ -462,6 +532,7 @@ export type Database = {
       }
       missions: {
         Row: {
+          chapter_id: string | null
           created_at: string
           created_by: string
           description: string
@@ -472,6 +543,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          chapter_id?: string | null
           created_at?: string
           created_by: string
           description: string
@@ -482,6 +554,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          chapter_id?: string | null
           created_at?: string
           created_by?: string
           description?: string
@@ -492,6 +565,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "missions_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "chapters"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "missions_created_by_fkey"
             columns: ["created_by"]
@@ -698,27 +778,33 @@ export type Database = {
       stories: {
         Row: {
           author_id: string
+          chapter_id: string | null
           content: string
           created_at: string
           id: string
+          mission_id: string | null
           published_at: string | null
           status: string
           title: string
         }
         Insert: {
           author_id: string
+          chapter_id?: string | null
           content: string
           created_at?: string
           id?: string
+          mission_id?: string | null
           published_at?: string | null
           status?: string
           title: string
         }
         Update: {
           author_id?: string
+          chapter_id?: string | null
           content?: string
           created_at?: string
           id?: string
+          mission_id?: string | null
           published_at?: string | null
           status?: string
           title?: string
@@ -730,6 +816,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "stories_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "chapters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stories_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "missions"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1128,3 +1228,4 @@ export const Constants = {
     },
   },
 } as const
+

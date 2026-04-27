@@ -60,7 +60,7 @@ function HomePage() {
 
         {/* Hero card (bottom-left) — lifted up & more transparent */}
         <div className="absolute inset-x-0 bottom-24 md:bottom-32 px-4">
-          <div className="mx-auto max-w-6xl">
+          <div className="mx-auto w-full max-w-7xl">
             <div className="max-w-md rounded-3xl glass-card-soft p-6 md:p-7 animate-fade-up">
               <h2 className="font-display text-3xl font-light leading-[1.1] text-balance text-[var(--parchment)] md:text-4xl">
                 Building the intelligence layer for India's builders.
@@ -122,7 +122,7 @@ function HomePage() {
 
       {/* ORBIT VISION */}
       <section className="px-6 pb-24">
-        <div className="mx-auto max-w-6xl rounded-3xl bg-[var(--indigo-night)] p-8 text-[var(--parchment)] shadow-2xl md:p-16">
+        <div className="mx-auto w-full max-w-7xl rounded-3xl bg-[var(--indigo-night)] p-8 text-[var(--parchment)] shadow-2xl md:p-16">
           <div className="grid gap-12 md:grid-cols-2 md:items-center">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">
@@ -161,7 +161,7 @@ function HomePage() {
 
       {/* CTA */}
       <section className="px-6 pb-24">
-        <div className="mx-auto max-w-4xl text-center">
+        <div className="mx-auto w-full max-w-7xl text-center">
           <h3 className="font-display text-3xl font-medium leading-tight text-balance md:text-5xl">
             We're building tools for an India that builds itself.
           </h3>

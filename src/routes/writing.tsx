@@ -101,7 +101,7 @@ function WritingPage() {
   return (
     <SiteShell>
       <section className="px-6 pb-12 pt-36 md:pt-44">
-        <div className="mx-auto max-w-6xl">
+        <div className="mx-auto w-full max-w-7xl">
           <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">
             Writing
           </p>
@@ -133,7 +133,7 @@ function WritingPage() {
       </section>
 
       <section className="px-6 pb-24">
-        <div className="mx-auto max-w-6xl">
+        <div className="mx-auto w-full max-w-7xl">
           <div className="grid gap-7 md:grid-cols-2 lg:grid-cols-3">
             {filtered.map((p) => (
               <article

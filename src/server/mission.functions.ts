@@ -1,10 +1,10 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export const createMission = async ({ data }: { data: { title: string; theme: string; description: string } }) => {
+export const createMission = async ({ data }: { data: { title: string; theme: string; description: string; chapterId?: string } }) => {
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) throw new Error("Unauthorized");
 
-  // Check admin role via standard client
+  // Check admin role
   const { data: roleData } = await supabase
     .from("user_roles")
     .select("role")
@@ -12,16 +12,41 @@ export const createMission = async ({ data }: { data: { title: string; theme: st
     .eq("role", "admin")
     .maybeSingle();
     
-  if (!roleData) throw new Error("Only admins can create missions");
+  let canCreate = !!roleData;
 
-  const { error } = await supabase.from("missions").insert({
+  // If not admin, check if they are a chapter lead for the provided chapter
+  if (!canCreate && data.chapterId) {
+    const { data: leadData } = await supabase
+      .from("chapter_members")
+      .select("role")
+      .eq("chapter_id", data.chapterId)
+      .eq("user_id", userData.user.id)
+      .eq("role", "lead")
+      .maybeSingle();
+    if (leadData) canCreate = true;
+  }
+
+  if (!canCreate) throw new Error("Only admins or chapter leads can create missions");
+
+  const { data: newMission, error } = await supabase.from("missions").insert({
     title: data.title,
     theme: data.theme,
     description: data.description,
     created_by: userData.user.id,
-  });
+    chapter_id: data.chapterId || null,
+  }).select("id").single();
 
   if (error) throw new Error(error.message);
+
+  // Auto-add the creator as a lead of the mission
+  if (newMission) {
+    await supabase.from("mission_members").insert({
+      mission_id: newMission.id,
+      user_id: userData.user.id,
+      role: "lead",
+    });
+  }
+
   return { ok: true };
 };
 
@@ -35,6 +60,20 @@ export const joinMission = async ({ data }: { data: { missionId: string; role: "
     role: data.role,
     commitment_type: data.commitmentType,
     message: data.message,
+  });
+
+  if (error) throw new Error(error.message);
+  return { ok: true };
+};
+
+export const removeMissionMember = async ({ data }: { data: { missionId: string; targetUserId: string } }) => {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) throw new Error("Unauthorized");
+
+  // Use SECURITY DEFINER function to bypass self-referencing RLS
+  const { error } = await supabase.rpc("lead_remove_mission_member" as any, {
+    _mission_id: data.missionId,
+    _target_user_id: data.targetUserId,
   });
 
   if (error) throw new Error(error.message);
@@ -105,7 +144,20 @@ export const getMission = async (missionId: string) => {
         id,
         content,
         created_at,
+        is_pinned,
         profiles!mission_updates_author_id_fkey (display_name, avatar_url)
+      ),
+      events (
+        id,
+        title,
+        start_time,
+        location_type
+      ),
+      stories (
+        id,
+        title,
+        status,
+        published_at
       )
     `)
     .eq("id", missionId)
@@ -113,9 +165,22 @@ export const getMission = async (missionId: string) => {
 
   if (error) throw new Error(error.message);
   
-  // Sort updates descending
+  // Sort updates: pinned first, then descending by date
   if (mission.mission_updates) {
-    mission.mission_updates.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    mission.mission_updates.sort((a: any, b: any) => {
+      if (a.is_pinned && !b.is_pinned) return -1;
+      if (!a.is_pinned && b.is_pinned) return 1;
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
+  }
+
+  // Sort members: leads first
+  if (mission.mission_members) {
+    mission.mission_members.sort((a: any, b: any) => {
+      if (a.role === 'lead' && b.role !== 'lead') return -1;
+      if (a.role !== 'lead' && b.role === 'lead') return 1;
+      return 0;
+    });
   }
 
   return mission;
@@ -154,4 +219,13 @@ export const postMissionUpdate = async ({ data }: { data: { missionId: string; c
   }
 
   return { ok: true, update: updateRow };
+};
+export const pinMissionUpdate = async (updateId: string, isPinned: boolean) => {
+  const { error } = await supabase
+    .from("mission_updates")
+    .update({ is_pinned: isPinned })
+    .eq("id", updateId);
+
+  if (error) throw new Error(error.message);
+  return { ok: true };
 };

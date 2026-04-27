@@ -22,6 +22,14 @@ export function SiteFooter() {
               networks that connect youth, experts, founders, investors and the
               diaspora into one orbit.
             </p>
+            <div className="mt-6 mb-2">
+              <Link
+                to="/what-is-indus-orbit"
+                className="inline-flex items-center gap-2 rounded-full border border-[var(--parchment)]/40 px-5 py-2 text-sm font-medium text-[var(--parchment)] hover:bg-[var(--parchment)]/10 transition"
+              >
+                What is Indus Orbit?
+              </Link>
+            </div>
             <form
               onSubmit={(e) => e.preventDefault()}
               className="mt-6 flex max-w-md items-center gap-2 rounded-full bg-white/10 p-1.5 backdrop-blur"

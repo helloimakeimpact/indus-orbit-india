@@ -72,7 +72,7 @@ function AdminDashboard() {
   if (!isAdmin) return null;
 
   return (
-    <div className="mx-auto max-w-6xl">
+    <div className="mx-auto w-full max-w-7xl">
       <h1 className="font-display text-3xl font-medium">Admin dashboard</h1>
       <p className="mt-2 text-sm text-muted-foreground">Live snapshot of the orbit.</p>
 
@@ -105,10 +105,14 @@ function AdminDashboard() {
             </Link>
           </div>
           
-          <div className="mt-4 grid gap-4 md:grid-cols-2">
+          <div className="mt-4 grid gap-4 md:grid-cols-3">
             <Link to="/app/admin/roles" className="rounded-3xl border border-border bg-card p-6 transition hover:bg-foreground/5">
               <p className="text-xs uppercase tracking-wider text-muted-foreground">Manage roles</p>
               <p className="mt-1 text-xs text-[var(--saffron)]">Edit →</p>
+            </Link>
+            <Link to="/app/admin/hubs" className="rounded-3xl border border-border bg-card p-6 transition hover:bg-foreground/5">
+              <p className="text-xs uppercase tracking-wider text-muted-foreground">Manage hubs</p>
+              <p className="mt-1 text-xs text-[var(--saffron)]">Edit Leads →</p>
             </Link>
             <Link to="/app/admin/vouches" className="rounded-3xl border border-border bg-card p-6 transition hover:bg-foreground/5">
               <p className="text-xs uppercase tracking-wider text-muted-foreground">Vouch limits</p>

@@ -65,7 +65,7 @@ function MembersPage() {
   return (
     <SiteShell>
       <section className="px-6 pt-32 pb-12">
-        <div className="mx-auto max-w-6xl">
+        <div className="mx-auto w-full max-w-7xl">
           <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">The Orbit</p>
           <h1 className="mt-3 font-display text-4xl md:text-5xl font-medium">Members</h1>
           <p className="mt-3 max-w-2xl text-foreground/70">

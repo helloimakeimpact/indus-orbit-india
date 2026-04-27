@@ -7,15 +7,15 @@ export const requestMentorSession = async ({ data }: { data: { expertId: string;
   const userId = userData.user.id;
   if (data.expertId === userId) throw new Error("You cannot book a session with yourself.");
   
-  // Ensure the target is actually an expert
-  const { data: profile } = await supabase
+  // Ensure the booker is verified
+  const { data: bookerProfile } = await supabase
     .from("profiles")
-    .select("orbit_segment, is_verified")
-    .eq("user_id", data.expertId)
+    .select("is_verified")
+    .eq("user_id", userId)
     .maybeSingle();
-    
-  if (!profile || profile.orbit_segment !== "expert") {
-    throw new Error("You can only book sessions with verified Experts.");
+
+  if (!bookerProfile?.is_verified) {
+    throw new Error("Only verified members can book sessions. Please get verified first.");
   }
 
   const { error, data: session } = await supabase.from("mentor_sessions").insert({

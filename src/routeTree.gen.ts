@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WritingRouteImport } from './routes/writing'
+import { Route as WhatIsIndusOrbitRouteImport } from './routes/what-is-indus-orbit'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as OurWorkRouteImport } from './routes/our-work'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
@@ -33,27 +34,35 @@ import { Route as AppInvestorFeedRouteImport } from './routes/app.investor-feed'
 import { Route as AppEventsRouteImport } from './routes/app.events'
 import { Route as AppDirectoryRouteImport } from './routes/app.directory'
 import { Route as AppConnectRouteImport } from './routes/app.connect'
-import { Route as AppChaptersRouteImport } from './routes/app.chapters'
 import { Route as AppChapterAdminRouteImport } from './routes/app.chapter-admin'
 import { Route as AppBoardRouteImport } from './routes/app.board'
 import { Route as AppStoriesIndexRouteImport } from './routes/app.stories.index'
 import { Route as AppMissionsIndexRouteImport } from './routes/app.missions.index'
 import { Route as AppEventsIndexRouteImport } from './routes/app.events.index'
+import { Route as AppChaptersIndexRouteImport } from './routes/app.chapters.index'
 import { Route as AppAdminIndexRouteImport } from './routes/app.admin.index'
 import { Route as AppStoriesIdRouteImport } from './routes/app.stories.$id'
 import { Route as AppMissionsMissionIdRouteImport } from './routes/app.missions.$missionId'
 import { Route as AppEventsIdRouteImport } from './routes/app.events.$id'
+import { Route as AppChaptersProposeRouteImport } from './routes/app.chapters.propose'
+import { Route as AppChaptersChapterIdRouteImport } from './routes/app.chapters.$chapterId'
 import { Route as AppAdminVouchesRouteImport } from './routes/app.admin.vouches'
 import { Route as AppAdminRolesRouteImport } from './routes/app.admin.roles'
 import { Route as AppAdminReportsRouteImport } from './routes/app.admin.reports'
 import { Route as AppAdminQueueRouteImport } from './routes/app.admin.queue'
 import { Route as AppAdminMembersRouteImport } from './routes/app.admin.members'
+import { Route as AppAdminHubsRouteImport } from './routes/app.admin.hubs'
 import { Route as AppAdminContentRouteImport } from './routes/app.admin.content'
 import { Route as AppAdminAuditRouteImport } from './routes/app.admin.audit'
 
 const WritingRoute = WritingRouteImport.update({
   id: '/writing',
   path: '/writing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WhatIsIndusOrbitRoute = WhatIsIndusOrbitRouteImport.update({
+  id: '/what-is-indus-orbit',
+  path: '/what-is-indus-orbit',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -171,11 +180,6 @@ const AppConnectRoute = AppConnectRouteImport.update({
   path: '/connect',
   getParentRoute: () => AppRoute,
 } as any)
-const AppChaptersRoute = AppChaptersRouteImport.update({
-  id: '/chapters',
-  path: '/chapters',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppChapterAdminRoute = AppChapterAdminRouteImport.update({
   id: '/chapter-admin',
   path: '/chapter-admin',
@@ -201,6 +205,11 @@ const AppEventsIndexRoute = AppEventsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppEventsRoute,
 } as any)
+const AppChaptersIndexRoute = AppChaptersIndexRouteImport.update({
+  id: '/chapters/',
+  path: '/chapters/',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAdminIndexRoute = AppAdminIndexRouteImport.update({
   id: '/admin/',
   path: '/admin/',
@@ -220,6 +229,16 @@ const AppEventsIdRoute = AppEventsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => AppEventsRoute,
+} as any)
+const AppChaptersProposeRoute = AppChaptersProposeRouteImport.update({
+  id: '/chapters/propose',
+  path: '/chapters/propose',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppChaptersChapterIdRoute = AppChaptersChapterIdRouteImport.update({
+  id: '/chapters/$chapterId',
+  path: '/chapters/$chapterId',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppAdminVouchesRoute = AppAdminVouchesRouteImport.update({
   id: '/admin/vouches',
@@ -246,6 +265,11 @@ const AppAdminMembersRoute = AppAdminMembersRouteImport.update({
   path: '/admin/members',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAdminHubsRoute = AppAdminHubsRouteImport.update({
+  id: '/admin/hubs',
+  path: '/admin/hubs',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAdminContentRoute = AppAdminContentRouteImport.update({
   id: '/admin/content',
   path: '/admin/content',
@@ -267,10 +291,10 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof OnboardingRoute
   '/our-work': typeof OurWorkRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/what-is-indus-orbit': typeof WhatIsIndusOrbitRoute
   '/writing': typeof WritingRoute
   '/app/board': typeof AppBoardRoute
   '/app/chapter-admin': typeof AppChapterAdminRoute
-  '/app/chapters': typeof AppChaptersRoute
   '/app/connect': typeof AppConnectRoute
   '/app/directory': typeof AppDirectoryRoute
   '/app/events': typeof AppEventsRouteWithChildren
@@ -287,15 +311,19 @@ export interface FileRoutesByFullPath {
   '/app/': typeof AppIndexRoute
   '/app/admin/audit': typeof AppAdminAuditRoute
   '/app/admin/content': typeof AppAdminContentRoute
+  '/app/admin/hubs': typeof AppAdminHubsRoute
   '/app/admin/members': typeof AppAdminMembersRoute
   '/app/admin/queue': typeof AppAdminQueueRoute
   '/app/admin/reports': typeof AppAdminReportsRoute
   '/app/admin/roles': typeof AppAdminRolesRoute
   '/app/admin/vouches': typeof AppAdminVouchesRoute
+  '/app/chapters/$chapterId': typeof AppChaptersChapterIdRoute
+  '/app/chapters/propose': typeof AppChaptersProposeRoute
   '/app/events/$id': typeof AppEventsIdRoute
   '/app/missions/$missionId': typeof AppMissionsMissionIdRoute
   '/app/stories/$id': typeof AppStoriesIdRoute
   '/app/admin/': typeof AppAdminIndexRoute
+  '/app/chapters/': typeof AppChaptersIndexRoute
   '/app/events/': typeof AppEventsIndexRoute
   '/app/missions/': typeof AppMissionsIndexRoute
   '/app/stories/': typeof AppStoriesIndexRoute
@@ -309,10 +337,10 @@ export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingRoute
   '/our-work': typeof OurWorkRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/what-is-indus-orbit': typeof WhatIsIndusOrbitRoute
   '/writing': typeof WritingRoute
   '/app/board': typeof AppBoardRoute
   '/app/chapter-admin': typeof AppChapterAdminRoute
-  '/app/chapters': typeof AppChaptersRoute
   '/app/connect': typeof AppConnectRoute
   '/app/directory': typeof AppDirectoryRoute
   '/app/investor-feed': typeof AppInvestorFeedRoute
@@ -326,15 +354,19 @@ export interface FileRoutesByTo {
   '/app': typeof AppIndexRoute
   '/app/admin/audit': typeof AppAdminAuditRoute
   '/app/admin/content': typeof AppAdminContentRoute
+  '/app/admin/hubs': typeof AppAdminHubsRoute
   '/app/admin/members': typeof AppAdminMembersRoute
   '/app/admin/queue': typeof AppAdminQueueRoute
   '/app/admin/reports': typeof AppAdminReportsRoute
   '/app/admin/roles': typeof AppAdminRolesRoute
   '/app/admin/vouches': typeof AppAdminVouchesRoute
+  '/app/chapters/$chapterId': typeof AppChaptersChapterIdRoute
+  '/app/chapters/propose': typeof AppChaptersProposeRoute
   '/app/events/$id': typeof AppEventsIdRoute
   '/app/missions/$missionId': typeof AppMissionsMissionIdRoute
   '/app/stories/$id': typeof AppStoriesIdRoute
   '/app/admin': typeof AppAdminIndexRoute
+  '/app/chapters': typeof AppChaptersIndexRoute
   '/app/events': typeof AppEventsIndexRoute
   '/app/missions': typeof AppMissionsIndexRoute
   '/app/stories': typeof AppStoriesIndexRoute
@@ -350,10 +382,10 @@ export interface FileRoutesById {
   '/onboarding': typeof OnboardingRoute
   '/our-work': typeof OurWorkRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/what-is-indus-orbit': typeof WhatIsIndusOrbitRoute
   '/writing': typeof WritingRoute
   '/app/board': typeof AppBoardRoute
   '/app/chapter-admin': typeof AppChapterAdminRoute
-  '/app/chapters': typeof AppChaptersRoute
   '/app/connect': typeof AppConnectRoute
   '/app/directory': typeof AppDirectoryRoute
   '/app/events': typeof AppEventsRouteWithChildren
@@ -370,15 +402,19 @@ export interface FileRoutesById {
   '/app/': typeof AppIndexRoute
   '/app/admin/audit': typeof AppAdminAuditRoute
   '/app/admin/content': typeof AppAdminContentRoute
+  '/app/admin/hubs': typeof AppAdminHubsRoute
   '/app/admin/members': typeof AppAdminMembersRoute
   '/app/admin/queue': typeof AppAdminQueueRoute
   '/app/admin/reports': typeof AppAdminReportsRoute
   '/app/admin/roles': typeof AppAdminRolesRoute
   '/app/admin/vouches': typeof AppAdminVouchesRoute
+  '/app/chapters/$chapterId': typeof AppChaptersChapterIdRoute
+  '/app/chapters/propose': typeof AppChaptersProposeRoute
   '/app/events/$id': typeof AppEventsIdRoute
   '/app/missions/$missionId': typeof AppMissionsMissionIdRoute
   '/app/stories/$id': typeof AppStoriesIdRoute
   '/app/admin/': typeof AppAdminIndexRoute
+  '/app/chapters/': typeof AppChaptersIndexRoute
   '/app/events/': typeof AppEventsIndexRoute
   '/app/missions/': typeof AppMissionsIndexRoute
   '/app/stories/': typeof AppStoriesIndexRoute
@@ -395,10 +431,10 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/our-work'
     | '/reset-password'
+    | '/what-is-indus-orbit'
     | '/writing'
     | '/app/board'
     | '/app/chapter-admin'
-    | '/app/chapters'
     | '/app/connect'
     | '/app/directory'
     | '/app/events'
@@ -415,15 +451,19 @@ export interface FileRouteTypes {
     | '/app/'
     | '/app/admin/audit'
     | '/app/admin/content'
+    | '/app/admin/hubs'
     | '/app/admin/members'
     | '/app/admin/queue'
     | '/app/admin/reports'
     | '/app/admin/roles'
     | '/app/admin/vouches'
+    | '/app/chapters/$chapterId'
+    | '/app/chapters/propose'
     | '/app/events/$id'
     | '/app/missions/$missionId'
     | '/app/stories/$id'
     | '/app/admin/'
+    | '/app/chapters/'
     | '/app/events/'
     | '/app/missions/'
     | '/app/stories/'
@@ -437,10 +477,10 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/our-work'
     | '/reset-password'
+    | '/what-is-indus-orbit'
     | '/writing'
     | '/app/board'
     | '/app/chapter-admin'
-    | '/app/chapters'
     | '/app/connect'
     | '/app/directory'
     | '/app/investor-feed'
@@ -454,15 +494,19 @@ export interface FileRouteTypes {
     | '/app'
     | '/app/admin/audit'
     | '/app/admin/content'
+    | '/app/admin/hubs'
     | '/app/admin/members'
     | '/app/admin/queue'
     | '/app/admin/reports'
     | '/app/admin/roles'
     | '/app/admin/vouches'
+    | '/app/chapters/$chapterId'
+    | '/app/chapters/propose'
     | '/app/events/$id'
     | '/app/missions/$missionId'
     | '/app/stories/$id'
     | '/app/admin'
+    | '/app/chapters'
     | '/app/events'
     | '/app/missions'
     | '/app/stories'
@@ -477,10 +521,10 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/our-work'
     | '/reset-password'
+    | '/what-is-indus-orbit'
     | '/writing'
     | '/app/board'
     | '/app/chapter-admin'
-    | '/app/chapters'
     | '/app/connect'
     | '/app/directory'
     | '/app/events'
@@ -497,15 +541,19 @@ export interface FileRouteTypes {
     | '/app/'
     | '/app/admin/audit'
     | '/app/admin/content'
+    | '/app/admin/hubs'
     | '/app/admin/members'
     | '/app/admin/queue'
     | '/app/admin/reports'
     | '/app/admin/roles'
     | '/app/admin/vouches'
+    | '/app/chapters/$chapterId'
+    | '/app/chapters/propose'
     | '/app/events/$id'
     | '/app/missions/$missionId'
     | '/app/stories/$id'
     | '/app/admin/'
+    | '/app/chapters/'
     | '/app/events/'
     | '/app/missions/'
     | '/app/stories/'
@@ -521,6 +569,7 @@ export interface RootRouteChildren {
   OnboardingRoute: typeof OnboardingRoute
   OurWorkRoute: typeof OurWorkRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  WhatIsIndusOrbitRoute: typeof WhatIsIndusOrbitRoute
   WritingRoute: typeof WritingRoute
   ProfileIdRoute: typeof ProfileIdRoute
   RedeemCodeRoute: typeof RedeemCodeRoute
@@ -533,6 +582,13 @@ declare module '@tanstack/react-router' {
       path: '/writing'
       fullPath: '/writing'
       preLoaderRoute: typeof WritingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/what-is-indus-orbit': {
+      id: '/what-is-indus-orbit'
+      path: '/what-is-indus-orbit'
+      fullPath: '/what-is-indus-orbit'
+      preLoaderRoute: typeof WhatIsIndusOrbitRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -696,13 +752,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppConnectRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/chapters': {
-      id: '/app/chapters'
-      path: '/chapters'
-      fullPath: '/app/chapters'
-      preLoaderRoute: typeof AppChaptersRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/app/chapter-admin': {
       id: '/app/chapter-admin'
       path: '/chapter-admin'
@@ -738,6 +787,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppEventsIndexRouteImport
       parentRoute: typeof AppEventsRoute
     }
+    '/app/chapters/': {
+      id: '/app/chapters/'
+      path: '/chapters'
+      fullPath: '/app/chapters/'
+      preLoaderRoute: typeof AppChaptersIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/admin/': {
       id: '/app/admin/'
       path: '/admin'
@@ -765,6 +821,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/events/$id'
       preLoaderRoute: typeof AppEventsIdRouteImport
       parentRoute: typeof AppEventsRoute
+    }
+    '/app/chapters/propose': {
+      id: '/app/chapters/propose'
+      path: '/chapters/propose'
+      fullPath: '/app/chapters/propose'
+      preLoaderRoute: typeof AppChaptersProposeRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/chapters/$chapterId': {
+      id: '/app/chapters/$chapterId'
+      path: '/chapters/$chapterId'
+      fullPath: '/app/chapters/$chapterId'
+      preLoaderRoute: typeof AppChaptersChapterIdRouteImport
+      parentRoute: typeof AppRoute
     }
     '/app/admin/vouches': {
       id: '/app/admin/vouches'
@@ -799,6 +869,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/members'
       fullPath: '/app/admin/members'
       preLoaderRoute: typeof AppAdminMembersRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/admin/hubs': {
+      id: '/app/admin/hubs'
+      path: '/admin/hubs'
+      fullPath: '/app/admin/hubs'
+      preLoaderRoute: typeof AppAdminHubsRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/admin/content': {
@@ -863,7 +940,6 @@ const AppStoriesRouteWithChildren = AppStoriesRoute._addFileChildren(
 interface AppRouteChildren {
   AppBoardRoute: typeof AppBoardRoute
   AppChapterAdminRoute: typeof AppChapterAdminRoute
-  AppChaptersRoute: typeof AppChaptersRoute
   AppConnectRoute: typeof AppConnectRoute
   AppDirectoryRoute: typeof AppDirectoryRoute
   AppEventsRoute: typeof AppEventsRouteWithChildren
@@ -878,18 +954,21 @@ interface AppRouteChildren {
   AppIndexRoute: typeof AppIndexRoute
   AppAdminAuditRoute: typeof AppAdminAuditRoute
   AppAdminContentRoute: typeof AppAdminContentRoute
+  AppAdminHubsRoute: typeof AppAdminHubsRoute
   AppAdminMembersRoute: typeof AppAdminMembersRoute
   AppAdminQueueRoute: typeof AppAdminQueueRoute
   AppAdminReportsRoute: typeof AppAdminReportsRoute
   AppAdminRolesRoute: typeof AppAdminRolesRoute
   AppAdminVouchesRoute: typeof AppAdminVouchesRoute
+  AppChaptersChapterIdRoute: typeof AppChaptersChapterIdRoute
+  AppChaptersProposeRoute: typeof AppChaptersProposeRoute
   AppAdminIndexRoute: typeof AppAdminIndexRoute
+  AppChaptersIndexRoute: typeof AppChaptersIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppBoardRoute: AppBoardRoute,
   AppChapterAdminRoute: AppChapterAdminRoute,
-  AppChaptersRoute: AppChaptersRoute,
   AppConnectRoute: AppConnectRoute,
   AppDirectoryRoute: AppDirectoryRoute,
   AppEventsRoute: AppEventsRouteWithChildren,
@@ -904,12 +983,16 @@ const AppRouteChildren: AppRouteChildren = {
   AppIndexRoute: AppIndexRoute,
   AppAdminAuditRoute: AppAdminAuditRoute,
   AppAdminContentRoute: AppAdminContentRoute,
+  AppAdminHubsRoute: AppAdminHubsRoute,
   AppAdminMembersRoute: AppAdminMembersRoute,
   AppAdminQueueRoute: AppAdminQueueRoute,
   AppAdminReportsRoute: AppAdminReportsRoute,
   AppAdminRolesRoute: AppAdminRolesRoute,
   AppAdminVouchesRoute: AppAdminVouchesRoute,
+  AppChaptersChapterIdRoute: AppChaptersChapterIdRoute,
+  AppChaptersProposeRoute: AppChaptersProposeRoute,
   AppAdminIndexRoute: AppAdminIndexRoute,
+  AppChaptersIndexRoute: AppChaptersIndexRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
@@ -924,6 +1007,7 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardingRoute: OnboardingRoute,
   OurWorkRoute: OurWorkRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  WhatIsIndusOrbitRoute: WhatIsIndusOrbitRoute,
   WritingRoute: WritingRoute,
   ProfileIdRoute: ProfileIdRoute,
   RedeemCodeRoute: RedeemCodeRoute,

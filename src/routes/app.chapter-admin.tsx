@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { VerifiedBadge } from "@/components/auth/VerifiedBadge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/app/chapter-admin")({
   head: () => ({ meta: [{ title: "Chapter Admin — Indus Orbit" }, { name: "robots", content: "noindex" }] }),
@@ -19,6 +20,7 @@ function ChapterAdminPage() {
   const [chapters, setChapters] = useState<any[]>([]);
   const [busy, setBusy] = useState(true);
   const [search, setSearch] = useState("");
+  const [memberToRemove, setMemberToRemove] = useState<{ chapterId: string; userId: string; name: string } | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -37,11 +39,12 @@ function ChapterAdminPage() {
     }
   }
 
-  async function handleRemove(chapterId: string, userId: string, name: string) {
-    if (!window.confirm(`Are you sure you want to remove ${name} from this chapter?`)) return;
+  async function handleRemove() {
+    if (!memberToRemove) return;
     try {
-      await removeChapterMember({ data: { chapterId, targetUserId: userId } });
-      toast.success(`${name} removed from chapter.`);
+      await removeChapterMember({ data: { chapterId: memberToRemove.chapterId, targetUserId: memberToRemove.userId } });
+      toast.success(`${memberToRemove.name} removed from chapter.`);
+      setMemberToRemove(null);
       load();
     } catch (err: any) {
       toast.error(err.message);
@@ -68,7 +71,7 @@ function ChapterAdminPage() {
 
   if (chapters.length === 0) {
     return (
-      <div className="mx-auto max-w-4xl text-center py-24">
+      <div className="mx-auto w-full max-w-7xl text-center py-24">
         <MapPin className="mx-auto h-12 w-12 text-muted-foreground opacity-50 mb-4" />
         <h1 className="font-display text-3xl font-medium mb-2">No Chapters Found</h1>
         <p className="text-muted-foreground mb-8">You are not currently assigned as a lead for any chapters.</p>
@@ -80,7 +83,7 @@ function ChapterAdminPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-16 pb-16">
+    <div className="mx-auto w-full max-w-7xl space-y-16 pb-16">
       <div>
         <h1 className="font-display text-4xl font-semibold leading-tight text-[var(--indigo-night)]">
           Chapter Administration
@@ -186,7 +189,7 @@ function ChapterAdminPage() {
                               variant="ghost" 
                               size="icon" 
                               className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:bg-destructive/10"
-                              onClick={() => handleRemove(chapter.id, m.user_id, m.profiles?.display_name)}
+                              onClick={() => setMemberToRemove({ chapterId: chapter.id, userId: m.user_id, name: m.profiles?.display_name || "Unknown" })}
                               title="Remove from chapter"
                             >
                               <Trash2 className="h-4 w-4" />
@@ -202,6 +205,21 @@ function ChapterAdminPage() {
           </section>
         );
       })}
+
+      <Dialog open={!!memberToRemove} onOpenChange={(open) => !open && setMemberToRemove(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Remove Member</DialogTitle>
+          </DialogHeader>
+          <p className="py-4 text-sm text-muted-foreground">
+            Are you sure you want to remove <span className="font-semibold text-foreground">{memberToRemove?.name}</span> from this chapter?
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMemberToRemove(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleRemove}>Remove Member</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

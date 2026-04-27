@@ -140,7 +140,7 @@ function WorkPage() {
       </section>
 
       <section className="px-6 py-20">
-        <div className="mx-auto max-w-6xl">
+        <div className="mx-auto w-full max-w-7xl">
           <div className="grid gap-7 md:grid-cols-2 lg:grid-cols-3">
             {featured.map((f) => (
               <a

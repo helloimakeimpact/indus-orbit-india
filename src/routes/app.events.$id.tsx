@@ -40,7 +40,7 @@ function EventDetailPage() {
   const end = new Date(event.end_time);
 
   return (
-    <div className="mx-auto max-w-4xl pb-16">
+    <div className="mx-auto w-full max-w-7xl pb-16">
       <Link to="/app/events" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-[var(--indigo-night)] mb-8 transition">
         <ArrowLeft className="mr-2 h-4 w-4" /> Back to Events
       </Link>

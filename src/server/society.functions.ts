@@ -1,14 +1,28 @@
 import { supabase } from "@/integrations/supabase/client";
 
 // 1. Stories
-export const submitStory = async ({ data }: { data: { title: string; content: string } }) => {
+export const submitStory = async ({ data }: { data: { title: string; content: string; chapterId?: string } }) => {
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) throw new Error("Unauthorized");
+
+  let status = "pending";
+  if (data.chapterId) {
+    const { data: leadData } = await supabase
+      .from("chapter_members")
+      .select("role")
+      .eq("chapter_id", data.chapterId)
+      .eq("user_id", userData.user.id)
+      .eq("role", "lead")
+      .maybeSingle();
+    if (leadData) status = "approved";
+  }
 
   const { error } = await supabase.from("stories").insert({
     author_id: userData.user.id,
     title: data.title,
     content: data.content,
+    chapter_id: data.chapterId || null,
+    status,
   });
   if (error) throw new Error(error.message);
   return { ok: true };
@@ -28,6 +42,18 @@ export const submitEvent = async ({ data }: { data: { title: string; description
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) throw new Error("Unauthorized");
 
+  let status = "pending";
+  if (data.chapterId) {
+    const { data: leadData } = await supabase
+      .from("chapter_members")
+      .select("role")
+      .eq("chapter_id", data.chapterId)
+      .eq("user_id", userData.user.id)
+      .eq("role", "lead")
+      .maybeSingle();
+    if (leadData) status = "approved";
+  }
+
   const { error } = await supabase.from("events").insert({
     organizer_id: userData.user.id,
     title: data.title,
@@ -38,6 +64,7 @@ export const submitEvent = async ({ data }: { data: { title: string; description
     location: data.location,
     link: data.link,
     chapter_id: data.chapterId,
+    status,
   });
   if (error) throw new Error(error.message);
   return { ok: true };
@@ -134,23 +161,83 @@ export const removeChapterMember = async ({ data }: { data: { chapterId: string;
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) throw new Error("Unauthorized");
 
-  // Verify caller is a lead
-  const { data: leadCheck } = await supabase
-    .from("chapter_members")
-    .select("role")
-    .eq("chapter_id", data.chapterId)
-    .eq("user_id", userData.user.id)
-    .maybeSingle();
-
-  if (!leadCheck || leadCheck.role !== "lead") throw new Error("Only chapter leads can remove members");
-
-  const { error } = await supabase
-    .from("chapter_members")
-    .delete()
-    .eq("chapter_id", data.chapterId)
-    .eq("user_id", data.targetUserId);
+  // Use SECURITY DEFINER function to bypass self-referencing RLS
+  const { error } = await supabase.rpc("lead_remove_chapter_member" as any, {
+    _chapter_id: data.chapterId,
+    _target_user_id: data.targetUserId,
+  });
 
   if (error) throw new Error(error.message);
+  return { ok: true };
+};
+
+export const getChapterProposals = async () => {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) throw new Error("Unauthorized");
+  
+  const { data: roleData } = await supabase.from("user_roles").select("role").eq("user_id", userData.user.id).eq("role", "admin").maybeSingle();
+  if (!roleData) throw new Error("Only admins can view proposals");
+
+  const { data } = await supabase
+    .from("chapter_proposals")
+    .select("*, profiles!chapter_proposals_proposer_id_fkey(display_name)")
+    .eq("status", "pending")
+    .order("created_at", { ascending: false });
+    
+  return data ?? [];
+};
+
+export const approveChapterProposal = async ({ data }: { data: { proposalId: string; proposerId: string; name: string; city: string; country: string; rationale: string } }) => {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) throw new Error("Unauthorized");
+  
+  const { data: roleData } = await supabase.from("user_roles").select("role").eq("user_id", userData.user.id).eq("role", "admin").maybeSingle();
+  if (!roleData) throw new Error("Only admins can approve proposals");
+
+  // 1. Create the chapter
+  const { error: chapterError, data: newChapter } = await supabase.from("chapters").insert({
+    name: data.name,
+    city: data.city,
+    country: data.country,
+    description: data.rationale.substring(0, 200) + "...", // basic description from rationale
+  }).select("id").single();
+
+  if (chapterError) throw new Error(chapterError.message);
+
+  // 2. Make proposer a lead
+  await supabase.from("chapter_members").insert({
+    chapter_id: newChapter.id,
+    user_id: data.proposerId,
+    role: "lead"
+  });
+
+  // 3. Mark proposal as approved
+  await supabase.from("chapter_proposals").update({
+    status: "approved"
+  }).eq("id", data.proposalId);
+
+  // 4. Send Notification
+  await supabase.from("notifications").insert({
+    user_id: data.proposerId,
+    type: "chapter_approved",
+    message: `Your proposal for ${data.name} was approved! You are now the Lead.`,
+    link: "/app/chapters",
+  });
+
+  return { ok: true };
+};
+
+export const rejectChapterProposal = async (proposalId: string) => {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) throw new Error("Unauthorized");
+  
+  const { data: roleData } = await supabase.from("user_roles").select("role").eq("user_id", userData.user.id).eq("role", "admin").maybeSingle();
+  if (!roleData) throw new Error("Only admins can reject proposals");
+
+  await supabase.from("chapter_proposals").update({
+    status: "rejected"
+  }).eq("id", proposalId);
+
   return { ok: true };
 };
 

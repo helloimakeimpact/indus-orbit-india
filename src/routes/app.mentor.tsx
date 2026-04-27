@@ -50,7 +50,7 @@ function MentorPage() {
   if (busy || !data) return <p className="mt-8 text-muted-foreground px-4">Loading sessions…</p>;
 
   return (
-    <div className="mx-auto max-w-5xl">
+    <div className="mx-auto w-full max-w-7xl">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">Mentorship</p>

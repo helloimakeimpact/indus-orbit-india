@@ -39,7 +39,7 @@ function NotificationsPage() {
   if (busy) return <p className="mt-8 px-4 text-muted-foreground">Loading notifications…</p>;
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="mx-auto w-full max-w-7xl">
       <div className="flex items-center gap-3">
         <Bell className="h-6 w-6 text-[var(--indigo-night)]" />
         <h1 className="font-display text-3xl font-medium md:text-4xl">Notifications</h1>
