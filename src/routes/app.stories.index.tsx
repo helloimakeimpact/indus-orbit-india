@@ -2,7 +2,7 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { BookOpen, PenTool, ExternalLink } from "lucide-react";
+import { BookOpen, PenTool, ExternalLink, Search } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,14 +18,15 @@ export const Route = createFileRoute("/app/stories/")({
 
 function StoriesPage() {
   const { user } = useAuth();
-  const [stories, setStories] = useState<any[]>([]);
+  const [allStories, setAllStories] = useState<any[]>([]);
   const [busy, setBusy] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   async function load() {
     try {
       const data = await getPublishedStories();
-      setStories(data);
+      setAllStories(data);
     } catch (err: any) {
       toast.error(err.message);
     } finally {
@@ -37,7 +38,25 @@ function StoriesPage() {
     load();
   }, []);
 
-  if (busy) return <p className="mt-8 text-muted-foreground px-4">Loading stories…</p>;
+  // Client-side filter
+  const filtered = allStories.filter((s) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      s.title?.toLowerCase().includes(q) ||
+      s.profiles?.display_name?.toLowerCase().includes(q) ||
+      s.content?.toLowerCase().includes(q)
+    );
+  });
+
+  const PAGE_SIZE = 10;
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const visible = filtered.slice(0, visibleCount);
+  const hasMore = visibleCount < filtered.length;
+
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [searchQuery]);
 
   return (
     <div className="mx-auto w-full max-w-7xl">
@@ -56,14 +75,43 @@ function StoriesPage() {
         )}
       </div>
 
-      <div className="mt-8 space-y-8">
-        {stories.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-border p-12 text-center text-muted-foreground">
-            <BookOpen className="mx-auto h-8 w-8 opacity-50" />
-            <p className="mt-4 font-medium text-foreground">No stories published yet.</p>
-          </div>
-        ) : (
-          stories.map((s) => (
+      {/* Search bar */}
+      <div className="mt-6 relative w-full sm:w-80">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          placeholder="Search stories or authors…"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-9 rounded-full bg-muted/50 border-border/50"
+        />
+      </div>
+
+      {/* Result count */}
+      {!busy && filtered.length > 0 && (
+        <p className="mt-4 text-xs text-muted-foreground">
+          Showing {visible.length} of {filtered.length} stor{filtered.length !== 1 ? "ies" : "y"}
+          {searchQuery && ` matching "${searchQuery}"`}
+        </p>
+      )}
+
+      {busy ? (
+        <p className="mt-8 text-muted-foreground px-4">Loading stories…</p>
+      ) : (
+        <div className="mt-4 space-y-8">
+          {filtered.length === 0 ? (
+            <div className="rounded-3xl border border-dashed border-border p-12 text-center text-muted-foreground">
+              <BookOpen className="mx-auto h-8 w-8 opacity-50" />
+              <p className="mt-4 font-medium text-foreground">
+                {searchQuery ? `No stories matching "${searchQuery}".` : "No stories published yet."}
+              </p>
+              {searchQuery && (
+                <button onClick={() => setSearchQuery("")} className="mt-2 text-sm text-[var(--indigo-night)] underline">
+                  Clear search
+                </button>
+              )}
+            </div>
+          ) : (
+            visible.map((s) => (
             <Link key={s.id} to="/app/stories/$id" params={{ id: s.id }} className="block">
               <article className="group relative rounded-3xl border border-border bg-card p-6 md:p-8 overflow-hidden transition hover:border-[var(--indigo-night)]/30">
                 {s.status === 'featured' && (
@@ -99,6 +147,20 @@ function StoriesPage() {
           ))
         )}
       </div>
+      )}
+
+      {/* Load More */}
+      {hasMore && !busy && (
+        <div className="mt-8 flex justify-center">
+          <Button
+            variant="outline"
+            onClick={() => setVisibleCount((v) => v + PAGE_SIZE)}
+            className="rounded-full px-8"
+          >
+            Load More ({filtered.length - visibleCount} remaining)
+          </Button>
+        </div>
+      )}
 
       {createOpen && <SubmitStoryDialog onClose={() => setCreateOpen(false)} onSubmitted={load} />}
     </div>

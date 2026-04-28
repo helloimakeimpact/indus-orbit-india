@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { MapPin, Globe, Linkedin, ArrowLeft, Send, ShieldCheck } from "lucide-react";
+import { MapPin, Globe, Linkedin, ArrowLeft, Send, ShieldCheck, Award, Orbit } from "lucide-react";
+import QRCodeLib from "qrcode";
 import { supabase } from "@/integrations/supabase/client";
 import { SiteShell } from "@/components/site/SiteShell";
 import { AppShell } from "@/components/app/AppShell";
@@ -9,6 +10,8 @@ import { VerifiedBadge } from "@/components/auth/VerifiedBadge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { ReachOutDialog } from "@/components/connect/ReachOutDialog";
+import { SEGMENT_META, type Segment } from "@/components/auth/segments";
+import logo from "@/assets/indus-orbit-logo.png";
 
 export const Route = createFileRoute("/profile/$id")({
   component: PublicProfilePage,
@@ -21,6 +24,8 @@ function PublicProfilePage() {
   const [profile, setProfile] = useState<any>(null);
   const [busy, setBusy] = useState(true);
   const [reachOutOpen, setReachOutOpen] = useState(false);
+  const [certData, setCertData] = useState<{ totalChapters: number; totalMissions: number; isLead: boolean } | null>(null);
+  const [qrDataUrl, setQrDataUrl] = useState("");
 
   useEffect(() => {
     async function load() {
@@ -34,6 +39,28 @@ function PublicProfilePage() {
         
       setProfile(data);
       setBusy(false);
+
+      // If profile is verified, load certificate metrics
+      if (data?.is_verified) {
+        const profileUrl = typeof window !== 'undefined' 
+          ? `${window.location.origin}/profile/${id}`
+          : `https://indus-orbit-india.com/profile/${id}`;
+        QRCodeLib.toDataURL(profileUrl, { margin: 2, scale: 4 }, (err: any, url: string) => {
+          if (!err) setQrDataUrl(url);
+        });
+
+        const [chRes, msRes] = await Promise.all([
+          supabase.from("chapter_members").select("role").eq("user_id", id),
+          supabase.from("mission_members").select("role").eq("user_id", id)
+        ]);
+        const chapters = chRes.data || [];
+        const missions = msRes.data || [];
+        setCertData({
+          totalChapters: chapters.length,
+          totalMissions: missions.length,
+          isLead: chapters.some((c: any) => c.role === "lead") || missions.some((m: any) => m.role === "lead")
+        });
+      }
     }
     load();
   }, [id]);
@@ -170,6 +197,75 @@ function PublicProfilePage() {
                       <Button asChild variant="outline" className="border-[var(--indigo-night)] text-[var(--indigo-night)] hover:bg-[var(--indigo-night)]/5">
                         <Link to="/what-is-indus-orbit">What is Indus Orbit?</Link>
                       </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Certificate Preview (Verified Profiles Only) */}
+            {profile.is_verified && certData && (
+              <div className="rounded-3xl overflow-hidden" style={{ backgroundColor: "#0e0a1f", color: "#fcfaf5", border: "1px solid rgba(255,255,255,0.15)" }}>
+                <div className="relative p-8 overflow-hidden">
+                  {/* Background orbits */}
+                  <div className="absolute -right-16 -top-16 opacity-5 pointer-events-none text-white">
+                    <Orbit className="h-64 w-64" />
+                  </div>
+                  <div className="absolute -left-16 -bottom-16 opacity-5 pointer-events-none text-white">
+                    <Orbit className="h-64 w-64" />
+                  </div>
+
+                  <div className="relative z-10 flex flex-col items-center text-center">
+                    <div className="mb-6 flex items-center gap-3">
+                      <img src={logo} alt="Indus Orbit" className="h-10 w-10" style={{ filter: "invert(1)" }} />
+                      <h3 className="font-display text-2xl font-semibold" style={{ color: "#fcfaf5" }}>Indus Orbit</h3>
+                    </div>
+
+                    <div className="mb-6" style={{ color: "#f97316" }}>
+                      <ShieldCheck className="mx-auto h-8 w-8 mb-2" />
+                      <p className="text-xs font-semibold uppercase tracking-[0.25em]">Official Certification</p>
+                    </div>
+
+                    <p className="text-sm mb-1" style={{ color: "rgba(252,250,245,0.7)" }}>This is to certify that</p>
+                    <h2 className="font-display text-3xl font-semibold mb-4">{profile.display_name}</h2>
+                    <p className="text-sm font-light italic max-w-md mb-6" style={{ color: "rgba(252,250,245,0.85)" }}>
+                      is recognized as a Verified {profile.orbit_segment ? SEGMENT_META[profile.orbit_segment as Segment]?.label : "Member"} within the Indus Orbit ecosystem.
+                    </p>
+
+                    {/* Metrics */}
+                    <div className="flex gap-8 pt-4 mb-4 justify-center" style={{ borderTop: "1px solid rgba(255,255,255,0.15)" }}>
+                      {certData.isLead && (
+                        <div className="flex flex-col items-center">
+                          <span className="text-lg font-bold" style={{ color: "#f97316" }}>Platform Lead</span>
+                          <span className="text-[10px] uppercase tracking-wider mt-1" style={{ color: "rgba(252,250,245,0.5)" }}>Status</span>
+                        </div>
+                      )}
+                      <div className="flex flex-col items-center">
+                        <span className="text-lg font-bold">{certData.totalChapters}</span>
+                        <span className="text-[10px] uppercase tracking-wider mt-1" style={{ color: "rgba(252,250,245,0.5)" }}>Chapters</span>
+                      </div>
+                      <div className="flex flex-col items-center">
+                        <span className="text-lg font-bold">{certData.totalMissions}</span>
+                        <span className="text-[10px] uppercase tracking-wider mt-1" style={{ color: "rgba(252,250,245,0.5)" }}>Missions</span>
+                      </div>
+                    </div>
+
+                    {/* QR & ID footer */}
+                    <div className="flex w-full justify-between items-end pt-4 px-2" style={{ borderTop: "1px solid rgba(255,255,255,0.15)" }}>
+                      <div className="flex items-center gap-3 text-left">
+                        {qrDataUrl && (
+                          <div className="p-1 rounded-lg bg-white">
+                            <img src={qrDataUrl} alt="Profile QR" style={{ width: "48px", height: "48px", display: "block" }} />
+                          </div>
+                        )}
+                        <div>
+                          <p className="font-display text-sm" style={{ color: "#fcfaf5" }}>Indus Orbit Trust Layer</p>
+                          <p className="text-[10px] uppercase tracking-widest" style={{ color: "rgba(252,250,245,0.6)" }}>Scan to verify or join</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs font-mono" style={{ color: "#f97316" }}>ID: {id.split('-')[0].toUpperCase()}</p>
+                      </div>
                     </div>
                   </div>
                 </div>

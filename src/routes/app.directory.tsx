@@ -1,6 +1,7 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { Flag, Send, ThumbsUp, CalendarClock, Search } from "lucide-react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { Flag, Send, ThumbsUp, CalendarClock, Search, Mail, Copy, MessageSquare } from "lucide-react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,17 @@ export const Route = createFileRoute("/app/directory")({
 const FILTERS = ["all", ...SEGMENT_LIST] as const;
 type Filter = (typeof FILTERS)[number];
 
+type Req = {
+  id: string;
+  sender_id: string;
+  recipient_id: string;
+  reason: string;
+  note: string;
+  status: "pending" | "accepted" | "declined" | "withdrawn";
+  created_at: string;
+  responded_at: string | null;
+};
+
 type Profile = {
   id: string;
   user_id: string;
@@ -39,6 +51,8 @@ type Profile = {
   is_verified: boolean;
 };
 
+const PAGE_SIZE = 24;
+
 function DirectoryPage() {
   const search = Route.useSearch();
   const { user } = useAuth();
@@ -46,42 +60,137 @@ function DirectoryPage() {
   const [filter, setFilter] = useState<Filter>(search.segment ?? "all");
   const [members, setMembers] = useState<Profile[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
   const [reachOut, setReachOut] = useState<Profile | null>(null);
   const [endorse, setEndorse] = useState<Profile | null>(null);
   const [report, setReport] = useState<Profile | null>(null);
   const [bookMentor, setBookMentor] = useState<Profile | null>(null);
   const [endorseCounts, setEndorseCounts] = useState<Record<string, number>>({});
   const [showVerificationPrompt, setShowVerificationPrompt] = useState(false);
+  const debounceRef = useRef<any>(null);
+
+  const navigate = useNavigate();
+  const [viewMode, setViewMode] = useState<"directory" | "incoming" | "outgoing">("directory");
+  const [reqRows, setReqRows] = useState<Req[]>([]);
+  const [reqNames, setReqNames] = useState<Record<string, string>>({});
+  const [reqEmails, setReqEmails] = useState<Record<string, string>>({});
+  const [reqBusy, setReqBusy] = useState(false);
 
   useEffect(() => {
     if (search.segment) setFilter(search.segment);
   }, [search.segment]);
 
+  // Debounce search input
   useEffect(() => {
-    setLoading(true);
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => setDebouncedSearch(searchQuery), 350);
+    return () => clearTimeout(debounceRef.current);
+  }, [searchQuery]);
+
+  const fetchMembers = useCallback(async (append = false) => {
+    if (append) setLoadingMore(true); else setLoading(true);
+    const from = append ? members.length : 0;
+    const to = from + PAGE_SIZE - 1;
+
     let q = supabase
       .from("profiles")
-      .select("id, user_id, display_name, headline, city, country, orbit_segment, linkedin_url, website_url, is_verified")
+      .select("id, user_id, display_name, headline, city, country, orbit_segment, linkedin_url, website_url, is_verified", { count: "exact" })
       .eq("is_public", true);
     if (filter !== "all") q = q.eq("orbit_segment", filter as never);
-    q.order("is_verified", { ascending: false })
+    if (debouncedSearch.trim()) {
+      q = q.or(`display_name.ilike.%${debouncedSearch.trim()}%,headline.ilike.%${debouncedSearch.trim()}%`);
+    }
+    const { data, count } = await q
+      .order("is_verified", { ascending: false })
       .order("created_at", { ascending: false })
-      .then(async ({ data }) => {
-        const list = (data as unknown as Profile[] | null) ?? [];
-        setMembers(list);
-        setLoading(false);
-        const ids = list.map((m) => m.user_id);
-        if (ids.length) {
-          const { data: ends } = await supabase.from("endorsements").select("endorsee_id").in("endorsee_id", ids);
-          const counts: Record<string, number> = {};
-          for (const e of (ends as { endorsee_id: string }[] | null) ?? []) {
-            counts[e.endorsee_id] = (counts[e.endorsee_id] ?? 0) + 1;
-          }
-          setEndorseCounts(counts);
-        }
+      .range(from, to);
+
+    const list = (data as unknown as Profile[] | null) ?? [];
+    const total = count ?? 0;
+    setTotalCount(total);
+    setMembers(append ? [...members, ...list] : list);
+    setHasMore(from + list.length < total);
+    setLoading(false);
+    setLoadingMore(false);
+
+    // Fetch endorsements for new batch
+    const ids = list.map((m) => m.user_id);
+    if (ids.length) {
+      const { data: ends } = await supabase.from("endorsements").select("endorsee_id").in("endorsee_id", ids);
+      const counts: Record<string, number> = {};
+      for (const e of (ends as { endorsee_id: string }[] | null) ?? []) {
+        counts[e.endorsee_id] = (counts[e.endorsee_id] ?? 0) + 1;
+      }
+      setEndorseCounts(prev => append ? { ...prev, ...counts } : counts);
+    }
+  }, [filter, debouncedSearch, members]);
+
+  useEffect(() => {
+    if (viewMode === "directory") fetchMembers(false);
+  }, [filter, debouncedSearch, viewMode]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const loadRequests = useCallback(async () => {
+    if (!user || viewMode === "directory") return;
+    setReqBusy(true);
+    const col = viewMode === "incoming" ? "recipient_id" : "sender_id";
+    const { data } = await supabase
+      .from("connection_requests")
+      .select("*")
+      .eq(col, user.id)
+      .order("created_at", { ascending: false });
+    const list = (data as unknown as Req[] | null) ?? [];
+    setReqRows(list);
+    const otherIds = Array.from(new Set(list.map((r) => (viewMode === "incoming" ? r.sender_id : r.recipient_id))));
+    if (otherIds.length) {
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("user_id, display_name")
+        .in("user_id", otherIds);
+      const map: Record<string, string> = {};
+      for (const p of (profs as { user_id: string; display_name: string | null }[] | null) ?? []) {
+        map[p.user_id] = p.display_name ?? "Member";
+      }
+      setReqNames(map);
+
+      const emailMap: Record<string, string> = {};
+      const acceptedRequests = list.filter(r => r.status === "accepted");
+      await Promise.all(
+        acceptedRequests.map(async (r) => {
+          const id = viewMode === "incoming" ? r.sender_id : r.recipient_id;
+          const { data: emailData } = await supabase.rpc("get_connection_email", { target_user_id: id });
+          if (emailData) emailMap[id] = emailData;
+        })
+      );
+      setReqEmails(emailMap);
+    }
+    setReqBusy(false);
+  }, [user, viewMode]);
+
+  useEffect(() => {
+    if (viewMode !== "directory") loadRequests();
+  }, [viewMode, loadRequests]);
+
+  async function respond(r: Req, status: "accepted" | "declined" | "withdrawn") {
+    const { error } = await supabase.from("connection_requests").update({ status }).eq("id", r.id);
+    if (error) return toast.error(error.message);
+    if (status === "accepted" && viewMode === "incoming") {
+      await supabase.from("notifications").insert({
+        user_id: r.sender_id, category: "connect_requests", type: "connect_requests",
+        message: `${user?.email} has accepted your connection request.`, link: "/app/directory"
       });
-  }, [filter]);
+    }
+    toast.success(`Request ${status}`);
+    loadRequests();
+  }
+
+  const handleCopyEmail = (email: string) => {
+    navigator.clipboard.writeText(email);
+    toast.success("Email copied to clipboard");
+  };
 
   useEffect(() => {
     if (!user) { setMeVerified(false); return; }
@@ -91,13 +200,47 @@ function DirectoryPage() {
 
   return (
     <div className="mx-auto w-full max-w-7xl">
-      <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">Directory</p>
-      <h1 className="mt-2 font-display text-3xl font-medium md:text-4xl">Members of the Orbit</h1>
-      <p className="mt-2 max-w-2xl text-sm text-foreground/70">
-        Public profiles across all stakeholder segments.
-      </p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">Network</p>
+          <h1 className="mt-2 font-display text-3xl font-medium md:text-4xl">Members & Connections</h1>
+          <p className="mt-2 max-w-2xl text-sm text-foreground/70">
+            Public profiles across all stakeholder segments, and your private connections.
+          </p>
+        </div>
+      </div>
 
-      <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      {/* Tabs */}
+      <div className="mt-6 flex gap-2 border-b border-border pb-4 overflow-x-auto">
+        <button
+          onClick={() => setViewMode("directory")}
+          className={`rounded-full border px-4 py-1.5 text-xs uppercase tracking-wider transition whitespace-nowrap ${
+            viewMode === "directory" ? "border-[var(--indigo-night)] bg-[var(--indigo-night)] text-[var(--parchment)]" : "border-border hover:bg-foreground/5"
+          }`}
+        >
+          Directory
+        </button>
+        <button
+          onClick={() => setViewMode("incoming")}
+          className={`rounded-full border px-4 py-1.5 text-xs uppercase tracking-wider transition whitespace-nowrap flex items-center gap-2 ${
+            viewMode === "incoming" ? "border-[var(--indigo-night)] bg-[var(--indigo-night)] text-[var(--parchment)]" : "border-border hover:bg-foreground/5"
+          }`}
+        >
+          Incoming Requests
+        </button>
+        <button
+          onClick={() => setViewMode("outgoing")}
+          className={`rounded-full border px-4 py-1.5 text-xs uppercase tracking-wider transition whitespace-nowrap flex items-center gap-2 ${
+            viewMode === "outgoing" ? "border-[var(--indigo-night)] bg-[var(--indigo-night)] text-[var(--parchment)]" : "border-border hover:bg-foreground/5"
+          }`}
+        >
+          Outgoing Requests
+        </button>
+      </div>
+
+      {viewMode === "directory" && (
+        <>
+          <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-wrap gap-2">
           {FILTERS.map((s) => (
             <button
@@ -124,18 +267,28 @@ function DirectoryPage() {
         </div>
       </div>
 
+      {/* Result count */}
+      {!loading && totalCount > 0 && (
+        <p className="mt-6 text-xs text-muted-foreground">
+          Showing {members.length} of {totalCount} member{totalCount !== 1 ? "s" : ""}
+          {debouncedSearch && ` matching "${debouncedSearch}"`}
+        </p>
+      )}
+
       {loading ? (
         <p className="mt-12 text-muted-foreground">Loading…</p>
       ) : members.length === 0 ? (
-        <p className="mt-12 text-muted-foreground">No members in this segment yet.</p>
+        <div className="mt-12 text-center">
+          <p className="text-muted-foreground">No members found{debouncedSearch ? ` matching "${debouncedSearch}"` : " in this segment yet"}.</p>
+          {debouncedSearch && (
+            <button onClick={() => setSearchQuery("")} className="mt-2 text-sm text-[var(--indigo-night)] underline">
+              Clear search
+            </button>
+          )}
+        </div>
       ) : (
-        <div className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {members
-            .filter(m => !searchQuery || 
-              m.display_name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-              m.headline?.toLowerCase().includes(searchQuery.toLowerCase())
-            )
-            .map((m) => (
+        <div className="mt-4 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+          {members.map((m) => (
             <article key={m.id} className="rounded-3xl border border-border bg-card p-6">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex flex-wrap items-center gap-2">
@@ -189,6 +342,97 @@ function DirectoryPage() {
               )}
             </article>
           ))}
+        </div>
+      )}
+
+      {/* Load More */}
+      {hasMore && !loading && (
+        <div className="mt-8 flex justify-center">
+          <Button
+            variant="outline"
+            onClick={() => fetchMembers(true)}
+            disabled={loadingMore}
+            className="rounded-full px-8"
+          >
+            {loadingMore ? "Loading…" : `Load More (${totalCount - members.length} remaining)`}
+          </Button>
+        </div>
+      )}
+      </>
+      )}
+
+      {viewMode !== "directory" && (
+        <div className="mt-6">
+          {reqBusy ? (
+            <p className="text-muted-foreground">Loading…</p>
+          ) : reqRows.length === 0 ? (
+            <p className="text-muted-foreground">
+              {viewMode === "incoming" ? "No incoming requests yet." : "You haven't sent any requests yet."}
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {reqRows.map((r) => {
+                const otherId = viewMode === "incoming" ? r.sender_id : r.recipient_id;
+                const otherName = reqNames[otherId] ?? "Member";
+                return (
+                  <article key={r.id} className="rounded-3xl border border-border bg-card p-6">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <h3 className="font-display text-lg font-semibold">
+                          {viewMode === "incoming" ? "From " : "To "}
+                          {otherName}
+                        </h3>
+                        <p className="text-xs uppercase tracking-wider text-muted-foreground">
+                          {new Date(r.created_at).toLocaleString()}
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Badge variant="secondary">{r.reason}</Badge>
+                        <Badge>{r.status}</Badge>
+                      </div>
+                    </div>
+                    <p className="mt-3 text-sm">{r.note}</p>
+                    {viewMode === "incoming" && r.status === "pending" && (
+                      <div className="mt-4 flex gap-2">
+                        <Button onClick={() => respond(r, "accepted")}>Accept</Button>
+                        <Button variant="outline" onClick={() => respond(r, "declined")}>Decline</Button>
+                      </div>
+                    )}
+                    {viewMode === "outgoing" && r.status === "pending" && (
+                      <div className="mt-4">
+                        <Button variant="outline" onClick={() => respond(r, "withdrawn")}>Withdraw</Button>
+                      </div>
+                    )}
+                    {r.status === "accepted" && reqEmails[otherId] && (
+                      <div className="mt-6 flex items-center justify-between rounded-2xl bg-[var(--indigo-night)]/5 p-4 border border-[var(--indigo-night)]/10">
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-wider text-[var(--indigo-night)]">Contact Information</p>
+                          <p className="mt-1 font-medium">{reqEmails[otherId]}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button size="icon" variant="outline" onClick={() => handleCopyEmail(reqEmails[otherId])}>
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            className="bg-[var(--indigo-night)] text-[var(--parchment)] hover:bg-[var(--indigo-night)]/90"
+                            onClick={() => { window.location.href = `mailto:${reqEmails[otherId]}`; }}
+                          >
+                            <Mail className="mr-2 h-4 w-4" /> Email
+                          </Button>
+                          <Button
+                            variant="outline"
+                            onClick={() => navigate({ to: '/app/messages', search: { user: otherId } })}
+                          >
+                            <MessageSquare className="mr-2 h-4 w-4" /> Message
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </article>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 

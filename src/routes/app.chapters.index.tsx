@@ -1,11 +1,12 @@
 import { createFileRoute, useNavigate, Link } from '@tanstack/react-router'
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { toast } from "sonner";
-import { MapPin, Users, Crown } from "lucide-react";
+import { MapPin, Users, Crown, Search } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { getChapters, joinChapter } from "@/server/society.functions";
 
 export const Route = createFileRoute("/app/chapters/")({
@@ -16,13 +17,14 @@ export const Route = createFileRoute("/app/chapters/")({
 function ChaptersPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [chapters, setChapters] = useState<any[]>([]);
+  const [allChapters, setAllChapters] = useState<any[]>([]);
   const [busy, setBusy] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
 
   async function load() {
     try {
       const data = await getChapters();
-      setChapters(data);
+      setAllChapters(data);
     } catch (err: any) {
       toast.error(err.message);
     } finally {
@@ -33,6 +35,28 @@ function ChaptersPage() {
   useEffect(() => {
     load();
   }, []);
+
+  // Client-side filter (chapters are usually smaller datasets)
+  const filtered = allChapters.filter((c) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      c.name?.toLowerCase().includes(q) ||
+      c.city?.toLowerCase().includes(q) ||
+      c.country?.toLowerCase().includes(q)
+    );
+  });
+
+  // Paginate the filtered results
+  const PAGE_SIZE = 12;
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const visible = filtered.slice(0, visibleCount);
+  const hasMore = visibleCount < filtered.length;
+
+  // Reset visible count when search changes
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [searchQuery]);
 
   async function handleJoin(chapterId: string) {
     if (!user) return toast.error("Please log in to join.");
@@ -64,7 +88,7 @@ function ChaptersPage() {
           >
             Propose a Chapter
           </Button>
-          {chapters.some(c => c.chapter_members?.some((m: any) => m.user_id === user?.id && m.role === 'lead')) && (
+          {allChapters.some((c: any) => c.chapter_members?.some((m: any) => m.user_id === user?.id && m.role === 'lead')) && (
             <Button
               variant="outline"
               className="border-[var(--indigo-night)] text-[var(--indigo-night)]"
@@ -76,14 +100,40 @@ function ChaptersPage() {
         </div>
       </div>
 
-      <div className="mt-8 grid gap-6 md:grid-cols-2">
-        {chapters.length === 0 ? (
+      {/* Search bar */}
+      <div className="mt-6 relative w-full sm:w-80">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          placeholder="Search by name, city, or country…"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-9 rounded-full bg-muted/50 border-border/50"
+        />
+      </div>
+
+      {/* Result count */}
+      {!busy && filtered.length > 0 && (
+        <p className="mt-4 text-xs text-muted-foreground">
+          Showing {visible.length} of {filtered.length} chapter{filtered.length !== 1 ? "s" : ""}
+          {searchQuery && ` matching "${searchQuery}"`}
+        </p>
+      )}
+
+      <div className="mt-4 grid gap-6 md:grid-cols-2">
+        {filtered.length === 0 ? (
           <div className="col-span-full rounded-3xl border border-dashed border-border p-12 text-center text-muted-foreground">
             <MapPin className="mx-auto h-8 w-8 opacity-50" />
-            <p className="mt-4 font-medium text-foreground">No chapters have been launched yet.</p>
+            <p className="mt-4 font-medium text-foreground">
+              {searchQuery ? `No chapters matching "${searchQuery}".` : "No chapters have been launched yet."}
+            </p>
+            {searchQuery && (
+              <button onClick={() => setSearchQuery("")} className="mt-2 text-sm text-[var(--indigo-night)] underline">
+                Clear search
+              </button>
+            )}
           </div>
         ) : (
-          chapters.map((c) => {
+          visible.map((c) => {
             const hasJoined = c.chapter_members?.some((m: any) => m.user_id === user?.id);
             const memberCount = c.chapter_members?.length || 0;
             const leads = c.chapter_members?.filter((m: any) => m.role === 'lead') || [];
@@ -135,6 +185,19 @@ function ChaptersPage() {
           })
         )}
       </div>
+
+      {/* Load More */}
+      {hasMore && !busy && (
+        <div className="mt-8 flex justify-center">
+          <Button
+            variant="outline"
+            onClick={() => setVisibleCount((v) => v + PAGE_SIZE)}
+            className="rounded-full px-8"
+          >
+            Load More ({filtered.length - visibleCount} remaining)
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

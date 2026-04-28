@@ -19,14 +19,16 @@ export const Route = createFileRoute("/app/events/")({
 
 function EventsPage() {
   const { user } = useAuth();
-  const [events, setEvents] = useState<any[]>([]);
+  const [allEvents, setAllEvents] = useState<any[]>([]);
   const [busy, setBusy] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
+  const [timeFilter, setTimeFilter] = useState<"upcoming" | "past">("upcoming");
+  const [locationFilter, setLocationFilter] = useState<"all" | "virtual" | "irl">("all");
 
   async function load() {
     try {
       const data = await getApprovedEvents();
-      setEvents(data);
+      setAllEvents(data);
     } catch (err: any) {
       toast.error(err.message);
     } finally {
@@ -38,7 +40,25 @@ function EventsPage() {
     load();
   }, []);
 
-  if (busy) return <p className="mt-8 text-muted-foreground px-4">Loading events…</p>;
+  // Client-side filter
+  const filtered = allEvents.filter((e) => {
+    const isPast = new Date(e.start_time) < new Date();
+    if (timeFilter === "upcoming" && isPast) return false;
+    if (timeFilter === "past" && !isPast) return false;
+    
+    if (locationFilter !== "all" && e.location_type !== locationFilter) return false;
+    
+    return true;
+  });
+
+  const PAGE_SIZE = 12;
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const visible = filtered.slice(0, visibleCount);
+  const hasMore = visibleCount < filtered.length;
+
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [timeFilter, locationFilter]);
 
   return (
     <div className="mx-auto w-full max-w-7xl">
@@ -57,15 +77,69 @@ function EventsPage() {
         )}
       </div>
 
-      <div className="mt-8 space-y-4">
-        {events.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-border p-12 text-center text-muted-foreground">
-            <CalendarDays className="mx-auto h-8 w-8 opacity-50" />
-            <p className="mt-4 font-medium text-foreground">No upcoming events right now.</p>
-          </div>
-        ) : (
-          events.map((e) => {
-            const start = new Date(e.start_time);
+      {/* Filters */}
+      <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setTimeFilter("upcoming")}
+            className={`rounded-full border px-4 py-1.5 text-xs uppercase tracking-wider transition ${
+              timeFilter === "upcoming"
+                ? "border-[var(--indigo-night)] bg-[var(--indigo-night)] text-[var(--parchment)]"
+                : "border-border hover:bg-foreground/5"
+            }`}
+          >
+            Upcoming
+          </button>
+          <button
+            onClick={() => setTimeFilter("past")}
+            className={`rounded-full border px-4 py-1.5 text-xs uppercase tracking-wider transition ${
+              timeFilter === "past"
+                ? "border-[var(--indigo-night)] bg-[var(--indigo-night)] text-[var(--parchment)]"
+                : "border-border hover:bg-foreground/5"
+            }`}
+          >
+            Past
+          </button>
+        </div>
+        
+        <div className="flex gap-2">
+          {["all", "virtual", "irl"].map((type) => (
+            <button
+              key={type}
+              onClick={() => setLocationFilter(type as "all" | "virtual" | "irl")}
+              className={`rounded-full border px-3 py-1.5 text-xs uppercase tracking-wider transition ${
+                locationFilter === type
+                  ? "border-[var(--indigo-night)] bg-[var(--indigo-night)] text-[var(--parchment)]"
+                  : "border-border hover:bg-foreground/5"
+              }`}
+            >
+              {type === "all" ? "All Locations" : type === "virtual" ? "Virtual" : "In-Person"}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Result count */}
+      {!busy && filtered.length > 0 && (
+        <p className="mt-4 text-xs text-muted-foreground">
+          Showing {visible.length} of {filtered.length} event{filtered.length !== 1 ? "s" : ""}
+        </p>
+      )}
+
+      {busy ? (
+        <p className="mt-8 text-muted-foreground px-4">Loading events…</p>
+      ) : (
+        <div className="mt-4 space-y-4">
+          {filtered.length === 0 ? (
+            <div className="rounded-3xl border border-dashed border-border p-12 text-center text-muted-foreground">
+              <CalendarDays className="mx-auto h-8 w-8 opacity-50" />
+              <p className="mt-4 font-medium text-foreground">
+                No {timeFilter} events match your filters.
+              </p>
+            </div>
+          ) : (
+            visible.map((e) => {
+              const start = new Date(e.start_time);
             return (
               <Link key={e.id} to="/app/events/$id" params={{ id: e.id }} className="block">
                 <article className="rounded-2xl border border-border bg-card p-5 md:flex items-start gap-6 hover:border-[var(--indigo-night)]/30 transition group">
@@ -113,6 +187,20 @@ function EventsPage() {
           })
         )}
       </div>
+      )}
+
+      {/* Load More */}
+      {hasMore && !busy && (
+        <div className="mt-8 flex justify-center">
+          <Button
+            variant="outline"
+            onClick={() => setVisibleCount((v) => v + PAGE_SIZE)}
+            className="rounded-full px-8"
+          >
+            Load More ({filtered.length - visibleCount} remaining)
+          </Button>
+        </div>
+      )}
 
       {createOpen && <SubmitEventDialog onClose={() => setCreateOpen(false)} onSubmitted={load} />}
     </div>

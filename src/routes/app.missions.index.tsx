@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Globe2, Rocket, Plus, Users, ArrowRight, Crown } from "lucide-react";
+import { Globe2, Rocket, Plus, Users, ArrowRight, Crown, Search } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,18 +17,23 @@ export const Route = createFileRoute("/app/missions/")({
   component: MissionsPage,
 });
 
+const STATUS_TABS = ["all", "open", "completed", "archived"] as const;
+type StatusTab = (typeof STATUS_TABS)[number];
+
 function MissionsPage() {
   const { user, isAdmin, userSegment } = useAuth();
   const navigate = useNavigate();
-  const [missions, setMissions] = useState<any[]>([]);
+  const [allMissions, setAllMissions] = useState<any[]>([]);
   const [busy, setBusy] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
   const [joinOpen, setJoinOpen] = useState<any | null>(null);
+  const [statusFilter, setStatusFilter] = useState<StatusTab>("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
   async function load() {
     try {
       const data = await getMissions();
-      setMissions(data);
+      setAllMissions(data);
     } catch (err: any) {
       toast.error(err.message);
     } finally {
@@ -39,6 +44,25 @@ function MissionsPage() {
   useEffect(() => {
     load();
   }, []);
+
+  // Client-side filter
+  const filtered = allMissions.filter((m) => {
+    if (statusFilter !== "all" && m.status !== statusFilter) return false;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      if (!m.title?.toLowerCase().includes(q) && !m.theme?.toLowerCase().includes(q)) return false;
+    }
+    return true;
+  });
+
+  const PAGE_SIZE = 10;
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const visible = filtered.slice(0, visibleCount);
+  const hasMore = visibleCount < filtered.length;
+
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [statusFilter, searchQuery]);
 
   async function handleStatusChange(missionId: string, status: "open" | "completed" | "archived") {
     try {
@@ -69,14 +93,61 @@ function MissionsPage() {
         )}
       </div>
 
-      <div className="mt-8 space-y-6">
-        {missions.length === 0 ? (
+      {/* Status tabs + search */}
+      <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap gap-2">
+          {STATUS_TABS.map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setStatusFilter(tab)}
+              className={`rounded-full border px-4 py-1.5 text-xs uppercase tracking-wider transition ${
+                statusFilter === tab
+                  ? "border-[var(--indigo-night)] bg-[var(--indigo-night)] text-[var(--parchment)]"
+                  : "border-border hover:bg-foreground/5"
+              }`}
+            >
+              {tab === "all" ? `All (${allMissions.length})` : `${tab.charAt(0).toUpperCase() + tab.slice(1)} (${allMissions.filter(m => m.status === tab).length})`}
+            </button>
+          ))}
+        </div>
+        <div className="relative w-full sm:w-64">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Search missions…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9 rounded-full bg-muted/50 border-border/50"
+          />
+        </div>
+      </div>
+
+      {/* Result count */}
+      {!busy && filtered.length > 0 && (
+        <p className="mt-4 text-xs text-muted-foreground">
+          Showing {visible.length} of {filtered.length} mission{filtered.length !== 1 ? "s" : ""}
+        </p>
+      )}
+
+      <div className="mt-4 space-y-6">
+        {filtered.length === 0 ? (
           <div className="rounded-3xl border border-dashed border-border p-12 text-center text-muted-foreground">
             <Globe2 className="mx-auto h-8 w-8 opacity-50" />
-            <p className="mt-4 font-medium text-foreground">No active missions right now.</p>
+            <p className="mt-4 font-medium text-foreground">
+              {statusFilter !== "all" || searchQuery
+                ? "No missions match your filters."
+                : "No active missions right now."}
+            </p>
+            {(statusFilter !== "all" || searchQuery) && (
+              <button
+                onClick={() => { setStatusFilter("all"); setSearchQuery(""); }}
+                className="mt-2 text-sm text-[var(--indigo-night)] underline"
+              >
+                Clear filters
+              </button>
+            )}
           </div>
         ) : (
-          missions.map((m) => {
+          visible.map((m) => {
             const hasJoined = m.mission_members?.some((mm: any) => mm.user_id === user?.id);
             const segmentCounts = m.mission_members?.reduce((acc: any, mm: any) => {
               const segment = mm.profiles?.orbit_segment || 'other';
@@ -199,6 +270,19 @@ function MissionsPage() {
           })
         )}
       </div>
+
+      {/* Load More */}
+      {hasMore && !busy && (
+        <div className="mt-8 flex justify-center">
+          <Button
+            variant="outline"
+            onClick={() => setVisibleCount((v) => v + PAGE_SIZE)}
+            className="rounded-full px-8"
+          >
+            Load More ({filtered.length - visibleCount} remaining)
+          </Button>
+        </div>
+      )}
 
       {createOpen && <CreateMissionDialog onClose={() => setCreateOpen(false)} onCreated={load} />}
       {joinOpen && <JoinMissionDialog mission={joinOpen} userSegment={userSegment} onClose={() => setJoinOpen(null)} onJoined={load} />}

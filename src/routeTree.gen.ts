@@ -33,7 +33,6 @@ import { Route as AppMentorRouteImport } from './routes/app.mentor'
 import { Route as AppInvestorFeedRouteImport } from './routes/app.investor-feed'
 import { Route as AppEventsRouteImport } from './routes/app.events'
 import { Route as AppDirectoryRouteImport } from './routes/app.directory'
-import { Route as AppConnectRouteImport } from './routes/app.connect'
 import { Route as AppChapterAdminRouteImport } from './routes/app.chapter-admin'
 import { Route as AppBoardRouteImport } from './routes/app.board'
 import { Route as AppStoriesIndexRouteImport } from './routes/app.stories.index'
@@ -175,11 +174,6 @@ const AppDirectoryRoute = AppDirectoryRouteImport.update({
   path: '/directory',
   getParentRoute: () => AppRoute,
 } as any)
-const AppConnectRoute = AppConnectRouteImport.update({
-  id: '/connect',
-  path: '/connect',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppChapterAdminRoute = AppChapterAdminRouteImport.update({
   id: '/chapter-admin',
   path: '/chapter-admin',
@@ -295,7 +289,6 @@ export interface FileRoutesByFullPath {
   '/writing': typeof WritingRoute
   '/app/board': typeof AppBoardRoute
   '/app/chapter-admin': typeof AppChapterAdminRoute
-  '/app/connect': typeof AppConnectRoute
   '/app/directory': typeof AppDirectoryRoute
   '/app/events': typeof AppEventsRouteWithChildren
   '/app/investor-feed': typeof AppInvestorFeedRoute
@@ -341,7 +334,6 @@ export interface FileRoutesByTo {
   '/writing': typeof WritingRoute
   '/app/board': typeof AppBoardRoute
   '/app/chapter-admin': typeof AppChapterAdminRoute
-  '/app/connect': typeof AppConnectRoute
   '/app/directory': typeof AppDirectoryRoute
   '/app/investor-feed': typeof AppInvestorFeedRoute
   '/app/mentor': typeof AppMentorRoute
@@ -386,7 +378,6 @@ export interface FileRoutesById {
   '/writing': typeof WritingRoute
   '/app/board': typeof AppBoardRoute
   '/app/chapter-admin': typeof AppChapterAdminRoute
-  '/app/connect': typeof AppConnectRoute
   '/app/directory': typeof AppDirectoryRoute
   '/app/events': typeof AppEventsRouteWithChildren
   '/app/investor-feed': typeof AppInvestorFeedRoute
@@ -435,7 +426,6 @@ export interface FileRouteTypes {
     | '/writing'
     | '/app/board'
     | '/app/chapter-admin'
-    | '/app/connect'
     | '/app/directory'
     | '/app/events'
     | '/app/investor-feed'
@@ -481,7 +471,6 @@ export interface FileRouteTypes {
     | '/writing'
     | '/app/board'
     | '/app/chapter-admin'
-    | '/app/connect'
     | '/app/directory'
     | '/app/investor-feed'
     | '/app/mentor'
@@ -525,7 +514,6 @@ export interface FileRouteTypes {
     | '/writing'
     | '/app/board'
     | '/app/chapter-admin'
-    | '/app/connect'
     | '/app/directory'
     | '/app/events'
     | '/app/investor-feed'
@@ -745,13 +733,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDirectoryRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/connect': {
-      id: '/app/connect'
-      path: '/connect'
-      fullPath: '/app/connect'
-      preLoaderRoute: typeof AppConnectRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/app/chapter-admin': {
       id: '/app/chapter-admin'
       path: '/chapter-admin'
@@ -940,7 +921,6 @@ const AppStoriesRouteWithChildren = AppStoriesRoute._addFileChildren(
 interface AppRouteChildren {
   AppBoardRoute: typeof AppBoardRoute
   AppChapterAdminRoute: typeof AppChapterAdminRoute
-  AppConnectRoute: typeof AppConnectRoute
   AppDirectoryRoute: typeof AppDirectoryRoute
   AppEventsRoute: typeof AppEventsRouteWithChildren
   AppInvestorFeedRoute: typeof AppInvestorFeedRoute
@@ -969,7 +949,6 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppBoardRoute: AppBoardRoute,
   AppChapterAdminRoute: AppChapterAdminRoute,
-  AppConnectRoute: AppConnectRoute,
   AppDirectoryRoute: AppDirectoryRoute,
   AppEventsRoute: AppEventsRouteWithChildren,
   AppInvestorFeedRoute: AppInvestorFeedRoute,

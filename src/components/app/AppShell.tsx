@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { AppSidebar } from "./AppSidebar";
 import { NotificationSheet } from "./NotificationSheet";
+import { ChatDropdown } from "./ChatDropdown";
 
 export function AppShell({ children, title }: { children: ReactNode; title?: string }) {
   return (
@@ -9,7 +10,10 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
       <div className="flex min-h-screen flex-1 flex-col md:pl-0">
         <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-background/80 px-6 pl-20 backdrop-blur md:pl-6">
           <h1 className="font-display text-lg font-medium text-foreground">{title ?? "Indus Orbit"}</h1>
-          <NotificationSheet />
+          <div className="flex items-center gap-1">
+            <ChatDropdown />
+            <NotificationSheet />
+          </div>
         </header>
         <main className="flex-1 px-4 py-6 md:px-8 md:py-10">{children}</main>
       </div>

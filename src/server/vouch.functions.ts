@@ -130,120 +130,20 @@ export async function vouchDirectly(recipientId: string) {
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) throw new Error("Unauthorized");
 
-  const userId = userData.user.id;
-  if (recipientId === userId) throw new Error("You cannot vouch for yourself.");
-  await assertCanIssue(userId);
+  const { data, error } = await supabase.rpc("vouch_directly", { _recipient_id: recipientId });
+  if (error) throw new Error(error.message);
 
-  const { data: recipient, error: rErr } = await supabase
-    .from("profiles")
-    .select("id, user_id, is_verified")
-    .eq("user_id", recipientId)
-    .maybeSingle();
-  if (rErr || !recipient) throw new Error("Recipient not found.");
-
-  if (!recipient.is_verified) {
-    const { error } = await supabase
-      .from("profiles")
-      .update({ is_verified: true, verified_by: userId })
-      .eq("id", recipient.id);
-    if (error) throw new Error(error.message);
-  }
-
-  await supabase.from("vouch_events").insert({
-    issuer_id: userId,
-    recipient_id: recipientId,
-    channel: "direct",
-  });
-
-  await supabase.from("audit_log").insert({
-    actor_id: userId,
-    action: "vouch.direct",
-    target_type: "profile",
-    target_id: recipientId,
-  });
-
-  // Notify the recipient
-  await supabase.from("notifications").insert({
-    user_id: recipientId,
-    type: "vouch_direct",
-    message: "You have been vouched for and verified!",
-    link: "/app/profile",
-  });
-
-  return { ok: true, alreadyVerified: recipient.is_verified };
+  return data as { ok: boolean; alreadyVerified: boolean };
 }
 
 export async function redeemCode(code: string) {
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) throw new Error("Unauthorized");
 
-  const userId = userData.user.id;
-  const normalizedCode = code.trim().toUpperCase();
-  if (normalizedCode.length < 6) throw new Error("Invalid code.");
+  const { data, error } = await supabase.rpc("redeem_vouch_code", { _code: code });
+  if (error) throw new Error(error.message);
 
-  const { data: codeRow } = await supabase
-    .from("vouch_codes")
-    .select("*")
-    .eq("code", normalizedCode)
-    .maybeSingle();
-  if (!codeRow) throw new Error("Code not found.");
-  if (codeRow.status !== "active") throw new Error(`Code is ${codeRow.status}.`);
-  if (new Date(codeRow.expires_at).getTime() < Date.now()) {
-    await supabase.from("vouch_codes").update({ status: "expired" }).eq("id", codeRow.id);
-    throw new Error("Code has expired.");
-  }
-  if (codeRow.issuer_id === userId) throw new Error("You cannot redeem your own code.");
-
-  const { data: susp } = await supabase
-    .from("member_suspensions")
-    .select("id")
-    .eq("user_id", userId)
-    .is("lifted_at", null)
-    .maybeSingle();
-  if (susp) throw new Error("Your account is suspended.");
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id, is_verified")
-    .eq("user_id", userId)
-    .maybeSingle();
-  if (!profile) throw new Error("Profile not found. Complete onboarding first.");
-
-  if (!profile.is_verified) {
-    const { error } = await supabase
-      .from("profiles")
-      .update({ is_verified: true, verified_by: codeRow.issuer_id })
-      .eq("id", profile.id);
-    if (error) throw new Error(error.message);
-  }
-
-  await supabase
-    .from("vouch_codes")
-    .update({ status: "redeemed", redeemed_at: new Date().toISOString(), redeemer_id: userId })
-    .eq("id", codeRow.id);
-
-  await supabase
-    .from("vouch_events")
-    .update({ recipient_id: userId })
-    .eq("code_id", codeRow.id);
-
-  await supabase.from("audit_log").insert({
-    actor_id: userId,
-    action: "vouch.code_redeemed",
-    target_type: "vouch_code",
-    target_id: codeRow.id,
-    metadata: { issuer_id: codeRow.issuer_id },
-  });
-
-  // Notify the issuer
-  await supabase.from("notifications").insert({
-    user_id: codeRow.issuer_id,
-    type: "vouch_code_redeemed",
-    message: "Someone successfully redeemed your vouch code.",
-    link: "/app/vouch",
-  });
-
-  return { ok: true };
+  return data as { ok: boolean };
 }
 
 export async function requestVouch(message: string, targetVerifierId?: string | null) {

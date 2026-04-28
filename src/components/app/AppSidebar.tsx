@@ -1,20 +1,17 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { Home, Users, User as UserIcon, Shield, UserCog, LogOut, Menu, X, Send, Megaphone, LayoutDashboard, ClipboardList, Flag, ScrollText, ShieldCheck, KeyRound, CalendarClock, TrendingUp, Globe2, BookOpen, MapPin, CalendarDays, Bell, MessageSquare } from "lucide-react";
+import { Home, Users, User as UserIcon, Shield, UserCog, LogOut, Menu, X, Send, Megaphone, LayoutDashboard, ClipboardList, Flag, ScrollText, ShieldCheck, KeyRound, CalendarClock, TrendingUp, Globe2, BookOpen, MapPin, CalendarDays, Bell } from "lucide-react";
 import logo from "@/assets/indus-orbit-logo.png";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { getUnreadNotificationCount } from "@/server/notification.functions";
-import { getUnreadMessageCount } from "@/server/messages.functions";
 
 type Item = { to: string; label: string; icon: typeof Home; admin?: boolean };
 
 const ITEMS: Item[] = [
   { to: "/app", label: "Home", icon: Home },
-  { to: "/app/directory", label: "Directory", icon: Users },
-  { to: "/app/connect", label: "Connect", icon: Send },
-  { to: "/app/messages", label: "Messages", icon: MessageSquare },
+  { to: "/app/directory", label: "Network", icon: Users },
   { to: "/app/board", label: "Board", icon: Megaphone },
   { to: "/app/missions", label: "India Missions", icon: Globe2 },
   { to: "/app/chapters", label: "Chapters", icon: MapPin },
@@ -37,13 +34,6 @@ const ADMIN_ITEMS: Item[] = [
 
 function NavList({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
   const { isAdmin, userSegment } = useAuth();
-  const [unreadMsgs, setUnreadMsgs] = useState(0);
-  
-  useEffect(() => {
-    getUnreadMessageCount().then(setUnreadMsgs).catch(() => {});
-    const id = setInterval(() => getUnreadMessageCount().then(setUnreadMsgs).catch(() => {}), 15000);
-    return () => clearInterval(id);
-  }, []);
   
   const navItems = [...ITEMS];
   if (userSegment === "investor") {
@@ -59,7 +49,6 @@ function NavList({ pathname, onNavigate }: { pathname: string; onNavigate?: () =
           item={item}
           active={pathname === item.to}
           onClick={onNavigate}
-          badgeCount={item.to === "/app/messages" ? unreadMsgs : 0}
         />
       ))}
       {isAdmin && (

@@ -1074,6 +1074,16 @@ export type Database = {
         Returns: boolean
       }
       is_suspended: { Args: { _user_id: string }; Returns: boolean }
+      lead_remove_chapter_member: {
+        Args: { _chapter_id: string; _target_user_id: string }
+        Returns: undefined
+      }
+      lead_remove_mission_member: {
+        Args: { _mission_id: string; _target_user_id: string }
+        Returns: undefined
+      }
+      redeem_vouch_code: { Args: { _code: string }; Returns: Json }
+      vouch_directly: { Args: { _recipient_id: string }; Returns: Json }
       vouch_effective_quota: { Args: { _user_id: string }; Returns: number }
       vouch_remaining: { Args: { _user_id: string }; Returns: number }
       vouch_used_in_window: { Args: { _user_id: string }; Returns: number }
