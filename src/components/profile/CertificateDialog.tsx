@@ -39,8 +39,8 @@ export function CertificateDialog({
   useEffect(() => {
     // Generate QR code data URL once per user
     const url = typeof window !== 'undefined' 
-      ? `${window.location.origin}/app/profile?id=${userId}` 
-      : `https://indus-orbit-india.com/app/profile?id=${userId}`;
+      ? `${window.location.origin}/profile/${userId}` 
+      : `https://indus-orbit-india.com/profile/${userId}`;
     
     QRCodeLib.toDataURL(url, { margin: 2, scale: 4 }, (err, dataUrl) => {
       if (!err) setQrDataUrl(dataUrl);
@@ -84,19 +84,23 @@ export function CertificateDialog({
     try {
       setDownloading(true);
       // Use a fixed dimension capture to prevent scaling issues
+      const width = 800;
+      const height = el.scrollHeight;
+
       const dataUrl = await toPng(el, { 
-        width: 800,
-        height: el.scrollHeight,
+        width: width,
+        height: height,
         pixelRatio: 2,
         cacheBust: true,
       });
       
+      const isLandscape = width > height;
       const pdf = new jsPDF({ 
-        orientation: "landscape", 
+        orientation: isLandscape ? "landscape" : "portrait", 
         unit: "px", 
-        format: [800, el.scrollHeight] 
+        format: [width, height] 
       });
-      pdf.addImage(dataUrl, "PNG", 0, 0, 800, el.scrollHeight);
+      pdf.addImage(dataUrl, "PNG", 0, 0, width, height);
       pdf.save(`Indus_Orbit_Certificate_${displayName.replace(/\s+/g, '_')}.pdf`);
     } catch (err) {
       console.error("Failed to generate PDF:", err);
@@ -143,9 +147,11 @@ export function CertificateDialog({
           ))}
         </div>
 
-        <div 
-          className="relative overflow-hidden rounded-3xl p-12"
-          id="certificate-node"
+        {/* Scrollable wrapper so the 800px node doesn't get clipped on small screens */}
+        <div className="w-full overflow-x-auto pb-4 text-center">
+          <div 
+            className="relative overflow-hidden rounded-3xl p-12 shrink-0 inline-block text-left"
+            id="certificate-node"
           style={{ 
             width: "800px", 
             height: "auto", 
@@ -233,12 +239,13 @@ export function CertificateDialog({
             </div>
           </div>
         </div>
+        </div>
 
         <div className="mt-6 flex justify-center gap-4">
           <Button 
             className="bg-white text-black hover:bg-gray-200"
             onClick={handleDownload}
-            disabled={downloading}
+            disabled={downloading || !qrDataUrl}
           >
             <Download className="mr-2 h-4 w-4" /> 
             {downloading ? "Generating PDF..." : "Save as PDF"}

@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { MapPin, Globe, Linkedin, ArrowLeft, Send } from "lucide-react";
+import { MapPin, Globe, Linkedin, ArrowLeft, Send, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { SiteShell } from "@/components/site/SiteShell";
 import { AppShell } from "@/components/app/AppShell";
@@ -149,6 +149,32 @@ function PublicProfilePage() {
                 <p className="text-muted-foreground italic">No biography provided.</p>
               )}
             </div>
+
+            {/* Verification & Network CTA (Public View Only) */}
+            {!user && (
+              <div className="rounded-3xl border border-[var(--saffron)]/30 bg-gradient-to-br from-[var(--saffron)]/5 to-transparent p-8 mt-8">
+                <div className="flex items-start gap-4">
+                  <div className="rounded-full bg-[var(--saffron)]/20 p-3 mt-1">
+                    <ShieldCheck className="h-6 w-6 text-[var(--saffron)]" />
+                  </div>
+                  <div>
+                    <h2 className="font-display text-2xl font-medium mb-2">Verified Ecosystem Member</h2>
+                    <p className="text-foreground/80 mb-6 leading-relaxed">
+                      This profile is an officially verified node within the Indus Orbit intelligence layer. 
+                      You have scanned a trusted certification. 
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-4">
+                      <Button asChild className="bg-[var(--indigo-night)] text-[var(--parchment)] hover:bg-[var(--indigo-night)]/90">
+                        <Link to="/auth">Join the Network</Link>
+                      </Button>
+                      <Button asChild variant="outline" className="border-[var(--indigo-night)] text-[var(--indigo-night)] hover:bg-[var(--indigo-night)]/5">
+                        <Link to="/what-is-indus-orbit">What is Indus Orbit?</Link>
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {profile.segment_details && Object.keys(profile.segment_details).length > 0 && (
               <div className="rounded-3xl border border-border bg-card p-8">
