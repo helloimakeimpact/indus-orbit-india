@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WritingRouteImport } from './routes/writing'
 import { Route as WhatIsIndusOrbitRouteImport } from './routes/what-is-indus-orbit'
+import { Route as SodaRouteImport } from './routes/soda'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as OurWorkRouteImport } from './routes/our-work'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
@@ -62,6 +63,11 @@ const WritingRoute = WritingRouteImport.update({
 const WhatIsIndusOrbitRoute = WhatIsIndusOrbitRouteImport.update({
   id: '/what-is-indus-orbit',
   path: '/what-is-indus-orbit',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SodaRoute = SodaRouteImport.update({
+  id: '/soda',
+  path: '/soda',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -285,6 +291,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof OnboardingRoute
   '/our-work': typeof OurWorkRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/soda': typeof SodaRoute
   '/what-is-indus-orbit': typeof WhatIsIndusOrbitRoute
   '/writing': typeof WritingRoute
   '/app/board': typeof AppBoardRoute
@@ -330,6 +337,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingRoute
   '/our-work': typeof OurWorkRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/soda': typeof SodaRoute
   '/what-is-indus-orbit': typeof WhatIsIndusOrbitRoute
   '/writing': typeof WritingRoute
   '/app/board': typeof AppBoardRoute
@@ -374,6 +382,7 @@ export interface FileRoutesById {
   '/onboarding': typeof OnboardingRoute
   '/our-work': typeof OurWorkRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/soda': typeof SodaRoute
   '/what-is-indus-orbit': typeof WhatIsIndusOrbitRoute
   '/writing': typeof WritingRoute
   '/app/board': typeof AppBoardRoute
@@ -422,6 +431,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/our-work'
     | '/reset-password'
+    | '/soda'
     | '/what-is-indus-orbit'
     | '/writing'
     | '/app/board'
@@ -467,6 +477,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/our-work'
     | '/reset-password'
+    | '/soda'
     | '/what-is-indus-orbit'
     | '/writing'
     | '/app/board'
@@ -510,6 +521,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/our-work'
     | '/reset-password'
+    | '/soda'
     | '/what-is-indus-orbit'
     | '/writing'
     | '/app/board'
@@ -557,6 +569,7 @@ export interface RootRouteChildren {
   OnboardingRoute: typeof OnboardingRoute
   OurWorkRoute: typeof OurWorkRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  SodaRoute: typeof SodaRoute
   WhatIsIndusOrbitRoute: typeof WhatIsIndusOrbitRoute
   WritingRoute: typeof WritingRoute
   ProfileIdRoute: typeof ProfileIdRoute
@@ -577,6 +590,13 @@ declare module '@tanstack/react-router' {
       path: '/what-is-indus-orbit'
       fullPath: '/what-is-indus-orbit'
       preLoaderRoute: typeof WhatIsIndusOrbitRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/soda': {
+      id: '/soda'
+      path: '/soda'
+      fullPath: '/soda'
+      preLoaderRoute: typeof SodaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -986,6 +1006,7 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardingRoute: OnboardingRoute,
   OurWorkRoute: OurWorkRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  SodaRoute: SodaRoute,
   WhatIsIndusOrbitRoute: WhatIsIndusOrbitRoute,
   WritingRoute: WritingRoute,
   ProfileIdRoute: ProfileIdRoute,

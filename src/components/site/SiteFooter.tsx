@@ -22,12 +22,18 @@ export function SiteFooter() {
               networks that connect youth, experts, founders, investors and the
               diaspora into one orbit.
             </p>
-            <div className="mt-6 mb-2">
+            <div className="mt-6 mb-2 flex flex-wrap gap-3">
               <Link
                 to="/what-is-indus-orbit"
                 className="inline-flex items-center gap-2 rounded-full border border-[var(--parchment)]/40 px-5 py-2 text-sm font-medium text-[var(--parchment)] hover:bg-[var(--parchment)]/10 transition"
               >
                 What is Indus Orbit?
+              </Link>
+              <Link
+                to="/soda"
+                className="inline-flex items-center gap-2 rounded-full border border-[var(--saffron)]/60 bg-[var(--saffron)]/10 px-5 py-2 text-sm font-medium text-[var(--saffron)] hover:bg-[var(--saffron)] hover:text-[var(--indigo-night)] transition"
+              >
+                SODA Program
               </Link>
             </div>
             <form
