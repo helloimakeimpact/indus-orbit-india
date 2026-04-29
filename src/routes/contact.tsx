@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { SiteShell } from "@/components/site/SiteShell";
 import contactImg from "@/assets/contact-rooftop.jpg";
 import { cn } from "@/lib/utils";
@@ -33,17 +34,47 @@ type Role = "Youth" | "Expert" | "Investor" | "Partner";
 function ContactPage() {
   const [role, setRole] = useState<Role>("Youth");
   const [submitting, setSubmitting] = useState(false);
+  const [num1, setNum1] = useState(Math.floor(Math.random() * 10) + 1);
+  const [num2, setNum2] = useState(Math.floor(Math.random() * 10) + 1);
+  const [answer, setAnswer] = useState("");
 
-  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
+    if (parseInt(answer) !== num1 + num2) {
+      toast.error("Incorrect math answer. Are you human?");
+      return;
+    }
+
     setSubmitting(true);
-    setTimeout(() => {
-      setSubmitting(false);
+    
+    const formData = new FormData(e.currentTarget);
+    const name = formData.get("name") as string;
+    const email = formData.get("email") as string;
+    const message = formData.get("message") as string;
+
+    const { error } = await supabase.from('contact_submissions').insert([{
+      name,
+      email,
+      role,
+      message,
+      source: 'contact_page'
+    }]);
+
+    setSubmitting(false);
+
+    if (error) {
+      toast.error("Failed to send message. Please try again later.");
+      console.error(error);
+    } else {
       (e.target as HTMLFormElement).reset();
+      setAnswer("");
+      setNum1(Math.floor(Math.random() * 10) + 1);
+      setNum2(Math.floor(Math.random() * 10) + 1);
       toast.success("Thanks — we'll be in touch soon.", {
         description: "Your message has reached the orbit.",
       });
-    }, 600);
+    }
   };
 
   return (
@@ -141,6 +172,20 @@ function ContactPage() {
                 rows={5}
                 placeholder="Tell us what you're building or what you'd like to bring."
                 className="mt-2 w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm focus:border-[var(--saffron)] focus:outline-none focus:ring-2 focus:ring-[var(--saffron)]/30"
+              />
+            </div>
+
+            <div className="mt-5">
+              <label className="text-xs font-semibold uppercase tracking-wider text-foreground/60">
+                Verify you're human: {num1} + {num2} = ?
+              </label>
+              <input
+                type="number"
+                value={answer}
+                onChange={(e) => setAnswer(e.target.value)}
+                required
+                placeholder="Answer"
+                className="mt-2 w-full max-w-[120px] block rounded-2xl border border-border bg-background px-4 py-3 text-sm focus:border-[var(--saffron)] focus:outline-none focus:ring-2 focus:ring-[var(--saffron)]/30"
               />
             </div>
 

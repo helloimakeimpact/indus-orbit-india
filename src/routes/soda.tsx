@@ -313,6 +313,14 @@ function CohortProgram() {
               <p className="text-lg text-[var(--parchment)]/80 leading-relaxed relative z-10">
                 These are founders, operators, creators, researchers, and ambitious problem-solvers who are already moving—and need the right orbit around them. We give them exactly that.
               </p>
+
+              <div className="mt-10 inline-flex flex-col sm:flex-row sm:items-center gap-4 rounded-2xl bg-white/10 border border-white/20 p-5 backdrop-blur-md shadow-xl relative z-10 transition hover:bg-white/15">
+                <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[var(--saffron)] shrink-0 mt-1 sm:mt-0">Sponsored By</span>
+                <p className="text-[15px] font-medium text-[var(--parchment)]/95 leading-snug">
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--saffron)] to-[#ffeaa7] font-display text-[1.4rem] font-bold tracking-wide drop-shadow-md mr-1">Jri.AI</span> 
+                  <span className="opacity-90">— The AI+Human business automation platform. From set up to scale.</span>
+                </p>
+              </div>
             </div>
           </section>
 

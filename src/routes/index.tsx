@@ -217,9 +217,20 @@ function HomePage() {
               </Link>
             </div>
           </div>
-          <div className="order-1 md:order-2 h-72 sm:h-96 md:h-full w-full bg-muted overflow-hidden relative">
-            <img src="/soda-2.jpg" alt="SODA Cohort Program Builders" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 hover:scale-105" />
-            <div className="absolute inset-0 bg-gradient-to-t from-[var(--indigo-night)]/80 via-transparent to-transparent md:bg-gradient-to-l md:from-transparent md:to-[var(--background)]/20 mix-blend-multiply" />
+          <div className="order-1 md:order-2 h-[400px] sm:h-[450px] md:h-full w-full bg-muted overflow-hidden relative group">
+            <img src="/soda-2.jpg" alt="SODA Cohort Program Builders" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[var(--indigo-night)]/90 via-black/20 to-transparent mix-blend-multiply" />
+            
+            {/* SPONSOR BANNER OVER IMAGE */}
+            <div className="absolute bottom-6 inset-x-6 rounded-2xl bg-white/10 border border-white/20 p-6 backdrop-blur-md shadow-2xl transition-transform duration-500 hover:-translate-y-1">
+              <div className="flex flex-col gap-1.5">
+                <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[var(--saffron)]">Sponsored Cohort</span>
+                <p className="text-[15px] text-white/95 leading-relaxed mt-1">
+                  Powered by <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--saffron)] to-[#ffeaa7] font-display text-[1.6rem] font-bold tracking-wide drop-shadow-md">Jri.AI</span><br/>
+                  <span className="font-medium text-white">The AI+Human business automation platform.</span> From set up to scale.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </section>

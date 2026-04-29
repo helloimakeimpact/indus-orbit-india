@@ -105,7 +105,7 @@ function AdminDashboard() {
             </Link>
           </div>
           
-          <div className="mt-4 grid gap-4 md:grid-cols-3">
+          <div className="mt-4 grid gap-4 md:grid-cols-4">
             <Link to="/app/admin/roles" className="rounded-3xl border border-border bg-card p-6 transition hover:bg-foreground/5">
               <p className="text-xs uppercase tracking-wider text-muted-foreground">Manage roles</p>
               <p className="mt-1 text-xs text-[var(--saffron)]">Edit →</p>
@@ -117,6 +117,10 @@ function AdminDashboard() {
             <Link to="/app/admin/vouches" className="rounded-3xl border border-border bg-card p-6 transition hover:bg-foreground/5">
               <p className="text-xs uppercase tracking-wider text-muted-foreground">Vouch limits</p>
               <p className="mt-1 text-xs text-[var(--saffron)]">Edit →</p>
+            </Link>
+            <Link to="/app/admin/submissions" className="rounded-3xl border border-border bg-card p-6 transition hover:bg-foreground/5">
+              <p className="text-xs uppercase tracking-wider text-muted-foreground">Submissions</p>
+              <p className="mt-1 text-xs text-[var(--saffron)]">View Contacts & Newsletters →</p>
             </Link>
           </div>
 

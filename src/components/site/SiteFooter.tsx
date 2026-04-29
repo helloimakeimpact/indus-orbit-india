@@ -1,8 +1,16 @@
 import { Link } from "@tanstack/react-router";
+import { useState } from "react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import footerBand from "@/assets/footer-band.jpg";
 import logo from "@/assets/indus-orbit-logo.png";
 
 export function SiteFooter() {
+  const [email, setEmail] = useState("");
+  const [num1, setNum1] = useState(Math.floor(Math.random() * 10) + 1);
+  const [num2, setNum2] = useState(Math.floor(Math.random() * 10) + 1);
+  const [answer, setAnswer] = useState("");
+
   return (
     <footer className="relative mt-24">
       <div
@@ -37,20 +45,52 @@ export function SiteFooter() {
               </Link>
             </div>
             <form
-              onSubmit={(e) => e.preventDefault()}
-              className="mt-6 flex max-w-md items-center gap-2 rounded-full bg-white/10 p-1.5 backdrop-blur"
+              onSubmit={async (e) => {
+                e.preventDefault();
+                if (parseInt(answer) !== num1 + num2) {
+                  toast.error("Incorrect math answer");
+                  return;
+                }
+                const { error } = await supabase.from('newsletter_subscriptions').insert([{ email }]);
+                if (error) {
+                  if (error.code === '23505') toast.error("You are already subscribed!");
+                  else toast.error("Failed to subscribe.");
+                } else {
+                  toast.success("Subscribed successfully!");
+                  setEmail("");
+                  setAnswer("");
+                  setNum1(Math.floor(Math.random() * 10) + 1);
+                  setNum2(Math.floor(Math.random() * 10) + 1);
+                }
+              }}
+              className="mt-6 flex flex-col gap-2 max-w-md"
             >
-              <input
-                type="email"
-                placeholder="your@email.com"
-                className="flex-1 bg-transparent px-3 py-2 text-sm text-[var(--parchment)] placeholder:text-[var(--parchment)]/50 focus:outline-none"
-              />
-              <button
-                type="submit"
-                className="rounded-full bg-[var(--saffron)] px-4 py-2 text-xs font-semibold uppercase tracking-wider text-[var(--indigo-night)]"
-              >
-                Subscribe
-              </button>
+              <div className="flex items-center gap-2 rounded-full bg-white/10 p-1.5 backdrop-blur">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="your@email.com"
+                  required
+                  className="flex-1 bg-transparent px-3 py-2 text-sm text-[var(--parchment)] placeholder:text-[var(--parchment)]/50 focus:outline-none"
+                />
+                <button
+                  type="submit"
+                  className="rounded-full bg-[var(--saffron)] px-4 py-2 text-xs font-semibold uppercase tracking-wider text-[var(--indigo-night)]"
+                >
+                  Subscribe
+                </button>
+              </div>
+              <div className="flex items-center gap-2 px-2 text-sm text-[var(--parchment)]/80">
+                <span>Verify you're human: {num1} + {num2} = </span>
+                <input 
+                  type="number" 
+                  value={answer}
+                  onChange={(e) => setAnswer(e.target.value)}
+                  className="w-16 bg-white/10 px-2 py-1 rounded text-center outline-none"
+                  required
+                />
+              </div>
             </form>
           </div>
 
