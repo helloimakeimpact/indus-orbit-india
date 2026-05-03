@@ -31,8 +31,9 @@ function RedeemPage() {
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase.rpc("lookup_vouch_code" as never, { _code: code });
-      const found = Array.isArray(data) && data.length > 0 ? (data[0] as { id: string; status: string; expires_at: string; issuer_id: string }) : null;
+      const { data } = await (supabase.rpc as any)("lookup_vouch_code", { _code: code });
+      const arr = data as Array<{ id: string; status: string; expires_at: string; issuer_id: string }> | null;
+      const found = arr && arr.length > 0 ? arr[0] : null;
       if (found) {
         setRow({ id: found.id, code: code.toUpperCase(), issuer_id: found.issuer_id, expires_at: found.expires_at, status: found.status });
         const { data: prof } = await supabase
