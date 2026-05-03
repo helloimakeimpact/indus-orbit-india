@@ -121,9 +121,10 @@ function AdminVouchesPage() {
   async function addRoleOverride() {
     if (!user) return;
     const seg = newRoleSegment === "any" ? null : newRoleSegment;
-    const { error } = await supabase
-      .from("vouch_role_overrides")
-      .upsert({ role: "member", segment: seg, quota: newRoleQuota, updated_by: user.id }, { onConflict: seg ? "role,segment" : undefined });
+    const segKey = seg ?? "__any__";
+    const payload = { role: "member", segment: seg, quota: newRoleQuota, updated_by: user.id, segment_key: segKey };
+    const { error } = await (supabase.from("vouch_role_overrides") as any)
+      .upsert(payload, { onConflict: "role,segment_key" });
     if (error) return toast.error(error.message);
     await supabase.from("audit_log").insert({
       actor_id: user.id,
