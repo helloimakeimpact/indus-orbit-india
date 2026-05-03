@@ -1033,6 +1033,7 @@ export type Database = {
           quota: number
           role: Database["public"]["Enums"]["app_role"]
           segment: Database["public"]["Enums"]["orbit_segment"] | null
+          segment_key: string
           updated_at: string
           updated_by: string | null
         }
@@ -1041,6 +1042,7 @@ export type Database = {
           quota: number
           role: Database["public"]["Enums"]["app_role"]
           segment?: Database["public"]["Enums"]["orbit_segment"] | null
+          segment_key: string
           updated_at?: string
           updated_by?: string | null
         }
@@ -1049,6 +1051,7 @@ export type Database = {
           quota?: number
           role?: Database["public"]["Enums"]["app_role"]
           segment?: Database["public"]["Enums"]["orbit_segment"] | null
+          segment_key?: string
           updated_at?: string
           updated_by?: string | null
         }
@@ -1110,6 +1113,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_resolve_vouch_request: {
+        Args: { _approve: boolean; _reason?: string; _request_id: string }
+        Returns: undefined
+      }
       get_connection_email: {
         Args: { target_user_id: string }
         Returns: string
@@ -1121,7 +1128,25 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_chapter_lead: {
+        Args: { _chapter_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_mission_lead: {
+        Args: { _mission_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_suspended: { Args: { _user_id: string }; Returns: boolean }
+      lead_approve_event: { Args: { _event_id: string }; Returns: undefined }
+      lead_approve_story: { Args: { _story_id: string }; Returns: undefined }
+      lead_reject_event: {
+        Args: { _event_id: string; _reason?: string }
+        Returns: undefined
+      }
+      lead_reject_story: {
+        Args: { _reason?: string; _story_id: string }
+        Returns: undefined
+      }
       lead_remove_chapter_member: {
         Args: { _chapter_id: string; _target_user_id: string }
         Returns: undefined
@@ -1130,6 +1155,16 @@ export type Database = {
         Args: { _mission_id: string; _target_user_id: string }
         Returns: undefined
       }
+      lookup_vouch_code: {
+        Args: { _code: string }
+        Returns: {
+          expires_at: string
+          id: string
+          issuer_id: string
+          status: string
+        }[]
+      }
+      my_lead_summary: { Args: never; Returns: Json }
       redeem_vouch_code: { Args: { _code: string }; Returns: Json }
       vouch_directly: { Args: { _recipient_id: string }; Returns: Json }
       vouch_effective_quota: { Args: { _user_id: string }; Returns: number }
