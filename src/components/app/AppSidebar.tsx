@@ -1,6 +1,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { Home, Users, User as UserIcon, Shield, UserCog, LogOut, Menu, X, Send, Megaphone, LayoutDashboard, ClipboardList, Flag, ScrollText, ShieldCheck, KeyRound, CalendarClock, TrendingUp, Globe2, BookOpen, MapPin, CalendarDays, Bell } from "lucide-react";
+import { Home, Users, User as UserIcon, Shield, UserCog, LogOut, Menu, X, Megaphone, LayoutDashboard, ClipboardList, Flag, ScrollText, ShieldCheck, KeyRound, CalendarClock, TrendingUp, Globe2, BookOpen, MapPin, CalendarDays, Compass, Target } from "lucide-react";
 import logo from "@/assets/indus-orbit-logo.png";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
@@ -33,7 +33,7 @@ const ADMIN_ITEMS: Item[] = [
 ];
 
 function NavList({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
-  const { isAdmin, userSegment } = useAuth();
+  const { isAdmin, isChapterLead, isMissionLead, userSegment } = useAuth();
   
   const navItems = [...ITEMS];
   if (userSegment === "investor") {
@@ -51,6 +51,27 @@ function NavList({ pathname, onNavigate }: { pathname: string; onNavigate?: () =
           onClick={onNavigate}
         />
       ))}
+      {(isChapterLead || isMissionLead) && (
+        <>
+          <p className="mt-4 mb-1 px-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--parchment)]/40">
+            Lead workspace
+          </p>
+          {isChapterLead && (
+            <NavRow
+              item={{ to: "/app/chapter-admin", label: "Chapter admin", icon: Compass }}
+              active={pathname.startsWith("/app/chapter-admin")}
+              onClick={onNavigate}
+            />
+          )}
+          {isMissionLead && (
+            <NavRow
+              item={{ to: "/app/mission-admin", label: "Mission admin", icon: Target }}
+              active={pathname.startsWith("/app/mission-admin")}
+              onClick={onNavigate}
+            />
+          )}
+        </>
+      )}
       {isAdmin && (
         <>
           <p className="mt-4 mb-1 px-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--parchment)]/40">

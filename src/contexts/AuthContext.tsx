@@ -6,6 +6,8 @@ type AuthContextValue = {
   session: Session | null;
   user: User | null;
   isAdmin: boolean;
+  isChapterLead: boolean;
+  isMissionLead: boolean;
   userSegment: string | null;
   loading: boolean;
   signOut: () => Promise<void>;
@@ -17,6 +19,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isChapterLead, setIsChapterLead] = useState(false);
+  const [isMissionLead, setIsMissionLead] = useState(false);
   const [userSegment, setUserSegment] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -32,6 +36,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }, 0);
       } else {
         setIsAdmin(false);
+        setIsChapterLead(false);
+        setIsMissionLead(false);
       }
     });
 
@@ -63,6 +69,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .eq("user_id", userId)
       .maybeSingle();
     setUserSegment(profile?.orbit_segment ?? null);
+
+    const { data: leadSummary } = await (supabase.rpc as any)("my_lead_summary");
+    const summary = (leadSummary ?? {}) as { chapter_lead_count?: number; mission_lead_count?: number };
+    setIsChapterLead((summary.chapter_lead_count ?? 0) > 0);
+    setIsMissionLead((summary.mission_lead_count ?? 0) > 0);
   }
 
   async function signOut() {
@@ -70,7 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ session, user, isAdmin, userSegment, loading, signOut }}>
+    <AuthContext.Provider value={{ session, user, isAdmin, isChapterLead, isMissionLead, userSegment, loading, signOut }}>
       {children}
     </AuthContext.Provider>
   );
