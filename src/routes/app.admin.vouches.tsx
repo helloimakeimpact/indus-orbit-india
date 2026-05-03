@@ -19,6 +19,7 @@ type RoleOverride = { id: string; role: "admin" | "member"; segment: Segment | n
 type UserOverride = { user_id: string; quota: number; reason: string | null };
 type Code = { id: string; code: string; issuer_id: string; status: string; expires_at: string; created_at: string };
 type Event = { id: string; issuer_id: string; recipient_id: string | null; channel: string; created_at: string };
+type VouchRequest = { id: string; requester_id: string; target_verifier_id: string | null; message: string; status: string; created_at: string };
 
 function AdminVouchesPage() {
   const { isAdmin, user, loading } = useAuth();
@@ -28,6 +29,7 @@ function AdminVouchesPage() {
   const [userOverrides, setUserOverrides] = useState<UserOverride[]>([]);
   const [codes, setCodes] = useState<Code[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
+  const [requests, setRequests] = useState<VouchRequest[]>([]);
   const [names, setNames] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(true);
 
@@ -48,23 +50,26 @@ function AdminVouchesPage() {
 
   async function load() {
     setBusy(true);
-    const [s, ro, uo, c, e] = await Promise.all([
+    const [s, ro, uo, c, e, rq] = await Promise.all([
       supabase.from("vouch_settings").select("*").eq("id", "global").maybeSingle(),
       supabase.from("vouch_role_overrides").select("*"),
       supabase.from("vouch_user_overrides").select("*"),
       supabase.from("vouch_codes").select("*").order("created_at", { ascending: false }).limit(50),
       supabase.from("vouch_events").select("*").order("created_at", { ascending: false }).limit(50),
+      supabase.from("vouch_requests").select("*").eq("status", "open").order("created_at", { ascending: false }).limit(50),
     ]);
     if (s.data) setSettings(s.data as never);
     setRoleOverrides((ro.data as never) ?? []);
     setUserOverrides((uo.data as never) ?? []);
     setCodes((c.data as never) ?? []);
     setEvents((e.data as never) ?? []);
+    setRequests((rq.data as never) ?? []);
 
     const ids = new Set<string>();
     ((c.data as Code[] | null) ?? []).forEach((x) => ids.add(x.issuer_id));
     ((e.data as Event[] | null) ?? []).forEach((x) => { ids.add(x.issuer_id); if (x.recipient_id) ids.add(x.recipient_id); });
     ((uo.data as UserOverride[] | null) ?? []).forEach((x) => ids.add(x.user_id));
+    ((rq.data as VouchRequest[] | null) ?? []).forEach((x) => { ids.add(x.requester_id); if (x.target_verifier_id) ids.add(x.target_verifier_id); });
     if (ids.size) {
       const { data: profs } = await supabase
         .from("profiles")
@@ -121,9 +126,10 @@ function AdminVouchesPage() {
   async function addRoleOverride() {
     if (!user) return;
     const seg = newRoleSegment === "any" ? null : newRoleSegment;
-    const { error } = await supabase
-      .from("vouch_role_overrides")
-      .upsert({ role: "member", segment: seg, quota: newRoleQuota, updated_by: user.id }, { onConflict: seg ? "role,segment" : undefined });
+    const segKey = seg ?? "__any__";
+    const payload = { role: "member", segment: seg, quota: newRoleQuota, updated_by: user.id, segment_key: segKey };
+    const { error } = await (supabase.from("vouch_role_overrides") as any)
+      .upsert(payload, { onConflict: "role,segment_key" });
     if (error) return toast.error(error.message);
     await supabase.from("audit_log").insert({
       actor_id: user.id,
@@ -181,6 +187,13 @@ function AdminVouchesPage() {
     const { error } = await supabase.from("vouch_codes").update({ status: "revoked" }).eq("id", id);
     if (error) return toast.error(error.message);
     await supabase.from("audit_log").insert({ actor_id: user.id, action: "vouch.code_revoked", target_type: "vouch_code", target_id: id });
+    load();
+  }
+
+  async function resolveRequest(id: string, approve: boolean) {
+    const { error } = await (supabase.rpc as any)("admin_resolve_vouch_request", { _request_id: id, _approve: approve, _reason: null });
+    if (error) return toast.error(error.message);
+    toast.success(approve ? "Approved & verified" : "Rejected");
     load();
   }
 
@@ -314,6 +327,32 @@ function AdminVouchesPage() {
             </div>
           ))}
         </div>
+      </section>
+
+      {/* Active codes */}
+      <section className="mt-6 rounded-3xl border border-border bg-card p-6">
+        <h2 className="font-display text-lg font-semibold">Open verification requests</h2>
+        {requests.length === 0 ? (
+          <p className="mt-2 text-sm text-muted-foreground">None.</p>
+        ) : (
+          <div className="mt-3 space-y-2">
+            {requests.map((r) => (
+              <div key={r.id} className="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-border p-3 text-sm">
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium">{names[r.requester_id] ?? r.requester_id.slice(0, 8)}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {r.target_verifier_id ? `→ ${names[r.target_verifier_id] ?? "specific member"}` : "open to admins"} · {new Date(r.created_at).toLocaleString()}
+                  </p>
+                  <p className="mt-2 whitespace-pre-wrap text-sm">{r.message}</p>
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={() => resolveRequest(r.id, true)}>Approve & verify</Button>
+                  <Button size="sm" variant="outline" onClick={() => resolveRequest(r.id, false)}>Reject</Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Active codes */}

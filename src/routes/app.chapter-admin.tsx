@@ -1,8 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Users, Settings, Trash2, MapPin, Search } from "lucide-react";
+import { Users, Settings, Trash2, MapPin, Search, Inbox, Check, X as XIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { getMyAdminChapters, removeChapterMember, updateChapterDetails } from "@/server/society.functions";
+import { getMyAdminChapters, removeChapterMember, updateChapterDetails, getLeadInbox, approveStory, rejectStory, approveEvent, rejectEvent } from "@/server/society.functions";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,7 @@ export const Route = createFileRoute("/app/chapter-admin")({
 
 function ChapterAdminPage() {
   const [chapters, setChapters] = useState<any[]>([]);
+  const [inbox, setInbox] = useState<{ stories: any[]; events: any[]; chapters: any[] }>({ stories: [], events: [], chapters: [] });
   const [busy, setBusy] = useState(true);
   const [search, setSearch] = useState("");
   const [memberToRemove, setMemberToRemove] = useState<{ chapterId: string; userId: string; name: string } | null>(null);
@@ -30,14 +31,20 @@ function ChapterAdminPage() {
   async function load() {
     setBusy(true);
     try {
-      const data = await getMyAdminChapters();
+      const [data, ibx] = await Promise.all([getMyAdminChapters(), getLeadInbox()]);
       setChapters(data);
+      setInbox(ibx as never);
     } catch (err: any) {
       toast.error(err.message || "Failed to load chapters");
     } finally {
       setBusy(false);
     }
   }
+
+  async function onApproveStory(id: string) { try { await approveStory({ data: { storyId: id } }); toast.success("Story approved"); load(); } catch (e: any) { toast.error(e.message); } }
+  async function onRejectStory(id: string) { try { await rejectStory({ data: { storyId: id } }); toast.success("Story rejected"); load(); } catch (e: any) { toast.error(e.message); } }
+  async function onApproveEvent(id: string) { try { await approveEvent({ data: { eventId: id } }); toast.success("Event approved"); load(); } catch (e: any) { toast.error(e.message); } }
+  async function onRejectEvent(id: string) { try { await rejectEvent({ data: { eventId: id } }); toast.success("Event rejected"); load(); } catch (e: any) { toast.error(e.message); } }
 
   async function handleRemove() {
     if (!memberToRemove) return;
@@ -92,6 +99,61 @@ function ChapterAdminPage() {
           Manage members and update details for the chapters you lead.
         </p>
       </div>
+
+      {(inbox.stories.length > 0 || inbox.events.length > 0) && (
+        <section className="rounded-3xl border border-[var(--saffron)]/40 bg-[var(--saffron)]/5 p-6">
+          <h2 className="font-display text-2xl font-medium flex items-center gap-2 text-[var(--indigo-night)]">
+            <Inbox className="h-5 w-5" /> Pending submissions ({inbox.stories.length + inbox.events.length})
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1">Review what your members have submitted to your chapters.</p>
+
+          {inbox.stories.length > 0 && (
+            <div className="mt-6">
+              <h3 className="font-semibold mb-3">Stories</h3>
+              <div className="space-y-3">
+                {inbox.stories.map((s: any) => (
+                  <div key={s.id} className="rounded-2xl border border-border bg-card p-4">
+                    <div className="flex flex-wrap justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold">{s.title}</p>
+                        <p className="text-xs text-muted-foreground">by {s.profiles?.display_name || "Member"}</p>
+                        <p className="mt-2 text-sm line-clamp-3">{s.content}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button size="sm" onClick={() => onApproveStory(s.id)}><Check className="h-4 w-4 mr-1" /> Approve</Button>
+                        <Button size="sm" variant="outline" onClick={() => onRejectStory(s.id)}><XIcon className="h-4 w-4 mr-1" /> Reject</Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {inbox.events.length > 0 && (
+            <div className="mt-6">
+              <h3 className="font-semibold mb-3">Events</h3>
+              <div className="space-y-3">
+                {inbox.events.map((ev: any) => (
+                  <div key={ev.id} className="rounded-2xl border border-border bg-card p-4">
+                    <div className="flex flex-wrap justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold">{ev.title}</p>
+                        <p className="text-xs text-muted-foreground">by {ev.profiles?.display_name || "Member"} · {new Date(ev.start_time).toLocaleString()}</p>
+                        <p className="mt-2 text-sm line-clamp-3">{ev.description}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button size="sm" onClick={() => onApproveEvent(ev.id)}><Check className="h-4 w-4 mr-1" /> Approve</Button>
+                        <Button size="sm" variant="outline" onClick={() => onRejectEvent(ev.id)}><XIcon className="h-4 w-4 mr-1" /> Reject</Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </section>
+      )}
 
       {chapters.map((chapter) => {
         const members = chapter.chapter_members || [];

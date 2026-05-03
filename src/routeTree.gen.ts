@@ -29,6 +29,7 @@ import { Route as AppStoriesRouteImport } from './routes/app.stories'
 import { Route as AppProfileRouteImport } from './routes/app.profile'
 import { Route as AppNotificationsRouteImport } from './routes/app.notifications'
 import { Route as AppMissionsRouteImport } from './routes/app.missions'
+import { Route as AppMissionAdminRouteImport } from './routes/app.mission-admin'
 import { Route as AppMessagesRouteImport } from './routes/app.messages'
 import { Route as AppMentorRouteImport } from './routes/app.mentor'
 import { Route as AppInvestorFeedRouteImport } from './routes/app.investor-feed'
@@ -154,6 +155,11 @@ const AppNotificationsRoute = AppNotificationsRouteImport.update({
 const AppMissionsRoute = AppMissionsRouteImport.update({
   id: '/missions',
   path: '/missions',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMissionAdminRoute = AppMissionAdminRouteImport.update({
+  id: '/mission-admin',
+  path: '/mission-admin',
   getParentRoute: () => AppRoute,
 } as any)
 const AppMessagesRoute = AppMessagesRouteImport.update({
@@ -307,6 +313,7 @@ export interface FileRoutesByFullPath {
   '/app/investor-feed': typeof AppInvestorFeedRoute
   '/app/mentor': typeof AppMentorRoute
   '/app/messages': typeof AppMessagesRoute
+  '/app/mission-admin': typeof AppMissionAdminRoute
   '/app/missions': typeof AppMissionsRouteWithChildren
   '/app/notifications': typeof AppNotificationsRoute
   '/app/profile': typeof AppProfileRoute
@@ -353,6 +360,7 @@ export interface FileRoutesByTo {
   '/app/investor-feed': typeof AppInvestorFeedRoute
   '/app/mentor': typeof AppMentorRoute
   '/app/messages': typeof AppMessagesRoute
+  '/app/mission-admin': typeof AppMissionAdminRoute
   '/app/notifications': typeof AppNotificationsRoute
   '/app/profile': typeof AppProfileRoute
   '/app/vouch': typeof AppVouchRoute
@@ -400,6 +408,7 @@ export interface FileRoutesById {
   '/app/investor-feed': typeof AppInvestorFeedRoute
   '/app/mentor': typeof AppMentorRoute
   '/app/messages': typeof AppMessagesRoute
+  '/app/mission-admin': typeof AppMissionAdminRoute
   '/app/missions': typeof AppMissionsRouteWithChildren
   '/app/notifications': typeof AppNotificationsRoute
   '/app/profile': typeof AppProfileRoute
@@ -450,6 +459,7 @@ export interface FileRouteTypes {
     | '/app/investor-feed'
     | '/app/mentor'
     | '/app/messages'
+    | '/app/mission-admin'
     | '/app/missions'
     | '/app/notifications'
     | '/app/profile'
@@ -496,6 +506,7 @@ export interface FileRouteTypes {
     | '/app/investor-feed'
     | '/app/mentor'
     | '/app/messages'
+    | '/app/mission-admin'
     | '/app/notifications'
     | '/app/profile'
     | '/app/vouch'
@@ -542,6 +553,7 @@ export interface FileRouteTypes {
     | '/app/investor-feed'
     | '/app/mentor'
     | '/app/messages'
+    | '/app/mission-admin'
     | '/app/missions'
     | '/app/notifications'
     | '/app/profile'
@@ -728,6 +740,13 @@ declare module '@tanstack/react-router' {
       path: '/missions'
       fullPath: '/app/missions'
       preLoaderRoute: typeof AppMissionsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/mission-admin': {
+      id: '/app/mission-admin'
+      path: '/mission-admin'
+      fullPath: '/app/mission-admin'
+      preLoaderRoute: typeof AppMissionAdminRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/messages': {
@@ -965,6 +984,7 @@ interface AppRouteChildren {
   AppInvestorFeedRoute: typeof AppInvestorFeedRoute
   AppMentorRoute: typeof AppMentorRoute
   AppMessagesRoute: typeof AppMessagesRoute
+  AppMissionAdminRoute: typeof AppMissionAdminRoute
   AppMissionsRoute: typeof AppMissionsRouteWithChildren
   AppNotificationsRoute: typeof AppNotificationsRoute
   AppProfileRoute: typeof AppProfileRoute
@@ -994,6 +1014,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppInvestorFeedRoute: AppInvestorFeedRoute,
   AppMentorRoute: AppMentorRoute,
   AppMessagesRoute: AppMessagesRoute,
+  AppMissionAdminRoute: AppMissionAdminRoute,
   AppMissionsRoute: AppMissionsRouteWithChildren,
   AppNotificationsRoute: AppNotificationsRoute,
   AppProfileRoute: AppProfileRoute,

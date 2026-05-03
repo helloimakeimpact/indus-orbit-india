@@ -31,19 +31,19 @@ function RedeemPage() {
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase
-        .from("vouch_codes")
-        .select("id, code, issuer_id, expires_at, status")
-        .eq("code", code.toUpperCase())
-        .maybeSingle();
-      setRow((data as CodeRow | null) ?? null);
-      if (data) {
+      const { data } = await (supabase.rpc as any)("lookup_vouch_code", { _code: code });
+      const arr = data as Array<{ id: string; status: string; expires_at: string; issuer_id: string }> | null;
+      const found = arr && arr.length > 0 ? arr[0] : null;
+      if (found) {
+        setRow({ id: found.id, code: code.toUpperCase(), issuer_id: found.issuer_id, expires_at: found.expires_at, status: found.status });
         const { data: prof } = await supabase
           .from("profiles")
           .select("display_name")
-          .eq("user_id", (data as CodeRow).issuer_id)
+          .eq("user_id", found.issuer_id)
           .maybeSingle();
         setIssuerName((prof?.display_name as string) ?? "a verified member");
+      } else {
+        setRow(null);
       }
       setBusy(false);
     })();

@@ -277,3 +277,91 @@ export const getSpotlights = async () => {
     .limit(5);
   return data ?? [];
 };
+
+// ---------- Lead inbox: pending stories & events for chapters I lead ----------
+
+export const getLeadInbox = async () => {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) throw new Error("Unauthorized");
+
+  const { data: leadRows } = await supabase
+    .from("chapter_members")
+    .select("chapter_id")
+    .eq("user_id", userData.user.id)
+    .eq("role", "lead");
+
+  const chapterIds = (leadRows ?? []).map((r) => r.chapter_id);
+  if (chapterIds.length === 0) return { stories: [], events: [], chapters: [] };
+
+  const [chapters, stories, events] = await Promise.all([
+    supabase.from("chapters").select("id, name").in("id", chapterIds),
+    supabase
+      .from("stories")
+      .select("id, title, content, status, created_at, chapter_id, profiles!stories_author_id_fkey(display_name)")
+      .in("chapter_id", chapterIds)
+      .eq("status", "pending")
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("events")
+      .select("id, title, description, start_time, status, chapter_id, profiles!events_organizer_id_fkey(display_name)")
+      .in("chapter_id", chapterIds)
+      .eq("status", "pending")
+      .order("start_time", { ascending: true }),
+  ]);
+
+  return {
+    chapters: chapters.data ?? [],
+    stories: stories.data ?? [],
+    events: events.data ?? [],
+  };
+};
+
+export const approveStory = async ({ data }: { data: { storyId: string } }) => {
+  const { error } = await (supabase.rpc as any)("lead_approve_story", { _story_id: data.storyId });
+  if (error) throw new Error(error.message);
+  return { ok: true };
+};
+
+export const rejectStory = async ({ data }: { data: { storyId: string; reason?: string } }) => {
+  const { error } = await (supabase.rpc as any)("lead_reject_story", { _story_id: data.storyId, _reason: data.reason ?? null });
+  if (error) throw new Error(error.message);
+  return { ok: true };
+};
+
+export const approveEvent = async ({ data }: { data: { eventId: string } }) => {
+  const { error } = await (supabase.rpc as any)("lead_approve_event", { _event_id: data.eventId });
+  if (error) throw new Error(error.message);
+  return { ok: true };
+};
+
+export const rejectEvent = async ({ data }: { data: { eventId: string; reason?: string } }) => {
+  const { error } = await (supabase.rpc as any)("lead_reject_event", { _event_id: data.eventId, _reason: data.reason ?? null });
+  if (error) throw new Error(error.message);
+  return { ok: true };
+};
+
+// ---------- Mission admin: chapters/missions I lead ----------
+
+export const getMyAdminMissions = async () => {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) throw new Error("Unauthorized");
+
+  const { data: leadRows } = await supabase
+    .from("mission_members")
+    .select("mission_id")
+    .eq("user_id", userData.user.id)
+    .eq("role", "lead");
+
+  const missionIds = (leadRows ?? []).map((r) => r.mission_id);
+  if (missionIds.length === 0) return [];
+
+  const { data } = await supabase
+    .from("missions")
+    .select(`
+      *,
+      mission_members(user_id, role, created_at, profiles(display_name, headline, is_verified))
+    `)
+    .in("id", missionIds)
+    .order("title", { ascending: true });
+  return data ?? [];
+};
