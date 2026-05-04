@@ -1,10 +1,18 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Share2, CalendarDays, MapPin, Video, Users, Clock, ExternalLink } from "lucide-react";
+import { ArrowLeft, Share2, CalendarDays, MapPin, Video, Users, Clock, ExternalLink, Check, X as XIcon, HelpCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  getEventRsvpState,
+  setMyRsvp,
+  clearMyRsvp,
+  getEventAttendees,
+  type RsvpStatus,
+} from "@/server/event.functions";
 
 export const Route = createFileRoute("/app/events/$id")({
   component: EventDetailPage,
@@ -12,8 +20,25 @@ export const Route = createFileRoute("/app/events/$id")({
 
 function EventDetailPage() {
   const { id } = Route.useParams();
+  const { user, isAdmin } = useAuth();
   const [event, setEvent] = useState<any>(null);
   const [busy, setBusy] = useState(true);
+  const [counts, setCounts] = useState<Record<RsvpStatus, number>>({ going: 0, interested: 0, not_going: 0 });
+  const [mine, setMine] = useState<RsvpStatus | null>(null);
+  const [rsvpBusy, setRsvpBusy] = useState(false);
+  const [attendees, setAttendees] = useState<any[]>([]);
+  const [showAttendees, setShowAttendees] = useState(false);
+
+  async function loadRsvp() {
+    try {
+      const state = await getEventRsvpState(id);
+      setCounts(state.counts);
+      setMine(state.mine);
+    } catch (e: any) {
+      // non-fatal
+      console.warn(e?.message);
+    }
+  }
 
   useEffect(() => {
     async function load() {
@@ -22,7 +47,7 @@ function EventDetailPage() {
         .select("*, chapters(name), profiles!events_organizer_id_fkey(display_name, headline)")
         .eq("id", id)
         .single();
-        
+
       if (error) {
         toast.error("Event not found");
       } else {
@@ -31,7 +56,44 @@ function EventDetailPage() {
       setBusy(false);
     }
     load();
+    loadRsvp();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  const canSeeAttendees =
+    !!event && !!user && (isAdmin || event.organizer_id === user.id);
+
+  async function loadAttendees() {
+    if (!canSeeAttendees) return;
+    try {
+      const list = await getEventAttendees(id);
+      setAttendees(list);
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  }
+
+  async function handleRsvp(status: RsvpStatus) {
+    if (!user) return toast.error("Sign in to RSVP");
+    setRsvpBusy(true);
+    try {
+      if (mine === status) {
+        await clearMyRsvp({ data: { eventId: id } });
+        toast.success("RSVP cleared");
+      } else {
+        await setMyRsvp({ data: { eventId: id, status } });
+        toast.success(
+          status === "going" ? "You're going!" : status === "interested" ? "Marked interested" : "Marked not going",
+        );
+      }
+      await loadRsvp();
+      if (showAttendees) await loadAttendees();
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setRsvpBusy(false);
+    }
+  }
 
   if (busy) return <p className="mt-8 px-4 text-muted-foreground">Loading event…</p>;
   if (!event) return <p className="mt-8 px-4 text-muted-foreground">Event not found or you do not have access.</p>;
@@ -95,6 +157,59 @@ function EventDetailPage() {
             </div>
 
             <div className="border-t border-border pt-6 space-y-3">
+              {/* RSVP controls */}
+              <div className="space-y-2">
+                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                  <Users className="h-3.5 w-3.5" /> RSVP
+                </p>
+                <div className="grid grid-cols-3 gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={mine === "going" ? "default" : "outline"}
+                    disabled={rsvpBusy || !user}
+                    onClick={() => handleRsvp("going")}
+                  >
+                    <Check className="mr-1 h-3.5 w-3.5" /> Going
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={mine === "interested" ? "default" : "outline"}
+                    disabled={rsvpBusy || !user}
+                    onClick={() => handleRsvp("interested")}
+                  >
+                    <HelpCircle className="mr-1 h-3.5 w-3.5" /> Maybe
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={mine === "not_going" ? "default" : "outline"}
+                    disabled={rsvpBusy || !user}
+                    onClick={() => handleRsvp("not_going")}
+                  >
+                    <XIcon className="mr-1 h-3.5 w-3.5" /> No
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {counts.going} going · {counts.interested} interested
+                </p>
+                {canSeeAttendees && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="w-full"
+                    onClick={async () => {
+                      setShowAttendees((v) => !v);
+                      if (!showAttendees) await loadAttendees();
+                    }}
+                  >
+                    {showAttendees ? "Hide attendees" : "View attendees"}
+                  </Button>
+                )}
+              </div>
+
               {event.link ? (
                 <Button className="w-full" asChild>
                   <a href={event.link} target="_blank" rel="noreferrer">
@@ -114,6 +229,24 @@ function EventDetailPage() {
               </Button>
             </div>
           </div>
+
+          {canSeeAttendees && showAttendees && (
+            <div className="rounded-2xl border border-border bg-card p-6 space-y-3">
+              <h3 className="font-display text-base font-semibold">Attendees</h3>
+              {attendees.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No RSVPs yet.</p>
+              ) : (
+                <ul className="space-y-2">
+                  {attendees.map((a) => (
+                    <li key={a.user_id} className="flex items-center justify-between text-sm">
+                      <span className="font-medium">{a.profile?.display_name ?? "Member"}</span>
+                      <Badge variant={a.status === "going" ? "default" : "secondary"}>{a.status}</Badge>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
