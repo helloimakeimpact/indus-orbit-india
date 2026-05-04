@@ -124,6 +124,17 @@ function AdminDashboard() {
             </Link>
           </div>
 
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <Link to="/app/admin/spotlights" className="rounded-3xl border border-border bg-card p-6 transition hover:bg-foreground/5">
+              <p className="text-xs uppercase tracking-wider text-muted-foreground">Spotlights</p>
+              <p className="mt-1 text-xs text-[var(--saffron)]">Feature members on the homepage →</p>
+            </Link>
+            <Link to="/app/admin/content" className="rounded-3xl border border-border bg-card p-6 transition hover:bg-foreground/5">
+              <p className="text-xs uppercase tracking-wider text-muted-foreground">Content moderation</p>
+              <p className="mt-1 text-xs text-[var(--saffron)]">Stories & events queue →</p>
+            </Link>
+          </div>
+
           <div className="mt-6 rounded-3xl border border-border bg-card p-6">
             <div className="flex items-center justify-between">
               <h2 className="font-display text-xl font-medium">Segment breakdown</h2>

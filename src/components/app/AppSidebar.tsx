@@ -1,6 +1,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { Home, Users, User as UserIcon, Shield, UserCog, LogOut, Menu, X, Megaphone, LayoutDashboard, ClipboardList, Flag, ScrollText, ShieldCheck, KeyRound, CalendarClock, TrendingUp, Globe2, BookOpen, MapPin, CalendarDays, Compass, Target } from "lucide-react";
+import { Home, Users, User as UserIcon, Shield, UserCog, LogOut, Menu, X, Megaphone, LayoutDashboard, ClipboardList, Flag, ScrollText, ShieldCheck, KeyRound, CalendarClock, TrendingUp, Globe2, BookOpen, MapPin, CalendarDays, Compass, Target, Sparkles } from "lucide-react";
 import logo from "@/assets/indus-orbit-logo.png";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
@@ -30,6 +30,7 @@ const ADMIN_ITEMS: Item[] = [
   { to: "/app/admin/audit", label: "Audit log", icon: ScrollText, admin: true },
   { to: "/app/admin/members", label: "Members", icon: Shield, admin: true },
   { to: "/app/admin/roles", label: "Roles", icon: UserCog, admin: true },
+  { to: "/app/admin/spotlights", label: "Spotlights", icon: Sparkles, admin: true },
 ];
 
 function NavList({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {

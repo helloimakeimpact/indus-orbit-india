@@ -49,6 +49,7 @@ import { Route as AppChaptersProposeRouteImport } from './routes/app.chapters.pr
 import { Route as AppChaptersChapterIdRouteImport } from './routes/app.chapters.$chapterId'
 import { Route as AppAdminVouchesRouteImport } from './routes/app.admin.vouches'
 import { Route as AppAdminSubmissionsRouteImport } from './routes/app.admin.submissions'
+import { Route as AppAdminSpotlightsRouteImport } from './routes/app.admin.spotlights'
 import { Route as AppAdminRolesRouteImport } from './routes/app.admin.roles'
 import { Route as AppAdminReportsRouteImport } from './routes/app.admin.reports'
 import { Route as AppAdminQueueRouteImport } from './routes/app.admin.queue'
@@ -257,6 +258,11 @@ const AppAdminSubmissionsRoute = AppAdminSubmissionsRouteImport.update({
   path: '/admin/submissions',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAdminSpotlightsRoute = AppAdminSpotlightsRouteImport.update({
+  id: '/admin/spotlights',
+  path: '/admin/spotlights',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAdminRolesRoute = AppAdminRolesRouteImport.update({
   id: '/admin/roles',
   path: '/admin/roles',
@@ -329,6 +335,7 @@ export interface FileRoutesByFullPath {
   '/app/admin/queue': typeof AppAdminQueueRoute
   '/app/admin/reports': typeof AppAdminReportsRoute
   '/app/admin/roles': typeof AppAdminRolesRoute
+  '/app/admin/spotlights': typeof AppAdminSpotlightsRoute
   '/app/admin/submissions': typeof AppAdminSubmissionsRoute
   '/app/admin/vouches': typeof AppAdminVouchesRoute
   '/app/chapters/$chapterId': typeof AppChaptersChapterIdRoute
@@ -374,6 +381,7 @@ export interface FileRoutesByTo {
   '/app/admin/queue': typeof AppAdminQueueRoute
   '/app/admin/reports': typeof AppAdminReportsRoute
   '/app/admin/roles': typeof AppAdminRolesRoute
+  '/app/admin/spotlights': typeof AppAdminSpotlightsRoute
   '/app/admin/submissions': typeof AppAdminSubmissionsRoute
   '/app/admin/vouches': typeof AppAdminVouchesRoute
   '/app/chapters/$chapterId': typeof AppChaptersChapterIdRoute
@@ -424,6 +432,7 @@ export interface FileRoutesById {
   '/app/admin/queue': typeof AppAdminQueueRoute
   '/app/admin/reports': typeof AppAdminReportsRoute
   '/app/admin/roles': typeof AppAdminRolesRoute
+  '/app/admin/spotlights': typeof AppAdminSpotlightsRoute
   '/app/admin/submissions': typeof AppAdminSubmissionsRoute
   '/app/admin/vouches': typeof AppAdminVouchesRoute
   '/app/chapters/$chapterId': typeof AppChaptersChapterIdRoute
@@ -475,6 +484,7 @@ export interface FileRouteTypes {
     | '/app/admin/queue'
     | '/app/admin/reports'
     | '/app/admin/roles'
+    | '/app/admin/spotlights'
     | '/app/admin/submissions'
     | '/app/admin/vouches'
     | '/app/chapters/$chapterId'
@@ -520,6 +530,7 @@ export interface FileRouteTypes {
     | '/app/admin/queue'
     | '/app/admin/reports'
     | '/app/admin/roles'
+    | '/app/admin/spotlights'
     | '/app/admin/submissions'
     | '/app/admin/vouches'
     | '/app/chapters/$chapterId'
@@ -569,6 +580,7 @@ export interface FileRouteTypes {
     | '/app/admin/queue'
     | '/app/admin/reports'
     | '/app/admin/roles'
+    | '/app/admin/spotlights'
     | '/app/admin/submissions'
     | '/app/admin/vouches'
     | '/app/chapters/$chapterId'
@@ -882,6 +894,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminSubmissionsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/admin/spotlights': {
+      id: '/app/admin/spotlights'
+      path: '/admin/spotlights'
+      fullPath: '/app/admin/spotlights'
+      preLoaderRoute: typeof AppAdminSpotlightsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/admin/roles': {
       id: '/app/admin/roles'
       path: '/admin/roles'
@@ -998,6 +1017,7 @@ interface AppRouteChildren {
   AppAdminQueueRoute: typeof AppAdminQueueRoute
   AppAdminReportsRoute: typeof AppAdminReportsRoute
   AppAdminRolesRoute: typeof AppAdminRolesRoute
+  AppAdminSpotlightsRoute: typeof AppAdminSpotlightsRoute
   AppAdminSubmissionsRoute: typeof AppAdminSubmissionsRoute
   AppAdminVouchesRoute: typeof AppAdminVouchesRoute
   AppChaptersChapterIdRoute: typeof AppChaptersChapterIdRoute
@@ -1028,6 +1048,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAdminQueueRoute: AppAdminQueueRoute,
   AppAdminReportsRoute: AppAdminReportsRoute,
   AppAdminRolesRoute: AppAdminRolesRoute,
+  AppAdminSpotlightsRoute: AppAdminSpotlightsRoute,
   AppAdminSubmissionsRoute: AppAdminSubmissionsRoute,
   AppAdminVouchesRoute: AppAdminVouchesRoute,
   AppChaptersChapterIdRoute: AppChaptersChapterIdRoute,
