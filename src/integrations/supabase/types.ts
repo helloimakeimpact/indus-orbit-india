@@ -322,6 +322,36 @@ export type Database = {
         }
         Relationships: []
       }
+      event_rsvps: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          note: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          note?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          note?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       events: {
         Row: {
           chapter_id: string | null
@@ -787,22 +817,37 @@ export type Database = {
       spotlights: {
         Row: {
           created_at: string
+          display_order: number
           featured_by: string
+          headline: string | null
           id: string
+          is_active: boolean
+          link: string | null
+          updated_at: string
           user_id: string
           writeup: string
         }
         Insert: {
           created_at?: string
+          display_order?: number
           featured_by: string
+          headline?: string | null
           id?: string
+          is_active?: boolean
+          link?: string | null
+          updated_at?: string
           user_id: string
           writeup: string
         }
         Update: {
           created_at?: string
+          display_order?: number
           featured_by?: string
+          headline?: string | null
           id?: string
+          is_active?: boolean
+          link?: string | null
+          updated_at?: string
           user_id?: string
           writeup?: string
         }
@@ -1117,6 +1162,7 @@ export type Database = {
         Args: { _approve: boolean; _reason?: string; _request_id: string }
         Returns: undefined
       }
+      event_rsvp_counts: { Args: { _event_id: string }; Returns: Json }
       get_connection_email: {
         Args: { target_user_id: string }
         Returns: string
@@ -1139,6 +1185,7 @@ export type Database = {
       is_suspended: { Args: { _user_id: string }; Returns: boolean }
       lead_approve_event: { Args: { _event_id: string }; Returns: undefined }
       lead_approve_story: { Args: { _story_id: string }; Returns: undefined }
+      lead_feature_story: { Args: { _story_id: string }; Returns: undefined }
       lead_reject_event: {
         Args: { _event_id: string; _reason?: string }
         Returns: undefined
