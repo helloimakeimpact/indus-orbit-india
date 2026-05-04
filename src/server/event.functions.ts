@@ -51,10 +51,18 @@ export const clearMyRsvp = async ({ data }: { data: { eventId: string } }) => {
 };
 
 export const getEventAttendees = async (eventId: string) => {
-  const { data, error } = await (supabase.from as any)("event_rsvps")
-    .select("status, created_at, profiles!event_rsvps_user_id_fkey(user_id, display_name, headline, avatar_url)")
+  const { data: rsvps, error } = await (supabase.from as any)("event_rsvps")
+    .select("status, created_at, user_id")
     .eq("event_id", eventId)
     .order("created_at", { ascending: true });
   if (error) throw new Error(error.message);
-  return data ?? [];
+  const list = (rsvps ?? []) as { status: string; created_at: string; user_id: string }[];
+  if (list.length === 0) return [];
+  const ids = Array.from(new Set(list.map((r) => r.user_id)));
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("user_id, display_name, headline, avatar_url")
+    .in("user_id", ids);
+  const byId = new Map(((profiles ?? []) as any[]).map((p) => [p.user_id, p]));
+  return list.map((r) => ({ ...r, profile: byId.get(r.user_id) ?? null }));
 };
