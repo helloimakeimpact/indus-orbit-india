@@ -1213,6 +1213,15 @@ export type Database = {
       }
       my_lead_summary: { Args: never; Returns: Json }
       redeem_vouch_code: { Args: { _code: string }; Returns: Json }
+      send_notification: {
+        Args: {
+          _link?: string
+          _message: string
+          _type: string
+          _user_id: string
+        }
+        Returns: string
+      }
       vouch_directly: { Args: { _recipient_id: string }; Returns: Json }
       vouch_effective_quota: { Args: { _user_id: string }; Returns: number }
       vouch_remaining: { Args: { _user_id: string }; Returns: number }

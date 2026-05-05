@@ -59,12 +59,12 @@ export function ReachOutDialog({
       return toast.error(error.message);
     }
 
-    // Insert notification for the recipient
-    await supabase.from("notifications").insert({
-      user_id: recipientId,
-      type: "connection_request",
-      message: "You have a new connection request.",
-      link: "/app/connect",
+    // Notify the recipient via SECURITY DEFINER RPC
+    await supabase.rpc("send_notification", {
+      _user_id: recipientId,
+      _type: "connection_request",
+      _message: "You have a new connection request.",
+      _link: "/app/connect",
     });
 
     setBusy(false);

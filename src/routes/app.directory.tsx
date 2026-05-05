@@ -178,9 +178,11 @@ function DirectoryPage() {
     const { error } = await supabase.from("connection_requests").update({ status }).eq("id", r.id);
     if (error) return toast.error(error.message);
     if (status === "accepted" && viewMode === "incoming") {
-      await supabase.from("notifications").insert({
-        user_id: r.sender_id, category: "connect_requests", type: "connect_requests",
-        message: `${user?.email} has accepted your connection request.`, link: "/app/directory"
+      await supabase.rpc("send_notification", {
+        _user_id: r.sender_id,
+        _type: "connect_requests",
+        _message: `${user?.email} has accepted your connection request.`,
+        _link: "/app/directory",
       });
     }
     toast.success(`Request ${status}`);
