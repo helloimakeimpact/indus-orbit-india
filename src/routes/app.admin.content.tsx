@@ -267,7 +267,7 @@ function Btn({ icon: Icon, children, ...props }: any) {
   );
 }
 
-function DeleteBtn({ label, onConfirm }: { label: string; onConfirm: () => void | Promise<void> }) {
+function DeleteBtn({ label, onConfirm }: { label: string; onConfirm: () => void | Promise<unknown> }) {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
