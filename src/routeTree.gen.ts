@@ -55,7 +55,6 @@ import { Route as AppAdminReportsRouteImport } from './routes/app.admin.reports'
 import { Route as AppAdminQueueRouteImport } from './routes/app.admin.queue'
 import { Route as AppAdminMembersRouteImport } from './routes/app.admin.members'
 import { Route as AppAdminHubsRouteImport } from './routes/app.admin.hubs'
-import { Route as AppAdminContentRouteImport } from './routes/app.admin.content'
 import { Route as AppAdminAuditRouteImport } from './routes/app.admin.audit'
 
 const WritingRoute = WritingRouteImport.update({
@@ -288,11 +287,6 @@ const AppAdminHubsRoute = AppAdminHubsRouteImport.update({
   path: '/admin/hubs',
   getParentRoute: () => AppRoute,
 } as any)
-const AppAdminContentRoute = AppAdminContentRouteImport.update({
-  id: '/admin/content',
-  path: '/admin/content',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppAdminAuditRoute = AppAdminAuditRouteImport.update({
   id: '/admin/audit',
   path: '/admin/audit',
@@ -329,7 +323,6 @@ export interface FileRoutesByFullPath {
   '/redeem/$code': typeof RedeemCodeRoute
   '/app/': typeof AppIndexRoute
   '/app/admin/audit': typeof AppAdminAuditRoute
-  '/app/admin/content': typeof AppAdminContentRoute
   '/app/admin/hubs': typeof AppAdminHubsRoute
   '/app/admin/members': typeof AppAdminMembersRoute
   '/app/admin/queue': typeof AppAdminQueueRoute
@@ -375,7 +368,6 @@ export interface FileRoutesByTo {
   '/redeem/$code': typeof RedeemCodeRoute
   '/app': typeof AppIndexRoute
   '/app/admin/audit': typeof AppAdminAuditRoute
-  '/app/admin/content': typeof AppAdminContentRoute
   '/app/admin/hubs': typeof AppAdminHubsRoute
   '/app/admin/members': typeof AppAdminMembersRoute
   '/app/admin/queue': typeof AppAdminQueueRoute
@@ -426,7 +418,6 @@ export interface FileRoutesById {
   '/redeem/$code': typeof RedeemCodeRoute
   '/app/': typeof AppIndexRoute
   '/app/admin/audit': typeof AppAdminAuditRoute
-  '/app/admin/content': typeof AppAdminContentRoute
   '/app/admin/hubs': typeof AppAdminHubsRoute
   '/app/admin/members': typeof AppAdminMembersRoute
   '/app/admin/queue': typeof AppAdminQueueRoute
@@ -478,7 +469,6 @@ export interface FileRouteTypes {
     | '/redeem/$code'
     | '/app/'
     | '/app/admin/audit'
-    | '/app/admin/content'
     | '/app/admin/hubs'
     | '/app/admin/members'
     | '/app/admin/queue'
@@ -524,7 +514,6 @@ export interface FileRouteTypes {
     | '/redeem/$code'
     | '/app'
     | '/app/admin/audit'
-    | '/app/admin/content'
     | '/app/admin/hubs'
     | '/app/admin/members'
     | '/app/admin/queue'
@@ -574,7 +563,6 @@ export interface FileRouteTypes {
     | '/redeem/$code'
     | '/app/'
     | '/app/admin/audit'
-    | '/app/admin/content'
     | '/app/admin/hubs'
     | '/app/admin/members'
     | '/app/admin/queue'
@@ -936,13 +924,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminHubsRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/admin/content': {
-      id: '/app/admin/content'
-      path: '/admin/content'
-      fullPath: '/app/admin/content'
-      preLoaderRoute: typeof AppAdminContentRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/app/admin/audit': {
       id: '/app/admin/audit'
       path: '/admin/audit'
@@ -1011,7 +992,6 @@ interface AppRouteChildren {
   AppVouchRoute: typeof AppVouchRoute
   AppIndexRoute: typeof AppIndexRoute
   AppAdminAuditRoute: typeof AppAdminAuditRoute
-  AppAdminContentRoute: typeof AppAdminContentRoute
   AppAdminHubsRoute: typeof AppAdminHubsRoute
   AppAdminMembersRoute: typeof AppAdminMembersRoute
   AppAdminQueueRoute: typeof AppAdminQueueRoute
@@ -1042,7 +1022,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppVouchRoute: AppVouchRoute,
   AppIndexRoute: AppIndexRoute,
   AppAdminAuditRoute: AppAdminAuditRoute,
-  AppAdminContentRoute: AppAdminContentRoute,
   AppAdminHubsRoute: AppAdminHubsRoute,
   AppAdminMembersRoute: AppAdminMembersRoute,
   AppAdminQueueRoute: AppAdminQueueRoute,
