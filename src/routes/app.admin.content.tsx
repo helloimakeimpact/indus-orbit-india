@@ -42,15 +42,27 @@ function ContentAdmin() {
   const load = useCallback(async () => {
     setBusy(true);
     const [s, e, a, m, c] = await Promise.all([
-      supabase.from("stories").select("*, profiles!stories_author_id_fkey(display_name)").order("created_at", { ascending: false }),
-      supabase.from("events").select("*, profiles!events_organizer_id_fkey(display_name)").order("created_at", { ascending: false }),
-      supabase.from("asks_offers").select("*, profiles!asks_offers_author_id_fkey(display_name)").order("created_at", { ascending: false }),
+      supabase.from("stories").select("*").order("created_at", { ascending: false }),
+      supabase.from("events").select("*").order("created_at", { ascending: false }),
+      supabase.from("asks_offers").select("*").order("created_at", { ascending: false }),
       supabase.from("missions").select("*").order("created_at", { ascending: false }),
       supabase.from("chapters").select("*").order("created_at", { ascending: false }),
     ]);
-    setStories(s.data || []);
-    setEvents(e.data || []);
-    setAsks(a.data || []);
+    const allUserIds = new Set<string>();
+    (s.data || []).forEach((r: any) => r.author_id && allUserIds.add(r.author_id));
+    (e.data || []).forEach((r: any) => r.organizer_id && allUserIds.add(r.organizer_id));
+    (a.data || []).forEach((r: any) => r.author_id && allUserIds.add(r.author_id));
+    let nameMap = new Map<string, string>();
+    if (allUserIds.size > 0) {
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("user_id, display_name")
+        .in("user_id", Array.from(allUserIds));
+      (profs || []).forEach((p: any) => nameMap.set(p.user_id, p.display_name || "Member"));
+    }
+    setStories((s.data || []).map((r: any) => ({ ...r, _author: nameMap.get(r.author_id) || "Member" })));
+    setEvents((e.data || []).map((r: any) => ({ ...r, _author: nameMap.get(r.organizer_id) || "Member" })));
+    setAsks((a.data || []).map((r: any) => ({ ...r, _author: nameMap.get(r.author_id) || "Member" })));
     setMissions(m.data || []);
     setChapters(c.data || []);
     setBusy(false);
@@ -136,7 +148,7 @@ function ContentAdmin() {
             {stories.length === 0 ? <Empty label="stories" /> : stories.map(s => (
               <Card key={s.id}
                 title={s.title}
-                meta={`by ${s.profiles?.display_name || "Member"} · ${new Date(s.created_at).toLocaleDateString()}`}
+                meta={`by ${s._author} · ${new Date(s.created_at).toLocaleDateString()}`}
                 statusBadge={<StatusBadge status={s.status} />}
                 body={s.content}
               >
@@ -155,7 +167,7 @@ function ContentAdmin() {
             {events.length === 0 ? <Empty label="events" /> : events.map(e => (
               <Card key={e.id}
                 title={e.title}
-                meta={`by ${e.profiles?.display_name || "Member"} · ${new Date(e.start_time).toLocaleString()}`}
+                meta={`by ${e._author} · ${new Date(e.start_time).toLocaleString()}`}
                 statusBadge={<StatusBadge status={e.status} />}
                 body={e.description}
               >
@@ -171,7 +183,7 @@ function ContentAdmin() {
             {asks.length === 0 ? <Empty label="board posts" /> : asks.map(a => (
               <Card key={a.id}
                 title={a.title}
-                meta={`${a.kind} · by ${a.profiles?.display_name || "Member"} · ${new Date(a.created_at).toLocaleDateString()}`}
+                meta={`${a.kind} · by ${a._author} · ${new Date(a.created_at).toLocaleDateString()}`}
                 statusBadge={<StatusBadge status={a.status} />}
                 body={a.body}
               >
