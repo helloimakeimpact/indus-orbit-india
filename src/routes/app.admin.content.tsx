@@ -72,19 +72,21 @@ function ContentAdmin() {
 
   // ---------- Story actions ----------
   async function setStoryStatus(id: string, status: string) {
-    const patch: Row = { status };
+    const patch: any = { status };
     if (status === "approved" || status === "featured") patch.published_at = new Date().toISOString();
     if (status === "pending" || status === "rejected") patch.published_at = null;
     const { error } = await supabase.from("stories").update(patch).eq("id", id);
     if (error) return toast.error(error.message);
     await audit(`content.story_${status}`, "story", id);
-    toast.success(`Story ${status}`); load();
+    toast.success(`Story ${status}`);
+    load();
   }
   async function deleteStory(id: string) {
     const { error } = await supabase.from("stories").delete().eq("id", id);
     if (error) return toast.error(error.message);
     await audit("content.story_deleted", "story", id);
-    toast.success("Story deleted"); load();
+    toast.success("Story deleted");
+    load();
   }
 
   // ---------- Event actions ----------
@@ -92,13 +94,15 @@ function ContentAdmin() {
     const { error } = await supabase.from("events").update({ status }).eq("id", id);
     if (error) return toast.error(error.message);
     await audit(`content.event_${status}`, "event", id);
-    toast.success(`Event ${status}`); load();
+    toast.success(`Event ${status}`);
+    load();
   }
   async function deleteEvent(id: string) {
     const { error } = await supabase.from("events").delete().eq("id", id);
     if (error) return toast.error(error.message);
     await audit("content.event_deleted", "event", id);
-    toast.success("Event deleted"); load();
+    toast.success("Event deleted");
+    load();
   }
 
   // ---------- Ask/Offer actions ----------
@@ -106,13 +110,15 @@ function ContentAdmin() {
     const { error } = await supabase.from("asks_offers").update({ status }).eq("id", id);
     if (error) return toast.error(error.message);
     await audit(`content.ask_${status}`, "ask_offer", id);
-    toast.success(`Post ${status}`); load();
+    toast.success(`Post ${status}`);
+    load();
   }
   async function deleteAsk(id: string) {
     const { error } = await supabase.from("asks_offers").delete().eq("id", id);
     if (error) return toast.error(error.message);
     await audit("content.ask_deleted", "ask_offer", id);
-    toast.success("Post deleted"); load();
+    toast.success("Post deleted");
+    load();
   }
 
   // ---------- Mission actions ----------
@@ -120,7 +126,8 @@ function ContentAdmin() {
     const { error } = await supabase.from("missions").update({ status }).eq("id", id);
     if (error) return toast.error(error.message);
     await audit(`content.mission_${status}`, "mission", id);
-    toast.success(`Mission ${status}`); load();
+    toast.success(`Mission ${status}`);
+    load();
   }
 
   if (!isAdmin) return null;
@@ -222,7 +229,8 @@ function ContentAdmin() {
                   const { error } = await supabase.from("chapters").delete().eq("id", c.id);
                   if (error) return toast.error(error.message);
                   await audit("content.chapter_deleted", "chapter", c.id);
-                  toast.success("Chapter deleted"); load();
+                  toast.success("Chapter deleted");
+                  load();
                 }} />
               </Card>
             ))}
