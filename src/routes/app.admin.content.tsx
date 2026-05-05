@@ -1,83 +1,132 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Trash2, Pause, Play, CheckCircle2, XCircle, Star } from "lucide-react";
 
 export const Route = createFileRoute("/app/admin/content")({
-  head: () => ({ meta: [{ title: "Content Queue — Admin" }, { name: "robots", content: "noindex" }] }),
-  component: ContentQueue,
+  head: () => ({ meta: [{ title: "Content moderation — Admin" }, { name: "robots", content: "noindex" }] }),
+  component: ContentAdmin,
 });
 
-function ContentQueue() {
+type Row = Record<string, any>;
+
+function ContentAdmin() {
   const { user, isAdmin, loading } = useAuth();
   const navigate = useNavigate();
-  const [stories, setStories] = useState<any[]>([]);
-  const [events, setEvents] = useState<any[]>([]);
+  const [stories, setStories] = useState<Row[]>([]);
+  const [events, setEvents] = useState<Row[]>([]);
+  const [asks, setAsks] = useState<Row[]>([]);
+  const [missions, setMissions] = useState<Row[]>([]);
+  const [chapters, setChapters] = useState<Row[]>([]);
   const [busy, setBusy] = useState(true);
 
   useEffect(() => {
     if (!loading && !isAdmin) { toast.error("Admins only"); navigate({ to: "/app" }); }
   }, [isAdmin, loading, navigate]);
 
-  async function load() {
+  const audit = useCallback(async (action: string, target_type: string, target_id: string, reason?: string) => {
+    if (!user) return;
+    await supabase.from("audit_log").insert({ actor_id: user.id, action, target_type, target_id, reason });
+  }, [user]);
+
+  const load = useCallback(async () => {
     setBusy(true);
-    
-    const { data: sData } = await supabase
-      .from("stories")
-      .select("*, profiles!stories_author_id_fkey(display_name)")
-      .eq("status", "pending")
-      .order("created_at", { ascending: false });
-      
-    const { data: eData } = await supabase
-      .from("events")
-      .select("*, profiles!events_organizer_id_fkey(display_name)")
-      .eq("status", "pending")
-      .order("created_at", { ascending: false });
-      
-    setStories(sData || []);
-    setEvents(eData || []);
-    setBusy(false);
-  }
-
-  useEffect(() => { if (isAdmin) load(); }, [isAdmin]);
-
-  async function decideStory(id: string, status: "approved" | "featured" | "declined") {
-    const { error } = await supabase.from("stories").update({ 
-      status, 
-      published_at: (status === "approved" || status === "featured") ? new Date().toISOString() : null 
-    }).eq("id", id);
-    if (error) return toast.error(error.message);
-    
-    if (user) {
-      await supabase.from("audit_log").insert({
-        actor_id: user.id,
-        action: `content.story_${status}`,
-        target_type: "story",
-        target_id: id,
-      });
+    const [s, e, a, m, c] = await Promise.all([
+      supabase.from("stories").select("*").order("created_at", { ascending: false }),
+      supabase.from("events").select("*").order("created_at", { ascending: false }),
+      supabase.from("asks_offers").select("*").order("created_at", { ascending: false }),
+      supabase.from("missions").select("*").order("created_at", { ascending: false }),
+      supabase.from("chapters").select("*").order("created_at", { ascending: false }),
+    ]);
+    const allUserIds = new Set<string>();
+    (s.data || []).forEach((r: any) => r.author_id && allUserIds.add(r.author_id));
+    (e.data || []).forEach((r: any) => r.organizer_id && allUserIds.add(r.organizer_id));
+    (a.data || []).forEach((r: any) => r.author_id && allUserIds.add(r.author_id));
+    let nameMap = new Map<string, string>();
+    if (allUserIds.size > 0) {
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("user_id, display_name")
+        .in("user_id", Array.from(allUserIds));
+      (profs || []).forEach((p: any) => nameMap.set(p.user_id, p.display_name || "Member"));
     }
+    setStories((s.data || []).map((r: any) => ({ ...r, _author: nameMap.get(r.author_id) || "Member" })));
+    setEvents((e.data || []).map((r: any) => ({ ...r, _author: nameMap.get(r.organizer_id) || "Member" })));
+    setAsks((a.data || []).map((r: any) => ({ ...r, _author: nameMap.get(r.author_id) || "Member" })));
+    setMissions(m.data || []);
+    setChapters(c.data || []);
+    setBusy(false);
+  }, []);
 
-    toast.success(`Story marked ${status}`);
+  useEffect(() => { if (isAdmin) load(); }, [isAdmin, load]);
+
+  // ---------- Story actions ----------
+  async function setStoryStatus(id: string, status: string) {
+    const patch: any = { status };
+    if (status === "approved" || status === "featured") patch.published_at = new Date().toISOString();
+    if (status === "pending" || status === "rejected") patch.published_at = null;
+    const { error } = await supabase.from("stories").update(patch).eq("id", id);
+    if (error) return toast.error(error.message);
+    await audit(`content.story_${status}`, "story", id);
+    toast.success(`Story ${status}`);
+    load();
+  }
+  async function deleteStory(id: string) {
+    const { error } = await supabase.from("stories").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    await audit("content.story_deleted", "story", id);
+    toast.success("Story deleted");
     load();
   }
 
-  async function decideEvent(id: string, status: "approved" | "declined") {
+  // ---------- Event actions ----------
+  async function setEventStatus(id: string, status: string) {
     const { error } = await supabase.from("events").update({ status }).eq("id", id);
     if (error) return toast.error(error.message);
-    
-    if (user) {
-      await supabase.from("audit_log").insert({
-        actor_id: user.id,
-        action: `content.event_${status}`,
-        target_type: "event",
-        target_id: id,
-      });
-    }
+    await audit(`content.event_${status}`, "event", id);
+    toast.success(`Event ${status}`);
+    load();
+  }
+  async function deleteEvent(id: string) {
+    const { error } = await supabase.from("events").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    await audit("content.event_deleted", "event", id);
+    toast.success("Event deleted");
+    load();
+  }
 
-    toast.success(`Event marked ${status}`);
+  // ---------- Ask/Offer actions ----------
+  async function setAskStatus(id: string, status: string) {
+    const { error } = await supabase.from("asks_offers").update({ status }).eq("id", id);
+    if (error) return toast.error(error.message);
+    await audit(`content.ask_${status}`, "ask_offer", id);
+    toast.success(`Post ${status}`);
+    load();
+  }
+  async function deleteAsk(id: string) {
+    const { error } = await supabase.from("asks_offers").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    await audit("content.ask_deleted", "ask_offer", id);
+    toast.success("Post deleted");
+    load();
+  }
+
+  // ---------- Mission actions ----------
+  async function setMissionStatus(id: string, status: string) {
+    const { error } = await supabase.from("missions").update({ status }).eq("id", id);
+    if (error) return toast.error(error.message);
+    await audit(`content.mission_${status}`, "mission", id);
+    toast.success(`Mission ${status}`);
     load();
   }
 
@@ -85,84 +134,174 @@ function ContentQueue() {
 
   return (
     <div className="mx-auto w-full max-w-7xl">
-      <h1 className="font-display text-3xl font-medium">Content Queue</h1>
-      <p className="mt-2 text-sm text-muted-foreground">Approve, decline, or feature member-submitted stories and events.</p>
+      <h1 className="font-display text-3xl font-medium">Content moderation</h1>
+      <p className="mt-2 text-sm text-muted-foreground">
+        Approve, pause, feature, or remove content across the platform. All actions are logged in the audit trail.
+      </p>
 
       {busy ? (
         <p className="mt-8 text-muted-foreground">Loading…</p>
       ) : (
-        <div className="mt-8 space-y-12">
-          
-          <section>
-            <h2 className="font-display text-2xl font-medium mb-4">Pending Stories</h2>
-            {stories.length === 0 ? (
-              <p className="text-muted-foreground">No pending stories.</p>
-            ) : (
-              <div className="space-y-4">
-                {stories.map(s => (
-                  <article key={s.id} className="rounded-3xl border border-border bg-card p-6">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="font-display text-lg font-semibold">{s.title}</h3>
-                        <p className="text-xs text-muted-foreground">by {s.profiles?.display_name || 'Member'} · {new Date(s.created_at).toLocaleDateString()}</p>
-                      </div>
-                      <Badge variant="outline">Story</Badge>
-                    </div>
-                    <div className="mt-4 prose prose-sm max-w-none line-clamp-3">
-                      {s.content}
-                    </div>
-                    <div className="mt-6 flex flex-wrap gap-2">
-                      <Button onClick={() => decideStory(s.id, "approved")}>Approve</Button>
-                      <Button variant="outline" className="border-[var(--saffron)] text-[var(--saffron)] hover:bg-[var(--saffron)]/10 hover:text-[var(--saffron)]" onClick={() => decideStory(s.id, "featured")}>Approve & Feature</Button>
-                      <Button variant="outline" onClick={() => decideStory(s.id, "declined")}>Decline</Button>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            )}
-          </section>
+        <Tabs defaultValue="stories" className="mt-8">
+          <TabsList className="flex-wrap h-auto">
+            <TabsTrigger value="stories">Stories ({stories.length})</TabsTrigger>
+            <TabsTrigger value="events">Events ({events.length})</TabsTrigger>
+            <TabsTrigger value="board">Board posts ({asks.length})</TabsTrigger>
+            <TabsTrigger value="missions">Missions ({missions.length})</TabsTrigger>
+            <TabsTrigger value="chapters">Chapters ({chapters.length})</TabsTrigger>
+          </TabsList>
 
-          <section>
-            <h2 className="font-display text-2xl font-medium mb-4">Pending Events</h2>
-            {events.length === 0 ? (
-              <p className="text-muted-foreground">No pending events.</p>
-            ) : (
-              <div className="space-y-4">
-                {events.map(e => (
-                  <article key={e.id} className="rounded-3xl border border-border bg-card p-6">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="font-display text-lg font-semibold">{e.title}</h3>
-                        <p className="text-xs text-muted-foreground">by {e.profiles?.display_name || 'Member'} · {new Date(e.created_at).toLocaleDateString()}</p>
-                      </div>
-                      <Badge variant="outline">Event · {e.location_type}</Badge>
-                    </div>
-                    <div className="mt-4 grid md:grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <span className="text-muted-foreground text-xs uppercase tracking-wider block">When</span>
-                        {new Date(e.start_time).toLocaleString()} to {new Date(e.end_time).toLocaleString()}
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground text-xs uppercase tracking-wider block">Where</span>
-                        {e.location || 'Not specified'}
-                      </div>
-                      <div className="md:col-span-2">
-                        <span className="text-muted-foreground text-xs uppercase tracking-wider block">Description</span>
-                        {e.description}
-                      </div>
-                    </div>
-                    <div className="mt-6 flex flex-wrap gap-2">
-                      <Button onClick={() => decideEvent(e.id, "approved")}>Approve</Button>
-                      <Button variant="outline" onClick={() => decideEvent(e.id, "declined")}>Decline</Button>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            )}
-          </section>
-          
-        </div>
+          <TabsContent value="stories" className="mt-6 space-y-4">
+            {stories.length === 0 ? <Empty label="stories" /> : stories.map(s => (
+              <Card key={s.id}
+                title={s.title}
+                meta={`by ${s._author} · ${new Date(s.created_at).toLocaleDateString()}`}
+                statusBadge={<StatusBadge status={s.status} />}
+                body={s.content}
+              >
+                {s.status !== "approved" && <Btn icon={CheckCircle2} onClick={() => setStoryStatus(s.id, "approved")}>Approve</Btn>}
+                {s.status !== "featured" && <Btn icon={Star} variant="outline" onClick={() => setStoryStatus(s.id, "featured")}>Feature</Btn>}
+                {(s.status === "approved" || s.status === "featured") && (
+                  <Btn icon={Pause} variant="outline" onClick={() => setStoryStatus(s.id, "pending")}>Pause</Btn>
+                )}
+                {s.status !== "rejected" && <Btn icon={XCircle} variant="outline" onClick={() => setStoryStatus(s.id, "rejected")}>Decline</Btn>}
+                <DeleteBtn label={s.title} onConfirm={() => deleteStory(s.id)} />
+              </Card>
+            ))}
+          </TabsContent>
+
+          <TabsContent value="events" className="mt-6 space-y-4">
+            {events.length === 0 ? <Empty label="events" /> : events.map(e => (
+              <Card key={e.id}
+                title={e.title}
+                meta={`by ${e._author} · ${new Date(e.start_time).toLocaleString()}`}
+                statusBadge={<StatusBadge status={e.status} />}
+                body={e.description}
+              >
+                {e.status !== "approved" && <Btn icon={CheckCircle2} onClick={() => setEventStatus(e.id, "approved")}>Approve</Btn>}
+                {e.status === "approved" && <Btn icon={Pause} variant="outline" onClick={() => setEventStatus(e.id, "pending")}>Pause</Btn>}
+                {e.status !== "rejected" && <Btn icon={XCircle} variant="outline" onClick={() => setEventStatus(e.id, "rejected")}>Decline</Btn>}
+                <DeleteBtn label={e.title} onConfirm={() => deleteEvent(e.id)} />
+              </Card>
+            ))}
+          </TabsContent>
+
+          <TabsContent value="board" className="mt-6 space-y-4">
+            {asks.length === 0 ? <Empty label="board posts" /> : asks.map(a => (
+              <Card key={a.id}
+                title={a.title}
+                meta={`${a.kind} · by ${a._author} · ${new Date(a.created_at).toLocaleDateString()}`}
+                statusBadge={<StatusBadge status={a.status} />}
+                body={a.body}
+              >
+                {a.status !== "active" && <Btn icon={Play} onClick={() => setAskStatus(a.id, "active")}>Activate</Btn>}
+                {a.status === "active" && <Btn icon={Pause} variant="outline" onClick={() => setAskStatus(a.id, "paused")}>Pause</Btn>}
+                {a.status !== "closed" && <Btn icon={XCircle} variant="outline" onClick={() => setAskStatus(a.id, "closed")}>Close</Btn>}
+                <DeleteBtn label={a.title} onConfirm={() => deleteAsk(a.id)} />
+              </Card>
+            ))}
+          </TabsContent>
+
+          <TabsContent value="missions" className="mt-6 space-y-4">
+            {missions.length === 0 ? <Empty label="missions" /> : missions.map(m => (
+              <Card key={m.id}
+                title={m.title}
+                meta={`${m.theme} · ${new Date(m.created_at).toLocaleDateString()}`}
+                statusBadge={<StatusBadge status={m.status} />}
+                body={m.description}
+              >
+                {m.status !== "open" && <Btn icon={Play} onClick={() => setMissionStatus(m.id, "open")}>Open</Btn>}
+                {m.status !== "paused" && <Btn icon={Pause} variant="outline" onClick={() => setMissionStatus(m.id, "paused")}>Pause</Btn>}
+                {m.status !== "closed" && <Btn icon={XCircle} variant="outline" onClick={() => setMissionStatus(m.id, "closed")}>Close</Btn>}
+              </Card>
+            ))}
+            <p className="text-xs text-muted-foreground">Missions cannot be deleted — close them instead to preserve history.</p>
+          </TabsContent>
+
+          <TabsContent value="chapters" className="mt-6 space-y-4">
+            {chapters.length === 0 ? <Empty label="chapters" /> : chapters.map(c => (
+              <Card key={c.id}
+                title={c.name}
+                meta={[c.city, c.country].filter(Boolean).join(", ") || "—"}
+                body={c.description}
+              >
+                <DeleteBtn label={c.name} onConfirm={async () => {
+                  const { error } = await supabase.from("chapters").delete().eq("id", c.id);
+                  if (error) return toast.error(error.message);
+                  await audit("content.chapter_deleted", "chapter", c.id);
+                  toast.success("Chapter deleted");
+                  load();
+                }} />
+              </Card>
+            ))}
+          </TabsContent>
+        </Tabs>
       )}
     </div>
   );
+}
+
+function Card({ title, meta, statusBadge, body, children }: {
+  title: string; meta: string; statusBadge?: React.ReactNode; body?: string; children: React.ReactNode;
+}) {
+  return (
+    <article className="rounded-3xl border border-border bg-card p-6">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <h3 className="font-display text-lg font-semibold truncate">{title}</h3>
+          <p className="text-xs text-muted-foreground">{meta}</p>
+        </div>
+        {statusBadge}
+      </div>
+      {body && <p className="mt-3 text-sm line-clamp-3 whitespace-pre-wrap">{body}</p>}
+      <div className="mt-4 flex flex-wrap gap-2">{children}</div>
+    </article>
+  );
+}
+
+function Btn({ icon: Icon, children, ...props }: any) {
+  return (
+    <Button size="sm" {...props}>
+      <Icon className="h-4 w-4 mr-1" />{children}
+    </Button>
+  );
+}
+
+function DeleteBtn({ label, onConfirm }: { label: string; onConfirm: () => void | Promise<unknown> }) {
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button size="sm" variant="destructive"><Trash2 className="h-4 w-4 mr-1" />Delete</Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete "{label}"?</AlertDialogTitle>
+          <AlertDialogDescription>This action is permanent and cannot be undone.</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={onConfirm}>Delete</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const variants: Record<string, string> = {
+    approved: "bg-green-500/10 text-green-700 border-green-500/30",
+    featured: "bg-[var(--saffron)]/10 text-[var(--saffron)] border-[var(--saffron)]/30",
+    active: "bg-green-500/10 text-green-700 border-green-500/30",
+    open: "bg-green-500/10 text-green-700 border-green-500/30",
+    pending: "bg-yellow-500/10 text-yellow-700 border-yellow-500/30",
+    paused: "bg-yellow-500/10 text-yellow-700 border-yellow-500/30",
+    rejected: "bg-red-500/10 text-red-700 border-red-500/30",
+    closed: "bg-muted text-muted-foreground",
+    expired: "bg-muted text-muted-foreground",
+  };
+  return <Badge variant="outline" className={variants[status] || ""}>{status}</Badge>;
+}
+
+function Empty({ label }: { label: string }) {
+  return <p className="text-muted-foreground text-sm">No {label} yet.</p>;
 }
