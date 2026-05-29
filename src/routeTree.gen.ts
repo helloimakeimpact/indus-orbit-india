@@ -41,11 +41,13 @@ import { Route as AppBoardRouteImport } from './routes/app.board'
 import { Route as AppStoriesIndexRouteImport } from './routes/app.stories.index'
 import { Route as AppMissionsIndexRouteImport } from './routes/app.missions.index'
 import { Route as AppEventsIndexRouteImport } from './routes/app.events.index'
+import { Route as AppEducationIndexRouteImport } from './routes/app.education.index'
 import { Route as AppChaptersIndexRouteImport } from './routes/app.chapters.index'
 import { Route as AppAdminIndexRouteImport } from './routes/app.admin.index'
 import { Route as AppStoriesIdRouteImport } from './routes/app.stories.$id'
 import { Route as AppMissionsMissionIdRouteImport } from './routes/app.missions.$missionId'
 import { Route as AppEventsIdRouteImport } from './routes/app.events.$id'
+import { Route as AppEducationCourseSlugRouteImport } from './routes/app.education.$courseSlug'
 import { Route as AppChaptersProposeRouteImport } from './routes/app.chapters.propose'
 import { Route as AppChaptersChapterIdRouteImport } from './routes/app.chapters.$chapterId'
 import { Route as AppAdminVouchesRouteImport } from './routes/app.admin.vouches'
@@ -219,6 +221,11 @@ const AppEventsIndexRoute = AppEventsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppEventsRoute,
 } as any)
+const AppEducationIndexRoute = AppEducationIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppEducationRoute,
+} as any)
 const AppChaptersIndexRoute = AppChaptersIndexRouteImport.update({
   id: '/chapters/',
   path: '/chapters/',
@@ -243,6 +250,11 @@ const AppEventsIdRoute = AppEventsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => AppEventsRoute,
+} as any)
+const AppEducationCourseSlugRoute = AppEducationCourseSlugRouteImport.update({
+  id: '/$courseSlug',
+  path: '/$courseSlug',
+  getParentRoute: () => AppEducationRoute,
 } as any)
 const AppChaptersProposeRoute = AppChaptersProposeRouteImport.update({
   id: '/chapters/propose',
@@ -321,7 +333,7 @@ export interface FileRoutesByFullPath {
   '/app/board': typeof AppBoardRoute
   '/app/chapter-admin': typeof AppChapterAdminRoute
   '/app/directory': typeof AppDirectoryRoute
-  '/app/education': typeof AppEducationRoute
+  '/app/education': typeof AppEducationRouteWithChildren
   '/app/events': typeof AppEventsRouteWithChildren
   '/app/investor-feed': typeof AppInvestorFeedRoute
   '/app/mentor': typeof AppMentorRoute
@@ -347,11 +359,13 @@ export interface FileRoutesByFullPath {
   '/app/admin/vouches': typeof AppAdminVouchesRoute
   '/app/chapters/$chapterId': typeof AppChaptersChapterIdRoute
   '/app/chapters/propose': typeof AppChaptersProposeRoute
+  '/app/education/$courseSlug': typeof AppEducationCourseSlugRoute
   '/app/events/$id': typeof AppEventsIdRoute
   '/app/missions/$missionId': typeof AppMissionsMissionIdRoute
   '/app/stories/$id': typeof AppStoriesIdRoute
   '/app/admin/': typeof AppAdminIndexRoute
   '/app/chapters/': typeof AppChaptersIndexRoute
+  '/app/education/': typeof AppEducationIndexRoute
   '/app/events/': typeof AppEventsIndexRoute
   '/app/missions/': typeof AppMissionsIndexRoute
   '/app/stories/': typeof AppStoriesIndexRoute
@@ -371,7 +385,6 @@ export interface FileRoutesByTo {
   '/app/board': typeof AppBoardRoute
   '/app/chapter-admin': typeof AppChapterAdminRoute
   '/app/directory': typeof AppDirectoryRoute
-  '/app/education': typeof AppEducationRoute
   '/app/investor-feed': typeof AppInvestorFeedRoute
   '/app/mentor': typeof AppMentorRoute
   '/app/messages': typeof AppMessagesRoute
@@ -394,11 +407,13 @@ export interface FileRoutesByTo {
   '/app/admin/vouches': typeof AppAdminVouchesRoute
   '/app/chapters/$chapterId': typeof AppChaptersChapterIdRoute
   '/app/chapters/propose': typeof AppChaptersProposeRoute
+  '/app/education/$courseSlug': typeof AppEducationCourseSlugRoute
   '/app/events/$id': typeof AppEventsIdRoute
   '/app/missions/$missionId': typeof AppMissionsMissionIdRoute
   '/app/stories/$id': typeof AppStoriesIdRoute
   '/app/admin': typeof AppAdminIndexRoute
   '/app/chapters': typeof AppChaptersIndexRoute
+  '/app/education': typeof AppEducationIndexRoute
   '/app/events': typeof AppEventsIndexRoute
   '/app/missions': typeof AppMissionsIndexRoute
   '/app/stories': typeof AppStoriesIndexRoute
@@ -420,7 +435,7 @@ export interface FileRoutesById {
   '/app/board': typeof AppBoardRoute
   '/app/chapter-admin': typeof AppChapterAdminRoute
   '/app/directory': typeof AppDirectoryRoute
-  '/app/education': typeof AppEducationRoute
+  '/app/education': typeof AppEducationRouteWithChildren
   '/app/events': typeof AppEventsRouteWithChildren
   '/app/investor-feed': typeof AppInvestorFeedRoute
   '/app/mentor': typeof AppMentorRoute
@@ -446,11 +461,13 @@ export interface FileRoutesById {
   '/app/admin/vouches': typeof AppAdminVouchesRoute
   '/app/chapters/$chapterId': typeof AppChaptersChapterIdRoute
   '/app/chapters/propose': typeof AppChaptersProposeRoute
+  '/app/education/$courseSlug': typeof AppEducationCourseSlugRoute
   '/app/events/$id': typeof AppEventsIdRoute
   '/app/missions/$missionId': typeof AppMissionsMissionIdRoute
   '/app/stories/$id': typeof AppStoriesIdRoute
   '/app/admin/': typeof AppAdminIndexRoute
   '/app/chapters/': typeof AppChaptersIndexRoute
+  '/app/education/': typeof AppEducationIndexRoute
   '/app/events/': typeof AppEventsIndexRoute
   '/app/missions/': typeof AppMissionsIndexRoute
   '/app/stories/': typeof AppStoriesIndexRoute
@@ -499,11 +516,13 @@ export interface FileRouteTypes {
     | '/app/admin/vouches'
     | '/app/chapters/$chapterId'
     | '/app/chapters/propose'
+    | '/app/education/$courseSlug'
     | '/app/events/$id'
     | '/app/missions/$missionId'
     | '/app/stories/$id'
     | '/app/admin/'
     | '/app/chapters/'
+    | '/app/education/'
     | '/app/events/'
     | '/app/missions/'
     | '/app/stories/'
@@ -523,7 +542,6 @@ export interface FileRouteTypes {
     | '/app/board'
     | '/app/chapter-admin'
     | '/app/directory'
-    | '/app/education'
     | '/app/investor-feed'
     | '/app/mentor'
     | '/app/messages'
@@ -546,11 +564,13 @@ export interface FileRouteTypes {
     | '/app/admin/vouches'
     | '/app/chapters/$chapterId'
     | '/app/chapters/propose'
+    | '/app/education/$courseSlug'
     | '/app/events/$id'
     | '/app/missions/$missionId'
     | '/app/stories/$id'
     | '/app/admin'
     | '/app/chapters'
+    | '/app/education'
     | '/app/events'
     | '/app/missions'
     | '/app/stories'
@@ -597,11 +617,13 @@ export interface FileRouteTypes {
     | '/app/admin/vouches'
     | '/app/chapters/$chapterId'
     | '/app/chapters/propose'
+    | '/app/education/$courseSlug'
     | '/app/events/$id'
     | '/app/missions/$missionId'
     | '/app/stories/$id'
     | '/app/admin/'
     | '/app/chapters/'
+    | '/app/education/'
     | '/app/events/'
     | '/app/missions/'
     | '/app/stories/'
@@ -850,6 +872,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppEventsIndexRouteImport
       parentRoute: typeof AppEventsRoute
     }
+    '/app/education/': {
+      id: '/app/education/'
+      path: '/'
+      fullPath: '/app/education/'
+      preLoaderRoute: typeof AppEducationIndexRouteImport
+      parentRoute: typeof AppEducationRoute
+    }
     '/app/chapters/': {
       id: '/app/chapters/'
       path: '/chapters'
@@ -884,6 +913,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/events/$id'
       preLoaderRoute: typeof AppEventsIdRouteImport
       parentRoute: typeof AppEventsRoute
+    }
+    '/app/education/$courseSlug': {
+      id: '/app/education/$courseSlug'
+      path: '/$courseSlug'
+      fullPath: '/app/education/$courseSlug'
+      preLoaderRoute: typeof AppEducationCourseSlugRouteImport
+      parentRoute: typeof AppEducationRoute
     }
     '/app/chapters/propose': {
       id: '/app/chapters/propose'
@@ -972,6 +1008,20 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AppEducationRouteChildren {
+  AppEducationCourseSlugRoute: typeof AppEducationCourseSlugRoute
+  AppEducationIndexRoute: typeof AppEducationIndexRoute
+}
+
+const AppEducationRouteChildren: AppEducationRouteChildren = {
+  AppEducationCourseSlugRoute: AppEducationCourseSlugRoute,
+  AppEducationIndexRoute: AppEducationIndexRoute,
+}
+
+const AppEducationRouteWithChildren = AppEducationRoute._addFileChildren(
+  AppEducationRouteChildren,
+)
+
 interface AppEventsRouteChildren {
   AppEventsIdRoute: typeof AppEventsIdRoute
   AppEventsIndexRoute: typeof AppEventsIndexRoute
@@ -1018,7 +1068,7 @@ interface AppRouteChildren {
   AppBoardRoute: typeof AppBoardRoute
   AppChapterAdminRoute: typeof AppChapterAdminRoute
   AppDirectoryRoute: typeof AppDirectoryRoute
-  AppEducationRoute: typeof AppEducationRoute
+  AppEducationRoute: typeof AppEducationRouteWithChildren
   AppEventsRoute: typeof AppEventsRouteWithChildren
   AppInvestorFeedRoute: typeof AppInvestorFeedRoute
   AppMentorRoute: typeof AppMentorRoute
@@ -1050,7 +1100,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppBoardRoute: AppBoardRoute,
   AppChapterAdminRoute: AppChapterAdminRoute,
   AppDirectoryRoute: AppDirectoryRoute,
-  AppEducationRoute: AppEducationRoute,
+  AppEducationRoute: AppEducationRouteWithChildren,
   AppEventsRoute: AppEventsRouteWithChildren,
   AppInvestorFeedRoute: AppInvestorFeedRoute,
   AppMentorRoute: AppMentorRoute,
