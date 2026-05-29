@@ -58,6 +58,7 @@ import { Route as AppAdminReportsRouteImport } from './routes/app.admin.reports'
 import { Route as AppAdminQueueRouteImport } from './routes/app.admin.queue'
 import { Route as AppAdminMembersRouteImport } from './routes/app.admin.members'
 import { Route as AppAdminHubsRouteImport } from './routes/app.admin.hubs'
+import { Route as AppAdminEducationRouteImport } from './routes/app.admin.education'
 import { Route as AppAdminContentRouteImport } from './routes/app.admin.content'
 import { Route as AppAdminAuditRouteImport } from './routes/app.admin.audit'
 import { Route as AppEducationCourseSlugLessonSlugRouteImport } from './routes/app.education.$courseSlug.$lessonSlug'
@@ -307,6 +308,11 @@ const AppAdminHubsRoute = AppAdminHubsRouteImport.update({
   path: '/admin/hubs',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAdminEducationRoute = AppAdminEducationRouteImport.update({
+  id: '/admin/education',
+  path: '/admin/education',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAdminContentRoute = AppAdminContentRouteImport.update({
   id: '/admin/content',
   path: '/admin/content',
@@ -356,6 +362,7 @@ export interface FileRoutesByFullPath {
   '/app/': typeof AppIndexRoute
   '/app/admin/audit': typeof AppAdminAuditRoute
   '/app/admin/content': typeof AppAdminContentRoute
+  '/app/admin/education': typeof AppAdminEducationRoute
   '/app/admin/hubs': typeof AppAdminHubsRoute
   '/app/admin/members': typeof AppAdminMembersRoute
   '/app/admin/queue': typeof AppAdminQueueRoute
@@ -405,6 +412,7 @@ export interface FileRoutesByTo {
   '/app': typeof AppIndexRoute
   '/app/admin/audit': typeof AppAdminAuditRoute
   '/app/admin/content': typeof AppAdminContentRoute
+  '/app/admin/education': typeof AppAdminEducationRoute
   '/app/admin/hubs': typeof AppAdminHubsRoute
   '/app/admin/members': typeof AppAdminMembersRoute
   '/app/admin/queue': typeof AppAdminQueueRoute
@@ -460,6 +468,7 @@ export interface FileRoutesById {
   '/app/': typeof AppIndexRoute
   '/app/admin/audit': typeof AppAdminAuditRoute
   '/app/admin/content': typeof AppAdminContentRoute
+  '/app/admin/education': typeof AppAdminEducationRoute
   '/app/admin/hubs': typeof AppAdminHubsRoute
   '/app/admin/members': typeof AppAdminMembersRoute
   '/app/admin/queue': typeof AppAdminQueueRoute
@@ -516,6 +525,7 @@ export interface FileRouteTypes {
     | '/app/'
     | '/app/admin/audit'
     | '/app/admin/content'
+    | '/app/admin/education'
     | '/app/admin/hubs'
     | '/app/admin/members'
     | '/app/admin/queue'
@@ -565,6 +575,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/app/admin/audit'
     | '/app/admin/content'
+    | '/app/admin/education'
     | '/app/admin/hubs'
     | '/app/admin/members'
     | '/app/admin/queue'
@@ -619,6 +630,7 @@ export interface FileRouteTypes {
     | '/app/'
     | '/app/admin/audit'
     | '/app/admin/content'
+    | '/app/admin/education'
     | '/app/admin/hubs'
     | '/app/admin/members'
     | '/app/admin/queue'
@@ -1004,6 +1016,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminHubsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/admin/education': {
+      id: '/app/admin/education'
+      path: '/admin/education'
+      fullPath: '/app/admin/education'
+      preLoaderRoute: typeof AppAdminEducationRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/admin/content': {
       id: '/app/admin/content'
       path: '/admin/content'
@@ -1117,6 +1136,7 @@ interface AppRouteChildren {
   AppIndexRoute: typeof AppIndexRoute
   AppAdminAuditRoute: typeof AppAdminAuditRoute
   AppAdminContentRoute: typeof AppAdminContentRoute
+  AppAdminEducationRoute: typeof AppAdminEducationRoute
   AppAdminHubsRoute: typeof AppAdminHubsRoute
   AppAdminMembersRoute: typeof AppAdminMembersRoute
   AppAdminQueueRoute: typeof AppAdminQueueRoute
@@ -1149,6 +1169,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppIndexRoute: AppIndexRoute,
   AppAdminAuditRoute: AppAdminAuditRoute,
   AppAdminContentRoute: AppAdminContentRoute,
+  AppAdminEducationRoute: AppAdminEducationRoute,
   AppAdminHubsRoute: AppAdminHubsRoute,
   AppAdminMembersRoute: AppAdminMembersRoute,
   AppAdminQueueRoute: AppAdminQueueRoute,
