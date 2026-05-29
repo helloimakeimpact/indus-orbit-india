@@ -34,17 +34,20 @@ import { Route as AppMessagesRouteImport } from './routes/app.messages'
 import { Route as AppMentorRouteImport } from './routes/app.mentor'
 import { Route as AppInvestorFeedRouteImport } from './routes/app.investor-feed'
 import { Route as AppEventsRouteImport } from './routes/app.events'
+import { Route as AppEducationRouteImport } from './routes/app.education'
 import { Route as AppDirectoryRouteImport } from './routes/app.directory'
 import { Route as AppChapterAdminRouteImport } from './routes/app.chapter-admin'
 import { Route as AppBoardRouteImport } from './routes/app.board'
 import { Route as AppStoriesIndexRouteImport } from './routes/app.stories.index'
 import { Route as AppMissionsIndexRouteImport } from './routes/app.missions.index'
 import { Route as AppEventsIndexRouteImport } from './routes/app.events.index'
+import { Route as AppEducationIndexRouteImport } from './routes/app.education.index'
 import { Route as AppChaptersIndexRouteImport } from './routes/app.chapters.index'
 import { Route as AppAdminIndexRouteImport } from './routes/app.admin.index'
 import { Route as AppStoriesIdRouteImport } from './routes/app.stories.$id'
 import { Route as AppMissionsMissionIdRouteImport } from './routes/app.missions.$missionId'
 import { Route as AppEventsIdRouteImport } from './routes/app.events.$id'
+import { Route as AppEducationCourseSlugRouteImport } from './routes/app.education.$courseSlug'
 import { Route as AppChaptersProposeRouteImport } from './routes/app.chapters.propose'
 import { Route as AppChaptersChapterIdRouteImport } from './routes/app.chapters.$chapterId'
 import { Route as AppAdminVouchesRouteImport } from './routes/app.admin.vouches'
@@ -55,8 +58,10 @@ import { Route as AppAdminReportsRouteImport } from './routes/app.admin.reports'
 import { Route as AppAdminQueueRouteImport } from './routes/app.admin.queue'
 import { Route as AppAdminMembersRouteImport } from './routes/app.admin.members'
 import { Route as AppAdminHubsRouteImport } from './routes/app.admin.hubs'
+import { Route as AppAdminEducationRouteImport } from './routes/app.admin.education'
 import { Route as AppAdminContentRouteImport } from './routes/app.admin.content'
 import { Route as AppAdminAuditRouteImport } from './routes/app.admin.audit'
+import { Route as AppEducationCourseSlugLessonSlugRouteImport } from './routes/app.education.$courseSlug.$lessonSlug'
 
 const WritingRoute = WritingRouteImport.update({
   id: '/writing',
@@ -183,6 +188,11 @@ const AppEventsRoute = AppEventsRouteImport.update({
   path: '/events',
   getParentRoute: () => AppRoute,
 } as any)
+const AppEducationRoute = AppEducationRouteImport.update({
+  id: '/education',
+  path: '/education',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppDirectoryRoute = AppDirectoryRouteImport.update({
   id: '/directory',
   path: '/directory',
@@ -213,6 +223,11 @@ const AppEventsIndexRoute = AppEventsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppEventsRoute,
 } as any)
+const AppEducationIndexRoute = AppEducationIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppEducationRoute,
+} as any)
 const AppChaptersIndexRoute = AppChaptersIndexRouteImport.update({
   id: '/chapters/',
   path: '/chapters/',
@@ -237,6 +252,11 @@ const AppEventsIdRoute = AppEventsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => AppEventsRoute,
+} as any)
+const AppEducationCourseSlugRoute = AppEducationCourseSlugRouteImport.update({
+  id: '/$courseSlug',
+  path: '/$courseSlug',
+  getParentRoute: () => AppEducationRoute,
 } as any)
 const AppChaptersProposeRoute = AppChaptersProposeRouteImport.update({
   id: '/chapters/propose',
@@ -288,6 +308,11 @@ const AppAdminHubsRoute = AppAdminHubsRouteImport.update({
   path: '/admin/hubs',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAdminEducationRoute = AppAdminEducationRouteImport.update({
+  id: '/admin/education',
+  path: '/admin/education',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAdminContentRoute = AppAdminContentRouteImport.update({
   id: '/admin/content',
   path: '/admin/content',
@@ -298,6 +323,12 @@ const AppAdminAuditRoute = AppAdminAuditRouteImport.update({
   path: '/admin/audit',
   getParentRoute: () => AppRoute,
 } as any)
+const AppEducationCourseSlugLessonSlugRoute =
+  AppEducationCourseSlugLessonSlugRouteImport.update({
+    id: '/$lessonSlug',
+    path: '/$lessonSlug',
+    getParentRoute: () => AppEducationCourseSlugRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -315,6 +346,7 @@ export interface FileRoutesByFullPath {
   '/app/board': typeof AppBoardRoute
   '/app/chapter-admin': typeof AppChapterAdminRoute
   '/app/directory': typeof AppDirectoryRoute
+  '/app/education': typeof AppEducationRouteWithChildren
   '/app/events': typeof AppEventsRouteWithChildren
   '/app/investor-feed': typeof AppInvestorFeedRoute
   '/app/mentor': typeof AppMentorRoute
@@ -330,6 +362,7 @@ export interface FileRoutesByFullPath {
   '/app/': typeof AppIndexRoute
   '/app/admin/audit': typeof AppAdminAuditRoute
   '/app/admin/content': typeof AppAdminContentRoute
+  '/app/admin/education': typeof AppAdminEducationRoute
   '/app/admin/hubs': typeof AppAdminHubsRoute
   '/app/admin/members': typeof AppAdminMembersRoute
   '/app/admin/queue': typeof AppAdminQueueRoute
@@ -340,14 +373,17 @@ export interface FileRoutesByFullPath {
   '/app/admin/vouches': typeof AppAdminVouchesRoute
   '/app/chapters/$chapterId': typeof AppChaptersChapterIdRoute
   '/app/chapters/propose': typeof AppChaptersProposeRoute
+  '/app/education/$courseSlug': typeof AppEducationCourseSlugRouteWithChildren
   '/app/events/$id': typeof AppEventsIdRoute
   '/app/missions/$missionId': typeof AppMissionsMissionIdRoute
   '/app/stories/$id': typeof AppStoriesIdRoute
   '/app/admin/': typeof AppAdminIndexRoute
   '/app/chapters/': typeof AppChaptersIndexRoute
+  '/app/education/': typeof AppEducationIndexRoute
   '/app/events/': typeof AppEventsIndexRoute
   '/app/missions/': typeof AppMissionsIndexRoute
   '/app/stories/': typeof AppStoriesIndexRoute
+  '/app/education/$courseSlug/$lessonSlug': typeof AppEducationCourseSlugLessonSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -376,6 +412,7 @@ export interface FileRoutesByTo {
   '/app': typeof AppIndexRoute
   '/app/admin/audit': typeof AppAdminAuditRoute
   '/app/admin/content': typeof AppAdminContentRoute
+  '/app/admin/education': typeof AppAdminEducationRoute
   '/app/admin/hubs': typeof AppAdminHubsRoute
   '/app/admin/members': typeof AppAdminMembersRoute
   '/app/admin/queue': typeof AppAdminQueueRoute
@@ -386,14 +423,17 @@ export interface FileRoutesByTo {
   '/app/admin/vouches': typeof AppAdminVouchesRoute
   '/app/chapters/$chapterId': typeof AppChaptersChapterIdRoute
   '/app/chapters/propose': typeof AppChaptersProposeRoute
+  '/app/education/$courseSlug': typeof AppEducationCourseSlugRouteWithChildren
   '/app/events/$id': typeof AppEventsIdRoute
   '/app/missions/$missionId': typeof AppMissionsMissionIdRoute
   '/app/stories/$id': typeof AppStoriesIdRoute
   '/app/admin': typeof AppAdminIndexRoute
   '/app/chapters': typeof AppChaptersIndexRoute
+  '/app/education': typeof AppEducationIndexRoute
   '/app/events': typeof AppEventsIndexRoute
   '/app/missions': typeof AppMissionsIndexRoute
   '/app/stories': typeof AppStoriesIndexRoute
+  '/app/education/$courseSlug/$lessonSlug': typeof AppEducationCourseSlugLessonSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -412,6 +452,7 @@ export interface FileRoutesById {
   '/app/board': typeof AppBoardRoute
   '/app/chapter-admin': typeof AppChapterAdminRoute
   '/app/directory': typeof AppDirectoryRoute
+  '/app/education': typeof AppEducationRouteWithChildren
   '/app/events': typeof AppEventsRouteWithChildren
   '/app/investor-feed': typeof AppInvestorFeedRoute
   '/app/mentor': typeof AppMentorRoute
@@ -427,6 +468,7 @@ export interface FileRoutesById {
   '/app/': typeof AppIndexRoute
   '/app/admin/audit': typeof AppAdminAuditRoute
   '/app/admin/content': typeof AppAdminContentRoute
+  '/app/admin/education': typeof AppAdminEducationRoute
   '/app/admin/hubs': typeof AppAdminHubsRoute
   '/app/admin/members': typeof AppAdminMembersRoute
   '/app/admin/queue': typeof AppAdminQueueRoute
@@ -437,14 +479,17 @@ export interface FileRoutesById {
   '/app/admin/vouches': typeof AppAdminVouchesRoute
   '/app/chapters/$chapterId': typeof AppChaptersChapterIdRoute
   '/app/chapters/propose': typeof AppChaptersProposeRoute
+  '/app/education/$courseSlug': typeof AppEducationCourseSlugRouteWithChildren
   '/app/events/$id': typeof AppEventsIdRoute
   '/app/missions/$missionId': typeof AppMissionsMissionIdRoute
   '/app/stories/$id': typeof AppStoriesIdRoute
   '/app/admin/': typeof AppAdminIndexRoute
   '/app/chapters/': typeof AppChaptersIndexRoute
+  '/app/education/': typeof AppEducationIndexRoute
   '/app/events/': typeof AppEventsIndexRoute
   '/app/missions/': typeof AppMissionsIndexRoute
   '/app/stories/': typeof AppStoriesIndexRoute
+  '/app/education/$courseSlug/$lessonSlug': typeof AppEducationCourseSlugLessonSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -464,6 +509,7 @@ export interface FileRouteTypes {
     | '/app/board'
     | '/app/chapter-admin'
     | '/app/directory'
+    | '/app/education'
     | '/app/events'
     | '/app/investor-feed'
     | '/app/mentor'
@@ -479,6 +525,7 @@ export interface FileRouteTypes {
     | '/app/'
     | '/app/admin/audit'
     | '/app/admin/content'
+    | '/app/admin/education'
     | '/app/admin/hubs'
     | '/app/admin/members'
     | '/app/admin/queue'
@@ -489,14 +536,17 @@ export interface FileRouteTypes {
     | '/app/admin/vouches'
     | '/app/chapters/$chapterId'
     | '/app/chapters/propose'
+    | '/app/education/$courseSlug'
     | '/app/events/$id'
     | '/app/missions/$missionId'
     | '/app/stories/$id'
     | '/app/admin/'
     | '/app/chapters/'
+    | '/app/education/'
     | '/app/events/'
     | '/app/missions/'
     | '/app/stories/'
+    | '/app/education/$courseSlug/$lessonSlug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -525,6 +575,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/app/admin/audit'
     | '/app/admin/content'
+    | '/app/admin/education'
     | '/app/admin/hubs'
     | '/app/admin/members'
     | '/app/admin/queue'
@@ -535,14 +586,17 @@ export interface FileRouteTypes {
     | '/app/admin/vouches'
     | '/app/chapters/$chapterId'
     | '/app/chapters/propose'
+    | '/app/education/$courseSlug'
     | '/app/events/$id'
     | '/app/missions/$missionId'
     | '/app/stories/$id'
     | '/app/admin'
     | '/app/chapters'
+    | '/app/education'
     | '/app/events'
     | '/app/missions'
     | '/app/stories'
+    | '/app/education/$courseSlug/$lessonSlug'
   id:
     | '__root__'
     | '/'
@@ -560,6 +614,7 @@ export interface FileRouteTypes {
     | '/app/board'
     | '/app/chapter-admin'
     | '/app/directory'
+    | '/app/education'
     | '/app/events'
     | '/app/investor-feed'
     | '/app/mentor'
@@ -575,6 +630,7 @@ export interface FileRouteTypes {
     | '/app/'
     | '/app/admin/audit'
     | '/app/admin/content'
+    | '/app/admin/education'
     | '/app/admin/hubs'
     | '/app/admin/members'
     | '/app/admin/queue'
@@ -585,14 +641,17 @@ export interface FileRouteTypes {
     | '/app/admin/vouches'
     | '/app/chapters/$chapterId'
     | '/app/chapters/propose'
+    | '/app/education/$courseSlug'
     | '/app/events/$id'
     | '/app/missions/$missionId'
     | '/app/stories/$id'
     | '/app/admin/'
     | '/app/chapters/'
+    | '/app/education/'
     | '/app/events/'
     | '/app/missions/'
     | '/app/stories/'
+    | '/app/education/$courseSlug/$lessonSlug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -789,6 +848,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppEventsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/education': {
+      id: '/app/education'
+      path: '/education'
+      fullPath: '/app/education'
+      preLoaderRoute: typeof AppEducationRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/directory': {
       id: '/app/directory'
       path: '/directory'
@@ -831,6 +897,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppEventsIndexRouteImport
       parentRoute: typeof AppEventsRoute
     }
+    '/app/education/': {
+      id: '/app/education/'
+      path: '/'
+      fullPath: '/app/education/'
+      preLoaderRoute: typeof AppEducationIndexRouteImport
+      parentRoute: typeof AppEducationRoute
+    }
     '/app/chapters/': {
       id: '/app/chapters/'
       path: '/chapters'
@@ -865,6 +938,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/events/$id'
       preLoaderRoute: typeof AppEventsIdRouteImport
       parentRoute: typeof AppEventsRoute
+    }
+    '/app/education/$courseSlug': {
+      id: '/app/education/$courseSlug'
+      path: '/$courseSlug'
+      fullPath: '/app/education/$courseSlug'
+      preLoaderRoute: typeof AppEducationCourseSlugRouteImport
+      parentRoute: typeof AppEducationRoute
     }
     '/app/chapters/propose': {
       id: '/app/chapters/propose'
@@ -936,6 +1016,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminHubsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/admin/education': {
+      id: '/app/admin/education'
+      path: '/admin/education'
+      fullPath: '/app/admin/education'
+      preLoaderRoute: typeof AppAdminEducationRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/admin/content': {
       id: '/app/admin/content'
       path: '/admin/content'
@@ -950,8 +1037,44 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminAuditRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/education/$courseSlug/$lessonSlug': {
+      id: '/app/education/$courseSlug/$lessonSlug'
+      path: '/$lessonSlug'
+      fullPath: '/app/education/$courseSlug/$lessonSlug'
+      preLoaderRoute: typeof AppEducationCourseSlugLessonSlugRouteImport
+      parentRoute: typeof AppEducationCourseSlugRoute
+    }
   }
 }
+
+interface AppEducationCourseSlugRouteChildren {
+  AppEducationCourseSlugLessonSlugRoute: typeof AppEducationCourseSlugLessonSlugRoute
+}
+
+const AppEducationCourseSlugRouteChildren: AppEducationCourseSlugRouteChildren =
+  {
+    AppEducationCourseSlugLessonSlugRoute:
+      AppEducationCourseSlugLessonSlugRoute,
+  }
+
+const AppEducationCourseSlugRouteWithChildren =
+  AppEducationCourseSlugRoute._addFileChildren(
+    AppEducationCourseSlugRouteChildren,
+  )
+
+interface AppEducationRouteChildren {
+  AppEducationCourseSlugRoute: typeof AppEducationCourseSlugRouteWithChildren
+  AppEducationIndexRoute: typeof AppEducationIndexRoute
+}
+
+const AppEducationRouteChildren: AppEducationRouteChildren = {
+  AppEducationCourseSlugRoute: AppEducationCourseSlugRouteWithChildren,
+  AppEducationIndexRoute: AppEducationIndexRoute,
+}
+
+const AppEducationRouteWithChildren = AppEducationRoute._addFileChildren(
+  AppEducationRouteChildren,
+)
 
 interface AppEventsRouteChildren {
   AppEventsIdRoute: typeof AppEventsIdRoute
@@ -999,6 +1122,7 @@ interface AppRouteChildren {
   AppBoardRoute: typeof AppBoardRoute
   AppChapterAdminRoute: typeof AppChapterAdminRoute
   AppDirectoryRoute: typeof AppDirectoryRoute
+  AppEducationRoute: typeof AppEducationRouteWithChildren
   AppEventsRoute: typeof AppEventsRouteWithChildren
   AppInvestorFeedRoute: typeof AppInvestorFeedRoute
   AppMentorRoute: typeof AppMentorRoute
@@ -1012,6 +1136,7 @@ interface AppRouteChildren {
   AppIndexRoute: typeof AppIndexRoute
   AppAdminAuditRoute: typeof AppAdminAuditRoute
   AppAdminContentRoute: typeof AppAdminContentRoute
+  AppAdminEducationRoute: typeof AppAdminEducationRoute
   AppAdminHubsRoute: typeof AppAdminHubsRoute
   AppAdminMembersRoute: typeof AppAdminMembersRoute
   AppAdminQueueRoute: typeof AppAdminQueueRoute
@@ -1030,6 +1155,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppBoardRoute: AppBoardRoute,
   AppChapterAdminRoute: AppChapterAdminRoute,
   AppDirectoryRoute: AppDirectoryRoute,
+  AppEducationRoute: AppEducationRouteWithChildren,
   AppEventsRoute: AppEventsRouteWithChildren,
   AppInvestorFeedRoute: AppInvestorFeedRoute,
   AppMentorRoute: AppMentorRoute,
@@ -1043,6 +1169,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppIndexRoute: AppIndexRoute,
   AppAdminAuditRoute: AppAdminAuditRoute,
   AppAdminContentRoute: AppAdminContentRoute,
+  AppAdminEducationRoute: AppAdminEducationRoute,
   AppAdminHubsRoute: AppAdminHubsRoute,
   AppAdminMembersRoute: AppAdminMembersRoute,
   AppAdminQueueRoute: AppAdminQueueRoute,

@@ -1,6 +1,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { Home, Users, User as UserIcon, Shield, UserCog, LogOut, Menu, X, Megaphone, LayoutDashboard, ClipboardList, Flag, ScrollText, ShieldCheck, KeyRound, CalendarClock, TrendingUp, Globe2, BookOpen, MapPin, CalendarDays, Compass, Target, Sparkles, FileCheck } from "lucide-react";
+import { Home, Users, User as UserIcon, Shield, UserCog, LogOut, Menu, X, Megaphone, LayoutDashboard, ClipboardList, Flag, ScrollText, ShieldCheck, KeyRound, CalendarClock, TrendingUp, Globe2, BookOpen, MapPin, CalendarDays, Compass, Target, Sparkles, FileCheck, GraduationCap } from "lucide-react";
 import logo from "@/assets/indus-orbit-logo.png";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
@@ -17,6 +17,7 @@ const ITEMS: Item[] = [
   { to: "/app/chapters", label: "Chapters", icon: MapPin },
   { to: "/app/events", label: "Events", icon: CalendarDays },
   { to: "/app/stories", label: "Stories", icon: BookOpen },
+  { to: "/app/education", label: "Academy", icon: GraduationCap },
   { to: "/app/vouch", label: "Vouch", icon: ShieldCheck },
   { to: "/app/mentor", label: "Mentorship", icon: CalendarClock },
   { to: "/app/profile", label: "My profile", icon: UserIcon },
@@ -32,6 +33,7 @@ const ADMIN_ITEMS: Item[] = [
   { to: "/app/admin/roles", label: "Roles", icon: UserCog, admin: true },
   { to: "/app/admin/spotlights", label: "Spotlights", icon: Sparkles, admin: true },
   { to: "/app/admin/content", label: "Content", icon: FileCheck, admin: true },
+  { to: "/app/admin/education", label: "Education", icon: GraduationCap, admin: true },
 ];
 
 function NavList({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
