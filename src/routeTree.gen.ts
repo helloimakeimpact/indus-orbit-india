@@ -60,6 +60,7 @@ import { Route as AppAdminMembersRouteImport } from './routes/app.admin.members'
 import { Route as AppAdminHubsRouteImport } from './routes/app.admin.hubs'
 import { Route as AppAdminContentRouteImport } from './routes/app.admin.content'
 import { Route as AppAdminAuditRouteImport } from './routes/app.admin.audit'
+import { Route as AppEducationCourseSlugLessonSlugRouteImport } from './routes/app.education.$courseSlug.$lessonSlug'
 
 const WritingRoute = WritingRouteImport.update({
   id: '/writing',
@@ -316,6 +317,12 @@ const AppAdminAuditRoute = AppAdminAuditRouteImport.update({
   path: '/admin/audit',
   getParentRoute: () => AppRoute,
 } as any)
+const AppEducationCourseSlugLessonSlugRoute =
+  AppEducationCourseSlugLessonSlugRouteImport.update({
+    id: '/$lessonSlug',
+    path: '/$lessonSlug',
+    getParentRoute: () => AppEducationCourseSlugRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -359,7 +366,7 @@ export interface FileRoutesByFullPath {
   '/app/admin/vouches': typeof AppAdminVouchesRoute
   '/app/chapters/$chapterId': typeof AppChaptersChapterIdRoute
   '/app/chapters/propose': typeof AppChaptersProposeRoute
-  '/app/education/$courseSlug': typeof AppEducationCourseSlugRoute
+  '/app/education/$courseSlug': typeof AppEducationCourseSlugRouteWithChildren
   '/app/events/$id': typeof AppEventsIdRoute
   '/app/missions/$missionId': typeof AppMissionsMissionIdRoute
   '/app/stories/$id': typeof AppStoriesIdRoute
@@ -369,6 +376,7 @@ export interface FileRoutesByFullPath {
   '/app/events/': typeof AppEventsIndexRoute
   '/app/missions/': typeof AppMissionsIndexRoute
   '/app/stories/': typeof AppStoriesIndexRoute
+  '/app/education/$courseSlug/$lessonSlug': typeof AppEducationCourseSlugLessonSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -407,7 +415,7 @@ export interface FileRoutesByTo {
   '/app/admin/vouches': typeof AppAdminVouchesRoute
   '/app/chapters/$chapterId': typeof AppChaptersChapterIdRoute
   '/app/chapters/propose': typeof AppChaptersProposeRoute
-  '/app/education/$courseSlug': typeof AppEducationCourseSlugRoute
+  '/app/education/$courseSlug': typeof AppEducationCourseSlugRouteWithChildren
   '/app/events/$id': typeof AppEventsIdRoute
   '/app/missions/$missionId': typeof AppMissionsMissionIdRoute
   '/app/stories/$id': typeof AppStoriesIdRoute
@@ -417,6 +425,7 @@ export interface FileRoutesByTo {
   '/app/events': typeof AppEventsIndexRoute
   '/app/missions': typeof AppMissionsIndexRoute
   '/app/stories': typeof AppStoriesIndexRoute
+  '/app/education/$courseSlug/$lessonSlug': typeof AppEducationCourseSlugLessonSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -461,7 +470,7 @@ export interface FileRoutesById {
   '/app/admin/vouches': typeof AppAdminVouchesRoute
   '/app/chapters/$chapterId': typeof AppChaptersChapterIdRoute
   '/app/chapters/propose': typeof AppChaptersProposeRoute
-  '/app/education/$courseSlug': typeof AppEducationCourseSlugRoute
+  '/app/education/$courseSlug': typeof AppEducationCourseSlugRouteWithChildren
   '/app/events/$id': typeof AppEventsIdRoute
   '/app/missions/$missionId': typeof AppMissionsMissionIdRoute
   '/app/stories/$id': typeof AppStoriesIdRoute
@@ -471,6 +480,7 @@ export interface FileRoutesById {
   '/app/events/': typeof AppEventsIndexRoute
   '/app/missions/': typeof AppMissionsIndexRoute
   '/app/stories/': typeof AppStoriesIndexRoute
+  '/app/education/$courseSlug/$lessonSlug': typeof AppEducationCourseSlugLessonSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -526,6 +536,7 @@ export interface FileRouteTypes {
     | '/app/events/'
     | '/app/missions/'
     | '/app/stories/'
+    | '/app/education/$courseSlug/$lessonSlug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -574,6 +585,7 @@ export interface FileRouteTypes {
     | '/app/events'
     | '/app/missions'
     | '/app/stories'
+    | '/app/education/$courseSlug/$lessonSlug'
   id:
     | '__root__'
     | '/'
@@ -627,6 +639,7 @@ export interface FileRouteTypes {
     | '/app/events/'
     | '/app/missions/'
     | '/app/stories/'
+    | '/app/education/$courseSlug/$lessonSlug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1005,16 +1018,38 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminAuditRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/education/$courseSlug/$lessonSlug': {
+      id: '/app/education/$courseSlug/$lessonSlug'
+      path: '/$lessonSlug'
+      fullPath: '/app/education/$courseSlug/$lessonSlug'
+      preLoaderRoute: typeof AppEducationCourseSlugLessonSlugRouteImport
+      parentRoute: typeof AppEducationCourseSlugRoute
+    }
   }
 }
 
+interface AppEducationCourseSlugRouteChildren {
+  AppEducationCourseSlugLessonSlugRoute: typeof AppEducationCourseSlugLessonSlugRoute
+}
+
+const AppEducationCourseSlugRouteChildren: AppEducationCourseSlugRouteChildren =
+  {
+    AppEducationCourseSlugLessonSlugRoute:
+      AppEducationCourseSlugLessonSlugRoute,
+  }
+
+const AppEducationCourseSlugRouteWithChildren =
+  AppEducationCourseSlugRoute._addFileChildren(
+    AppEducationCourseSlugRouteChildren,
+  )
+
 interface AppEducationRouteChildren {
-  AppEducationCourseSlugRoute: typeof AppEducationCourseSlugRoute
+  AppEducationCourseSlugRoute: typeof AppEducationCourseSlugRouteWithChildren
   AppEducationIndexRoute: typeof AppEducationIndexRoute
 }
 
 const AppEducationRouteChildren: AppEducationRouteChildren = {
-  AppEducationCourseSlugRoute: AppEducationCourseSlugRoute,
+  AppEducationCourseSlugRoute: AppEducationCourseSlugRouteWithChildren,
   AppEducationIndexRoute: AppEducationIndexRoute,
 }
 
