@@ -34,6 +34,7 @@ import { Route as AppMessagesRouteImport } from './routes/app.messages'
 import { Route as AppMentorRouteImport } from './routes/app.mentor'
 import { Route as AppInvestorFeedRouteImport } from './routes/app.investor-feed'
 import { Route as AppEventsRouteImport } from './routes/app.events'
+import { Route as AppEducationRouteImport } from './routes/app.education'
 import { Route as AppDirectoryRouteImport } from './routes/app.directory'
 import { Route as AppChapterAdminRouteImport } from './routes/app.chapter-admin'
 import { Route as AppBoardRouteImport } from './routes/app.board'
@@ -183,6 +184,11 @@ const AppEventsRoute = AppEventsRouteImport.update({
   path: '/events',
   getParentRoute: () => AppRoute,
 } as any)
+const AppEducationRoute = AppEducationRouteImport.update({
+  id: '/education',
+  path: '/education',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppDirectoryRoute = AppDirectoryRouteImport.update({
   id: '/directory',
   path: '/directory',
@@ -315,6 +321,7 @@ export interface FileRoutesByFullPath {
   '/app/board': typeof AppBoardRoute
   '/app/chapter-admin': typeof AppChapterAdminRoute
   '/app/directory': typeof AppDirectoryRoute
+  '/app/education': typeof AppEducationRoute
   '/app/events': typeof AppEventsRouteWithChildren
   '/app/investor-feed': typeof AppInvestorFeedRoute
   '/app/mentor': typeof AppMentorRoute
@@ -364,6 +371,7 @@ export interface FileRoutesByTo {
   '/app/board': typeof AppBoardRoute
   '/app/chapter-admin': typeof AppChapterAdminRoute
   '/app/directory': typeof AppDirectoryRoute
+  '/app/education': typeof AppEducationRoute
   '/app/investor-feed': typeof AppInvestorFeedRoute
   '/app/mentor': typeof AppMentorRoute
   '/app/messages': typeof AppMessagesRoute
@@ -412,6 +420,7 @@ export interface FileRoutesById {
   '/app/board': typeof AppBoardRoute
   '/app/chapter-admin': typeof AppChapterAdminRoute
   '/app/directory': typeof AppDirectoryRoute
+  '/app/education': typeof AppEducationRoute
   '/app/events': typeof AppEventsRouteWithChildren
   '/app/investor-feed': typeof AppInvestorFeedRoute
   '/app/mentor': typeof AppMentorRoute
@@ -464,6 +473,7 @@ export interface FileRouteTypes {
     | '/app/board'
     | '/app/chapter-admin'
     | '/app/directory'
+    | '/app/education'
     | '/app/events'
     | '/app/investor-feed'
     | '/app/mentor'
@@ -513,6 +523,7 @@ export interface FileRouteTypes {
     | '/app/board'
     | '/app/chapter-admin'
     | '/app/directory'
+    | '/app/education'
     | '/app/investor-feed'
     | '/app/mentor'
     | '/app/messages'
@@ -560,6 +571,7 @@ export interface FileRouteTypes {
     | '/app/board'
     | '/app/chapter-admin'
     | '/app/directory'
+    | '/app/education'
     | '/app/events'
     | '/app/investor-feed'
     | '/app/mentor'
@@ -789,6 +801,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppEventsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/education': {
+      id: '/app/education'
+      path: '/education'
+      fullPath: '/app/education'
+      preLoaderRoute: typeof AppEducationRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/directory': {
       id: '/app/directory'
       path: '/directory'
@@ -999,6 +1018,7 @@ interface AppRouteChildren {
   AppBoardRoute: typeof AppBoardRoute
   AppChapterAdminRoute: typeof AppChapterAdminRoute
   AppDirectoryRoute: typeof AppDirectoryRoute
+  AppEducationRoute: typeof AppEducationRoute
   AppEventsRoute: typeof AppEventsRouteWithChildren
   AppInvestorFeedRoute: typeof AppInvestorFeedRoute
   AppMentorRoute: typeof AppMentorRoute
@@ -1030,6 +1050,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppBoardRoute: AppBoardRoute,
   AppChapterAdminRoute: AppChapterAdminRoute,
   AppDirectoryRoute: AppDirectoryRoute,
+  AppEducationRoute: AppEducationRoute,
   AppEventsRoute: AppEventsRouteWithChildren,
   AppInvestorFeedRoute: AppInvestorFeedRoute,
   AppMentorRoute: AppMentorRoute,
