@@ -102,7 +102,17 @@ function DirectoryPage() {
       .eq("is_public", true);
     if (filter !== "all") q = q.eq("orbit_segment", filter as never);
     if (debouncedSearch.trim()) {
-      q = q.or(`display_name.ilike.%${debouncedSearch.trim()}%,headline.ilike.%${debouncedSearch.trim()}%`);
+      const term = debouncedSearch.trim().replace(/[%,]/g, " ");
+      q = q.or(
+        [
+          `display_name.ilike.%${term}%`,
+          `headline.ilike.%${term}%`,
+          `bio.ilike.%${term}%`,
+          `city.ilike.%${term}%`,
+          `country.ilike.%${term}%`,
+          `segment_details_text.ilike.%${term}%`,
+        ].join(",")
+      );
     }
     const { data, count } = await q
       .order("is_verified", { ascending: false })
