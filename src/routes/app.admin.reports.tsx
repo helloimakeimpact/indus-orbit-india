@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { ExternalLink, Shield } from "lucide-react";
 
 export const Route = createFileRoute("/app/admin/reports")({
   head: () => ({ meta: [{ title: "Reports — Indus Orbit" }, { name: "robots", content: "noindex" }] }),
@@ -29,6 +31,34 @@ const TABS: Array<{ key: Report["status"]; label: string }> = [
   { key: "actioned", label: "Actioned" },
   { key: "dismissed", label: "Dismissed" },
 ];
+
+function targetLink(r: Report): string | null {
+  switch (r.target_type) {
+    case "profile":
+      return `/profile/${r.target_id}`;
+    case "ask_offer":
+      return `/app/board`;
+    case "story":
+      return `/app/stories/${r.target_id}`;
+    case "event":
+      return `/app/events/${r.target_id}`;
+    default:
+      return null;
+  }
+}
+
+function moderationLink(r: Report): { to: string; label: string } | null {
+  switch (r.target_type) {
+    case "profile":
+      return { to: "/app/admin/members", label: "Member tools" };
+    case "ask_offer":
+    case "story":
+    case "event":
+      return { to: "/app/admin/content", label: "Content moderation" };
+    default:
+      return null;
+  }
+}
 
 function ReportsPage() {
   const { isAdmin, user, loading } = useAuth();
@@ -112,6 +142,24 @@ function ReportsPage() {
                   <p className="mt-2 text-xs text-muted-foreground">
                     target id: {r.target_id.slice(0, 8)}… · reporter: {r.reporter_id.slice(0, 8)}… · {new Date(r.created_at).toLocaleString()}
                   </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {targetLink(r) && (
+                    <Link
+                      to={targetLink(r)!}
+                      className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1 text-xs hover:bg-foreground/5"
+                    >
+                      <ExternalLink className="h-3 w-3" /> View target
+                    </Link>
+                  )}
+                  {moderationLink(r) && (
+                    <Link
+                      to={moderationLink(r)!.to}
+                      className="inline-flex items-center gap-1 rounded-full border border-[var(--indigo-night)]/30 bg-[var(--indigo-night)]/5 px-3 py-1 text-xs font-medium text-[var(--indigo-night)] hover:bg-[var(--indigo-night)]/10"
+                    >
+                      <Shield className="h-3 w-3" /> {moderationLink(r)!.label}
+                    </Link>
+                  )}
                 </div>
               </div>
               <p className="mt-3 text-sm">{r.reason}</p>
