@@ -918,6 +918,7 @@ export type Database = {
           orbit_segment: Database["public"]["Enums"]["orbit_segment"] | null
           region: string | null
           segment_details: Json
+          segment_details_text: string | null
           timezone: string | null
           updated_at: string
           user_id: string
@@ -942,6 +943,7 @@ export type Database = {
           orbit_segment?: Database["public"]["Enums"]["orbit_segment"] | null
           region?: string | null
           segment_details?: Json
+          segment_details_text?: string | null
           timezone?: string | null
           updated_at?: string
           user_id: string
@@ -966,6 +968,7 @@ export type Database = {
           orbit_segment?: Database["public"]["Enums"]["orbit_segment"] | null
           region?: string | null
           segment_details?: Json
+          segment_details_text?: string | null
           timezone?: string | null
           updated_at?: string
           user_id?: string
