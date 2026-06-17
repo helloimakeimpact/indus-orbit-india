@@ -1,480 +1,438 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
 import { SiteShell } from "@/components/site/SiteShell";
-import { 
-  Users, Rocket, Zap, Globe2, ShieldCheck, MapPin, 
-  Target, BookOpen, Cpu, Sparkles, Crown, Award,
-  Radio, Flame, Network, PenTool, CheckCircle, Handshake,
-  Mic, Workflow, LayoutDashboard, Compass, Signal, Building2, TrendingUp
+import sodaHero from "@/assets/soda-hero.jpg";
+import {
+  Search, Sparkles, TrendingUp, Zap, ArrowRight, Filter, Flame,
+  Cpu, GraduationCap, HeartPulse, Leaf, Wallet, Tractor, Factory,
+  ShoppingBag, Plane, Building2, Radio, Layers, Calendar, Target, BarChart3, Compass,
 } from "lucide-react";
 
 export const Route = createFileRoute("/soda")({
-  head: () => ({ meta: [{ title: "SODA — Startup Opportunities, Development & Action" }] }),
+  head: () => ({
+    meta: [
+      { title: "SODA — Startup Opportunities, Development & Action | Indus Orbit" },
+      {
+        name: "description",
+        content:
+          "SODA is Indus Orbit's living database of startup opportunities for India — daily ideas, market signals, sector deep-dives and the builders moving on them.",
+      },
+      { property: "og:title", content: "SODA — Startup Opportunities, Development & Action" },
+      { property: "og:image", content: sodaHero },
+    ],
+  }),
   component: SodaPage,
 });
 
-// Art Assets
-const ART = {
-  hero: "/soda-1.jpg", 
-  group: "/soda-2.jpg", 
+// ----- Seed data (static for now; later wired to Supabase) -----
+
+type Idea = {
+  slug: string;
+  title: string;
+  one_liner: string;
+  sector: string;
+  stage: "Whitespace" | "Early signal" | "Heating up" | "Crowded";
+  why_now: string;
+  market_size: string;
+  signal_score: number; // 0-100
+  tags: string[];
+};
+
+const SECTORS = [
+  { key: "all", label: "All", icon: Layers },
+  { key: "ai", label: "AI & Agents", icon: Cpu },
+  { key: "edu", label: "Education", icon: GraduationCap },
+  { key: "health", label: "Healthcare", icon: HeartPulse },
+  { key: "climate", label: "Climate", icon: Leaf },
+  { key: "fintech", label: "Fintech", icon: Wallet },
+  { key: "agri", label: "Agritech", icon: Tractor },
+  { key: "mfg", label: "Manufacturing", icon: Factory },
+  { key: "commerce", label: "Commerce", icon: ShoppingBag },
+  { key: "travel", label: "Travel", icon: Plane },
+  { key: "govtech", label: "Govtech", icon: Building2 },
+  { key: "media", label: "Media", icon: Radio },
+];
+
+const IDEAS: Idea[] = [
+  { slug: "vernacular-voice-agents", title: "Vernacular voice agents for Bharat SMBs", one_liner: "Always-on Hindi/Tamil/Telugu voice agents that take orders, book appointments and chase payments for 60M small businesses.", sector: "ai", stage: "Heating up", why_now: "Cheap inference + Sarvam/IndicTrans2 reaching parity with English on Indic ASR. WhatsApp Business API rolled out flow-based payments.", market_size: "$8B SMB software TAM in India by 2030", signal_score: 92, tags: ["voice", "vernacular", "smb", "whatsapp"] },
+  { slug: "ai-tutor-jee-neet", title: "AI tutor for JEE / NEET tier-3 towns", one_liner: "A personalised AI prep companion priced at ₹299/month that replaces the ₹50k coaching gap for tier-3 aspirants.", sector: "edu", stage: "Heating up", why_now: "Byju's collapse opened the affordable mid-market. ~3M aspirants annually have no good option between free YouTube and unaffordable coaching.", market_size: "₹58,000 Cr test-prep market", signal_score: 88, tags: ["edtech", "jee", "neet", "regional"] },
+  { slug: "rooftop-solar-financing", title: "BNPL rails for rooftop solar", one_liner: "Embedded financing layer that lets installers close residential solar in one visit — paperwork, underwriting and subsidy in 10 minutes.", sector: "climate", stage: "Early signal", why_now: "PM Surya Ghar Yojana targets 1 Cr homes by 2027. Discoms now mandated to net-meter within 30 days. Installer fragmentation = distribution wedge.", market_size: "$50B installed-capacity opportunity by 2030", signal_score: 84, tags: ["climate", "fintech", "embedded"] },
+  { slug: "diagnostics-supply-rails", title: "Diagnostics supply rails for tier-2", one_liner: "Asset-light platform that lets standalone path labs match Thyrocare's pricing through pooled reagent procurement and reporting.", sector: "health", stage: "Whitespace", why_now: "Insurance penetration crossed 40% post-Ayushman Bharat. ~100k standalone labs squeezed by chains. Generic reagents now sub-30% the branded SKUs.", market_size: "$15B Indian diagnostics market", signal_score: 79, tags: ["b2b", "healthcare", "supply-chain"] },
+  { slug: "ugc-msme-credit", title: "Cash-flow underwriting for kirana credit", one_liner: "Underwrite working-capital loans for kirana stores using UPI + GST + e-way bill data — no collateral, no paperwork, 24-hour disbursal.", sector: "fintech", stage: "Heating up", why_now: "Account Aggregator framework now covers 1.5B accounts. GSTN public APIs went live for fintechs in Q1. NBFC license backlog clearing.", market_size: "$340B MSME credit gap", signal_score: 90, tags: ["lending", "aa", "msme"] },
+  { slug: "farm-to-export-fpo", title: "FPO-to-export operating system", one_liner: "Software + supply chain that lets Farmer Producer Organisations sell directly into Gulf & EU retailers, skipping 4 layers of mandi.", sector: "agri", stage: "Whitespace", why_now: "10,000 FPO scheme crossed funding milestone. UAE-India CEPA tariffs at 0% on most agri SKUs. Cold-chain density up 3x since 2020.", market_size: "$50B India agri-export TAM", signal_score: 76, tags: ["agritech", "export", "fpo"] },
+  { slug: "design-for-india-mfg", title: "DFM copilots for India's contract manufacturers", one_liner: "AI assistant that converts a Western OEM's CAD pack into a ready-to-quote BOM for an Indian contract manufacturer in 4 hours instead of 4 weeks.", sector: "mfg", stage: "Early signal", why_now: "PLI 2.0 + China+1 pushed $40B of contract manufacturing inquiries to India in 2025. Engineering bandwidth is the bottleneck, not capacity.", market_size: "$300B contract manufacturing TAM by 2030", signal_score: 81, tags: ["pli", "supply-chain", "ai"] },
+  { slug: "creator-commerce-tier2", title: "Live commerce stack for tier-2 creators", one_liner: "Shopify-for-livestreams aimed at 100k regional creators selling sarees, kitchenware and devotional goods on Instagram & Meesho Live.", sector: "commerce", stage: "Heating up", why_now: "Meesho Live and YouTube Shopping rolled out India SDKs. Reels commerce GMV crossed $2B run-rate. UPI payouts now T+0 for sellers.", market_size: "$20B social commerce by 2028", signal_score: 83, tags: ["creator", "social-commerce"] },
+  { slug: "bharat-bleisure", title: "Bharat bleisure booking layer", one_liner: "B2B booking rails for the 200M Indian middle-class travellers MakeMyTrip is too expensive to serve — vernacular-first, EMI-default.", sector: "travel", stage: "Whitespace", why_now: "Domestic flyers crossed 150M in 2025. Tier-2 airport count doubled in 4 years. UPI on autopay finally cleared for travel.", market_size: "$75B domestic travel by 2030", signal_score: 71, tags: ["travel", "tier-2"] },
+  { slug: "municipal-data-os", title: "Operating system for Indian municipalities", one_liner: "Plug-and-play data + payments stack for India's 4,000+ urban local bodies — property tax, water bills, complaints in one app.", sector: "govtech", stage: "Whitespace", why_now: "15th Finance Commission ringfenced ₹4.36 lakh Cr for ULB digitisation. AMRUT 2.0 mandates digital revenue reporting by 2027.", market_size: "₹50,000 Cr govtech TAM", signal_score: 74, tags: ["govtech", "urban", "data"] },
+  { slug: "podcast-network-indic", title: "Indic-language podcast monetisation network", one_liner: "An ad + sponsorship network purpose-built for the 50k Hindi/Marathi/Tamil podcasters who can't get onto Spotify's brand deals.", sector: "media", stage: "Early signal", why_now: "Indic podcast listenership crossed English in 2025. Brand spend on audio still <2% of total digital — gap closing fast.", market_size: "₹4,000 Cr audio ad market by 2027", signal_score: 68, tags: ["audio", "indic", "creator"] },
+  { slug: "campus-agent-builder", title: "Agent-builder studio for college clubs", one_liner: "A no-code agent studio that lets every IIT/NIT tech club ship one AI product per semester — distribution into 500 campuses on day one.", sector: "ai", stage: "Whitespace", why_now: "Bolt/Lovable normalized agent-native dev. 1.4M engineering grads/year. College clubs are the most underrated GTM in India.", market_size: "Unbounded — talent pipeline play", signal_score: 86, tags: ["ai", "campus", "community"] },
+];
+
+const IDEA_OF_DAY = IDEAS[0];
+
+const STAGE_TONE: Record<Idea["stage"], string> = {
+  Whitespace: "bg-[var(--saffron)]/15 text-[var(--indigo-night)] border-[var(--saffron)]/40",
+  "Early signal": "bg-emerald-100 text-emerald-900 border-emerald-300/60",
+  "Heating up": "bg-orange-100 text-orange-900 border-orange-300/60",
+  Crowded: "bg-foreground/10 text-foreground/70 border-foreground/15",
 };
 
 function SodaPage() {
-  const [mode, setMode] = useState<"wing" | "cohort">("wing");
+  const [q, setQ] = useState("");
+  const [sector, setSector] = useState("all");
+  const [sort, setSort] = useState<"signal" | "newest">("signal");
+
+  const filtered = useMemo(() => {
+    let rows = IDEAS.filter((i) => sector === "all" || i.sector === sector);
+    const needle = q.trim().toLowerCase();
+    if (needle) {
+      rows = rows.filter((i) =>
+        [i.title, i.one_liner, i.why_now, ...i.tags].join(" ").toLowerCase().includes(needle),
+      );
+    }
+    rows = [...rows].sort((a, b) =>
+      sort === "signal" ? b.signal_score - a.signal_score : a.title.localeCompare(b.title),
+    );
+    return rows;
+  }, [q, sector, sort]);
 
   return (
     <SiteShell navTone="dark">
-      {/* HERO SECTION */}
-      <section className="relative w-full overflow-hidden bg-[var(--indigo-night)] pt-32 pb-24 text-[var(--parchment)]">
-        <div className="absolute inset-0 opacity-40">
-          <img src={ART.hero} alt="SODA Vision" className="h-full w-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[var(--indigo-night)] via-[var(--indigo-night)]/80 to-transparent" />
-        </div>
-        
+      {/* HERO */}
+      <section className="relative w-full overflow-hidden bg-[var(--indigo-night)] pt-36 pb-20 text-[var(--parchment)]">
+        <img
+          src={sodaHero}
+          alt=""
+          aria-hidden
+          className="absolute inset-0 h-full w-full object-cover opacity-45"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-[var(--indigo-night)]/60 via-[var(--indigo-night)]/70 to-[var(--indigo-night)]" />
+
         <div className="relative z-10 mx-auto max-w-5xl px-6 text-center">
-          <Badge>Startup Opportunities, Development & Action</Badge>
-          <h1 className="mt-6 font-display text-5xl font-light leading-tight md:text-7xl text-glow">
+          <span className="inline-flex items-center gap-2 rounded-full border border-[var(--parchment)]/25 bg-[var(--indigo-night)]/40 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">
+            <Sparkles className="h-3 w-3" /> A living database from Indus Orbit
+          </span>
+          <h1 className="mt-6 font-display text-5xl font-light leading-[1.05] text-glow md:text-7xl">
             SODA
           </h1>
-          <h2 className="mt-4 font-display text-2xl font-light md:text-3xl text-[var(--saffron)] drop-shadow-md">
-            The Communication Wing of Indus Orbit
-          </h2>
-          <p className="mx-auto mt-6 max-w-2xl text-xl text-[var(--parchment)]/90 tracking-wide font-medium">
-            Stories. Signal. Systems.
+          <p className="mt-3 font-display text-xl text-[var(--saffron)] md:text-2xl">
+            Startup Opportunities, Development &amp; Action
           </p>
-          <p className="mx-auto mt-6 max-w-3xl text-lg text-[var(--parchment)]/80 leading-relaxed">
-            SODA is the communication and visibility engine of Indus Orbit. 
-            If Indus Orbit builds the intelligence layer for India’s builders, SODA is how that intelligence moves. 
-            It exists to turn high-potential people, missions, and ideas into visible momentum.
+          <p className="mx-auto mt-6 max-w-2xl text-base text-[var(--parchment)]/85 md:text-lg">
+            Every week, we surface the highest-signal startup ideas for India —
+            with the market data, the timing thesis and the builders already
+            moving on them.
           </p>
 
-          {/* TOGGLE */}
-          <div className="mx-auto mt-12 flex w-fit rounded-full bg-white/10 p-1.5 backdrop-blur shadow-xl border border-white/10">
-            <button
-              onClick={() => setMode("wing")}
-              className={`relative rounded-full px-8 py-3 text-sm font-semibold transition-colors ${
-                mode === "wing" ? "text-[var(--indigo-night)]" : "text-[var(--parchment)] hover:text-white"
-              }`}
+          {/* Search */}
+          <form
+            onSubmit={(e) => e.preventDefault()}
+            className="relative mx-auto mt-10 flex max-w-2xl items-center gap-2 rounded-full border border-[var(--parchment)]/25 bg-[var(--parchment)]/10 px-2 py-2 backdrop-blur-md"
+          >
+            <Search className="ml-3 h-4 w-4 text-[var(--parchment)]/70" />
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search ideas, sectors, market signals…"
+              className="w-full bg-transparent px-2 py-2 text-sm text-[var(--parchment)] placeholder:text-[var(--parchment)]/60 focus:outline-none"
+            />
+            <a
+              href="#database"
+              className="rounded-full bg-[var(--saffron)] px-4 py-2 text-xs font-semibold text-[var(--indigo-night)] hover:opacity-90"
             >
-              {mode === "wing" && (
-                <div className="absolute inset-0 rounded-full bg-[var(--saffron)] shadow-md" />
-              )}
-              <span className="relative z-10">The Creative Wing</span>
-            </button>
-            <button
-              onClick={() => setMode("cohort")}
-              className={`relative rounded-full px-8 py-3 text-sm font-semibold transition-colors ${
-                mode === "cohort" ? "text-[var(--indigo-night)]" : "text-[var(--parchment)] hover:text-white"
-              }`}
-            >
-              {mode === "cohort" && (
-                <div className="absolute inset-0 rounded-full bg-[var(--saffron)] shadow-md" />
-              )}
-              <span className="relative z-10">The Cohort Program</span>
-            </button>
+              Browse all
+            </a>
+          </form>
+
+          {/* Stat strip */}
+          <div className="mx-auto mt-10 grid max-w-3xl grid-cols-3 gap-4 text-left">
+            {[
+              { k: "127", v: "Ideas indexed" },
+              { k: "12", v: "Sectors mapped" },
+              { k: "Daily", v: "New signal" },
+            ].map((s) => (
+              <div
+                key={s.v}
+                className="rounded-2xl border border-[var(--parchment)]/15 bg-[var(--parchment)]/5 px-5 py-4 backdrop-blur-md"
+              >
+                <p className="font-display text-3xl font-medium text-[var(--saffron)]">{s.k}</p>
+                <p className="mt-1 text-xs uppercase tracking-[0.18em] text-[var(--parchment)]/65">
+                  {s.v}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* CONTENT AREA */}
-      <div className="min-h-screen bg-background">
-        {mode === "wing" ? (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <CreativeWing />
+      {/* IDEA OF THE DAY */}
+      <section className="px-6 py-20">
+        <div className="mx-auto w-full max-w-7xl">
+          <div className="mb-8 flex items-end justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">
+                Idea of the day
+              </p>
+              <h2 className="mt-2 font-display text-3xl font-medium md:text-4xl">
+                What we'd build if we had a weekend.
+              </h2>
+            </div>
+            <span className="hidden items-center gap-2 rounded-full bg-foreground/5 px-3 py-1 text-xs text-foreground/60 md:inline-flex">
+              <Calendar className="h-3 w-3" /> Updated daily
+            </span>
           </div>
-        ) : (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <CohortProgram />
+
+          <article className="grid gap-0 overflow-hidden rounded-3xl border border-border bg-card shadow-2xl md:grid-cols-5">
+            <div className="relative md:col-span-2 bg-[var(--indigo-night)] p-8 text-[var(--parchment)] md:p-10">
+              <div className="flex items-center gap-2">
+                <Flame className="h-4 w-4 text-[var(--saffron)]" />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--saffron)]">
+                  Signal {IDEA_OF_DAY.signal_score}/100
+                </span>
+              </div>
+              <h3 className="mt-5 font-display text-3xl font-medium leading-tight md:text-4xl">
+                {IDEA_OF_DAY.title}
+              </h3>
+              <p className="mt-4 text-[var(--parchment)]/80">{IDEA_OF_DAY.one_liner}</p>
+              <div className="mt-8 flex flex-wrap gap-2">
+                {IDEA_OF_DAY.tags.map((t) => (
+                  <span
+                    key={t}
+                    className="rounded-full border border-[var(--parchment)]/25 px-2.5 py-1 text-[11px] text-[var(--parchment)]/80"
+                  >
+                    #{t}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="grid gap-6 p-8 md:col-span-3 md:p-10">
+              <div>
+                <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-foreground/60">
+                  <Zap className="h-3 w-3 text-[var(--saffron)]" /> Why now
+                </p>
+                <p className="mt-3 leading-relaxed text-foreground/85">{IDEA_OF_DAY.why_now}</p>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Stat icon={BarChart3} label="Market size" value={IDEA_OF_DAY.market_size} />
+                <Stat icon={Target} label="Stage" value={IDEA_OF_DAY.stage} />
+              </div>
+              <div className="flex flex-wrap gap-3 pt-2">
+                <Link
+                  to="/auth"
+                  className="inline-flex items-center gap-2 rounded-full bg-[var(--indigo-night)] px-5 py-2.5 text-sm font-semibold text-[var(--parchment)] hover:bg-[var(--saffron)] hover:text-[var(--indigo-night)] transition"
+                >
+                  Claim this idea <ArrowRight className="h-4 w-4" />
+                </Link>
+                <a
+                  href="#database"
+                  className="inline-flex items-center gap-2 rounded-full border border-foreground/15 px-5 py-2.5 text-sm font-medium hover:bg-foreground/5"
+                >
+                  See similar opportunities
+                </a>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      {/* SECTOR PILLS + DATABASE */}
+      <section id="database" className="px-6 pb-24">
+        <div className="mx-auto w-full max-w-7xl">
+          <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">
+                The database
+              </p>
+              <h2 className="mt-2 font-display text-3xl font-medium md:text-4xl">
+                Browse by what India needs next.
+              </h2>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <Filter className="h-4 w-4 text-foreground/60" />
+              <select
+                value={sort}
+                onChange={(e) => setSort(e.target.value as any)}
+                className="rounded-full border border-border bg-card px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--saffron)]/40"
+              >
+                <option value="signal">Sort: Signal score</option>
+                <option value="newest">Sort: A → Z</option>
+              </select>
+            </div>
           </div>
-        )}
-      </div>
+
+          {/* sector chips */}
+          <div className="mb-8 flex flex-wrap gap-2">
+            {SECTORS.map((s) => {
+              const Icon = s.icon;
+              const active = sector === s.key;
+              return (
+                <button
+                  key={s.key}
+                  type="button"
+                  onClick={() => setSector(s.key)}
+                  className={
+                    "inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-sm transition " +
+                    (active
+                      ? "border-[var(--indigo-night)] bg-[var(--indigo-night)] text-[var(--parchment)]"
+                      : "border-border bg-card text-foreground/75 hover:border-foreground/30")
+                  }
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  {s.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* grid */}
+          {filtered.length === 0 ? (
+            <div className="rounded-3xl border border-dashed border-border bg-card p-12 text-center text-foreground/60">
+              No ideas match that search yet. Try a broader keyword or another sector.
+            </div>
+          ) : (
+            <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+              {filtered.map((idea) => (
+                <IdeaCard key={idea.slug} idea={idea} />
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* WHY SODA */}
+      <section className="bg-[var(--indigo-night)] px-6 py-24 text-[var(--parchment)]">
+        <div className="mx-auto grid w-full max-w-7xl gap-12 md:grid-cols-2 md:items-center">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">
+              Why SODA
+            </p>
+            <h2 className="mt-4 font-display text-3xl font-medium leading-tight md:text-5xl">
+              A research desk for the people building India next.
+            </h2>
+            <p className="mt-5 text-[var(--parchment)]/75">
+              SODA is not a newsletter and not a fund. It's the research desk
+              we wish we had when we started: every idea pressure-tested against
+              market size, regulatory timing, distribution wedges and the
+              builders already in motion.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link
+                to="/auth"
+                className="inline-flex items-center gap-2 rounded-full bg-[var(--saffron)] px-5 py-2.5 text-sm font-semibold text-[var(--indigo-night)] hover:opacity-90"
+              >
+                Join the Orbit <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link
+                to="/our-work"
+                className="inline-flex items-center gap-2 rounded-full border border-[var(--parchment)]/25 px-5 py-2.5 text-sm font-medium hover:bg-[var(--parchment)]/5"
+              >
+                See our work
+              </Link>
+            </div>
+          </div>
+
+          <div className="grid gap-4">
+            {[
+              { i: TrendingUp, t: "Market timing, not just market size", d: "Every idea ships with a 'why now' thesis — regulation, infra, behaviour change." },
+              { i: Compass, t: "Built for India, not transplanted", d: "We index for distribution in Bharat: vernacular, UPI rails, trust ladders." },
+              { i: Sparkles, t: "Builders, not just bystanders", d: "Each idea links to the people already moving — find your co-founder in the Orbit." },
+            ].map(({ i: Icon, t, d }) => (
+              <div
+                key={t}
+                className="rounded-2xl border border-[var(--parchment)]/15 bg-[var(--parchment)]/[0.04] p-5 backdrop-blur"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[var(--saffron)] text-[var(--indigo-night)]">
+                    <Icon className="h-4 w-4" />
+                  </span>
+                  <h3 className="font-display text-lg font-medium">{t}</h3>
+                </div>
+                <p className="mt-3 text-sm text-[var(--parchment)]/75">{d}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="px-6 py-24">
+        <div className="mx-auto max-w-3xl text-center">
+          <h2 className="font-display text-3xl font-medium leading-tight md:text-5xl">
+            Get one high-signal idea in your inbox every Sunday.
+          </h2>
+          <p className="mt-5 text-foreground/70">
+            Curated by the Indus Orbit research team — no spam, no fluff, just the one
+            opportunity worth thinking about this week.
+          </p>
+          <Link
+            to="/auth"
+            className="mt-8 inline-flex items-center gap-2 rounded-full bg-[var(--indigo-night)] px-6 py-3 text-sm font-semibold text-[var(--parchment)] hover:bg-[var(--saffron)] hover:text-[var(--indigo-night)] transition"
+          >
+            Subscribe to SODA <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+      </section>
     </SiteShell>
   );
 }
 
-// ----------------------------------------------------------------------
-// THE CREATIVE WING
-// ----------------------------------------------------------------------
-
-function CreativeWing() {
+function Stat({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
   return (
-    <div className="mx-auto max-w-6xl px-6 py-16">
-      <div className="grid gap-12 lg:grid-cols-[250px_1fr]">
-        
-        {/* Sticky TOC */}
-        <div className="hidden lg:block">
-          <div className="sticky top-32 space-y-6">
-            <h4 className="font-display text-lg font-medium text-muted-foreground">Contents</h4>
-            <nav className="flex flex-col space-y-3 text-sm font-medium">
-              <a href="#intro" className="text-foreground hover:text-[var(--saffron)] transition">Introduction</a>
-              <a href="#why-soda" className="text-foreground hover:text-[var(--saffron)] transition">1. Why SODA Exists</a>
-              <a href="#what-soda-does" className="text-foreground hover:text-[var(--saffron)] transition">2. What SODA Does</a>
-              <a href="#sponsorship" className="text-foreground hover:text-[var(--saffron)] transition">3. Sponsorship & Pillars</a>
-            </nav>
-          </div>
-        </div>
-
-        {/* Main Content */}
-        <div className="prose prose-lg prose-indigo max-w-none">
-          
-          <section id="intro" className="scroll-mt-32 mb-20">
-            <p className="lead text-2xl font-light text-foreground/90 mb-8 leading-snug">
-              We do not believe in passive networking, vanity content, or performative startup culture. We believe in documenting real builders, real execution, and real progress.
-            </p>
-            <p className="text-muted-foreground">
-              SODA is the creative wing that ensures the right people are seen by the right people—founders by investors, youth builders by mentors, operators by collaborators, and ideas by those capable of turning them into companies. 
-              <strong> It is where communication becomes infrastructure.</strong>
-            </p>
-          </section>
-
-          <section id="why-soda" className="scroll-mt-32 mb-20">
-            <h2 className="font-display text-4xl mb-6">Why SODA Exists</h2>
-            <div className="grid md:grid-cols-3 gap-6 mb-8">
-              <div className="border border-border/50 bg-card p-6 rounded-2xl shadow-sm">
-                <Users className="h-8 w-8 text-[var(--indigo-night)] mb-4" />
-                <h4 className="font-display text-xl mb-2">Invisible Talent</h4>
-                <p className="text-sm text-muted-foreground m-0">Brilliant young builders often remain invisible. India does not suffer from a lack of talent. It suffers from a routing problem.</p>
-              </div>
-              <div className="border border-border/50 bg-card p-6 rounded-2xl shadow-sm">
-                <Network className="h-8 w-8 text-[var(--saffron)] mb-4" />
-                <h4 className="font-display text-xl mb-2">Missing Bridges</h4>
-                <p className="text-sm text-muted-foreground m-0">Experts are willing to help, but the bridge does not exist. The connection between established operators and emerging talent is broken.</p>
-              </div>
-              <div className="border border-border/50 bg-card p-6 rounded-2xl shadow-sm">
-                <ShieldCheck className="h-8 w-8 text-blue-600 mb-4" />
-                <h4 className="font-display text-xl mb-2">Trust Deficit</h4>
-                <p className="text-sm text-muted-foreground m-0">Investors seek conviction, but trust takes too long to form. Most platforms optimize for attention. We optimize for alignment.</p>
-              </div>
-            </div>
-            <p className="text-muted-foreground text-lg">
-              SODA exists to solve that. It is the storytelling, documentation, and public trust layer of Indus Orbit—designed to create signal in a noisy ecosystem. By combining media, mentorship, and public accountability, SODA helps exceptional people move faster.
-            </p>
-          </section>
-
-          <section id="what-soda-does" className="scroll-mt-32 mb-20">
-            <h2 className="font-display text-4xl mb-8">What SODA Does</h2>
-            <div className="space-y-8">
-              
-              <WikiCard 
-                title="1. Communication" 
-                icon={<Signal className="h-6 w-6 text-[var(--indigo-night)]" />}
-                imageSrc={ART.group}
-                description="We document and distribute high-signal stories from India’s builders. This includes founder journeys, mission progress, operator playbooks, and youth builder case studies. Distributed across YouTube, LinkedIn, X, Podcasts, and Newsletters. This is not content for attention. It is content for movement."
-              />
-              
-              <div className="flex flex-col md:flex-row gap-6 rounded-3xl border border-border bg-card p-6 shadow-sm">
-                <div className="shrink-0 flex items-center justify-center h-24 w-24 rounded-2xl bg-[var(--indigo-night)]/5 border border-[var(--indigo-night)]/10">
-                  <ShieldCheck className="h-10 w-10 text-[var(--saffron)]" />
-                </div>
-                <div>
-                  <h3 className="flex items-center gap-2 font-display text-2xl font-medium mb-3">
-                    2. Credibility
-                  </h3>
-                  <p className="text-foreground/80 leading-relaxed m-0">
-                    Visibility without trust creates noise. SODA works inside the Indus Orbit trust system to ensure stories are backed by real execution. Every founder featured is tied to actual work, actual progress, and real accountability. This creates sponsor confidence, investor confidence, and ecosystem trust. We do not amplify potential alone. We amplify proof.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex flex-col md:flex-row gap-6 rounded-3xl border border-border bg-card p-6 shadow-sm">
-                <div className="shrink-0 flex items-center justify-center h-24 w-24 rounded-2xl bg-blue-50 border border-blue-100 dark:bg-blue-900/20 dark:border-blue-900/30">
-                  <TrendingUp className="h-10 w-10 text-blue-600" />
-                </div>
-                <div>
-                  <h3 className="flex items-center gap-2 font-display text-2xl font-medium mb-3">
-                    3. Builder Development
-                  </h3>
-                  <p className="text-foreground/80 leading-relaxed m-0">
-                    SODA is not only a media platform. It is an operator-driven system that runs the SODA Cohort Program. We identify high-potential young builders and help them move from ambition to execution. This is where storytelling meets outcomes.
-                  </p>
-                </div>
-              </div>
-
-            </div>
-          </section>
-
-          <section id="sponsorship" className="scroll-mt-32 mb-20">
-            <div className="bg-[var(--saffron)]/10 border border-[var(--saffron)]/30 p-8 md:p-12 rounded-3xl mb-12 relative overflow-hidden">
-              <Handshake className="absolute top-1/2 right-10 -translate-y-1/2 h-48 w-48 text-[var(--saffron)] opacity-10" />
-              <h2 className="font-display text-4xl mb-4 relative z-10 text-[var(--indigo-night)]">Sponsor India’s Next Builders</h2>
-              <p className="text-lg text-foreground/80 mb-6 max-w-2xl relative z-10">
-                SODA is built for long-term ecosystem partners. Sponsors do not fund advertisements. They fund outcomes.
-              </p>
-              <ul className="grid sm:grid-cols-2 gap-3 text-sm font-medium text-foreground/80 relative z-10 max-w-2xl mb-6">
-                <li>• Founder development</li>
-                <li>• Youth innovation</li>
-                <li>• High-trust communities</li>
-                <li>• Startup pipelines</li>
-                <li>• Public execution journeys</li>
-                <li>• Next generation of Indian builders</li>
-              </ul>
-              <p className="text-xl font-medium text-[var(--indigo-night)] relative z-10">
-                This is measurable, visible, and meaningful.<br/>
-                Not impressions. Proof.
-              </p>
-            </div>
-
-            <div className="mb-16">
-              <h2 className="font-display text-3xl mb-6 text-center">Built on the Indus Orbit Pillars</h2>
-              <div className="grid md:grid-cols-3 gap-6 text-center">
-                <div>
-                  <h4 className="font-display text-xl mb-2 text-[var(--indigo-night)]">Connection</h4>
-                  <p className="text-muted-foreground text-sm">We bring the right people into the same room.</p>
-                </div>
-                <div>
-                  <h4 className="font-display text-xl mb-2 text-[var(--saffron)]">Synergy</h4>
-                  <p className="text-muted-foreground text-sm">We help talent compound talent.</p>
-                </div>
-                <div>
-                  <h4 className="font-display text-xl mb-2 text-blue-600">Society</h4>
-                  <p className="text-muted-foreground text-sm">We measure success by how much we lift others.</p>
-                </div>
-              </div>
-              <p className="text-center mt-8 font-medium text-lg text-foreground/80">
-                SODA is not separate from Indus Orbit.<br/>
-                It is how the orbit becomes visible.
-              </p>
-            </div>
-
-            <div className="border-t border-border pt-16 pb-8 text-center max-w-3xl mx-auto">
-              <h2 className="font-display text-4xl mb-8 leading-tight">
-                The future should not belong only to those with access. <br/>
-                <span className="text-[var(--saffron)]">It should belong to those willing to build.</span>
-              </h2>
-              <div className="flex justify-center gap-6 mb-8 text-lg font-medium text-[var(--indigo-night)]">
-                <span>We identify them.</span>
-                <span>We support them.</span>
-                <span>We document them.</span>
-                <span>We help them move.</span>
-              </div>
-              <p className="text-2xl font-light text-foreground mb-4">
-                This is not content.<br/>
-                <strong className="font-medium">This is founder infrastructure.</strong>
-              </p>
-              <div className="mt-12 inline-flex items-center gap-3">
-                <img src="/logo.png" alt="Indus Orbit" className="h-8 w-8 opacity-80" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-                <span className="font-display text-xl uppercase tracking-widest text-muted-foreground font-semibold">
-                  This is SODA by Indus Orbit
-                </span>
-              </div>
-            </div>
-          </section>
-
-        </div>
-      </div>
+    <div className="rounded-2xl border border-border bg-background/50 p-4">
+      <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/55">
+        <Icon className="h-3 w-3 text-[var(--saffron)]" /> {label}
+      </p>
+      <p className="mt-2 font-display text-lg font-medium leading-tight">{value}</p>
     </div>
   );
 }
 
-// ----------------------------------------------------------------------
-// THE COHORT PROGRAM
-// ----------------------------------------------------------------------
-
-function CohortProgram() {
+function IdeaCard({ idea }: { idea: Idea }) {
   return (
-    <div className="mx-auto max-w-6xl px-6 py-16">
-      <div className="grid gap-12 lg:grid-cols-[250px_1fr]">
-        
-        {/* Sticky TOC */}
-        <div className="hidden lg:block">
-          <div className="sticky top-32 space-y-6">
-            <h4 className="font-display text-lg font-medium text-muted-foreground">Contents</h4>
-            <nav className="flex flex-col space-y-3 text-sm font-medium">
-              <a href="#program-intro" className="text-foreground hover:text-[var(--saffron)] transition">Program Overview</a>
-              <a href="#core-idea" className="text-foreground hover:text-[var(--saffron)] transition">1. The Core Idea</a>
-              <a href="#benefits" className="text-foreground hover:text-[var(--saffron)] transition">2. What Builders Receive</a>
-              <a href="#structure" className="text-foreground hover:text-[var(--saffron)] transition">3. How It Works</a>
-            </nav>
-          </div>
-        </div>
-
-        {/* Main Content */}
-        <div className="prose prose-lg prose-indigo max-w-none">
-
-          <section id="program-intro" className="scroll-mt-32 mb-20">
-            <div className="rounded-3xl bg-[var(--indigo-night)] text-[var(--parchment)] p-10 md:p-14 shadow-2xl relative overflow-hidden">
-              <div className="absolute top-0 right-0 opacity-10 pointer-events-none">
-                <Rocket className="h-64 w-64 text-[var(--saffron)] -mr-10 -mt-10" />
-              </div>
-              <Badge>Run by SODA</Badge>
-              <h2 className="font-display text-4xl md:text-5xl mt-6 mb-4 text-glow relative z-10">
-                The SODA Cohort Program
-              </h2>
-              <h3 className="text-xl md:text-2xl text-[var(--saffron)] font-medium mb-8 relative z-10">
-                Indus Orbit’s Founder Development Program for Builders Under 24
-              </h3>
-              <p className="text-lg text-[var(--parchment)]/90 leading-relaxed relative z-10 mb-6">
-                The SODA Cohort is our flagship accelerator program designed to identify and support India’s highest-potential young builders. Every cohort selects 5 exceptional individuals under the age of 24.
-              </p>
-              <p className="text-xl font-medium text-white relative z-10 mb-8">
-                Not students chasing credentials.<br/>
-                Builders chasing outcomes.
-              </p>
-              <p className="text-lg text-[var(--parchment)]/80 leading-relaxed relative z-10">
-                These are founders, operators, creators, researchers, and ambitious problem-solvers who are already moving—and need the right orbit around them. We give them exactly that.
-              </p>
-
-              <div className="mt-10 inline-flex flex-col sm:flex-row sm:items-center gap-4 rounded-2xl bg-white/10 border border-white/20 p-5 backdrop-blur-md shadow-xl relative z-10 transition hover:bg-white/15">
-                <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[var(--saffron)] shrink-0 mt-1 sm:mt-0">Sponsored By</span>
-                <p className="text-[15px] font-medium text-[var(--parchment)]/95 leading-snug">
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--saffron)] to-[#ffeaa7] font-display text-[1.4rem] font-bold tracking-wide drop-shadow-md mr-1">Jri.AI</span> 
-                  <span className="opacity-90">— The AI+Human business automation platform. From set up to scale.</span>
-                </p>
-              </div>
-            </div>
-          </section>
-
-          <section id="core-idea" className="scroll-mt-32 mb-20">
-            <h2 className="font-display text-4xl mb-6">The Core Idea</h2>
-            <div className="p-8 border-l-4 border-[var(--saffron)] bg-muted/30 rounded-r-2xl">
-              <p className="text-xl font-light text-foreground/90 mb-4">
-                Talent is everywhere. Structured access is not.
-              </p>
-              <p className="text-muted-foreground mb-4">
-                Most young builders fail not because they lack intelligence, but because they lack the right mentors, feedback loops, execution systems, introductions, accountability, and belief from credible people.
-              </p>
-              <p className="font-medium text-foreground">
-                SODA closes that gap. We create an environment where progress becomes inevitable.
-              </p>
-            </div>
-          </section>
-
-          <section id="benefits" className="scroll-mt-32 mb-20">
-            <h2 className="font-display text-4xl mb-8">What Selected Builders Receive</h2>
-            <div className="grid sm:grid-cols-2 gap-6">
-              
-              <div className="border border-border/50 bg-card p-6 rounded-2xl shadow-sm">
-                <Crown className="h-8 w-8 text-[var(--saffron)] mb-4" />
-                <h4 className="font-display text-xl font-medium mb-3">Elite Mentorship</h4>
-                <p className="text-muted-foreground leading-relaxed text-sm">
-                  Direct access to founders, operators, experts, and industry veterans who have already built what others are still trying to understand. Not advice from the sidelines. Real strategic guidance.
-                </p>
-              </div>
-
-              <div className="border border-border/50 bg-card p-6 rounded-2xl shadow-sm">
-                <LayoutDashboard className="h-8 w-8 text-[var(--indigo-night)] mb-4" />
-                <h4 className="font-display text-xl font-medium mb-3">Startup Design Support</h4>
-                <p className="text-muted-foreground leading-relaxed text-sm">
-                  We help shape strong businesses—not just ideas. This includes market clarity, founder positioning, business model design, customer understanding, and execution prioritization.
-                </p>
-              </div>
-
-              <div className="border border-border/50 bg-card p-6 rounded-2xl shadow-sm">
-                <Cpu className="h-8 w-8 text-blue-600 mb-4" />
-                <h4 className="font-display text-xl font-medium mb-3">AI + Technology Access</h4>
-                <p className="text-muted-foreground leading-relaxed text-sm">
-                  Access to the tools, systems, and workflows needed to operate like modern builders. Agent-native workflows, research systems, execution support. Build with intelligence, not just effort.
-                </p>
-              </div>
-
-              <div className="border border-border/50 bg-card p-6 rounded-2xl shadow-sm">
-                <Network className="h-8 w-8 text-[var(--saffron)] mb-4" />
-                <h4 className="font-display text-xl font-medium mb-3">Founder Network Access</h4>
-                <p className="text-muted-foreground leading-relaxed text-sm">
-                  Access to founders, experts, investors, operators, diaspora networks, and mission collaborators. Relationships are not random here. They are designed.
-                </p>
-              </div>
-
-              <div className="border border-border/50 bg-card p-6 rounded-2xl shadow-sm sm:col-span-2">
-                <Radio className="h-8 w-8 text-[var(--indigo-night)] mb-4" />
-                <h4 className="font-display text-xl font-medium mb-3">Public Documentation</h4>
-                <p className="text-muted-foreground leading-relaxed">
-                  Every journey is documented by the SODA communication wing. Progress is visible. Execution is public. Growth becomes proof. This creates trust, accountability, and opportunity. It also turns the builder into a signal others can recognize.
-                </p>
-              </div>
-
-            </div>
-          </section>
-
-          <section id="structure" className="scroll-mt-32 mb-20">
-            <h2 className="font-display text-4xl mb-6">How the Program Works</h2>
-            
-            <div className="flex flex-col md:flex-row gap-8 mb-10">
-              <div className="flex-1 bg-[var(--indigo-night)]/5 border border-[var(--indigo-night)]/10 p-8 rounded-3xl text-center">
-                <h3 className="font-display text-xl font-medium text-[var(--indigo-night)] mb-2">Cohort Based</h3>
-                <p className="text-muted-foreground text-sm">Focused founder acceleration cycle.</p>
-                <div className="mt-6 flex justify-center gap-4">
-                  <div className="bg-white px-4 py-2 rounded-lg shadow-sm border font-medium">5 Builders</div>
-                  <div className="bg-white px-4 py-2 rounded-lg shadow-sm border font-medium">180 Days</div>
-                  <div className="bg-[var(--indigo-night)] text-white px-4 py-2 rounded-lg shadow-sm font-medium">Publicly Built</div>
-                </div>
-              </div>
-              
-              <div className="flex-1 bg-muted/50 border border-border p-8 rounded-3xl">
-                <h3 className="font-display text-xl font-medium mb-4">Weekly Structure</h3>
-                <ul className="grid grid-cols-2 gap-2 text-sm text-muted-foreground font-medium">
-                  <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-[var(--saffron)]"/> Founder reviews</li>
-                  <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-[var(--saffron)]"/> Mentor sessions</li>
-                  <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-[var(--saffron)]"/> Execution check-ins</li>
-                  <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-[var(--saffron)]"/> Strategic problem solving</li>
-                  <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-[var(--saffron)]"/> Public updates</li>
-                  <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-[var(--saffron)]"/> Ecosystem intros</li>
-                </ul>
-                <p className="mt-6 font-semibold text-foreground">This is not inspiration. It is operational pressure.</p>
-              </div>
-            </div>
-
-            <div className="my-12">
-              <h3 className="font-display text-3xl mb-6">Why It Matters</h3>
-              <div className="grid sm:grid-cols-2 gap-4">
-                <div className="p-4 border rounded-xl bg-card">
-                  <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground block mb-1">For Builders</span>
-                  <span className="font-medium">Clarity, access, credibility, speed</span>
-                </div>
-                <div className="p-4 border rounded-xl bg-card">
-                  <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground block mb-1">For Mentors</span>
-                  <span className="font-medium">High-quality emerging talent</span>
-                </div>
-                <div className="p-4 border rounded-xl bg-card">
-                  <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground block mb-1">For Investors</span>
-                  <span className="font-medium">Early visibility into real operators</span>
-                </div>
-                <div className="p-4 border rounded-xl bg-card">
-                  <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground block mb-1">For Sponsors</span>
-                  <span className="font-medium">Direct access to the next generation of founders</span>
-                </div>
-              </div>
-              <p className="mt-6 text-center text-xl font-light text-foreground/80">
-                For India: more people building meaningful things earlier. <br/>
-                <strong className="font-medium text-[var(--indigo-night)]">This is how ecosystems grow.</strong>
-              </p>
-            </div>
-          </section>
-
-        </div>
+    <article className="group flex h-full flex-col rounded-3xl border border-border bg-card p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
+      <div className="flex items-center justify-between gap-3">
+        <span
+          className={
+            "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider " +
+            STAGE_TONE[idea.stage]
+          }
+        >
+          {idea.stage}
+        </span>
+        <span className="inline-flex items-center gap-1 text-xs font-semibold text-foreground/70">
+          <Flame className="h-3.5 w-3.5 text-[var(--saffron)]" />
+          {idea.signal_score}
+        </span>
       </div>
-    </div>
-  );
-}
 
-// ----------------------------------------------------------------------
-// COMPONENTS
-// ----------------------------------------------------------------------
+      <h3 className="mt-4 font-display text-xl font-medium leading-snug group-hover:text-[var(--indigo-night)]">
+        {idea.title}
+      </h3>
+      <p className="mt-3 text-sm leading-relaxed text-foreground/70">{idea.one_liner}</p>
 
-function WikiCard({ title, description, icon, imageSrc }: { title: string, description: string, icon: React.ReactNode, imageSrc: string }) {
-  return (
-    <div className="flex flex-col md:flex-row gap-6 rounded-3xl border border-border bg-card p-6 shadow-sm">
-      <div className="shrink-0 hidden sm:block">
-        <div className="h-24 w-24 rounded-2xl bg-muted overflow-hidden border border-border/50">
-          <img src={imageSrc} alt={title} className="h-full w-full object-cover" />
-        </div>
-      </div>
-      <div>
-        <h3 className="flex items-center gap-2 font-display text-2xl font-medium mb-3">
-          {icon} {title}
-        </h3>
-        <p className="text-foreground/80 leading-relaxed m-0">
-          {description}
+      <div className="mt-5 rounded-2xl bg-[var(--indigo-night)]/[0.04] p-3">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/55">
+          Why now
+        </p>
+        <p className="mt-1.5 line-clamp-3 text-xs leading-relaxed text-foreground/75">
+          {idea.why_now}
         </p>
       </div>
-    </div>
-  );
-}
 
-function Badge({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="inline-flex items-center rounded-full bg-[var(--saffron)]/20 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-[var(--saffron)] border border-[var(--saffron)]/30 backdrop-blur-sm">
-      {children}
-    </span>
+      <div className="mt-auto pt-5 flex items-end justify-between gap-3">
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/55">
+            Market
+          </p>
+          <p className="mt-1 text-xs font-medium text-foreground/80">{idea.market_size}</p>
+        </div>
+        <Link
+          to="/auth"
+          className="inline-flex items-center gap-1 rounded-full bg-[var(--indigo-night)] px-3 py-1.5 text-[11px] font-semibold text-[var(--parchment)] hover:bg-[var(--saffron)] hover:text-[var(--indigo-night)] transition"
+        >
+          Open <ArrowRight className="h-3 w-3" />
+        </Link>
+      </div>
+    </article>
   );
 }
