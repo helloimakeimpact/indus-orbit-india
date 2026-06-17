@@ -3,6 +3,8 @@ import { SiteShell } from "@/components/site/SiteShell";
 import heroImg from "@/assets/hero-india-dawn.jpg";
 import lotusImg from "@/assets/lotus-pixel.png";
 import { ArrowRight, Sparkles, Users, Globe2, Sunrise } from "lucide-react";
+import { useEffect, useState } from "react";
+import { getSpotlights } from "@/server/society.functions";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -28,6 +30,11 @@ export const Route = createFileRoute("/")({
 });
 
 function HomePage() {
+  const [spotlights, setSpotlights] = useState<any[]>([]);
+  useEffect(() => {
+    getSpotlights().then((rows) => setSpotlights(rows ?? [])).catch(() => {});
+  }, []);
+
   return (
     <SiteShell navTone="dark">
       {/* HERO */}
@@ -186,6 +193,59 @@ function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* SPOTLIGHTS — voices from the orbit */}
+      {spotlights.length > 0 && (
+        <section className="px-6 pb-24">
+          <div className="mx-auto w-full max-w-7xl">
+            <div className="mb-10 text-center">
+              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">
+                Voices from the orbit
+              </p>
+              <h3 className="mt-4 font-display text-3xl font-medium leading-tight md:text-5xl">
+                Spotlights
+              </h3>
+              <p className="mt-4 text-foreground/70">
+                Builders, mentors and dreamers we're proud to orbit with.
+              </p>
+            </div>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {spotlights.slice(0, 6).map((s) => (
+                <article
+                  key={s.id}
+                  className="rounded-3xl border border-border bg-card p-6 shadow-sm transition hover:shadow-md"
+                >
+                  <div className="flex items-center gap-3">
+                    {s.profiles?.avatar_url ? (
+                      <img
+                        src={s.profiles.avatar_url}
+                        alt={s.profiles?.display_name ?? "Member"}
+                        className="h-12 w-12 rounded-full object-cover"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="h-12 w-12 rounded-full bg-[var(--indigo-night)]/10 flex items-center justify-center text-[var(--indigo-night)] font-semibold">
+                        {(s.profiles?.display_name ?? "?").charAt(0)}
+                      </div>
+                    )}
+                    <div>
+                      <p className="font-display text-lg font-medium leading-tight">
+                        {s.profiles?.display_name ?? "A member"}
+                      </p>
+                      {s.profiles?.headline && (
+                        <p className="text-xs text-muted-foreground">{s.profiles.headline}</p>
+                      )}
+                    </div>
+                  </div>
+                  <p className="mt-4 text-sm italic leading-relaxed border-l-2 border-[var(--saffron)] pl-3 text-foreground/80">
+                    "{s.writeup}"
+                  </p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* SODA COHORT PROGRAM */}
       <section className="px-6 pb-24">
