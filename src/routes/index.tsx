@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteShell } from "@/components/site/SiteShell";
 import heroImg from "@/assets/hero-india-dawn.jpg";
 import lotusImg from "@/assets/lotus-pixel.png";
-import { ArrowRight, Sparkles, Users, Globe2, Sunrise } from "lucide-react";
+import { ArrowRight, Sparkles, Users, Globe2, Sunrise, Flame, TrendingUp, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getSpotlights } from "@/server/society.functions";
 
@@ -163,6 +163,61 @@ function HomePage() {
 
             <OrbitDiagram />
           </div>
+        </div>
+      </section>
+
+      {/* SODA TEASER — sits right below the "One orbit. Many walks of life." card */}
+      <section className="px-6 pb-24">
+        <div className="mx-auto w-full max-w-7xl">
+          <Link
+            to="/soda"
+            className="group relative block overflow-hidden rounded-3xl border border-border bg-card p-8 shadow-sm transition hover:-translate-y-0.5 hover:shadow-2xl md:p-10"
+          >
+            <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-[var(--saffron)]/15 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-20 -left-10 h-56 w-56 rounded-full bg-[var(--indigo-night)]/10 blur-3xl" />
+
+            <div className="relative grid gap-8 md:grid-cols-[1.4fr_1fr] md:items-center">
+              <div>
+                <span className="inline-flex items-center gap-2 rounded-full bg-[var(--indigo-night)] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--saffron)]">
+                  <Sparkles className="h-3 w-3" /> New from Indus Orbit
+                </span>
+                <h3 className="mt-4 font-display text-3xl font-medium leading-tight md:text-4xl">
+                  SODA — the idea database for India's next builders.
+                </h3>
+                <p className="mt-4 max-w-xl text-foreground/70">
+                  Startup Opportunities, Development &amp; Action. A weekly,
+                  signal-scored map of where to build next — sector by sector,
+                  with the timing thesis baked in.
+                </p>
+                <span className="mt-6 inline-flex items-center gap-1 text-sm font-semibold text-[var(--indigo-night)] group-hover:gap-2 transition-all">
+                  Open the database <ArrowRight className="h-4 w-4" />
+                </span>
+              </div>
+
+              <div className="grid gap-3">
+                {[
+                  { i: Flame, k: "Idea of the day", v: "Vernacular voice agents for Bharat SMBs" },
+                  { i: TrendingUp, k: "127 ideas indexed", v: "Across 12 sectors and counting" },
+                  { i: Zap, k: "Why now, not why", v: "Regulation, infra and behaviour signals" },
+                ].map(({ i: Icon, k, v }) => (
+                  <div
+                    key={k}
+                    className="flex items-start gap-3 rounded-2xl border border-border bg-background/60 p-4"
+                  >
+                    <span className="mt-0.5 inline-flex h-8 w-8 flex-none items-center justify-center rounded-full bg-[var(--saffron)] text-[var(--indigo-night)]">
+                      <Icon className="h-4 w-4" />
+                    </span>
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/55">
+                        {k}
+                      </p>
+                      <p className="mt-1 text-sm font-medium text-foreground/85">{v}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Link>
         </div>
       </section>
 
