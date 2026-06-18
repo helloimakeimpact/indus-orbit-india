@@ -47,6 +47,7 @@ import { Route as AppEducationIndexRouteImport } from './routes/app.education.in
 import { Route as AppChaptersIndexRouteImport } from './routes/app.chapters.index'
 import { Route as AppAdminIndexRouteImport } from './routes/app.admin.index'
 import { Route as AppStoriesIdRouteImport } from './routes/app.stories.$id'
+import { Route as AppSodaSlugRouteImport } from './routes/app.soda.$slug'
 import { Route as AppMissionsMissionIdRouteImport } from './routes/app.missions.$missionId'
 import { Route as AppEventsIdRouteImport } from './routes/app.events.$id'
 import { Route as AppEducationCourseSlugRouteImport } from './routes/app.education.$courseSlug'
@@ -255,6 +256,11 @@ const AppStoriesIdRoute = AppStoriesIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AppStoriesRoute,
 } as any)
+const AppSodaSlugRoute = AppSodaSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => AppSodaRoute,
+} as any)
 const AppMissionsMissionIdRoute = AppMissionsMissionIdRouteImport.update({
   id: '/$missionId',
   path: '/$missionId',
@@ -389,6 +395,7 @@ export interface FileRoutesByFullPath {
   '/app/education/$courseSlug': typeof AppEducationCourseSlugRouteWithChildren
   '/app/events/$id': typeof AppEventsIdRoute
   '/app/missions/$missionId': typeof AppMissionsMissionIdRoute
+  '/app/soda/$slug': typeof AppSodaSlugRoute
   '/app/stories/$id': typeof AppStoriesIdRoute
   '/app/admin/': typeof AppAdminIndexRoute
   '/app/chapters/': typeof AppChaptersIndexRoute
@@ -440,6 +447,7 @@ export interface FileRoutesByTo {
   '/app/education/$courseSlug': typeof AppEducationCourseSlugRouteWithChildren
   '/app/events/$id': typeof AppEventsIdRoute
   '/app/missions/$missionId': typeof AppMissionsMissionIdRoute
+  '/app/soda/$slug': typeof AppSodaSlugRoute
   '/app/stories/$id': typeof AppStoriesIdRoute
   '/app/admin': typeof AppAdminIndexRoute
   '/app/chapters': typeof AppChaptersIndexRoute
@@ -498,6 +506,7 @@ export interface FileRoutesById {
   '/app/education/$courseSlug': typeof AppEducationCourseSlugRouteWithChildren
   '/app/events/$id': typeof AppEventsIdRoute
   '/app/missions/$missionId': typeof AppMissionsMissionIdRoute
+  '/app/soda/$slug': typeof AppSodaSlugRoute
   '/app/stories/$id': typeof AppStoriesIdRoute
   '/app/admin/': typeof AppAdminIndexRoute
   '/app/chapters/': typeof AppChaptersIndexRoute
@@ -557,6 +566,7 @@ export interface FileRouteTypes {
     | '/app/education/$courseSlug'
     | '/app/events/$id'
     | '/app/missions/$missionId'
+    | '/app/soda/$slug'
     | '/app/stories/$id'
     | '/app/admin/'
     | '/app/chapters/'
@@ -608,6 +618,7 @@ export interface FileRouteTypes {
     | '/app/education/$courseSlug'
     | '/app/events/$id'
     | '/app/missions/$missionId'
+    | '/app/soda/$slug'
     | '/app/stories/$id'
     | '/app/admin'
     | '/app/chapters'
@@ -665,6 +676,7 @@ export interface FileRouteTypes {
     | '/app/education/$courseSlug'
     | '/app/events/$id'
     | '/app/missions/$missionId'
+    | '/app/soda/$slug'
     | '/app/stories/$id'
     | '/app/admin/'
     | '/app/chapters/'
@@ -961,6 +973,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppStoriesIdRouteImport
       parentRoute: typeof AppStoriesRoute
     }
+    '/app/soda/$slug': {
+      id: '/app/soda/$slug'
+      path: '/$slug'
+      fullPath: '/app/soda/$slug'
+      preLoaderRoute: typeof AppSodaSlugRouteImport
+      parentRoute: typeof AppSodaRoute
+    }
     '/app/missions/$missionId': {
       id: '/app/missions/$missionId'
       path: '/$missionId'
@@ -1141,10 +1160,12 @@ const AppMissionsRouteWithChildren = AppMissionsRoute._addFileChildren(
 )
 
 interface AppSodaRouteChildren {
+  AppSodaSlugRoute: typeof AppSodaSlugRoute
   AppSodaIndexRoute: typeof AppSodaIndexRoute
 }
 
 const AppSodaRouteChildren: AppSodaRouteChildren = {
+  AppSodaSlugRoute: AppSodaSlugRoute,
   AppSodaIndexRoute: AppSodaIndexRoute,
 }
 
