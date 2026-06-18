@@ -56,6 +56,7 @@ import { Route as AppChaptersChapterIdRouteImport } from './routes/app.chapters.
 import { Route as AppAdminVouchesRouteImport } from './routes/app.admin.vouches'
 import { Route as AppAdminSubmissionsRouteImport } from './routes/app.admin.submissions'
 import { Route as AppAdminSpotlightsRouteImport } from './routes/app.admin.spotlights'
+import { Route as AppAdminSodaRouteImport } from './routes/app.admin.soda'
 import { Route as AppAdminRolesRouteImport } from './routes/app.admin.roles'
 import { Route as AppAdminReportsRouteImport } from './routes/app.admin.reports'
 import { Route as AppAdminQueueRouteImport } from './routes/app.admin.queue'
@@ -301,6 +302,11 @@ const AppAdminSpotlightsRoute = AppAdminSpotlightsRouteImport.update({
   path: '/admin/spotlights',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAdminSodaRoute = AppAdminSodaRouteImport.update({
+  id: '/admin/soda',
+  path: '/admin/soda',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAdminRolesRoute = AppAdminRolesRouteImport.update({
   id: '/admin/roles',
   path: '/admin/roles',
@@ -387,6 +393,7 @@ export interface FileRoutesByFullPath {
   '/app/admin/queue': typeof AppAdminQueueRoute
   '/app/admin/reports': typeof AppAdminReportsRoute
   '/app/admin/roles': typeof AppAdminRolesRoute
+  '/app/admin/soda': typeof AppAdminSodaRoute
   '/app/admin/spotlights': typeof AppAdminSpotlightsRoute
   '/app/admin/submissions': typeof AppAdminSubmissionsRoute
   '/app/admin/vouches': typeof AppAdminVouchesRoute
@@ -439,6 +446,7 @@ export interface FileRoutesByTo {
   '/app/admin/queue': typeof AppAdminQueueRoute
   '/app/admin/reports': typeof AppAdminReportsRoute
   '/app/admin/roles': typeof AppAdminRolesRoute
+  '/app/admin/soda': typeof AppAdminSodaRoute
   '/app/admin/spotlights': typeof AppAdminSpotlightsRoute
   '/app/admin/submissions': typeof AppAdminSubmissionsRoute
   '/app/admin/vouches': typeof AppAdminVouchesRoute
@@ -498,6 +506,7 @@ export interface FileRoutesById {
   '/app/admin/queue': typeof AppAdminQueueRoute
   '/app/admin/reports': typeof AppAdminReportsRoute
   '/app/admin/roles': typeof AppAdminRolesRoute
+  '/app/admin/soda': typeof AppAdminSodaRoute
   '/app/admin/spotlights': typeof AppAdminSpotlightsRoute
   '/app/admin/submissions': typeof AppAdminSubmissionsRoute
   '/app/admin/vouches': typeof AppAdminVouchesRoute
@@ -558,6 +567,7 @@ export interface FileRouteTypes {
     | '/app/admin/queue'
     | '/app/admin/reports'
     | '/app/admin/roles'
+    | '/app/admin/soda'
     | '/app/admin/spotlights'
     | '/app/admin/submissions'
     | '/app/admin/vouches'
@@ -610,6 +620,7 @@ export interface FileRouteTypes {
     | '/app/admin/queue'
     | '/app/admin/reports'
     | '/app/admin/roles'
+    | '/app/admin/soda'
     | '/app/admin/spotlights'
     | '/app/admin/submissions'
     | '/app/admin/vouches'
@@ -668,6 +679,7 @@ export interface FileRouteTypes {
     | '/app/admin/queue'
     | '/app/admin/reports'
     | '/app/admin/roles'
+    | '/app/admin/soda'
     | '/app/admin/spotlights'
     | '/app/admin/submissions'
     | '/app/admin/vouches'
@@ -1036,6 +1048,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminSpotlightsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/admin/soda': {
+      id: '/app/admin/soda'
+      path: '/admin/soda'
+      fullPath: '/app/admin/soda'
+      preLoaderRoute: typeof AppAdminSodaRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/admin/roles': {
       id: '/app/admin/roles'
       path: '/admin/roles'
@@ -1211,6 +1230,7 @@ interface AppRouteChildren {
   AppAdminQueueRoute: typeof AppAdminQueueRoute
   AppAdminReportsRoute: typeof AppAdminReportsRoute
   AppAdminRolesRoute: typeof AppAdminRolesRoute
+  AppAdminSodaRoute: typeof AppAdminSodaRoute
   AppAdminSpotlightsRoute: typeof AppAdminSpotlightsRoute
   AppAdminSubmissionsRoute: typeof AppAdminSubmissionsRoute
   AppAdminVouchesRoute: typeof AppAdminVouchesRoute
@@ -1245,6 +1265,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAdminQueueRoute: AppAdminQueueRoute,
   AppAdminReportsRoute: AppAdminReportsRoute,
   AppAdminRolesRoute: AppAdminRolesRoute,
+  AppAdminSodaRoute: AppAdminSodaRoute,
   AppAdminSpotlightsRoute: AppAdminSpotlightsRoute,
   AppAdminSubmissionsRoute: AppAdminSubmissionsRoute,
   AppAdminVouchesRoute: AppAdminVouchesRoute,
