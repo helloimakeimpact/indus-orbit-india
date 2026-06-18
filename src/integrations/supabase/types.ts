@@ -1208,6 +1208,120 @@ export type Database = {
         }
         Relationships: []
       }
+      soda_ideas: {
+        Row: {
+          badges: string[]
+          business_fit: Json
+          community_signals: Json
+          created_at: string
+          created_by: string | null
+          execution_plan: string | null
+          featured_on: string | null
+          framework_fit: Json
+          growth_pct: number | null
+          hero_image_url: string | null
+          id: string
+          keyword: string | null
+          main_competitor: string | null
+          market_gap: string | null
+          market_label: string | null
+          offer: Json
+          published_at: string | null
+          score_feasibility: number | null
+          score_opportunity: number | null
+          score_problem: number | null
+          score_why_now: number | null
+          sector: string
+          slug: string
+          status: string
+          summary: string | null
+          tagline: string | null
+          tags: string[]
+          target_label: string | null
+          title: string
+          top_keywords: Json
+          trend_analysis: string | null
+          type_label: string | null
+          updated_at: string
+          volume: number | null
+          why_now: string | null
+        }
+        Insert: {
+          badges?: string[]
+          business_fit?: Json
+          community_signals?: Json
+          created_at?: string
+          created_by?: string | null
+          execution_plan?: string | null
+          featured_on?: string | null
+          framework_fit?: Json
+          growth_pct?: number | null
+          hero_image_url?: string | null
+          id?: string
+          keyword?: string | null
+          main_competitor?: string | null
+          market_gap?: string | null
+          market_label?: string | null
+          offer?: Json
+          published_at?: string | null
+          score_feasibility?: number | null
+          score_opportunity?: number | null
+          score_problem?: number | null
+          score_why_now?: number | null
+          sector?: string
+          slug: string
+          status?: string
+          summary?: string | null
+          tagline?: string | null
+          tags?: string[]
+          target_label?: string | null
+          title: string
+          top_keywords?: Json
+          trend_analysis?: string | null
+          type_label?: string | null
+          updated_at?: string
+          volume?: number | null
+          why_now?: string | null
+        }
+        Update: {
+          badges?: string[]
+          business_fit?: Json
+          community_signals?: Json
+          created_at?: string
+          created_by?: string | null
+          execution_plan?: string | null
+          featured_on?: string | null
+          framework_fit?: Json
+          growth_pct?: number | null
+          hero_image_url?: string | null
+          id?: string
+          keyword?: string | null
+          main_competitor?: string | null
+          market_gap?: string | null
+          market_label?: string | null
+          offer?: Json
+          published_at?: string | null
+          score_feasibility?: number | null
+          score_opportunity?: number | null
+          score_problem?: number | null
+          score_why_now?: number | null
+          sector?: string
+          slug?: string
+          status?: string
+          summary?: string | null
+          tagline?: string | null
+          tags?: string[]
+          target_label?: string | null
+          title?: string
+          top_keywords?: Json
+          trend_analysis?: string | null
+          type_label?: string | null
+          updated_at?: string
+          volume?: number | null
+          why_now?: string | null
+        }
+        Relationships: []
+      }
       spotlights: {
         Row: {
           created_at: string
