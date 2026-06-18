@@ -26,6 +26,7 @@ import { Route as RedeemCodeRouteImport } from './routes/redeem.$code'
 import { Route as ProfileIdRouteImport } from './routes/profile.$id'
 import { Route as AppVouchRouteImport } from './routes/app.vouch'
 import { Route as AppStoriesRouteImport } from './routes/app.stories'
+import { Route as AppSodaRouteImport } from './routes/app.soda'
 import { Route as AppProfileRouteImport } from './routes/app.profile'
 import { Route as AppNotificationsRouteImport } from './routes/app.notifications'
 import { Route as AppMissionsRouteImport } from './routes/app.missions'
@@ -146,6 +147,11 @@ const AppVouchRoute = AppVouchRouteImport.update({
 const AppStoriesRoute = AppStoriesRouteImport.update({
   id: '/stories',
   path: '/stories',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSodaRoute = AppSodaRouteImport.update({
+  id: '/soda',
+  path: '/soda',
   getParentRoute: () => AppRoute,
 } as any)
 const AppProfileRoute = AppProfileRouteImport.update({
@@ -355,6 +361,7 @@ export interface FileRoutesByFullPath {
   '/app/missions': typeof AppMissionsRouteWithChildren
   '/app/notifications': typeof AppNotificationsRoute
   '/app/profile': typeof AppProfileRoute
+  '/app/soda': typeof AppSodaRoute
   '/app/stories': typeof AppStoriesRouteWithChildren
   '/app/vouch': typeof AppVouchRoute
   '/profile/$id': typeof ProfileIdRoute
@@ -406,6 +413,7 @@ export interface FileRoutesByTo {
   '/app/mission-admin': typeof AppMissionAdminRoute
   '/app/notifications': typeof AppNotificationsRoute
   '/app/profile': typeof AppProfileRoute
+  '/app/soda': typeof AppSodaRoute
   '/app/vouch': typeof AppVouchRoute
   '/profile/$id': typeof ProfileIdRoute
   '/redeem/$code': typeof RedeemCodeRoute
@@ -461,6 +469,7 @@ export interface FileRoutesById {
   '/app/missions': typeof AppMissionsRouteWithChildren
   '/app/notifications': typeof AppNotificationsRoute
   '/app/profile': typeof AppProfileRoute
+  '/app/soda': typeof AppSodaRoute
   '/app/stories': typeof AppStoriesRouteWithChildren
   '/app/vouch': typeof AppVouchRoute
   '/profile/$id': typeof ProfileIdRoute
@@ -518,6 +527,7 @@ export interface FileRouteTypes {
     | '/app/missions'
     | '/app/notifications'
     | '/app/profile'
+    | '/app/soda'
     | '/app/stories'
     | '/app/vouch'
     | '/profile/$id'
@@ -569,6 +579,7 @@ export interface FileRouteTypes {
     | '/app/mission-admin'
     | '/app/notifications'
     | '/app/profile'
+    | '/app/soda'
     | '/app/vouch'
     | '/profile/$id'
     | '/redeem/$code'
@@ -623,6 +634,7 @@ export interface FileRouteTypes {
     | '/app/missions'
     | '/app/notifications'
     | '/app/profile'
+    | '/app/soda'
     | '/app/stories'
     | '/app/vouch'
     | '/profile/$id'
@@ -790,6 +802,13 @@ declare module '@tanstack/react-router' {
       path: '/stories'
       fullPath: '/app/stories'
       preLoaderRoute: typeof AppStoriesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/soda': {
+      id: '/app/soda'
+      path: '/soda'
+      fullPath: '/app/soda'
+      preLoaderRoute: typeof AppSodaRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/profile': {
@@ -1131,6 +1150,7 @@ interface AppRouteChildren {
   AppMissionsRoute: typeof AppMissionsRouteWithChildren
   AppNotificationsRoute: typeof AppNotificationsRoute
   AppProfileRoute: typeof AppProfileRoute
+  AppSodaRoute: typeof AppSodaRoute
   AppStoriesRoute: typeof AppStoriesRouteWithChildren
   AppVouchRoute: typeof AppVouchRoute
   AppIndexRoute: typeof AppIndexRoute
@@ -1164,6 +1184,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppMissionsRoute: AppMissionsRouteWithChildren,
   AppNotificationsRoute: AppNotificationsRoute,
   AppProfileRoute: AppProfileRoute,
+  AppSodaRoute: AppSodaRoute,
   AppStoriesRoute: AppStoriesRouteWithChildren,
   AppVouchRoute: AppVouchRoute,
   AppIndexRoute: AppIndexRoute,
