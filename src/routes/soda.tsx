@@ -11,13 +11,13 @@ import {
 export const Route = createFileRoute("/soda")({
   head: () => ({
     meta: [
-      { title: "SODA — Startup Opportunities, Development & Action | Indus Orbit" },
+      { title: "S.O.D.A — Startup Opportunities, Development & Action | Indus Orbit" },
       {
         name: "description",
         content:
-          "SODA is Indus Orbit's living database of startup opportunities for India — daily ideas, market signals, sector deep-dives and the builders moving on them.",
+          "S.O.D.A (Startup Opportunities, Development & Action) is Indus Orbit's living database of startup opportunities for India — daily ideas, market signals, sector deep-dives and the builders moving on them.",
       },
-      { property: "og:title", content: "SODA — Startup Opportunities, Development & Action" },
+      { property: "og:title", content: "S.O.D.A — Startup Opportunities, Development & Action" },
       { property: "og:image", content: sodaHero },
     ],
   }),
@@ -113,7 +113,7 @@ function SodaPage() {
             <Sparkles className="h-3 w-3" /> A living database from Indus Orbit
           </span>
           <h1 className="mt-6 font-display text-5xl font-light leading-[1.05] text-glow md:text-7xl">
-            SODA
+            S.O.D.A
           </h1>
           <p className="mt-3 font-display text-xl text-[var(--saffron)] md:text-2xl">
             Startup Opportunities, Development &amp; Action
