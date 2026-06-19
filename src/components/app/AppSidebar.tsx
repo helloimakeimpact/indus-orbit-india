@@ -18,7 +18,7 @@ const ITEMS: Item[] = [
   { to: "/app/events", label: "Events", icon: CalendarDays },
   { to: "/app/stories", label: "Stories", icon: BookOpen },
   { to: "/app/education", label: "Academy", icon: GraduationCap },
-  { to: "/app/soda", label: "SODA List", icon: Lightbulb },
+  { to: "/app/soda", label: "S.O.D.A List", icon: Lightbulb },
   { to: "/app/vouch", label: "Vouch", icon: ShieldCheck },
   { to: "/app/mentor", label: "Mentorship", icon: CalendarClock },
   { to: "/app/profile", label: "My profile", icon: UserIcon },
@@ -35,7 +35,7 @@ const ADMIN_ITEMS: Item[] = [
   { to: "/app/admin/spotlights", label: "Spotlights", icon: Sparkles, admin: true },
   { to: "/app/admin/content", label: "Content", icon: FileCheck, admin: true },
   { to: "/app/admin/education", label: "Education", icon: GraduationCap, admin: true },
-  { to: "/app/admin/soda", label: "SODA ideas", icon: Lightbulb, admin: true },
+  { to: "/app/admin/soda", label: "S.O.D.A ideas", icon: Lightbulb, admin: true },
 ];
 
 function NavList({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
