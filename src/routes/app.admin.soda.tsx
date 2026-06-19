@@ -122,9 +122,9 @@ function AdminSoda() {
             <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">
               Admin
             </p>
-            <h1 className="mt-2 font-display text-3xl font-medium md:text-4xl">SODA ideas</h1>
+            <h1 className="mt-2 font-display text-3xl font-medium md:text-4xl">S.O.D.A ideas</h1>
             <p className="mt-1 text-sm text-foreground/65">
-              Create, edit, publish and delete entries in the SODA list.
+              Create, edit, publish and delete entries in the S.O.D.A list (Startup Opportunities, Development &amp; Action).
             </p>
           </div>
           <button

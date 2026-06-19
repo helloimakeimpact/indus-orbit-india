@@ -57,7 +57,7 @@ function SodaInAppPage() {
             <Sparkles className="h-3 w-3" /> Members-only research desk
           </span>
           <h1 className="mt-5 font-display text-4xl font-light leading-[1.05] text-glow md:text-6xl">
-            SODA List
+            S.O.D.A List
           </h1>
           <p className="mt-2 font-display text-lg text-[var(--saffron)] md:text-xl">
             Startup Opportunities, Development &amp; Action
@@ -179,7 +179,7 @@ function SodaInAppPage() {
             <p className="text-sm text-foreground/60">Loading ideas…</p>
           ) : filtered.length === 0 ? (
             <div className="rounded-3xl border border-dashed border-border bg-card p-12 text-center text-foreground/60">
-              No ideas yet. Admins can add the first one from the SODA admin.
+              No ideas yet. Admins can add the first one from the S.O.D.A admin.
             </div>
           ) : (
             <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">

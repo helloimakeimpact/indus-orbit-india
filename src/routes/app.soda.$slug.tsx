@@ -27,7 +27,7 @@ function SodaDetail() {
     return (
       <div className="p-12">
         <Link to="/app/soda" className="inline-flex items-center gap-2 text-sm text-foreground/70 hover:text-foreground">
-          <ArrowLeft className="h-4 w-4" /> Back to SODA
+          <ArrowLeft className="h-4 w-4" /> Back to S.O.D.A
         </Link>
         <p className="mt-6 text-foreground/70">Idea not found.</p>
       </div>
@@ -38,7 +38,7 @@ function SodaDetail() {
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-5xl px-6 py-10">
         <Link to="/app/soda" className="inline-flex items-center gap-2 text-sm text-foreground/70 hover:text-foreground">
-          <ArrowLeft className="h-4 w-4" /> Back to SODA list
+          <ArrowLeft className="h-4 w-4" /> Back to S.O.D.A list
         </Link>
 
         {/* Header */}

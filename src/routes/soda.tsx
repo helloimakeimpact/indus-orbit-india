@@ -11,13 +11,13 @@ import {
 export const Route = createFileRoute("/soda")({
   head: () => ({
     meta: [
-      { title: "SODA — Startup Opportunities, Development & Action | Indus Orbit" },
+      { title: "S.O.D.A — Startup Opportunities, Development & Action | Indus Orbit" },
       {
         name: "description",
         content:
-          "SODA is Indus Orbit's living database of startup opportunities for India — daily ideas, market signals, sector deep-dives and the builders moving on them.",
+          "S.O.D.A (Startup Opportunities, Development & Action) is Indus Orbit's living database of startup opportunities for India — daily ideas, market signals, sector deep-dives and the builders moving on them.",
       },
-      { property: "og:title", content: "SODA — Startup Opportunities, Development & Action" },
+      { property: "og:title", content: "S.O.D.A — Startup Opportunities, Development & Action" },
       { property: "og:image", content: sodaHero },
     ],
   }),
@@ -113,7 +113,7 @@ function SodaPage() {
             <Sparkles className="h-3 w-3" /> A living database from Indus Orbit
           </span>
           <h1 className="mt-6 font-display text-5xl font-light leading-[1.05] text-glow md:text-7xl">
-            SODA
+            S.O.D.A
           </h1>
           <p className="mt-3 font-display text-xl text-[var(--saffron)] md:text-2xl">
             Startup Opportunities, Development &amp; Action
@@ -304,13 +304,13 @@ function SodaPage() {
         <div className="mx-auto grid w-full max-w-7xl gap-12 md:grid-cols-2 md:items-center">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">
-              Why SODA
+              Why S.O.D.A
             </p>
             <h2 className="mt-4 font-display text-3xl font-medium leading-tight md:text-5xl">
               A research desk for the people building India next.
             </h2>
             <p className="mt-5 text-[var(--parchment)]/75">
-              SODA is not a newsletter and not a fund. It's the research desk
+              S.O.D.A is not a newsletter and not a fund. It's the research desk
               we wish we had when we started: every idea pressure-tested against
               market size, regulatory timing, distribution wedges and the
               builders already in motion.
@@ -368,7 +368,7 @@ function SodaPage() {
             to="/auth"
             className="mt-8 inline-flex items-center gap-2 rounded-full bg-[var(--indigo-night)] px-6 py-3 text-sm font-semibold text-[var(--parchment)] hover:bg-[var(--saffron)] hover:text-[var(--indigo-night)] transition"
           >
-            Subscribe to SODA <ArrowRight className="h-4 w-4" />
+            Subscribe to S.O.D.A <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
       </section>
