@@ -237,7 +237,7 @@ function SodaPage() {
           {/* Stat strip */}
           <div className="mx-auto mt-10 grid max-w-3xl grid-cols-3 gap-4 text-left">
             {[
-              { k: "127", v: "Ideas indexed" },
+              { k: `${rows.length || "—"}+`, v: "Ideas indexed" },
               { k: "12", v: "Sectors mapped" },
               { k: "Daily", v: "New signal" },
             ].map((s) => (
