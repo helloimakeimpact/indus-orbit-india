@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { SiteShell } from "@/components/site/SiteShell";
 import sodaHero from "@/assets/soda-hero.jpg";
+import { listPublishedSodaIdeas, type SodaIdea } from "@/server/soda.functions";
 import {
   Search, Sparkles, TrendingUp, Zap, ArrowRight, Filter, Flame,
   Cpu, GraduationCap, HeartPulse, Leaf, Wallet, Tractor, Factory,
@@ -53,7 +54,59 @@ const SECTORS = [
   { key: "media", label: "Media", icon: Radio },
 ];
 
-const IDEAS: Idea[] = [
+const SECTOR_ALIAS: Record<string, string> = {
+  health: "health",
+  healthcare: "health",
+  edtech: "edu",
+  education: "edu",
+  manufacturing: "mfg",
+  agritech: "agri",
+  retail: "commerce",
+  media: "media",
+  ai: "ai",
+  fintech: "fintech",
+  commerce: "commerce",
+  travel: "travel",
+  climate: "climate",
+  govtech: "govtech",
+  agri: "agri",
+  mfg: "mfg",
+  edu: "edu",
+};
+
+function deriveStage(score: number): Idea["stage"] {
+  if (score >= 9) return "Heating up";
+  if (score >= 7) return "Early signal";
+  if (score >= 5) return "Whitespace";
+  return "Crowded";
+}
+
+function ideaFromRow(row: SodaIdea): Idea {
+  const sectorKey = SECTOR_ALIAS[(row.sector ?? "").toLowerCase()] ?? "all";
+  const marketSize =
+    row.market_label ||
+    (row.volume ? `${row.volume.toLocaleString()} monthly searches` : "—");
+  return {
+    slug: row.slug,
+    title: row.title,
+    one_liner: row.tagline || row.summary || "",
+    sector: sectorKey,
+    stage: deriveStage(row.score_opportunity ?? 0),
+    why_now: row.why_now || "",
+    market_size: marketSize,
+    signal_score: Math.round(
+      (((row.score_opportunity ?? 0) +
+        (row.score_problem ?? 0) +
+        (row.score_feasibility ?? 0) +
+        (row.score_why_now ?? 0)) /
+        4) *
+        10,
+    ),
+    tags: row.tags ?? [],
+  };
+}
+
+const FALLBACK_IDEAS: Idea[] = [
   { slug: "vernacular-voice-agents", title: "Vernacular voice agents for Bharat SMBs", one_liner: "Always-on Hindi/Tamil/Telugu voice agents that take orders, book appointments and chase payments for 60M small businesses.", sector: "ai", stage: "Heating up", why_now: "Cheap inference + Sarvam/IndicTrans2 reaching parity with English on Indic ASR. WhatsApp Business API rolled out flow-based payments.", market_size: "$8B SMB software TAM in India by 2030", signal_score: 92, tags: ["voice", "vernacular", "smb", "whatsapp"] },
   { slug: "ai-tutor-jee-neet", title: "AI tutor for JEE / NEET tier-3 towns", one_liner: "A personalised AI prep companion priced at ₹299/month that replaces the ₹50k coaching gap for tier-3 aspirants.", sector: "edu", stage: "Heating up", why_now: "Byju's collapse opened the affordable mid-market. ~3M aspirants annually have no good option between free YouTube and unaffordable coaching.", market_size: "₹58,000 Cr test-prep market", signal_score: 88, tags: ["edtech", "jee", "neet", "regional"] },
   { slug: "rooftop-solar-financing", title: "BNPL rails for rooftop solar", one_liner: "Embedded financing layer that lets installers close residential solar in one visit — paperwork, underwriting and subsidy in 10 minutes.", sector: "climate", stage: "Early signal", why_now: "PM Surya Ghar Yojana targets 1 Cr homes by 2027. Discoms now mandated to net-meter within 30 days. Installer fragmentation = distribution wedge.", market_size: "$50B installed-capacity opportunity by 2030", signal_score: 84, tags: ["climate", "fintech", "embedded"] },
@@ -68,8 +121,6 @@ const IDEAS: Idea[] = [
   { slug: "campus-agent-builder", title: "Agent-builder studio for college clubs", one_liner: "A no-code agent studio that lets every IIT/NIT tech club ship one AI product per semester — distribution into 500 campuses on day one.", sector: "ai", stage: "Whitespace", why_now: "Bolt/Lovable normalized agent-native dev. 1.4M engineering grads/year. College clubs are the most underrated GTM in India.", market_size: "Unbounded — talent pipeline play", signal_score: 86, tags: ["ai", "campus", "community"] },
 ];
 
-const IDEA_OF_DAY = IDEAS[0];
-
 const STAGE_TONE: Record<Idea["stage"], string> = {
   Whitespace: "bg-[var(--saffron)]/15 text-[var(--indigo-night)] border-[var(--saffron)]/40",
   "Early signal": "bg-emerald-100 text-emerald-900 border-emerald-300/60",
@@ -81,20 +132,59 @@ function SodaPage() {
   const [q, setQ] = useState("");
   const [sector, setSector] = useState("all");
   const [sort, setSort] = useState<"signal" | "newest">("signal");
+  const [rows, setRows] = useState<SodaIdea[]>([]);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    listPublishedSodaIdeas()
+      .then((r) => setRows(r))
+      .catch(() => setRows([]))
+      .finally(() => setLoaded(true));
+  }, []);
+
+  // Public preview: top-5 by score + 5 latest by published_at (deduped).
+  const publicIdeas: Idea[] = useMemo(() => {
+    if (rows.length === 0) return loaded ? [] : FALLBACK_IDEAS;
+    const byScore = [...rows].sort(
+      (a, b) => (b.score_opportunity ?? 0) - (a.score_opportunity ?? 0),
+    );
+    const byDate = [...rows].sort(
+      (a, b) =>
+        new Date(b.published_at ?? 0).getTime() -
+        new Date(a.published_at ?? 0).getTime(),
+    );
+    const picks: SodaIdea[] = [];
+    const seen = new Set<string>();
+    for (const r of byScore.slice(0, 5)) {
+      if (!seen.has(r.id)) {
+        picks.push(r);
+        seen.add(r.id);
+      }
+    }
+    for (const r of byDate.slice(0, 5)) {
+      if (!seen.has(r.id)) {
+        picks.push(r);
+        seen.add(r.id);
+      }
+    }
+    return picks.map(ideaFromRow);
+  }, [rows, loaded]);
+
+  const ideaOfDay: Idea = publicIdeas[0] ?? FALLBACK_IDEAS[0];
 
   const filtered = useMemo(() => {
-    let rows = IDEAS.filter((i) => sector === "all" || i.sector === sector);
+    let list = publicIdeas.filter((i) => sector === "all" || i.sector === sector);
     const needle = q.trim().toLowerCase();
     if (needle) {
-      rows = rows.filter((i) =>
+      list = list.filter((i) =>
         [i.title, i.one_liner, i.why_now, ...i.tags].join(" ").toLowerCase().includes(needle),
       );
     }
-    rows = [...rows].sort((a, b) =>
+    list = [...list].sort((a, b) =>
       sort === "signal" ? b.signal_score - a.signal_score : a.title.localeCompare(b.title),
     );
-    return rows;
-  }, [q, sector, sort]);
+    return list;
+  }, [q, sector, sort, publicIdeas]);
 
   return (
     <SiteShell navTone="dark">
