@@ -285,7 +285,7 @@ function SodaPage() {
               </h3>
               <p className="mt-4 text-[var(--parchment)]/80">{ideaOfDay.one_liner}</p>
               <div className="mt-8 flex flex-wrap gap-2">
-                {ideaOfDay.tags.map((t) => (
+                {ideaOfDay.tags.map((t: string) => (
                   <span
                     key={t}
                     className="rounded-full border border-[var(--parchment)]/25 px-2.5 py-1 text-[11px] text-[var(--parchment)]/80"
