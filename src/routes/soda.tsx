@@ -334,8 +334,11 @@ function SodaPage() {
                 The database
               </p>
               <h2 className="mt-2 font-display text-3xl font-medium md:text-4xl">
-                Browse by what India needs next.
+                A peek at what India needs next.
               </h2>
+              <p className="mt-2 text-sm text-foreground/60">
+                Showing this week's top-signal and freshest ideas. The full S.O.D.A database lives behind the Orbit — <Link to="/auth" className="font-semibold text-[var(--indigo-night)] underline">sign in</Link> to browse all {rows.length || ""} entries.
+              </p>
             </div>
             <div className="flex items-center gap-2 text-sm">
               <Filter className="h-4 w-4 text-foreground/60" />
