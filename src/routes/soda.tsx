@@ -277,15 +277,15 @@ function SodaPage() {
               <div className="flex items-center gap-2">
                 <Flame className="h-4 w-4 text-[var(--saffron)]" />
                 <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--saffron)]">
-                  Signal {IDEA_OF_DAY.signal_score}/100
+                  Signal {ideaOfDay.signal_score}/100
                 </span>
               </div>
               <h3 className="mt-5 font-display text-3xl font-medium leading-tight md:text-4xl">
-                {IDEA_OF_DAY.title}
+                {ideaOfDay.title}
               </h3>
-              <p className="mt-4 text-[var(--parchment)]/80">{IDEA_OF_DAY.one_liner}</p>
+              <p className="mt-4 text-[var(--parchment)]/80">{ideaOfDay.one_liner}</p>
               <div className="mt-8 flex flex-wrap gap-2">
-                {IDEA_OF_DAY.tags.map((t) => (
+                {ideaOfDay.tags.map((t) => (
                   <span
                     key={t}
                     className="rounded-full border border-[var(--parchment)]/25 px-2.5 py-1 text-[11px] text-[var(--parchment)]/80"
@@ -300,11 +300,11 @@ function SodaPage() {
                 <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-foreground/60">
                   <Zap className="h-3 w-3 text-[var(--saffron)]" /> Why now
                 </p>
-                <p className="mt-3 leading-relaxed text-foreground/85">{IDEA_OF_DAY.why_now}</p>
+                <p className="mt-3 leading-relaxed text-foreground/85">{ideaOfDay.why_now}</p>
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
-                <Stat icon={BarChart3} label="Market size" value={IDEA_OF_DAY.market_size} />
-                <Stat icon={Target} label="Stage" value={IDEA_OF_DAY.stage} />
+                <Stat icon={BarChart3} label="Market size" value={ideaOfDay.market_size} />
+                <Stat icon={Target} label="Stage" value={ideaOfDay.stage} />
               </div>
               <div className="flex flex-wrap gap-3 pt-2">
                 <Link
