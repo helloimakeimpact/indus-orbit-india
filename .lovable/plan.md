@@ -1,249 +1,132 @@
-## Indus Orbit — Phase 3 Plan: Verification Codes + Roadmap Catch-up
+## What Skills and Loop are
 
-This plan does three things:
-1. **Audit** what's actually built vs the System Analysis & Feature Roadmap.
-2. **Design** the verification-code / vouching system you described (with admin-controlled global + per-role + per-user quotas, every 28 days).
-3. **Lay out** the next slice of features to bring the orbit to "alive."
+**Skills** — a community library of reusable founder playbooks: tight, repeatable procedures the Orbit can apply on demand. Think: "How to register a Section 8 company", "How to run a 5-day kirana-store sales pilot", "How to negotiate a manufacturing PO in Tamil Nadu". Each Skill bundles a how-to body, prerequisites, a checklist, time/cost estimates, and pointers to templates or tools.
 
----
+**Loop** — based on the *Forward Future* essay "Build the Loop, Not the Agent". The thesis: don't ship a finished AI agent, ship the iteration loop that rebuilds it as models improve. The library captures **loop blueprints**: a problem, an eval set, the smallest end-to-end pipeline that solves it, and the cadence/trigger that re-runs the loop when a new model lands. Each entry is essentially "here's the loop, here's the eval, here's how you re-run it on the next frontier model".
 
-### 1. Implementation status vs the Roadmap
-
-#### Phase 1 — Admin Governance (DONE)
-
-| Item | Status | Where |
-|---|---|---|
-| Verification queue with reasons + decision log | Done | `/app/admin/queue`, `verification_decisions` |
-| Audit log + admin viewer | Done | `/app/admin/audit`, `audit_log` |
-| Admin analytics (members, verified %, segments, week-over-week) | Done | `/app/admin` |
-| Soft-suspend with reason + RLS enforcement | Done | `/app/admin/members`, `member_suspensions`, `is_suspended()` |
-| Reports & moderation queue | Done | `/app/admin/reports`, `reports` |
-| Roles management (promote/demote admin) | Done (pre-existing) | `/app/admin/roles` |
-
-#### Phase 2 — Connection (DONE)
-
-| Item | Status | Where |
-|---|---|---|
-| C1 Connection requests | Done | `/app/connect`, `connection_requests` |
-| C3 Endorsements (verified-only) | Done | `EndorseDialog`, `endorsements` |
-| C4 Ask & Offer board (30-day expiry, filters, report) | Done | `/app/board`, `asks_offers` |
-| Reach-out + Report from directory cards | Done | `/app/directory` |
-
-#### Phase 3 — Synergy (NOT STARTED)
-S1 Mentor slots · S2 Investor signals · S3 India Missions · S4 Research–Practice bridge.
-
-#### Phase 4 — Society & Scale (NOT STARTED)
-Y1 Spotlights · Y2 Chapters + `chapter_lead` role · Y3 Stories · Y4 Events board.
-
-#### Cross-cutting gaps still open
-- Only two role tiers (`admin`, `member`). No `chapter_lead`, `editor`, `verifier`.
-- No member-driven path to **become** verified — admin-only flip today.
-- `segment_details` JSON is collected at onboarding, never re-surfaced for matching/search.
-- No notifications (email or in-app) for accepted requests, endorsements, decisions.
+Both fit the same Indus Orbit pattern as S.O.D.A: a living, India-flavoured database, refreshed continuously, with depth gated behind sign-in.
 
 ---
 
-### 2. The Verification Code system (your new ask)
-
-#### Concept
-
-Verification today = an admin flips a switch. We add a **second, member-driven path**: any verified member can mint a small number of **vouching codes** that, when redeemed, instantly verify the recipient. This is the "trust web" — Indus Orbit grows by who its trusted members vouch for, with admin holding the global throttle.
-
-Two surfaces are unified:
-- **Generate code** → a 10-char code the holder can hand to someone (or paste into a request).
-- **Vouch directly** → pick a member, click "Vouch", same accounting.
-
-Both consume from the same 28-day budget.
-
-#### Default policy (overridable)
-
-| Who | Default budget per 28 days |
-|---|---|
-| Verified member (any segment) | 5 vouches/codes |
-| Unverified member | 0 (cannot vouch) |
-| Admin | unlimited (logged) |
-
-Admin can override at three levels (highest wins):
-1. **Per-user override** — give Riya 20 this period.
-2. **Per-role override** — all `expert`s get 10 this period.
-3. **Global default** — bump the platform default from 5 → 8.
-
-#### Workflow
+## Architecture (identical for both, mirrors S.O.D.A)
 
 ```text
-Member A (verified)
-  └─ /app/vouch
-       ├─ "Generate code"  → 10-char code, expires in 14 days, single-use
-       │     copies to clipboard, shareable link /redeem/<code>
-       └─ "Vouch directly" → search → confirm → recipient is verified now
-                                 (audit_log entry written)
-
-Member B (unverified)
-  └─ /app/profile  → "Have a code?" field
-       └─ valid + not expired + budget intact on issuer
-            → B becomes verified, code marked redeemed
-            → B can also "Request vouch" from admin or any verified member
-
-Admin
-  └─ /app/admin/vouches
-       ├─ Global default budget (1 input)
-       ├─ Per-role overrides (table)
-       ├─ Per-user overrides (search + add)
-       ├─ Active codes (issuer, code, status, expires)
-       └─ Recent vouch events (who → who, when, channel)
+PUBLIC                              AUTH                            ADMIN
+/skills          ---------->  /app/skills         ----------->  /app/admin/skills
+/loop            ---------->  /app/loop           ----------->  /app/admin/loop
+  - hero                        - full list, search             - CRUD table
+  - top 5 by score              - filters & sort                - search + filter
+  - 5 newest                    - tag clouds                    - status toggle
+  - "of the day"                - detail pages                  - CSV export
+  - sign-in CTA                                                 - JSON editors
 ```
 
-#### Quota enforcement (the important bit)
+Each library gets:
+1. **Public route** showing top-5-by-score and 5-newest (deduped), an "Item of the Day" rotation, and a sign-in CTA — same shape as `/soda` today.
+2. **Auth route** at `/app/<lib>` with full grid, search, sector filter, sort.
+3. **Detail route** at `/app/<lib>/$slug` with the full body.
+4. **Admin route** at `/app/admin/<lib>` — table, search, status filter, publish toggle, CSV export, single-row editor (same component shape as S.O.D.A admin).
+5. **Sidebar entries** under main nav (member) and Admin section.
+6. **SEO**: per-page canonical, OG/Twitter, JSON-LD `ItemList` (library) and `HowTo` (Skill) or `TechArticle` (Loop).
 
-A SQL function `vouch_budget_remaining(_user_id)` returns:
-```
-GREATEST(effective_quota(_user_id) - count_used_in_window(_user_id, 28d), 0)
-```
-- Window = trailing 28 days from now (rolling, not calendar).
-- A "use" = either an issued code (whether redeemed or not) **or** a direct vouch.
-- Issued-but-expired-unredeemed codes still count (prevents code-spam to dodge quota). Admin can manually credit back via override.
+---
 
-`effective_quota(_user_id)`:
-```
-COALESCE(per_user_override, per_role_override(role), global_default)
-```
-Admins always return a sentinel "unlimited" (we use a high number like 9999).
+## Data model
 
-#### Database (new tables)
+Two new tables, identical pattern to `soda_ideas`:
+
+**`public.skills`**
+- Identity: slug, title, summary, hero_image_url, status (draft|published), featured_on
+- Taxonomy: category (`legal`, `finance`, `gtm`, `ops`, `product`, `hiring`, `compliance`, `vernacular`, `ai`), tags[], badges[]
+- Body: when_to_use, prerequisites (jsonb array), steps (jsonb array of `{title, body}`), time_estimate, cost_estimate, common_pitfalls, india_context_notes
+- Resources: templates (jsonb array of `{label, url, kind}`), referenced_tools[], legal_refs[]
+- Scoring: score_clarity, score_completeness, score_india_fit, score_freshness (0–10) — drives "top by score" ranking
+- Ownership: created_by, updated_at, published_at
+
+**`public.loops`**
+- Identity: slug, title, summary, hero_image_url, status, featured_on
+- Taxonomy: domain (`agents`, `evals`, `data-pipelines`, `voice`, `vision`, `multimodal`, `rag`), tags[], badges[]
+- Body: problem_statement, why_iterate (the "model-keeps-shifting" thesis), minimum_loop (jsonb: `{input, pipeline, output, eval}`), eval_set_description, current_baseline_model, trigger_to_rerun (e.g. "new frontier model > X benchmark"), upgrade_history (jsonb timeline)
+- Architecture: stack[], cost_per_iteration_inr, latency_target_ms
+- Scoring: score_iteration_speed, score_eval_rigor, score_business_value, score_india_fit
+- Ownership: created_by, updated_at, published_at
+
+Both tables follow the same RLS pattern S.O.D.A now uses:
+- `anon` may `SELECT` rows where `status = 'published'`
+- `authenticated` may `SELECT` published rows
+- Only admins may `INSERT / UPDATE / DELETE`
+
+GRANTs and policies set in the same migration as the CREATE TABLE.
+
+---
+
+## Files to add (per library)
 
 ```text
-vouch_settings
-  id (singleton row, key='global')
-  default_quota int       -- starts at 5
-  code_ttl_days int       -- starts at 14
-  window_days int         -- starts at 28
-  updated_at, updated_by
+src/server/skill.functions.ts         (mirrors soda.functions.ts)
+src/server/loop.functions.ts
 
-vouch_role_overrides
-  segment orbit_segment   -- nullable; we may want per-segment too
-  role app_role           -- 'member' | 'admin'
-  quota int
-  updated_at, updated_by
-  (PK: role + segment combo)
+src/routes/skills.tsx                 (public hero + top 5 + newest 5)
+src/routes/loop.tsx
+src/routes/app.skills.tsx             (Outlet wrapper)
+src/routes/app.skills.index.tsx       (full auth grid)
+src/routes/app.skills.$slug.tsx       (detail)
+src/routes/app.loop.tsx
+src/routes/app.loop.index.tsx
+src/routes/app.loop.$slug.tsx
+src/routes/app.admin.skills.tsx       (CRUD, same shape as app.admin.soda.tsx)
+src/routes/app.admin.loop.tsx
 
-vouch_user_overrides
-  user_id (PK)
-  quota int               -- absolute override for this 28d window
-  reason text
-  updated_at, updated_by
-
-vouch_codes
-  id, code (10-char unique), issuer_id
-  created_at, expires_at, redeemed_at, redeemer_id
-  status: 'active' | 'redeemed' | 'expired' | 'revoked'
-
-vouch_events
-  id, issuer_id, recipient_id
-  channel: 'code' | 'direct'
-  code_id (nullable, FK to vouch_codes)
-  created_at
-  (this is the "use" record that drives the 28d window count)
-
-vouch_requests
-  id, requester_id, target_verifier_id (nullable = "any admin")
-  message text
-  status: 'open' | 'fulfilled' | 'declined' | 'expired'
-  created_at, responded_at
+# Sidebar entries added to src/components/app/AppSidebar.tsx
+# Sitemap entries added to public/sitemap.xml
 ```
 
-#### RLS & security
-
-- `vouch_settings`, `vouch_role_overrides`, `vouch_user_overrides`: admin-only read/write.
-- `vouch_codes`: issuer can read their own; redeemer can read by code (server fn does the lookup, RLS on `code` lookup uses anon-safe read by exact match); admins read all.
-- `vouch_events`: issuer + recipient + admin can read.
-- `vouch_requests`: requester + target + admin can read.
-- All vouch-issuance and redemption goes through **`createServerFn`** so we can:
-  - Atomically check quota + insert event + flip `profiles.is_verified` in one transaction (via `supabaseAdmin`).
-  - Avoid a client-side race on the 5/period ceiling.
-  - Write to `audit_log` with `action='verification.vouched'` or `'verification.code_redeemed'`.
-
-#### `guard_profile_verification` update
-
-Today only admins can flip `is_verified`. We extend it to also allow the `supabaseAdmin` server function (it already bypasses RLS), but keep the trigger so direct client updates from members still fail. The vouching path always goes through the server fn.
-
-#### UI surfaces
-
-| Route | Audience | What |
-|---|---|---|
-| `/app/vouch` | Verified members + admins | Budget pill ("3 of 5 left, resets in 12 days"), Generate Code button, Vouch Directly search, list of my active codes & recent vouches |
-| `/app/profile` (small addition) | Unverified members | "Have a code?" input + "Request a vouch" button |
-| `/app/admin/vouches` | Admin only | Global default, role overrides, user overrides, active codes table, vouch events feed |
-| `/redeem/$code` | Public | Renders code state; if logged-in unverified member, one-click redeem → verified |
-
-#### Sidebar additions
-- "Vouch" under main nav (visible to all verified members and admins)
-- "Vouches" under Admin section
-
-#### Counts and edge cases handled
-- Issuing a code decrements remaining immediately (not on redemption) — prevents minting 100 codes at once.
-- Code expiry is 14 days; if unredeemed, the slot does NOT auto-return (admin can refund via per-user override).
-- A member cannot vouch for themselves (server fn check).
-- Already-verified recipients can still receive codes; the server fn no-ops the verification flip but still logs the event (so issuer pays the budget — explicitly chosen so spammy auto-vouching costs the issuer).
-- Suspended members cannot issue or redeem (uses existing `is_suspended()`).
-- Admin issuance is logged but doesn't decrement (their quota is effectively unlimited).
+A shared `LibraryCard`, `LibraryDetail` and `LibraryAdminTable` component could be factored later, but I'd ship the first cut with copy-paste from the S.O.D.A files to avoid premature abstraction (consistent with the Loop essay itself).
 
 ---
 
-### 3. What ships in this plan (concrete deliverables)
+## Seed content (so neither library launches empty)
 
-**Migration**
-- 6 new tables above + indexes (`vouch_codes(code) UNIQUE`, `vouch_events(issuer_id, created_at)`, `vouch_events(recipient_id)`).
-- SQL functions: `vouch_effective_quota(uuid)`, `vouch_used_in_window(uuid)`, `vouch_remaining(uuid)`.
-- Update `guard_profile_verification` to allow service-role updates (for server-fn path).
-- Seed `vouch_settings` row with `default_quota=5, code_ttl_days=14, window_days=28`.
+I'll seed each with ~8 India-context entries:
 
-**Server functions** (`src/server/vouch.ts`)
-- `issueCode()` — checks quota, generates 10-char code, inserts into `vouch_codes` + `vouch_events`, returns code + share URL.
-- `redeemCode({code})` — validates state, flips recipient's `is_verified`, marks code redeemed, writes audit log.
-- `vouchDirectly({recipient_id})` — same as redeem but skips code, single transaction.
-- `requestVouch({target_id?, message})` — inserts `vouch_requests` row.
-- `getMyVouchStatus()` — returns `{remaining, quota, window_resets_at, recent_events, my_active_codes}`.
+**Skills (sample)**
+1. Register a startup in India in 7 days (MCA, GST, PAN, current account)
+2. Run a 5-day kirana-store pilot in Pune
+3. Hire your first 3 engineers from tier-2 campuses
+4. Set up UPI Autopay for a subscription product
+5. File DPIIT recognition and unlock Startup India benefits
+6. Negotiate a manufacturing PO in Coimbatore
+7. Set up an Indic LLM eval harness in a weekend
+8. Get on ONDC as a seller
 
-**Routes**
-- `src/routes/app.vouch.tsx` — member surface
-- `src/routes/app.admin.vouches.tsx` — admin governance surface
-- `src/routes/redeem.$code.tsx` — public redemption page
-- Small additions to `src/routes/app.profile.tsx` (code input + request-vouch button) and `src/components/app/AppSidebar.tsx` (two new entries).
-
-**Components**
-- `IssueCodeButton`, `VouchDirectlyDialog`, `VouchBudgetPill`, `MyCodesTable`, `RequestVouchDialog`, `AdminVouchSettingsForm`, `AdminVouchOverridesTable`, `AdminVouchEventsFeed`.
-
-**Out of scope for this slice** (planned next)
-- Phase 3 Synergy features (mentor slots, investor signals, missions, research bridge).
-- `chapter_lead` / `editor` role tiers.
-- Email notifications for vouches/requests.
-- Re-surfacing `segment_details` in directory search.
+**Loop (sample)**
+1. Vernacular voice-agent quality loop (Hindi → Tamil → Telugu)
+2. RAG-eval loop for Indian legal documents
+3. Pricing-experiment loop for tier-2 D2C
+4. KYC-doc-OCR accuracy loop across regional IDs
+5. Recommendation loop for Bharat creator commerce
+6. WhatsApp-flow conversion-rate loop
+7. Code-review agent loop for service businesses
+8. Local-search ranking loop for ONDC catalogues
 
 ---
 
-### 4. Order of execution
+## Build order
 
-```text
-1. Migration (tables, functions, trigger update, seed row)
-2. Server fns (issueCode, redeemCode, vouchDirectly, requestVouch, getMyVouchStatus)
-3. /app/vouch page + sidebar entry
-4. /redeem/$code public page
-5. Profile additions (code input, request-vouch dialog)
-6. /app/admin/vouches + sidebar entry
-7. Audit-log integration verification (manual smoke test of every action)
-```
+1. Migration for `skills` (table + GRANTs + RLS + policies). Then seed 8 rows.
+2. Public `/skills`, auth `/app/skills`, detail, admin — copied from S.O.D.A shape.
+3. Sidebar + sitemap + SEO.
+4. Repeat the same six steps for `loop`.
+
+Estimated scope: roughly the same as S.O.D.A took, twice.
 
 ---
 
-### 5. Open questions before I build
+## Open questions
 
-If you're happy with the defaults below, I'll proceed; otherwise tell me which to change:
+1. **Naming**: keep `/loop` or use `/loops` (plural, matches DB table)?
+2. **Skills authoring**: admin-only, or do we let verified members propose Skills that admins approve (mirrors the Stories pattern)?
+3. **Loop entries**: should each Loop link to a S.O.D.A idea it serves (e.g. "this loop powers the *Vernacular voice agents* idea")? Adds a nice cross-library graph.
+4. **Visibility split**: same as S.O.D.A (top 5 score + 5 newest public), or tighter (top 3 only)?
 
-- **Window length**: 28 days rolling (your spec). ✅
-- **Default budget**: 5 issuances+vouches combined. ✅
-- **Code TTL**: 14 days. Reasonable?
-- **Self-vouch / re-vouch**: blocked / no-op-but-charged. Reasonable?
-- **Unverified members vouching**: not allowed (your spec). ✅
-- **Per-segment overrides**: included alongside per-role. Useful or noise?
-
-Approve this plan and I'll ship the full vouch system end-to-end, then come back with a Phase 3 plan for Synergy features.
+Once you confirm these, I'll start with the Skills migration.
