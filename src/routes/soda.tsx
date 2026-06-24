@@ -181,6 +181,45 @@ function SodaPage() {
 
   const ideaOfDay: Idea = publicIdeas[0] ?? FALLBACK_IDEAS[0];
 
+  // Inject dynamic SEO once Idea-of-the-Day & list are known.
+  useEffect(() => {
+    if (!ideaOfDay) return;
+    const dynamicDesc = `Today's Idea of the Day: ${ideaOfDay.title} — ${ideaOfDay.one_liner}`.slice(0, 300);
+    const setMeta = (sel: string, attr: string, value: string) => {
+      let el = document.head.querySelector<HTMLMetaElement>(sel);
+      if (!el) {
+        el = document.createElement("meta");
+        const [, key, val] = sel.match(/\[(.*?)="(.*?)"\]/) ?? [];
+        if (key && val) el.setAttribute(key, val);
+        document.head.appendChild(el);
+      }
+      el.setAttribute(attr, value);
+    };
+    setMeta('meta[name="description"]', "content", dynamicDesc);
+    setMeta('meta[property="og:description"]', "content", dynamicDesc);
+    setMeta('meta[name="twitter:description"]', "content", dynamicDesc);
+
+    // JSON-LD ItemList of public ideas
+    const ldId = "soda-itemlist-jsonld";
+    document.getElementById(ldId)?.remove();
+    const script = document.createElement("script");
+    script.type = "application/ld+json";
+    script.id = ldId;
+    script.text = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      name: "S.O.D.A — Startup Opportunities for India",
+      itemListElement: publicIdeas.map((i, idx) => ({
+        "@type": "ListItem",
+        position: idx + 1,
+        name: i.title,
+        description: i.one_liner,
+      })),
+    });
+    document.head.appendChild(script);
+    return () => { document.getElementById(ldId)?.remove(); };
+  }, [ideaOfDay, publicIdeas]);
+
   const filtered = useMemo(() => {
     let list = publicIdeas.filter((i) => sector === "all" || i.sector === sector);
     const needle = q.trim().toLowerCase();
