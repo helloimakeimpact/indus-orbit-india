@@ -7,7 +7,7 @@ import {
   deleteSodaIdea,
   type SodaIdea,
 } from "@/server/soda.functions";
-import { Plus, Pencil, Trash2, Save, X, Sparkles } from "lucide-react";
+import { Plus, Pencil, Trash2, Save, X, Sparkles, Search, Download, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/app/admin/soda")({
@@ -59,6 +59,8 @@ function AdminSoda() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Partial<SodaIdea> | null>(null);
   const [saving, setSaving] = useState(false);
+  const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "draft" | "published">("all");
 
   async function refresh() {
     setLoading(true);
@@ -114,6 +116,42 @@ function AdminSoda() {
     }
   }
 
+  async function togglePublish(r: SodaIdea) {
+    try {
+      await upsertSodaIdea({
+        ...r,
+        status: r.status === "published" ? "draft" : "published",
+      });
+      toast.success(r.status === "published" ? "Unpublished" : "Published");
+      refresh();
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  }
+
+  function exportCsv() {
+    const cols = ["slug", "title", "sector", "status", "score_opportunity", "score_problem", "score_feasibility", "score_why_now", "featured_on", "published_at"] as const;
+    const esc = (v: any) => {
+      const s = v === null || v === undefined ? "" : String(v);
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const lines = [cols.join(",")].concat(rows.map((r) => cols.map((c) => esc((r as any)[c])).join(",")));
+    const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `soda-ideas-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  const visibleRows = rows.filter((r) => {
+    if (statusFilter !== "all" && r.status !== statusFilter) return false;
+    if (!query.trim()) return true;
+    const q = query.toLowerCase();
+    return [r.title, r.slug, r.sector, r.tagline, ...(r.tags ?? [])].some((v) => (v ?? "").toString().toLowerCase().includes(q));
+  });
+
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-6xl px-6 py-10">
@@ -127,13 +165,43 @@ function AdminSoda() {
               Create, edit, publish and delete entries in the S.O.D.A list (Startup Opportunities, Development &amp; Action).
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => setEditing(emptyDraft())}
-            className="inline-flex items-center gap-2 rounded-full bg-[var(--indigo-night)] px-4 py-2 text-sm font-semibold text-[var(--parchment)] hover:opacity-90"
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={exportCsv}
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-medium hover:bg-foreground/5"
+            >
+              <Download className="h-4 w-4" /> Export CSV
+            </button>
+            <button
+              type="button"
+              onClick={() => setEditing(emptyDraft())}
+              className="inline-flex items-center gap-2 rounded-full bg-[var(--indigo-night)] px-4 py-2 text-sm font-semibold text-[var(--parchment)] hover:opacity-90"
+            >
+              <Plus className="h-4 w-4" /> New idea
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-6 flex flex-wrap items-center gap-3">
+          <div className="relative flex-1 min-w-[220px]">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/50" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search title, slug, sector, tag…"
+              className="w-full rounded-full border border-border bg-card pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--saffron)]/40"
+            />
+          </div>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as any)}
+            className="rounded-full border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--saffron)]/40"
           >
-            <Plus className="h-4 w-4" /> New idea
-          </button>
+            <option value="all">All ({rows.length})</option>
+            <option value="published">Published ({rows.filter((r) => r.status === "published").length})</option>
+            <option value="draft">Drafts ({rows.filter((r) => r.status === "draft").length})</option>
+          </select>
         </div>
 
         <div className="mt-8 overflow-hidden rounded-2xl border border-border bg-card">
@@ -154,14 +222,14 @@ function AdminSoda() {
                     Loading…
                   </td>
                 </tr>
-              ) : rows.length === 0 ? (
+              ) : visibleRows.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-4 py-12 text-center text-foreground/60">
-                    No ideas yet. Click <strong>New idea</strong> to add your first.
+                    {rows.length === 0 ? <>No ideas yet. Click <strong>New idea</strong> to add your first.</> : "No ideas match your filters."}
                   </td>
                 </tr>
               ) : (
-                rows.map((r) => (
+                visibleRows.map((r) => (
                   <tr key={r.id} className="border-t border-border">
                     <td className="px-4 py-3">
                       <p className="font-medium">{r.title}</p>
@@ -185,6 +253,14 @@ function AdminSoda() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => togglePublish(r)}
+                          title={r.status === "published" ? "Unpublish" : "Publish"}
+                          className="rounded-lg p-2 text-foreground/70 hover:bg-foreground/5"
+                        >
+                          {r.status === "published" ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
                         <button
                           type="button"
                           onClick={() => setEditing(r)}
