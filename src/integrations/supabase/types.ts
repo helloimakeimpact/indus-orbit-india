@@ -622,6 +622,102 @@ export type Database = {
           },
         ]
       }
+      loops: {
+        Row: {
+          badges: string[]
+          cost_per_iteration_inr: number | null
+          created_at: string
+          created_by: string | null
+          current_baseline_model: string | null
+          domain: string
+          eval_set_description: string | null
+          featured_on: string | null
+          hero_image_url: string | null
+          id: string
+          latency_target_ms: number | null
+          minimum_loop: Json
+          problem_statement: string | null
+          published_at: string | null
+          related_soda_slug: string | null
+          score_business_value: number
+          score_eval_rigor: number
+          score_india_fit: number
+          score_iteration_speed: number
+          slug: string
+          stack: string[]
+          status: string
+          summary: string | null
+          tags: string[]
+          title: string
+          trigger_to_rerun: string | null
+          updated_at: string
+          upgrade_history: Json
+          why_iterate: string | null
+        }
+        Insert: {
+          badges?: string[]
+          cost_per_iteration_inr?: number | null
+          created_at?: string
+          created_by?: string | null
+          current_baseline_model?: string | null
+          domain?: string
+          eval_set_description?: string | null
+          featured_on?: string | null
+          hero_image_url?: string | null
+          id?: string
+          latency_target_ms?: number | null
+          minimum_loop?: Json
+          problem_statement?: string | null
+          published_at?: string | null
+          related_soda_slug?: string | null
+          score_business_value?: number
+          score_eval_rigor?: number
+          score_india_fit?: number
+          score_iteration_speed?: number
+          slug: string
+          stack?: string[]
+          status?: string
+          summary?: string | null
+          tags?: string[]
+          title: string
+          trigger_to_rerun?: string | null
+          updated_at?: string
+          upgrade_history?: Json
+          why_iterate?: string | null
+        }
+        Update: {
+          badges?: string[]
+          cost_per_iteration_inr?: number | null
+          created_at?: string
+          created_by?: string | null
+          current_baseline_model?: string | null
+          domain?: string
+          eval_set_description?: string | null
+          featured_on?: string | null
+          hero_image_url?: string | null
+          id?: string
+          latency_target_ms?: number | null
+          minimum_loop?: Json
+          problem_statement?: string | null
+          published_at?: string | null
+          related_soda_slug?: string | null
+          score_business_value?: number
+          score_eval_rigor?: number
+          score_india_fit?: number
+          score_iteration_speed?: number
+          slug?: string
+          stack?: string[]
+          status?: string
+          summary?: string | null
+          tags?: string[]
+          title?: string
+          trigger_to_rerun?: string | null
+          updated_at?: string
+          upgrade_history?: Json
+          why_iterate?: string | null
+        }
+        Relationships: []
+      }
       member_suspensions: {
         Row: {
           actor_id: string
@@ -1205,6 +1301,99 @@ export type Database = {
           title?: string
           updated_at?: string
           url?: string | null
+        }
+        Relationships: []
+      }
+      skills: {
+        Row: {
+          badges: string[]
+          category: string
+          common_pitfalls: string | null
+          cost_estimate: string | null
+          created_at: string
+          created_by: string | null
+          featured_on: string | null
+          hero_image_url: string | null
+          id: string
+          india_context_notes: string | null
+          legal_refs: string[]
+          prerequisites: Json
+          published_at: string | null
+          referenced_tools: string[]
+          score_clarity: number
+          score_completeness: number
+          score_freshness: number
+          score_india_fit: number
+          slug: string
+          status: string
+          steps: Json
+          summary: string | null
+          tags: string[]
+          templates: Json
+          time_estimate: string | null
+          title: string
+          updated_at: string
+          when_to_use: string | null
+        }
+        Insert: {
+          badges?: string[]
+          category?: string
+          common_pitfalls?: string | null
+          cost_estimate?: string | null
+          created_at?: string
+          created_by?: string | null
+          featured_on?: string | null
+          hero_image_url?: string | null
+          id?: string
+          india_context_notes?: string | null
+          legal_refs?: string[]
+          prerequisites?: Json
+          published_at?: string | null
+          referenced_tools?: string[]
+          score_clarity?: number
+          score_completeness?: number
+          score_freshness?: number
+          score_india_fit?: number
+          slug: string
+          status?: string
+          steps?: Json
+          summary?: string | null
+          tags?: string[]
+          templates?: Json
+          time_estimate?: string | null
+          title: string
+          updated_at?: string
+          when_to_use?: string | null
+        }
+        Update: {
+          badges?: string[]
+          category?: string
+          common_pitfalls?: string | null
+          cost_estimate?: string | null
+          created_at?: string
+          created_by?: string | null
+          featured_on?: string | null
+          hero_image_url?: string | null
+          id?: string
+          india_context_notes?: string | null
+          legal_refs?: string[]
+          prerequisites?: Json
+          published_at?: string | null
+          referenced_tools?: string[]
+          score_clarity?: number
+          score_completeness?: number
+          score_freshness?: number
+          score_india_fit?: number
+          slug?: string
+          status?: string
+          steps?: Json
+          summary?: string | null
+          tags?: string[]
+          templates?: Json
+          time_estimate?: string | null
+          title?: string
+          updated_at?: string
+          when_to_use?: string | null
         }
         Relationships: []
       }
