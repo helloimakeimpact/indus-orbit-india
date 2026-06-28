@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Send, Rocket } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,9 +6,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ReachOutDialog } from "@/components/connect/ReachOutDialog";
+import { formatInlineProfileLocation } from "@/lib/location";
 
 export const Route = createFileRoute("/app/investor-feed")({
-  head: () => ({ meta: [{ title: "Deal Flow — Indus Orbit" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({
+    meta: [{ title: "Deal Flow — Indus Orbit" }, { name: "robots", content: "noindex" }],
+  }),
   component: InvestorFeedPage,
 });
 
@@ -35,14 +38,16 @@ function InvestorFeedPage() {
       // Find founders who are actively raising
       const { data } = await supabase
         .from("profiles")
-        .select("id, user_id, display_name, headline, city, country, linkedin_url, website_url, segment_details")
+        .select(
+          "id, user_id, display_name, headline, city, country, linkedin_url, website_url, segment_details",
+        )
         .eq("orbit_segment", "founder")
         .eq("is_verified", true)
         // using contains to filter jsonb
         .contains("segment_details", { fundraising: "actively_raising" })
         .order("created_at", { ascending: false });
-        
-      setFounders(data as FounderSignal[] ?? []);
+
+      setFounders((data as FounderSignal[]) ?? []);
       setBusy(false);
     }
     load();
@@ -54,10 +59,15 @@ function InvestorFeedPage() {
     <div className="mx-auto w-full max-w-7xl">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">Deal Flow</p>
-          <h1 className="mt-2 font-display text-3xl font-medium md:text-4xl">Founders Actively Raising</h1>
+          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">
+            Deal Flow
+          </p>
+          <h1 className="mt-2 font-display text-3xl font-medium md:text-4xl">
+            Founders Actively Raising
+          </h1>
           <p className="mt-2 max-w-2xl text-sm text-foreground/70">
-            A curated feed of verified founders currently seeking capital. Reach out to express interest privately.
+            A curated feed of verified founders currently seeking capital. Reach out to express
+            interest privately.
           </p>
         </div>
       </div>
@@ -76,30 +86,57 @@ function InvestorFeedPage() {
                   <h3 className="font-display text-lg font-semibold">{f.display_name}</h3>
                   <p className="text-sm text-muted-foreground">{f.headline}</p>
                 </div>
-                <Badge variant="default" className="bg-green-600">Raising</Badge>
+                <Badge variant="default" className="bg-green-600">
+                  Raising
+                </Badge>
               </div>
-              
+
               <div className="mt-4 space-y-2 text-sm">
                 {f.segment_details?.company && (
-                  <p><span className="font-medium">Company:</span> {f.segment_details.company}</p>
+                  <p>
+                    <span className="font-medium">Company:</span> {f.segment_details.company}
+                  </p>
                 )}
                 {f.segment_details?.stage && (
-                  <p><span className="font-medium">Stage:</span> <span className="capitalize">{f.segment_details.stage}</span></p>
+                  <p>
+                    <span className="font-medium">Stage:</span>{" "}
+                    <span className="capitalize">{f.segment_details.stage}</span>
+                  </p>
                 )}
                 {f.segment_details?.sector && (
-                  <p><span className="font-medium">Sector:</span> {f.segment_details.sector}</p>
+                  <p>
+                    <span className="font-medium">Sector:</span> {f.segment_details.sector}
+                  </p>
                 )}
               </div>
 
               {(f.city || f.country) && (
                 <p className="mt-4 text-xs uppercase tracking-wider text-muted-foreground">
-                  {[f.city, f.country].filter(Boolean).join(" · ")}
+                  {formatInlineProfileLocation(f)}
                 </p>
               )}
 
               <div className="mt-3 flex gap-3 text-sm">
-                {f.linkedin_url && <a href={f.linkedin_url} target="_blank" rel="noreferrer" className="text-[var(--indigo-night)] hover:underline">LinkedIn</a>}
-                {f.website_url && <a href={f.website_url} target="_blank" rel="noreferrer" className="text-[var(--indigo-night)] hover:underline">Website</a>}
+                {f.linkedin_url && (
+                  <a
+                    href={f.linkedin_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[var(--indigo-night)] hover:underline"
+                  >
+                    LinkedIn
+                  </a>
+                )}
+                {f.website_url && (
+                  <a
+                    href={f.website_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[var(--indigo-night)] hover:underline"
+                  >
+                    Website
+                  </a>
+                )}
               </div>
 
               {user && user.id !== f.user_id && (

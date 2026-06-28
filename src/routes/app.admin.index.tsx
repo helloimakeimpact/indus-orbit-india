@@ -5,14 +5,23 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { SEGMENT_LIST, SEGMENT_META, type Segment } from "@/components/auth/segments";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { createChapter } from "@/server/society.functions";
 
 export const Route = createFileRoute("/app/admin/")({
-  head: () => ({ meta: [{ title: "Admin dashboard — Indus Orbit" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({
+    meta: [{ title: "Admin dashboard — Indus Orbit" }, { name: "robots", content: "noindex" }],
+  }),
   component: AdminDashboard,
 });
 
@@ -43,14 +52,34 @@ function AdminDashboard() {
     if (!isAdmin) return;
     (async () => {
       const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-      const [{ data: profiles }, { count: pendingReports }, { count: openRequests }] = await Promise.all([
-        supabase.from("profiles").select("orbit_segment, is_verified, is_public, created_at"),
-        supabase.from("reports").select("id", { count: "exact", head: true }).eq("status", "open"),
-        supabase.from("connection_requests").select("id", { count: "exact", head: true }).eq("status", "pending"),
-      ]);
-      const list = (profiles as { orbit_segment: Segment | null; is_verified: boolean; is_public: boolean; created_at: string }[] | null) ?? [];
-      const bySegment = SEGMENT_LIST.reduce((acc, s) => ({ ...acc, [s]: 0 }), {} as Record<Segment, number>);
-      let verified = 0, publicCount = 0, weekSignups = 0;
+      const [{ data: profiles }, { count: pendingReports }, { count: openRequests }] =
+        await Promise.all([
+          supabase.from("profiles").select("orbit_segment, is_verified, is_public, created_at"),
+          supabase
+            .from("reports")
+            .select("id", { count: "exact", head: true })
+            .eq("status", "open"),
+          supabase
+            .from("connection_requests")
+            .select("id", { count: "exact", head: true })
+            .eq("status", "pending"),
+        ]);
+      const list =
+        (profiles as
+          | {
+              orbit_segment: Segment | null;
+              is_verified: boolean;
+              is_public: boolean;
+              created_at: string;
+            }[]
+          | null) ?? [];
+      const bySegment = SEGMENT_LIST.reduce(
+        (acc, s) => ({ ...acc, [s]: 0 }),
+        {} as Record<Segment, number>,
+      );
+      let verified = 0,
+        publicCount = 0,
+        weekSignups = 0;
       for (const p of list) {
         if (p.orbit_segment) bySegment[p.orbit_segment]++;
         if (p.is_verified) verified++;
@@ -82,55 +111,93 @@ function AdminDashboard() {
         <>
           <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Stat label="Members" value={stats.total} />
-            <Stat label="Verified" value={`${stats.verified} (${pct(stats.verified, stats.total)}%)`} />
+            <Stat
+              label="Verified"
+              value={`${stats.verified} (${pct(stats.verified, stats.total)}%)`}
+            />
             <Stat label="Public" value={stats.publicCount} />
             <Stat label="New this week" value={stats.weekSignups} />
           </div>
 
           <div className="mt-6 grid gap-4 md:grid-cols-3">
-            <Link to="/app/admin/queue" className="rounded-3xl border border-border bg-card p-6 transition hover:bg-foreground/5">
-              <p className="text-xs uppercase tracking-wider text-muted-foreground">Pending verification</p>
+            <Link
+              to="/app/admin/queue"
+              className="rounded-3xl border border-border bg-card p-6 transition hover:bg-foreground/5"
+            >
+              <p className="text-xs uppercase tracking-wider text-muted-foreground">
+                Pending verification
+              </p>
               <p className="mt-2 font-display text-3xl">{stats.total - stats.verified}</p>
               <p className="mt-1 text-xs text-[var(--saffron)]">Open queue →</p>
             </Link>
-            <Link to="/app/admin/content" className="rounded-3xl border border-border bg-card p-6 transition hover:bg-foreground/5">
-              <p className="text-xs uppercase tracking-wider text-muted-foreground">Pending content</p>
+            <Link
+              to="/app/admin/content"
+              className="rounded-3xl border border-border bg-card p-6 transition hover:bg-foreground/5"
+            >
+              <p className="text-xs uppercase tracking-wider text-muted-foreground">
+                Pending content
+              </p>
               <p className="mt-2 font-display text-3xl">-</p>
               <p className="mt-1 text-xs text-[var(--saffron)]">Review →</p>
             </Link>
-            <Link to="/app/admin/reports" className="rounded-3xl border border-border bg-card p-6 transition hover:bg-foreground/5">
+            <Link
+              to="/app/admin/reports"
+              className="rounded-3xl border border-border bg-card p-6 transition hover:bg-foreground/5"
+            >
               <p className="text-xs uppercase tracking-wider text-muted-foreground">Open reports</p>
               <p className="mt-2 font-display text-3xl">{stats.pendingReports}</p>
               <p className="mt-1 text-xs text-[var(--saffron)]">Review →</p>
             </Link>
           </div>
-          
+
           <div className="mt-4 grid gap-4 md:grid-cols-4">
-            <Link to="/app/admin/roles" className="rounded-3xl border border-border bg-card p-6 transition hover:bg-foreground/5">
+            <Link
+              to="/app/admin/roles"
+              className="rounded-3xl border border-border bg-card p-6 transition hover:bg-foreground/5"
+            >
               <p className="text-xs uppercase tracking-wider text-muted-foreground">Manage roles</p>
               <p className="mt-1 text-xs text-[var(--saffron)]">Edit →</p>
             </Link>
-            <Link to="/app/admin/hubs" className="rounded-3xl border border-border bg-card p-6 transition hover:bg-foreground/5">
+            <Link
+              to="/app/admin/hubs"
+              className="rounded-3xl border border-border bg-card p-6 transition hover:bg-foreground/5"
+            >
               <p className="text-xs uppercase tracking-wider text-muted-foreground">Manage hubs</p>
               <p className="mt-1 text-xs text-[var(--saffron)]">Edit Leads →</p>
             </Link>
-            <Link to="/app/admin/vouches" className="rounded-3xl border border-border bg-card p-6 transition hover:bg-foreground/5">
+            <Link
+              to="/app/admin/vouches"
+              className="rounded-3xl border border-border bg-card p-6 transition hover:bg-foreground/5"
+            >
               <p className="text-xs uppercase tracking-wider text-muted-foreground">Vouch limits</p>
               <p className="mt-1 text-xs text-[var(--saffron)]">Edit →</p>
             </Link>
-            <Link to="/app/admin/submissions" className="rounded-3xl border border-border bg-card p-6 transition hover:bg-foreground/5">
+            <Link
+              to="/app/admin/submissions"
+              className="rounded-3xl border border-border bg-card p-6 transition hover:bg-foreground/5"
+            >
               <p className="text-xs uppercase tracking-wider text-muted-foreground">Submissions</p>
               <p className="mt-1 text-xs text-[var(--saffron)]">View Contacts & Newsletters →</p>
             </Link>
           </div>
 
           <div className="mt-4 grid gap-4 md:grid-cols-2">
-            <Link to="/app/admin/spotlights" className="rounded-3xl border border-border bg-card p-6 transition hover:bg-foreground/5">
+            <Link
+              to="/app/admin/spotlights"
+              className="rounded-3xl border border-border bg-card p-6 transition hover:bg-foreground/5"
+            >
               <p className="text-xs uppercase tracking-wider text-muted-foreground">Spotlights</p>
-              <p className="mt-1 text-xs text-[var(--saffron)]">Feature members on the homepage →</p>
+              <p className="mt-1 text-xs text-[var(--saffron)]">
+                Feature members on the homepage →
+              </p>
             </Link>
-            <Link to="/app/admin/content" className="rounded-3xl border border-border bg-card p-6 transition hover:bg-foreground/5">
-              <p className="text-xs uppercase tracking-wider text-muted-foreground">Content moderation</p>
+            <Link
+              to="/app/admin/content"
+              className="rounded-3xl border border-border bg-card p-6 transition hover:bg-foreground/5"
+            >
+              <p className="text-xs uppercase tracking-wider text-muted-foreground">
+                Content moderation
+              </p>
               <p className="mt-1 text-xs text-[var(--saffron)]">Stories & events queue →</p>
             </Link>
           </div>
@@ -145,7 +212,9 @@ function AdminDashboard() {
             <div className="mt-4 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
               {SEGMENT_LIST.map((s) => (
                 <div key={s} className="rounded-xl border border-border p-3">
-                  <p className="text-xs uppercase tracking-wider text-muted-foreground">{SEGMENT_META[s].label}</p>
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground">
+                    {SEGMENT_META[s].label}
+                  </p>
                   <p className="mt-1 font-display text-xl">{stats.bySegment[s]}</p>
                 </div>
               ))}
@@ -186,26 +255,49 @@ function CreateChapterDialog({ onClose }: { onClose: () => void }) {
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <Label>Chapter Name *</Label>
-            <Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="e.g. Bangalore Builders" />
+            <Input
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              placeholder="e.g. Bangalore Builders"
+            />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>City</Label>
-              <Input value={form.city} onChange={e => setForm({...form, city: e.target.value})} placeholder="e.g. Bangalore" />
+              <Label>Base city</Label>
+              <Input
+                value={form.city}
+                onChange={(e) => setForm({ ...form, city: e.target.value })}
+                placeholder="e.g. Bangalore"
+              />
             </div>
             <div className="space-y-2">
-              <Label>Country</Label>
-              <Input value={form.country} onChange={e => setForm({...form, country: e.target.value})} placeholder="e.g. India" />
+              <Label>Base country</Label>
+              <Input
+                value={form.country}
+                onChange={(e) => setForm({ ...form, country: e.target.value })}
+                placeholder="e.g. India"
+              />
             </div>
           </div>
+          <p className="rounded-xl bg-muted/40 p-3 text-xs leading-5 text-muted-foreground">
+            Chapters store a discovery base location. Add exact venue addresses on event pages.
+          </p>
           <div className="space-y-2">
             <Label>Description</Label>
-            <Textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} placeholder="What is this chapter about?" />
+            <Textarea
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              placeholder="What is this chapter about?"
+            />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={submit} disabled={busy || !form.name}>{busy ? "Creating..." : "Create Chapter"}</Button>
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button onClick={submit} disabled={busy || !form.name}>
+            {busy ? "Creating..." : "Create Chapter"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

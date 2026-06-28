@@ -1,5 +1,6 @@
 import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app/AppShell";
@@ -25,7 +26,12 @@ function AppLayout() {
       .select("orbit_segment")
       .eq("user_id", user.id)
       .maybeSingle()
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) {
+          toast.error(error.message);
+          setChecked(true);
+          return;
+        }
         const segment = (data as { orbit_segment: string | null } | null)?.orbit_segment;
         if (!segment) {
           navigate({ to: "/onboarding" });

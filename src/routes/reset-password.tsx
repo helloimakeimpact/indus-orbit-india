@@ -10,10 +10,7 @@ import logo from "@/assets/indus-orbit-logo.png";
 
 export const Route = createFileRoute("/reset-password")({
   head: () => ({
-    meta: [
-      { title: "Reset password — Indus Orbit" },
-      { name: "robots", content: "noindex" },
-    ],
+    meta: [{ title: "Reset password — Indus Orbit" }, { name: "robots", content: "noindex" }],
   }),
   component: ResetPasswordPage,
 });
@@ -38,7 +35,7 @@ function ResetPasswordPage() {
       return;
     }
     toast.success("Password updated");
-    navigate({ to: "/dashboard" });
+    navigate({ to: "/app" });
   }
 
   return (
@@ -50,13 +47,26 @@ function ResetPasswordPage() {
         </Link>
         <div className="rounded-3xl bg-[var(--parchment)] text-foreground p-8 shadow-2xl">
           <h1 className="font-display text-2xl font-medium">Set a new password</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Choose a strong password for your account.</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Choose a strong password for your account.
+          </p>
           <form onSubmit={onSubmit} className="mt-6 space-y-4">
             <div className="space-y-2">
               <Label htmlFor="new-password">New password</Label>
-              <Input id="new-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} />
+              <Input
+                id="new-password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={8}
+              />
             </div>
-            <Button type="submit" disabled={busy} className="w-full bg-[var(--indigo-night)] text-[var(--parchment)] hover:bg-[var(--indigo-night)]/90">
+            <Button
+              type="submit"
+              disabled={busy}
+              className="w-full bg-[var(--indigo-night)] text-[var(--parchment)] hover:bg-[var(--indigo-night)]/90"
+            >
               {busy ? "Updating…" : "Update password"}
             </Button>
           </form>

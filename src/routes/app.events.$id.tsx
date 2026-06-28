@@ -1,11 +1,24 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Share2, CalendarDays, MapPin, Video, Users, Clock, ExternalLink, Check, X as XIcon, HelpCircle } from "lucide-react";
+import {
+  ArrowLeft,
+  Share2,
+  CalendarDays,
+  MapPin,
+  Video,
+  Users,
+  Clock,
+  ExternalLink,
+  Check,
+  X as XIcon,
+  HelpCircle,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { formatEventLocation, formatLocationTypeLabel } from "@/lib/location";
 import {
   getEventRsvpState,
   setMyRsvp,
@@ -23,7 +36,11 @@ function EventDetailPage() {
   const { user, isAdmin } = useAuth();
   const [event, setEvent] = useState<any>(null);
   const [busy, setBusy] = useState(true);
-  const [counts, setCounts] = useState<Record<RsvpStatus, number>>({ going: 0, interested: 0, not_going: 0 });
+  const [counts, setCounts] = useState<Record<RsvpStatus, number>>({
+    going: 0,
+    interested: 0,
+    not_going: 0,
+  });
   const [mine, setMine] = useState<RsvpStatus | null>(null);
   const [rsvpBusy, setRsvpBusy] = useState(false);
   const [attendees, setAttendees] = useState<any[]>([]);
@@ -35,8 +52,7 @@ function EventDetailPage() {
       setCounts(state.counts);
       setMine(state.mine);
     } catch (e: any) {
-      // non-fatal
-      console.warn(e?.message);
+      toast.error(e?.message || "Could not load RSVP state");
     }
   }
 
@@ -60,8 +76,7 @@ function EventDetailPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  const canSeeAttendees =
-    !!event && !!user && (isAdmin || event.organizer_id === user.id);
+  const canSeeAttendees = !!event && !!user && (isAdmin || event.organizer_id === user.id);
 
   async function loadAttendees() {
     if (!canSeeAttendees) return;
@@ -83,7 +98,11 @@ function EventDetailPage() {
       } else {
         await setMyRsvp({ data: { eventId: id, status } });
         toast.success(
-          status === "going" ? "You're going!" : status === "interested" ? "Marked interested" : "Marked not going",
+          status === "going"
+            ? "You're going!"
+            : status === "interested"
+              ? "Marked interested"
+              : "Marked not going",
         );
       }
       await loadRsvp();
@@ -96,14 +115,21 @@ function EventDetailPage() {
   }
 
   if (busy) return <p className="mt-8 px-4 text-muted-foreground">Loading event…</p>;
-  if (!event) return <p className="mt-8 px-4 text-muted-foreground">Event not found or you do not have access.</p>;
+  if (!event)
+    return (
+      <p className="mt-8 px-4 text-muted-foreground">Event not found or you do not have access.</p>
+    );
 
   const start = new Date(event.start_time);
   const end = new Date(event.end_time);
+  const isVirtual = event.location_type === "virtual";
 
   return (
     <div className="mx-auto w-full max-w-7xl pb-16">
-      <Link to="/app/events" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-[var(--indigo-night)] mb-8 transition">
+      <Link
+        to="/app/events"
+        className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-[var(--indigo-night)] mb-8 transition"
+      >
         <ArrowLeft className="mr-2 h-4 w-4" /> Back to Events
       </Link>
 
@@ -111,12 +137,15 @@ function EventDetailPage() {
         <div className="md:col-span-2 space-y-6">
           <div className="flex flex-wrap gap-2">
             {event.chapters?.name && <Badge variant="outline">{event.chapters.name}</Badge>}
-            <Badge variant={event.location_type === 'virtual' ? 'secondary' : 'default'} className="flex items-center gap-1">
-              {event.location_type === 'virtual' ? <Video className="h-3 w-3" /> : <MapPin className="h-3 w-3" />}
-              {event.location_type.toUpperCase()}
+            <Badge
+              variant={isVirtual ? "secondary" : "default"}
+              className="flex items-center gap-1"
+            >
+              {isVirtual ? <Video className="h-3 w-3" /> : <MapPin className="h-3 w-3" />}
+              {formatLocationTypeLabel(event.location_type)}
             </Badge>
           </div>
-          
+
           <h1 className="font-display text-4xl md:text-5xl font-semibold leading-tight text-[var(--indigo-night)]">
             {event.title}
           </h1>
@@ -126,8 +155,12 @@ function EventDetailPage() {
               {(event.profiles?.display_name ?? "?").charAt(0).toUpperCase()}
             </div>
             <div className="flex flex-col">
-              <span className="text-xs text-muted-foreground uppercase tracking-wider">Organized by</span>
-              <span className="text-sm font-semibold text-foreground">{event.profiles?.display_name || 'Member'}</span>
+              <span className="text-xs text-muted-foreground uppercase tracking-wider">
+                Organized by
+              </span>
+              <span className="text-sm font-semibold text-foreground">
+                {event.profiles?.display_name || "Member"}
+              </span>
             </div>
           </div>
 
@@ -142,18 +175,27 @@ function EventDetailPage() {
               <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
                 <CalendarDays className="h-4 w-4" /> Date & Time
               </h3>
-              <p className="font-semibold">{start.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+              <p className="font-semibold">
+                {start.toLocaleDateString(undefined, {
+                  weekday: "long",
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </p>
               <p className="text-sm text-muted-foreground mt-1 flex items-center gap-2">
-                <Clock className="h-3.5 w-3.5" /> 
-                {start.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} - {end.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                <Clock className="h-3.5 w-3.5" />
+                {start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} -{" "}
+                {end.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
               </p>
             </div>
 
             <div className="border-t border-border pt-6">
               <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
-                <MapPin className="h-4 w-4" /> Location
+                {isVirtual ? <Video className="h-4 w-4" /> : <MapPin className="h-4 w-4" />}
+                {isVirtual ? "Online location" : "Venue / address"}
               </h3>
-              <p className="font-medium">{event.location || (event.location_type === 'virtual' ? 'Virtual Event' : 'TBD')}</p>
+              <p className="font-medium">{formatEventLocation(event)}</p>
             </div>
 
             <div className="border-t border-border pt-6 space-y-3">
@@ -213,7 +255,7 @@ function EventDetailPage() {
               {event.link ? (
                 <Button className="w-full" asChild>
                   <a href={event.link} target="_blank" rel="noreferrer">
-                    RSVP / Join Link <ExternalLink className="ml-2 h-4 w-4" />
+                    Registration / join link <ExternalLink className="ml-2 h-4 w-4" />
                   </a>
                 </Button>
               ) : (
@@ -221,10 +263,14 @@ function EventDetailPage() {
                   No link provided
                 </Button>
               )}
-              <Button variant="outline" className="w-full" onClick={() => {
-                navigator.clipboard.writeText(window.location.href);
-                toast.success("Event link copied to clipboard");
-              }}>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  navigator.clipboard.writeText(window.location.href);
+                  toast.success("Event link copied to clipboard");
+                }}
+              >
                 <Share2 className="mr-2 h-4 w-4" /> Share Event
               </Button>
             </div>
@@ -240,7 +286,9 @@ function EventDetailPage() {
                   {attendees.map((a) => (
                     <li key={a.user_id} className="flex items-center justify-between text-sm">
                       <span className="font-medium">{a.profile?.display_name ?? "Member"}</span>
-                      <Badge variant={a.status === "going" ? "default" : "secondary"}>{a.status}</Badge>
+                      <Badge variant={a.status === "going" ? "default" : "secondary"}>
+                        {a.status}
+                      </Badge>
                     </li>
                   ))}
                 </ul>

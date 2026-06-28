@@ -43,18 +43,18 @@ const MODULES: Record<Segment, ModuleCard[]> = {
 export function SegmentHomeModules({ segment }: { segment: Segment }) {
   const cards = MODULES[segment] ?? [];
   return (
-    <div className="grid gap-4 md:grid-cols-2">
+    <div className="grid gap-2">
       {cards.map((c) => (
         <Link
           key={c.title}
           to={c.to}
           search={c.search}
-          className="group rounded-3xl border border-border bg-card p-6 transition hover:border-[var(--saffron)] hover:shadow-md"
+          className="group rounded-xl border border-border bg-muted/35 p-3 transition hover:border-[var(--saffron)]"
         >
-          <h3 className="font-display text-lg font-semibold text-foreground">{c.title}</h3>
-          <p className="mt-1 text-sm text-muted-foreground">{c.desc}</p>
-          <div className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-[var(--indigo-night)] transition-all group-hover:gap-2">
-            Open <ArrowRight className="h-4 w-4" />
+          <h3 className="text-sm font-semibold text-foreground">{c.title}</h3>
+          <p className="mt-1 text-xs leading-5 text-muted-foreground">{c.desc}</p>
+          <div className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-[var(--indigo-night)] transition-all group-hover:gap-2">
+            Open <ArrowRight className="h-3.5 w-3.5" />
           </div>
         </Link>
       ))}

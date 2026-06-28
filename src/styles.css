@@ -1,10 +1,9 @@
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Inter:wght@300;400;500;600;700&display=swap");
 @import "tailwindcss" source(none);
 @import "tw-animate-css";
 @source "../src";
 
 @custom-variant dark (&:is(.dark *));
-
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Inter:wght@300;400;500;600;700&display=swap');
 
 /*
  * Indus Orbit design system.
@@ -157,7 +156,11 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  h1, h2, h3, h4, h5 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5 {
     font-family: var(--font-display);
     font-weight: 400;
     letter-spacing: -0.015em;
@@ -208,22 +211,538 @@
     animation: fade-up 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
   @keyframes fade-up {
-    from { opacity: 0; transform: translateY(16px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
   .animate-orbit {
     animation: orbit 18s linear infinite;
     transform-origin: center;
   }
   @keyframes orbit {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
   }
   .animate-counter-orbit {
     animation: counter-orbit 18s linear infinite;
   }
   @keyframes counter-orbit {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(-360deg); }
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(-360deg);
+    }
+  }
+
+  .app-ui {
+    --radius: 0.625rem;
+    --background: oklch(0.965 0.009 270);
+    --foreground: oklch(0.2 0.065 275);
+    --card: oklch(0.995 0.006 92);
+    --border: oklch(0.875 0.014 270);
+    --muted: oklch(0.94 0.01 270);
+    --muted-foreground: oklch(0.42 0.04 270);
+    --indigo-night: oklch(0.23 0.083 274);
+    --saffron: oklch(0.705 0.17 64);
+    --app-surface: color-mix(in oklab, var(--card) 78%, transparent);
+    --app-surface-strong: color-mix(in oklab, var(--card) 92%, transparent);
+    --app-surface-soft: color-mix(in oklab, var(--card) 58%, transparent);
+    --app-control: color-mix(in oklab, white 70%, var(--muted));
+    --app-border: color-mix(in oklab, var(--border) 72%, transparent);
+    --app-shadow: 0 18px 44px -32px oklch(0.19 0.07 275 / 0.36);
+    --app-shadow-strong: 0 24px 70px -46px oklch(0.19 0.07 275 / 0.44);
+    background:
+      radial-gradient(
+        circle at 12% -8%,
+        color-mix(in oklab, var(--saffron) 14%, transparent),
+        transparent 24rem
+      ),
+      radial-gradient(
+        circle at 88% 8%,
+        color-mix(in oklab, var(--indigo-night) 8%, transparent),
+        transparent 28rem
+      ),
+      linear-gradient(135deg, oklch(0.963 0.009 270), oklch(0.986 0.008 92));
+  }
+
+  .app-ui .app-glass {
+    background: var(--app-surface);
+    backdrop-filter: blur(24px) saturate(170%);
+    -webkit-backdrop-filter: blur(24px) saturate(170%);
+    border: 1px solid var(--app-border);
+    box-shadow: var(--app-shadow);
+  }
+
+  .app-ui .app-topbar {
+    background: color-mix(in oklab, var(--card) 74%, transparent);
+    backdrop-filter: blur(28px) saturate(180%);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    border-bottom: 1px solid color-mix(in oklab, var(--border) 64%, transparent);
+    box-shadow: 0 16px 34px -34px oklch(0.19 0.07 275 / 0.34);
+  }
+
+  .app-ui .app-workspace-head {
+    padding: 0.875rem;
+  }
+
+  .app-ui .app-workspace-head-main {
+    display: grid;
+    gap: 0.875rem;
+  }
+
+  .app-ui .app-workspace-title {
+    min-width: 0;
+  }
+
+  .app-ui .app-workspace-kicker {
+    color: var(--saffron);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+
+  .app-ui .app-workspace-title h1 {
+    margin-top: 0.45rem;
+    color: var(--indigo-night);
+    font-size: clamp(1.15rem, 1.4vw, 1.45rem);
+    font-weight: 650;
+    line-height: 1.1;
+  }
+
+  .app-ui .app-workspace-title p:not(.app-workspace-kicker) {
+    margin-top: 0.35rem;
+    max-width: 54rem;
+    color: color-mix(in oklab, var(--foreground) 68%, transparent);
+    font-size: 0.84rem;
+    line-height: 1.45;
+  }
+
+  .app-ui .app-workspace-tabs,
+  .app-ui .app-filter-row {
+    display: flex;
+    gap: 0.4rem;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .app-ui .app-workspace-tabs::-webkit-scrollbar,
+  .app-ui .app-filter-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  .app-ui .app-workspace-tabs {
+    align-items: center;
+    border: 1px solid var(--app-border);
+    border-radius: 999px;
+    background: color-mix(in oklab, white 52%, transparent);
+    padding: 0.2rem;
+  }
+
+  .app-ui .app-workspace-controls {
+    display: grid;
+    gap: 0.6rem;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--app-border);
+  }
+
+  .app-ui .app-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2rem;
+    white-space: nowrap;
+    border: 1px solid var(--app-border);
+    border-radius: 999px;
+    background: color-mix(in oklab, white 52%, transparent);
+    padding: 0.35rem 0.7rem;
+    color: color-mix(in oklab, var(--foreground) 82%, transparent);
+    font-size: 0.76rem;
+    font-weight: 650;
+    line-height: 1;
+    transition:
+      background-color 160ms ease,
+      border-color 160ms ease,
+      color 160ms ease;
+  }
+
+  .app-ui .app-chip:hover {
+    background: color-mix(in oklab, white 72%, transparent);
+    color: var(--foreground);
+  }
+
+  .app-ui .app-chip[data-active="true"] {
+    border-color: var(--indigo-night);
+    background: var(--indigo-night);
+    color: var(--parchment);
+    box-shadow: 0 8px 20px -16px oklch(0.19 0.07 275 / 0.55);
+  }
+
+  .app-ui .app-search {
+    position: relative;
+    width: 100%;
+  }
+
+  .app-ui .app-search svg {
+    position: absolute;
+    top: 50%;
+    left: 0.72rem;
+    height: 0.92rem;
+    width: 0.92rem;
+    transform: translateY(-50%);
+    color: var(--muted-foreground);
+  }
+
+  .app-ui .app-search input {
+    height: 2.1rem;
+    border-radius: 999px;
+    padding-left: 2.1rem;
+  }
+
+  .app-ui .app-result-line {
+    margin-top: 0.65rem;
+    color: var(--muted-foreground);
+    font-size: 0.76rem;
+    font-weight: 500;
+  }
+
+  @media (min-width: 768px) {
+    .app-ui .app-workspace-head {
+      padding: 1rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .app-ui .app-workspace-head-main {
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: start;
+    }
+
+    .app-ui .app-workspace-tabs {
+      justify-self: end;
+      max-width: min(42vw, 34rem);
+    }
+
+    .app-ui .app-workspace-controls {
+      grid-template-columns: minmax(0, 1fr) minmax(16rem, 24rem);
+      align-items: center;
+    }
+
+    .app-ui .app-workspace-controls.app-workspace-controls-single {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .app-ui .app-result-line {
+      grid-column: 1 / -1;
+      margin-top: 0;
+    }
+  }
+
+  .app-ui .app-mobile-menu {
+    background: color-mix(in oklab, var(--card) 76%, transparent);
+    backdrop-filter: blur(22px) saturate(170%);
+    -webkit-backdrop-filter: blur(22px) saturate(170%);
+    border: 1px solid color-mix(in oklab, var(--border) 62%, transparent);
+    box-shadow: var(--app-shadow);
+  }
+
+  .app-ui .app-rail {
+    background: linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--card) 72%, transparent),
+      color-mix(in oklab, var(--saffron) 7%, white)
+    );
+    backdrop-filter: blur(28px) saturate(175%);
+    -webkit-backdrop-filter: blur(28px) saturate(175%);
+    box-shadow: 18px 0 50px -42px oklch(0.22 0.07 275 / 0.35);
+  }
+
+  .app-ui .bg-card,
+  .app-ui .bg-card\/50,
+  .app-ui .bg-card\/70,
+  .app-ui .bg-card\/80 {
+    background: var(--app-surface);
+    backdrop-filter: blur(22px) saturate(165%);
+    -webkit-backdrop-filter: blur(22px) saturate(165%);
+  }
+
+  .app-ui .bg-background,
+  .app-ui .bg-background\/50,
+  .app-ui .bg-background\/80 {
+    background-color: color-mix(in oklab, var(--background) 78%, transparent);
+  }
+
+  .app-ui .bg-muted,
+  .app-ui .bg-muted\/20,
+  .app-ui .bg-muted\/25,
+  .app-ui .bg-muted\/30,
+  .app-ui .bg-muted\/35,
+  .app-ui .bg-muted\/40,
+  .app-ui .bg-muted\/50 {
+    background-color: color-mix(in oklab, var(--muted) 62%, transparent);
+  }
+
+  .app-ui .border-border,
+  .app-ui .border-border\/50,
+  .app-ui .border-border\/60,
+  .app-ui .border-border\/70,
+  .app-ui .border-border\/80 {
+    border-color: var(--app-border);
+  }
+
+  .app-ui .text-muted-foreground {
+    color: var(--muted-foreground);
+  }
+
+  .app-ui input:not([type="checkbox"]):not([type="radio"]),
+  .app-ui textarea,
+  .app-ui select,
+  .app-ui [role="combobox"] {
+    background: var(--app-control);
+    border-color: var(--app-border);
+    box-shadow: inset 0 1px 0 color-mix(in oklab, white 65%, transparent);
+  }
+
+  .app-ui input:not([type="checkbox"]):not([type="radio"]):focus,
+  .app-ui textarea:focus,
+  .app-ui select:focus,
+  .app-ui [role="combobox"]:focus {
+    border-color: color-mix(in oklab, var(--saffron) 58%, var(--border));
+    outline: none;
+    box-shadow:
+      0 0 0 3px color-mix(in oklab, var(--saffron) 18%, transparent),
+      inset 0 1px 0 color-mix(in oklab, white 65%, transparent);
+  }
+
+  .app-ui button,
+  .app-ui a {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .app-ui .bg-primary {
+    background-color: var(--indigo-night);
+    color: var(--parchment);
+    box-shadow: 0 10px 24px -18px oklch(0.19 0.07 275 / 0.5);
+  }
+
+  .app-ui .bg-primary:hover {
+    background-color: color-mix(in oklab, var(--indigo-night) 92%, black);
+  }
+
+  .app-ui .bg-secondary {
+    background-color: color-mix(in oklab, var(--saffron) 13%, white);
+    color: var(--indigo-night);
+  }
+
+  .app-ui .ring-border\/60,
+  .app-ui .ring-border\/70 {
+    --tw-ring-color: var(--app-border);
+  }
+
+  .app-ui .app-sidebar-scroll {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .app-ui .app-sidebar-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  .app-ui.app-compact main {
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+  }
+
+  .app-ui main > * {
+    min-width: 0;
+  }
+
+  @media (min-width: 768px) {
+    .app-ui.app-compact main {
+      padding-left: 0.75rem;
+      padding-right: 0.75rem;
+    }
+  }
+
+  .app-ui main > .mx-auto.max-w-7xl,
+  .app-ui main > .mx-auto.max-w-6xl {
+    max-width: none;
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .app-ui.app-compact main .p-6 {
+    padding: 1rem;
+  }
+
+  .app-ui.app-compact main .p-8 {
+    padding: 1.25rem;
+  }
+
+  .app-ui.app-compact main .p-12 {
+    padding: 1.5rem;
+  }
+
+  @media (min-width: 768px) {
+    .app-ui.app-compact main .md\:p-8 {
+      padding: 1.25rem;
+    }
+  }
+
+  .app-ui.app-compact main .gap-8 {
+    gap: 1rem;
+  }
+
+  .app-ui.app-compact main .gap-12 {
+    gap: 1.5rem;
+  }
+
+  .app-ui.app-compact main .space-y-8 > :not([hidden]) ~ :not([hidden]) {
+    --tw-space-y-reverse: 0;
+    margin-top: calc(1rem * calc(1 - var(--tw-space-y-reverse)));
+    margin-bottom: calc(1rem * var(--tw-space-y-reverse));
+  }
+
+  .app-ui.app-compact main .space-y-6 > :not([hidden]) ~ :not([hidden]) {
+    --tw-space-y-reverse: 0;
+    margin-top: calc(0.875rem * calc(1 - var(--tw-space-y-reverse)));
+    margin-bottom: calc(0.875rem * var(--tw-space-y-reverse));
+  }
+
+  .app-ui.app-compact main .mt-10 {
+    margin-top: 1.25rem;
+  }
+
+  .app-ui.app-compact main .mt-8 {
+    margin-top: 1rem;
+  }
+
+  .app-ui.app-compact main .py-24 {
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+  }
+
+  .app-ui.app-flat .app-glass {
+    background: var(--card);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: none;
+  }
+
+  .app-ui.app-reduce-motion *,
+  .app-ui.app-reduce-motion *::before,
+  .app-ui.app-reduce-motion *::after {
+    animation-duration: 1ms !important;
+    scroll-behavior: auto !important;
+    transition-duration: 1ms !important;
+  }
+
+  .app-ui .font-display {
+    font-family: var(--font-sans);
+    letter-spacing: 0;
+  }
+
+  .app-ui h1,
+  .app-ui h2,
+  .app-ui h3,
+  .app-ui h4,
+  .app-ui h5 {
+    font-family: var(--font-sans);
+    letter-spacing: 0;
+  }
+
+  .app-ui .rounded-3xl {
+    border-radius: 1rem;
+  }
+
+  .app-ui .rounded-2xl {
+    border-radius: 0.875rem;
+  }
+
+  .app-ui .shadow-sm,
+  .app-ui .shadow-md,
+  .app-ui .shadow-lg,
+  .app-ui .shadow-xl,
+  .app-ui .shadow-2xl {
+    box-shadow: var(--app-shadow);
+  }
+
+  .app-ui .tracking-\[0\.25em\] {
+    letter-spacing: 0.12em;
+  }
+
+  @media (max-width: 767px) {
+    .app-ui {
+      background:
+        radial-gradient(
+          circle at 0% -6%,
+          color-mix(in oklab, var(--saffron) 12%, transparent),
+          transparent 17rem
+        ),
+        linear-gradient(135deg, oklch(0.964 0.008 270), oklch(0.986 0.008 92));
+    }
+
+    .app-ui main {
+      overflow-x: hidden;
+    }
+
+    .app-ui .app-glass {
+      border-radius: 1rem;
+      box-shadow: 0 14px 32px -28px oklch(0.19 0.07 275 / 0.32);
+    }
+
+    .app-ui .rounded-3xl,
+    .app-ui .rounded-2xl {
+      border-radius: 1rem;
+    }
+
+    .app-ui h1 {
+      font-size: clamp(1.45rem, 7vw, 2rem);
+      line-height: 1.08;
+    }
+
+    .app-ui h2 {
+      font-size: clamp(1.05rem, 5vw, 1.35rem);
+      line-height: 1.2;
+    }
+
+    .app-ui input:not([type="checkbox"]):not([type="radio"]),
+    .app-ui textarea,
+    .app-ui select,
+    .app-ui [role="combobox"] {
+      font-size: 16px;
+    }
+
+    .app-ui .p-6,
+    .app-ui .p-8,
+    .app-ui .p-12 {
+      padding: 1rem;
+    }
+
+    .app-ui .gap-6,
+    .app-ui .gap-8,
+    .app-ui .gap-12 {
+      gap: 0.875rem;
+    }
+
+    .app-ui .mt-10,
+    .app-ui .mt-8,
+    .app-ui .mt-6 {
+      margin-top: 1rem;
+    }
   }
 }

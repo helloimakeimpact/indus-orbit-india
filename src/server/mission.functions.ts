@@ -1,18 +1,53 @@
 import { supabase } from "@/integrations/supabase/client";
+import { sendNotification } from "@/server/notification.functions";
 
-export const createMission = async ({ data }: { data: { title: string; theme: string; description: string; chapterId?: string } }) => {
+type MissionStatus = "open" | "completed" | "archived";
+
+async function hasAdminRole(userId: string) {
+  const { data } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .eq("role", "admin")
+    .maybeSingle();
+  return !!data;
+}
+
+async function isMissionLead(userId: string, missionId: string) {
+  const { data } = await supabase
+    .from("mission_members")
+    .select("role")
+    .eq("mission_id", missionId)
+    .eq("user_id", userId)
+    .eq("role", "lead")
+    .maybeSingle();
+  return !!data;
+}
+
+async function isMissionMember(userId: string, missionId: string) {
+  const { data } = await supabase
+    .from("mission_members")
+    .select("user_id")
+    .eq("mission_id", missionId)
+    .eq("user_id", userId)
+    .maybeSingle();
+  return !!data;
+}
+
+async function canManageMission(userId: string, missionId: string) {
+  return (await hasAdminRole(userId)) || (await isMissionLead(userId, missionId));
+}
+
+export const createMission = async ({
+  data,
+}: {
+  data: { title: string; theme: string; description: string; chapterId?: string };
+}) => {
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) throw new Error("Unauthorized");
 
   // Check admin role
-  const { data: roleData } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", userData.user.id)
-    .eq("role", "admin")
-    .maybeSingle();
-    
-  let canCreate = !!roleData;
+  let canCreate = await hasAdminRole(userData.user.id);
 
   // If not admin, check if they are a chapter lead for the provided chapter
   if (!canCreate && data.chapterId) {
@@ -28,33 +63,57 @@ export const createMission = async ({ data }: { data: { title: string; theme: st
 
   if (!canCreate) throw new Error("Only admins or chapter leads can create missions");
 
-  const { data: newMission, error } = await supabase.from("missions").insert({
-    title: data.title,
-    theme: data.theme,
-    description: data.description,
-    created_by: userData.user.id,
-    chapter_id: data.chapterId || null,
-  }).select("id").single();
+  const { data: newMission, error } = await supabase
+    .from("missions")
+    .insert({
+      title: data.title.trim(),
+      theme: data.theme.trim(),
+      description: data.description.trim(),
+      created_by: userData.user.id,
+      chapter_id: data.chapterId || null,
+    })
+    .select("id")
+    .single();
 
   if (error) throw new Error(error.message);
 
   // Auto-add the creator as a lead of the mission
   if (newMission) {
-    await supabase.from("mission_members").insert({
+    const { error: memberError } = await supabase.from("mission_members").insert({
       mission_id: newMission.id,
       user_id: userData.user.id,
       role: "lead",
     });
+    if (memberError) throw new Error(memberError.message);
   }
 
   return { ok: true };
 };
 
-export const joinMission = async ({ data }: { data: { missionId: string; role: "contributor" | "founder"; commitmentType?: string; message?: string } }) => {
+export const joinMission = async ({
+  data,
+}: {
+  data: {
+    missionId: string;
+    role: "contributor" | "founder";
+    commitmentType?: string;
+    message?: string;
+  };
+}) => {
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) throw new Error("Unauthorized");
-  
-  const { error } = await supabase.from("mission_members").upsert({
+
+  const { data: mission, error: missionError } = await supabase
+    .from("missions")
+    .select("status")
+    .eq("id", data.missionId)
+    .single();
+  if (missionError) throw new Error(missionError.message);
+  if (mission.status !== "open") throw new Error("This mission is not open for joining");
+
+  if (await isMissionMember(userData.user.id, data.missionId)) return { ok: true };
+
+  const { error } = await supabase.from("mission_members").insert({
     mission_id: data.missionId,
     user_id: userData.user.id,
     role: data.role,
@@ -66,7 +125,11 @@ export const joinMission = async ({ data }: { data: { missionId: string; role: "
   return { ok: true };
 };
 
-export const removeMissionMember = async ({ data }: { data: { missionId: string; targetUserId: string } }) => {
+export const removeMissionMember = async ({
+  data,
+}: {
+  data: { missionId: string; targetUserId: string };
+}) => {
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) throw new Error("Unauthorized");
 
@@ -83,7 +146,8 @@ export const removeMissionMember = async ({ data }: { data: { missionId: string;
 export const getMissions = async () => {
   const { data: missions, error } = await supabase
     .from("missions")
-    .select(`
+    .select(
+      `
       *,
       mission_members (
         user_id,
@@ -92,26 +156,25 @@ export const getMissions = async () => {
         message,
         profiles:user_id (display_name, avatar_url, orbit_segment)
       )
-    `)
+    `,
+    )
     .order("created_at", { ascending: false });
 
   if (error) throw new Error(error.message);
   return missions ?? [];
 };
 
-export const updateMissionStatus = async ({ data }: { data: { missionId: string; status: "open" | "completed" | "archived" } }) => {
+export const updateMissionStatus = async ({
+  data,
+}: {
+  data: { missionId: string; status: MissionStatus };
+}) => {
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) throw new Error("Unauthorized");
 
-  // Check admin role
-  const { data: roleData } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", userData.user.id)
-    .eq("role", "admin")
-    .maybeSingle();
-    
-  if (!roleData) throw new Error("Only admins can update missions");
+  if (!(await canManageMission(userData.user.id, data.missionId))) {
+    throw new Error("Only mission leads or admins can update missions");
+  }
 
   const { error } = await supabase
     .from("missions")
@@ -119,7 +182,7 @@ export const updateMissionStatus = async ({ data }: { data: { missionId: string;
     .eq("id", data.missionId);
 
   if (error) throw new Error(error.message);
-  
+
   await supabase.from("audit_log").insert({
     actor_id: userData.user.id,
     action: `mission.status_updated_to_${data.status}`,
@@ -133,7 +196,8 @@ export const updateMissionStatus = async ({ data }: { data: { missionId: string;
 export const getMission = async (missionId: string) => {
   const { data: mission, error } = await supabase
     .from("missions")
-    .select(`
+    .select(
+      `
       *,
       mission_members (
         user_id,
@@ -151,6 +215,7 @@ export const getMission = async (missionId: string) => {
         id,
         title,
         start_time,
+        location,
         location_type
       ),
       stories (
@@ -159,12 +224,13 @@ export const getMission = async (missionId: string) => {
         status,
         published_at
       )
-    `)
+    `,
+    )
     .eq("id", missionId)
     .single();
 
   if (error) throw new Error(error.message);
-  
+
   // Sort updates: pinned first, then descending by date
   if (mission.mission_updates) {
     mission.mission_updates.sort((a: any, b: any) => {
@@ -177,8 +243,8 @@ export const getMission = async (missionId: string) => {
   // Sort members: leads first
   if (mission.mission_members) {
     mission.mission_members.sort((a: any, b: any) => {
-      if (a.role === 'lead' && b.role !== 'lead') return -1;
-      if (a.role !== 'lead' && b.role === 'lead') return 1;
+      if (a.role === "lead" && b.role !== "lead") return -1;
+      if (a.role !== "lead" && b.role === "lead") return 1;
       return 0;
     });
   }
@@ -186,41 +252,77 @@ export const getMission = async (missionId: string) => {
   return mission;
 };
 
-export const postMissionUpdate = async ({ data }: { data: { missionId: string; content: string } }) => {
+export const postMissionUpdate = async ({
+  data,
+}: {
+  data: { missionId: string; content: string };
+}) => {
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) throw new Error("Unauthorized");
 
-  const { error, data: updateRow } = await supabase.from("mission_updates").insert({
-    mission_id: data.missionId,
-    author_id: userData.user.id,
-    content: data.content
-  }).select().single();
+  const content = data.content.trim();
+  if (!content) throw new Error("Update content is required");
+
+  const canPost =
+    (await isMissionMember(userData.user.id, data.missionId)) ||
+    (await hasAdminRole(userData.user.id));
+  if (!canPost) throw new Error("Join this mission before posting updates");
+
+  const { error, data: updateRow } = await supabase
+    .from("mission_updates")
+    .insert({
+      mission_id: data.missionId,
+      author_id: userData.user.id,
+      content,
+    })
+    .select()
+    .single();
 
   if (error) throw new Error(error.message);
 
   // Trigger notifications
-  const { data: members } = await supabase.from("mission_members").select("user_id").eq("mission_id", data.missionId);
-  const { data: mission } = await supabase.from("missions").select("title").eq("id", data.missionId).single();
-  
+  const { data: members } = await supabase
+    .from("mission_members")
+    .select("user_id")
+    .eq("mission_id", data.missionId);
+  const { data: mission } = await supabase
+    .from("missions")
+    .select("title")
+    .eq("id", data.missionId)
+    .single();
+
   if (members && mission) {
-    const notifications = members
-      .filter(m => m.user_id !== userData.user!.id)
-      .map(m => ({
-        user_id: m.user_id,
-        category: "mission_updates",
-        type: "mission_updates",
-        message: `New update in mission: ${mission.title}`,
-        link: `/app/missions_/${data.missionId}`
-      }));
-      
-    if (notifications.length > 0) {
-      await supabase.from("notifications").insert(notifications);
-    }
+    await Promise.all(
+      members
+        .filter((m) => m.user_id !== userData.user!.id)
+        .map((m) =>
+          sendNotification({
+            userId: m.user_id,
+            type: "mission_updates",
+            message: `New update in mission: ${mission.title}`,
+            link: `/app/missions/${data.missionId}`,
+          }),
+        ),
+    );
   }
 
   return { ok: true, update: updateRow };
 };
 export const pinMissionUpdate = async (updateId: string, isPinned: boolean) => {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) throw new Error("Unauthorized");
+
+  const { data: update, error: lookupError } = await supabase
+    .from("mission_updates")
+    .select("mission_id")
+    .eq("id", updateId)
+    .single();
+  if (lookupError) throw new Error(lookupError.message);
+
+  if (!(await canManageMission(userData.user.id, update.mission_id))) {
+    throw new Error("Only mission leads or admins can pin updates");
+  }
+
   const { error } = await supabase
     .from("mission_updates")
     .update({ is_pinned: isPinned })

@@ -23,9 +23,12 @@ import {
 import { SEGMENT_LIST, SEGMENT_META, type Segment } from "@/components/auth/segments";
 import { VerifiedBadge } from "@/components/auth/VerifiedBadge";
 import { SuspendDialog } from "@/components/admin/SuspendDialog";
+import { formatInlineProfileLocation } from "@/lib/location";
 
 export const Route = createFileRoute("/app/admin/members")({
-  head: () => ({ meta: [{ title: "Members admin — Indus Orbit" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({
+    meta: [{ title: "Members admin — Indus Orbit" }, { name: "robots", content: "noindex" }],
+  }),
   component: AdminMembers,
 });
 
@@ -70,7 +73,10 @@ function AdminMembers() {
 
   async function load() {
     setBusy(true);
-    const { data } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
+    const { data } = await supabase
+      .from("profiles")
+      .select("*")
+      .order("created_at", { ascending: false });
     setRows((data as unknown as Row[] | null) ?? []);
     const { data: susp } = await supabase
       .from("member_suspensions")
@@ -80,7 +86,9 @@ function AdminMembers() {
     setBusy(false);
   }
 
-  useEffect(() => { if (isAdmin) load(); }, [isAdmin]);
+  useEffect(() => {
+    if (isAdmin) load();
+  }, [isAdmin]);
 
   const filtered = useMemo(() => {
     let r = rows;
@@ -90,19 +98,26 @@ function AdminMembers() {
     else if (filter !== "all") r = r.filter((x) => x.orbit_segment === filter);
     if (search.trim()) {
       const q = search.trim().toLowerCase();
-      r = r.filter((x) =>
-        (x.display_name ?? "").toLowerCase().includes(q) ||
-        (x.headline ?? "").toLowerCase().includes(q) ||
-        (x.city ?? "").toLowerCase().includes(q) ||
-        (x.country ?? "").toLowerCase().includes(q),
+      r = r.filter(
+        (x) =>
+          (x.display_name ?? "").toLowerCase().includes(q) ||
+          (x.headline ?? "").toLowerCase().includes(q) ||
+          (x.city ?? "").toLowerCase().includes(q) ||
+          (x.country ?? "").toLowerCase().includes(q),
       );
     }
     return r;
   }, [rows, filter, search]);
 
   async function patch(row: Row, p: Record<string, unknown>) {
-    const { error } = await supabase.from("profiles").update(p as never).eq("id", row.id);
-    if (error) { toast.error(error.message); return false; }
+    const { error } = await supabase
+      .from("profiles")
+      .update(p as never)
+      .eq("id", row.id);
+    if (error) {
+      toast.error(error.message);
+      return false;
+    }
     return true;
   }
 
@@ -135,7 +150,15 @@ function AdminMembers() {
                 : "border-border hover:bg-foreground/5"
             }`}
           >
-            {f === "all" ? "All" : f === "verified" ? "Verified" : f === "pending" ? "Pending" : f === "public" ? "Public" : SEGMENT_META[f as Segment].label}
+            {f === "all"
+              ? "All"
+              : f === "verified"
+                ? "Verified"
+                : f === "pending"
+                  ? "Pending"
+                  : f === "public"
+                    ? "Public"
+                    : SEGMENT_META[f as Segment].label}
           </button>
         ))}
       </div>
@@ -163,25 +186,55 @@ function AdminMembers() {
                     <td className="p-4">
                       <div className="font-medium">{r.display_name ?? "—"}</div>
                       <div className="text-xs text-muted-foreground">
-                        {[r.city, r.country].filter(Boolean).join(" · ") || "—"}
+                        {formatInlineProfileLocation(r, "—")}
                       </div>
                     </td>
                     <td className="p-4">
-                      <Select value={r.orbit_segment ?? ""} onValueChange={async (v) => { if (await patch(r, { orbit_segment: v })) { toast.success("Segment updated"); load(); } }}>
-                        <SelectTrigger className="h-8 w-[160px] text-xs"><SelectValue placeholder="—" /></SelectTrigger>
+                      <Select
+                        value={r.orbit_segment ?? ""}
+                        onValueChange={async (v) => {
+                          if (await patch(r, { orbit_segment: v })) {
+                            toast.success("Segment updated");
+                            load();
+                          }
+                        }}
+                      >
+                        <SelectTrigger className="h-8 w-[160px] text-xs">
+                          <SelectValue placeholder="—" />
+                        </SelectTrigger>
                         <SelectContent>
-                          {SEGMENT_LIST.map((s) => (<SelectItem key={s} value={s}>{SEGMENT_META[s].label}</SelectItem>))}
+                          {SEGMENT_LIST.map((s) => (
+                            <SelectItem key={s} value={s}>
+                              {SEGMENT_META[s].label}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </td>
                     <td className="p-4">
                       <div className="flex items-center gap-2">
-                        <Switch checked={r.is_verified} onCheckedChange={async (v) => { if (await patch(r, { is_verified: v })) { toast.success(v ? "Verified" : "Verification removed"); load(); } }} />
+                        <Switch
+                          checked={r.is_verified}
+                          onCheckedChange={async (v) => {
+                            if (await patch(r, { is_verified: v })) {
+                              toast.success(v ? "Verified" : "Verification removed");
+                              load();
+                            }
+                          }}
+                        />
                         {r.is_verified && <VerifiedBadge />}
                       </div>
                     </td>
                     <td className="p-4">
-                      <Switch checked={r.is_public} onCheckedChange={async (v) => { if (await patch(r, { is_public: v })) { toast.success(v ? "Listed" : "Hidden"); load(); } }} />
+                      <Switch
+                        checked={r.is_public}
+                        onCheckedChange={async (v) => {
+                          if (await patch(r, { is_public: v })) {
+                            toast.success(v ? "Listed" : "Hidden");
+                            load();
+                          }
+                        }}
+                      />
                     </td>
                     <td className="p-4 text-right">
                       {suspendedIds.has(r.user_id) ? (
@@ -224,7 +277,9 @@ function AdminMembers() {
                           Suspend
                         </Button>
                       )}
-                      <Button size="sm" variant="outline" onClick={() => setActive(r)}>Details</Button>
+                      <Button size="sm" variant="outline" onClick={() => setActive(r)}>
+                        Details
+                      </Button>
                     </td>
                   </tr>
                 ))}
@@ -246,13 +301,29 @@ function AdminMembers() {
                 <SheetDescription>{active.headline ?? "No headline yet."}</SheetDescription>
               </SheetHeader>
               <div className="mt-6 space-y-4 text-sm">
-                <DetailRow label="Segment" value={active.orbit_segment ? SEGMENT_META[active.orbit_segment].label : "—"} />
-                <DetailRow label="Location" value={[active.city, active.country, active.region].filter(Boolean).join(" · ") || "—"} />
-                <DetailRow label="LinkedIn" value={active.linkedin_url ?? "—"} link={active.linkedin_url ?? undefined} />
-                <DetailRow label="Website" value={active.website_url ?? "—"} link={active.website_url ?? undefined} />
-                <DetailRow label="Joined" value={new Date(active.created_at).toLocaleDateString()} />
+                <DetailRow
+                  label="Segment"
+                  value={active.orbit_segment ? SEGMENT_META[active.orbit_segment].label : "—"}
+                />
+                <DetailRow label="Location" value={formatInlineProfileLocation(active, "—")} />
+                <DetailRow
+                  label="LinkedIn"
+                  value={active.linkedin_url ?? "—"}
+                  link={active.linkedin_url ?? undefined}
+                />
+                <DetailRow
+                  label="Website"
+                  value={active.website_url ?? "—"}
+                  link={active.website_url ?? undefined}
+                />
+                <DetailRow
+                  label="Joined"
+                  value={new Date(active.created_at).toLocaleDateString()}
+                />
                 <div>
-                  <p className="text-xs uppercase tracking-wider text-muted-foreground">Segment details</p>
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground">
+                    Segment details
+                  </p>
                   <pre className="mt-2 overflow-x-auto rounded-xl bg-muted/40 p-3 text-xs">
                     {JSON.stringify(active.segment_details ?? {}, null, 2)}
                   </pre>
@@ -282,7 +353,14 @@ function DetailRow({ label, value, link }: { label: string; value: string; link?
     <div>
       <p className="text-xs uppercase tracking-wider text-muted-foreground">{label}</p>
       {link ? (
-        <a href={link} target="_blank" rel="noreferrer" className="mt-1 block break-all text-[var(--indigo-night)] hover:underline">{value}</a>
+        <a
+          href={link}
+          target="_blank"
+          rel="noreferrer"
+          className="mt-1 block break-all text-[var(--indigo-night)] hover:underline"
+        >
+          {value}
+        </a>
       ) : (
         <p className="mt-1 break-all">{value}</p>
       )}

@@ -16,9 +16,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { formatInlineProfileLocation } from "@/lib/location";
 
 export const Route = createFileRoute("/app/admin/roles")({
-  head: () => ({ meta: [{ title: "Roles admin — Indus Orbit" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({
+    meta: [{ title: "Roles admin — Indus Orbit" }, { name: "robots", content: "noindex" }],
+  }),
   component: AdminRoles,
 });
 
@@ -42,7 +45,9 @@ function AdminRoles() {
   const [busy, setBusy] = useState(true);
   const [search, setSearch] = useState("");
   const [activeRole, setActiveRole] = useState<RoleKind>("admin");
-  const [demoteTarget, setDemoteTarget] = useState<{ profile: Profile; role: RoleKind } | null>(null);
+  const [demoteTarget, setDemoteTarget] = useState<{ profile: Profile; role: RoleKind } | null>(
+    null,
+  );
 
   useEffect(() => {
     if (!loading && !isAdmin) {
@@ -54,7 +59,10 @@ function AdminRoles() {
   async function load() {
     setBusy(true);
     const [{ data: p }, { data: r }] = await Promise.all([
-      supabase.from("profiles").select("id, user_id, display_name, headline, city, country").order("display_name"),
+      supabase
+        .from("profiles")
+        .select("id, user_id, display_name, headline, city, country")
+        .order("display_name"),
       supabase.from("user_roles").select("user_id, role").in("role", ["admin", "editor"]),
     ]);
     setProfiles((p as unknown as Profile[] | null) ?? []);
@@ -64,7 +72,9 @@ function AdminRoles() {
     setBusy(false);
   }
 
-  useEffect(() => { if (isAdmin) load(); }, [isAdmin]);
+  useEffect(() => {
+    if (isAdmin) load();
+  }, [isAdmin]);
 
   const currentSet = activeRole === "admin" ? adminIds : editorIds;
   const holders = useMemo(
@@ -76,14 +86,22 @@ function AdminRoles() {
     if (!q) return [];
     return profiles
       .filter((p) => !currentSet.has(p.user_id))
-      .filter((p) => (p.display_name ?? "").toLowerCase().includes(q) || (p.headline ?? "").toLowerCase().includes(q))
+      .filter(
+        (p) =>
+          (p.display_name ?? "").toLowerCase().includes(q) ||
+          (p.headline ?? "").toLowerCase().includes(q),
+      )
       .slice(0, 8);
   }, [profiles, currentSet, search]);
 
   async function promote(p: Profile) {
-    const { error } = await supabase.from("user_roles").insert({ user_id: p.user_id, role: activeRole });
+    const { error } = await supabase
+      .from("user_roles")
+      .insert({ user_id: p.user_id, role: activeRole });
     if (error) return toast.error(error.message);
-    toast.success(`${p.display_name ?? "Member"} is now ${activeRole === "admin" ? "an admin" : "an editor"}`);
+    toast.success(
+      `${p.display_name ?? "Member"} is now ${activeRole === "admin" ? "an admin" : "an editor"}`,
+    );
     setSearch("");
     load();
   }
@@ -106,20 +124,27 @@ function AdminRoles() {
     <div className="mx-auto w-full max-w-7xl">
       <h1 className="font-display text-3xl font-medium">Roles</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        Manage admins (full platform control) and editors (story & event moderation across the platform).
+        Manage admins (full platform control) and editors (story & event moderation across the
+        platform).
       </p>
 
       <div className="mt-6 inline-flex rounded-xl border border-border bg-card p-1">
         <button
           type="button"
-          onClick={() => { setActiveRole("admin"); setSearch(""); }}
+          onClick={() => {
+            setActiveRole("admin");
+            setSearch("");
+          }}
           className={`rounded-lg px-4 py-1.5 text-sm font-medium transition ${activeRole === "admin" ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"}`}
         >
           Admins
         </button>
         <button
           type="button"
-          onClick={() => { setActiveRole("editor"); setSearch(""); }}
+          onClick={() => {
+            setActiveRole("editor");
+            setSearch("");
+          }}
           className={`rounded-lg px-4 py-1.5 text-sm font-medium transition ${activeRole === "editor" ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"}`}
         >
           Editors
@@ -143,11 +168,16 @@ function AdminRoles() {
               <p className="text-sm text-muted-foreground">No matches.</p>
             ) : (
               candidates.map((c) => (
-                <div key={c.id} className="flex items-center justify-between rounded-xl border border-border p-3">
+                <div
+                  key={c.id}
+                  className="flex items-center justify-between rounded-xl border border-border p-3"
+                >
                   <div>
                     <p className="font-medium">{c.display_name ?? "Member"}</p>
                     <p className="text-xs text-muted-foreground">
-                      {[c.headline, [c.city, c.country].filter(Boolean).join(", ")].filter(Boolean).join(" · ") || "—"}
+                      {[c.headline, formatInlineProfileLocation(c, "")]
+                        .filter(Boolean)
+                        .join(" · ") || "—"}
                     </p>
                   </div>
                   <Button size="sm" onClick={() => promote(c)}>
@@ -176,12 +206,19 @@ function AdminRoles() {
         ) : (
           <div className="mt-3 space-y-2">
             {holders.map((a) => (
-              <div key={a.id} className="flex items-center justify-between rounded-xl border border-border p-3">
+              <div
+                key={a.id}
+                className="flex items-center justify-between rounded-xl border border-border p-3"
+              >
                 <div>
                   <p className="font-medium">{a.display_name ?? "Member"}</p>
                   <p className="text-xs text-muted-foreground">{a.headline ?? "—"}</p>
                 </div>
-                <Button size="sm" variant="outline" onClick={() => setDemoteTarget({ profile: a, role: activeRole })}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setDemoteTarget({ profile: a, role: activeRole })}
+                >
                   {activeRole === "admin" ? "Remove admin" : "Remove editor"}
                 </Button>
               </div>
@@ -203,7 +240,9 @@ function AdminRoles() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => demoteTarget && demote(demoteTarget.profile, demoteTarget.role)}>
+            <AlertDialogAction
+              onClick={() => demoteTarget && demote(demoteTarget.profile, demoteTarget.role)}
+            >
               Remove
             </AlertDialogAction>
           </AlertDialogFooter>

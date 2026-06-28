@@ -12,10 +12,12 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as WritingRouteImport } from './routes/writing'
 import { Route as WhatIsIndusOrbitRouteImport } from './routes/what-is-indus-orbit'
 import { Route as SodaRouteImport } from './routes/soda'
+import { Route as SkillsRouteImport } from './routes/skills'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as OurWorkRouteImport } from './routes/our-work'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as MembersRouteImport } from './routes/members'
+import { Route as LoopsRouteImport } from './routes/loops'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AppRouteImport } from './routes/app'
@@ -27,6 +29,7 @@ import { Route as ProfileIdRouteImport } from './routes/profile.$id'
 import { Route as AppVouchRouteImport } from './routes/app.vouch'
 import { Route as AppStoriesRouteImport } from './routes/app.stories'
 import { Route as AppSodaRouteImport } from './routes/app.soda'
+import { Route as AppSettingsRouteImport } from './routes/app.settings'
 import { Route as AppProfileRouteImport } from './routes/app.profile'
 import { Route as AppNotificationsRouteImport } from './routes/app.notifications'
 import { Route as AppMissionsRouteImport } from './routes/app.missions'
@@ -82,6 +85,11 @@ const SodaRoute = SodaRouteImport.update({
   path: '/soda',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SkillsRoute = SkillsRouteImport.update({
+  id: '/skills',
+  path: '/skills',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
@@ -100,6 +108,11 @@ const OnboardingRoute = OnboardingRouteImport.update({
 const MembersRoute = MembersRouteImport.update({
   id: '/members',
   path: '/members',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoopsRoute = LoopsRouteImport.update({
+  id: '/loops',
+  path: '/loops',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactRoute = ContactRouteImport.update({
@@ -155,6 +168,11 @@ const AppStoriesRoute = AppStoriesRouteImport.update({
 const AppSodaRoute = AppSodaRouteImport.update({
   id: '/soda',
   path: '/soda',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSettingsRoute = AppSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => AppRoute,
 } as any)
 const AppProfileRoute = AppProfileRouteImport.update({
@@ -360,10 +378,12 @@ export interface FileRoutesByFullPath {
   '/app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
+  '/loops': typeof LoopsRoute
   '/members': typeof MembersRoute
   '/onboarding': typeof OnboardingRoute
   '/our-work': typeof OurWorkRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/skills': typeof SkillsRoute
   '/soda': typeof SodaRoute
   '/what-is-indus-orbit': typeof WhatIsIndusOrbitRoute
   '/writing': typeof WritingRoute
@@ -379,6 +399,7 @@ export interface FileRoutesByFullPath {
   '/app/missions': typeof AppMissionsRouteWithChildren
   '/app/notifications': typeof AppNotificationsRoute
   '/app/profile': typeof AppProfileRoute
+  '/app/settings': typeof AppSettingsRoute
   '/app/soda': typeof AppSodaRouteWithChildren
   '/app/stories': typeof AppStoriesRouteWithChildren
   '/app/vouch': typeof AppVouchRoute
@@ -418,10 +439,12 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
+  '/loops': typeof LoopsRoute
   '/members': typeof MembersRoute
   '/onboarding': typeof OnboardingRoute
   '/our-work': typeof OurWorkRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/skills': typeof SkillsRoute
   '/soda': typeof SodaRoute
   '/what-is-indus-orbit': typeof WhatIsIndusOrbitRoute
   '/writing': typeof WritingRoute
@@ -434,6 +457,7 @@ export interface FileRoutesByTo {
   '/app/mission-admin': typeof AppMissionAdminRoute
   '/app/notifications': typeof AppNotificationsRoute
   '/app/profile': typeof AppProfileRoute
+  '/app/settings': typeof AppSettingsRoute
   '/app/vouch': typeof AppVouchRoute
   '/profile/$id': typeof ProfileIdRoute
   '/redeem/$code': typeof RedeemCodeRoute
@@ -473,10 +497,12 @@ export interface FileRoutesById {
   '/app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
+  '/loops': typeof LoopsRoute
   '/members': typeof MembersRoute
   '/onboarding': typeof OnboardingRoute
   '/our-work': typeof OurWorkRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/skills': typeof SkillsRoute
   '/soda': typeof SodaRoute
   '/what-is-indus-orbit': typeof WhatIsIndusOrbitRoute
   '/writing': typeof WritingRoute
@@ -492,6 +518,7 @@ export interface FileRoutesById {
   '/app/missions': typeof AppMissionsRouteWithChildren
   '/app/notifications': typeof AppNotificationsRoute
   '/app/profile': typeof AppProfileRoute
+  '/app/settings': typeof AppSettingsRoute
   '/app/soda': typeof AppSodaRouteWithChildren
   '/app/stories': typeof AppStoriesRouteWithChildren
   '/app/vouch': typeof AppVouchRoute
@@ -534,10 +561,12 @@ export interface FileRouteTypes {
     | '/app'
     | '/auth'
     | '/contact'
+    | '/loops'
     | '/members'
     | '/onboarding'
     | '/our-work'
     | '/reset-password'
+    | '/skills'
     | '/soda'
     | '/what-is-indus-orbit'
     | '/writing'
@@ -553,6 +582,7 @@ export interface FileRouteTypes {
     | '/app/missions'
     | '/app/notifications'
     | '/app/profile'
+    | '/app/settings'
     | '/app/soda'
     | '/app/stories'
     | '/app/vouch'
@@ -592,10 +622,12 @@ export interface FileRouteTypes {
     | '/about'
     | '/auth'
     | '/contact'
+    | '/loops'
     | '/members'
     | '/onboarding'
     | '/our-work'
     | '/reset-password'
+    | '/skills'
     | '/soda'
     | '/what-is-indus-orbit'
     | '/writing'
@@ -608,6 +640,7 @@ export interface FileRouteTypes {
     | '/app/mission-admin'
     | '/app/notifications'
     | '/app/profile'
+    | '/app/settings'
     | '/app/vouch'
     | '/profile/$id'
     | '/redeem/$code'
@@ -646,10 +679,12 @@ export interface FileRouteTypes {
     | '/app'
     | '/auth'
     | '/contact'
+    | '/loops'
     | '/members'
     | '/onboarding'
     | '/our-work'
     | '/reset-password'
+    | '/skills'
     | '/soda'
     | '/what-is-indus-orbit'
     | '/writing'
@@ -665,6 +700,7 @@ export interface FileRouteTypes {
     | '/app/missions'
     | '/app/notifications'
     | '/app/profile'
+    | '/app/settings'
     | '/app/soda'
     | '/app/stories'
     | '/app/vouch'
@@ -706,10 +742,12 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   AuthRoute: typeof AuthRoute
   ContactRoute: typeof ContactRoute
+  LoopsRoute: typeof LoopsRoute
   MembersRoute: typeof MembersRoute
   OnboardingRoute: typeof OnboardingRoute
   OurWorkRoute: typeof OurWorkRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  SkillsRoute: typeof SkillsRoute
   SodaRoute: typeof SodaRoute
   WhatIsIndusOrbitRoute: typeof WhatIsIndusOrbitRoute
   WritingRoute: typeof WritingRoute
@@ -740,6 +778,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SodaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/skills': {
+      id: '/skills'
+      path: '/skills'
+      fullPath: '/skills'
+      preLoaderRoute: typeof SkillsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
@@ -766,6 +811,13 @@ declare module '@tanstack/react-router' {
       path: '/members'
       fullPath: '/members'
       preLoaderRoute: typeof MembersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/loops': {
+      id: '/loops'
+      path: '/loops'
+      fullPath: '/loops'
+      preLoaderRoute: typeof LoopsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contact': {
@@ -843,6 +895,13 @@ declare module '@tanstack/react-router' {
       path: '/soda'
       fullPath: '/app/soda'
       preLoaderRoute: typeof AppSodaRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/settings': {
+      id: '/app/settings'
+      path: '/settings'
+      fullPath: '/app/settings'
+      preLoaderRoute: typeof AppSettingsRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/profile': {
@@ -1218,6 +1277,7 @@ interface AppRouteChildren {
   AppMissionsRoute: typeof AppMissionsRouteWithChildren
   AppNotificationsRoute: typeof AppNotificationsRoute
   AppProfileRoute: typeof AppProfileRoute
+  AppSettingsRoute: typeof AppSettingsRoute
   AppSodaRoute: typeof AppSodaRouteWithChildren
   AppStoriesRoute: typeof AppStoriesRouteWithChildren
   AppVouchRoute: typeof AppVouchRoute
@@ -1253,6 +1313,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppMissionsRoute: AppMissionsRouteWithChildren,
   AppNotificationsRoute: AppNotificationsRoute,
   AppProfileRoute: AppProfileRoute,
+  AppSettingsRoute: AppSettingsRoute,
   AppSodaRoute: AppSodaRouteWithChildren,
   AppStoriesRoute: AppStoriesRouteWithChildren,
   AppVouchRoute: AppVouchRoute,
@@ -1283,10 +1344,12 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   AuthRoute: AuthRoute,
   ContactRoute: ContactRoute,
+  LoopsRoute: LoopsRoute,
   MembersRoute: MembersRoute,
   OnboardingRoute: OnboardingRoute,
   OurWorkRoute: OurWorkRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  SkillsRoute: SkillsRoute,
   SodaRoute: SodaRoute,
   WhatIsIndusOrbitRoute: WhatIsIndusOrbitRoute,
   WritingRoute: WritingRoute,

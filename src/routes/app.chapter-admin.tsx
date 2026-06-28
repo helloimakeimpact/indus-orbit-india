@@ -2,26 +2,52 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Users, Settings, Trash2, MapPin, Search, Inbox, Check, X as XIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { getMyAdminChapters, removeChapterMember, updateChapterDetails, getLeadInbox, approveStory, rejectStory, approveEvent, rejectEvent } from "@/server/society.functions";
+import {
+  getMyAdminChapters,
+  removeChapterMember,
+  updateChapterDetails,
+  getLeadInbox,
+  approveStory,
+  rejectStory,
+  approveEvent,
+  rejectEvent,
+} from "@/server/society.functions";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { VerifiedBadge } from "@/components/auth/VerifiedBadge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { formatChapterBaseLocation, formatEventLocation } from "@/lib/location";
 
 export const Route = createFileRoute("/app/chapter-admin")({
-  head: () => ({ meta: [{ title: "Chapter Admin — Indus Orbit" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({
+    meta: [{ title: "Chapter Admin — Indus Orbit" }, { name: "robots", content: "noindex" }],
+  }),
   component: ChapterAdminPage,
 });
 
 function ChapterAdminPage() {
   const [chapters, setChapters] = useState<any[]>([]);
-  const [inbox, setInbox] = useState<{ stories: any[]; events: any[]; chapters: any[] }>({ stories: [], events: [], chapters: [] });
+  const [inbox, setInbox] = useState<{ stories: any[]; events: any[]; chapters: any[] }>({
+    stories: [],
+    events: [],
+    chapters: [],
+  });
   const [busy, setBusy] = useState(true);
   const [search, setSearch] = useState("");
-  const [memberToRemove, setMemberToRemove] = useState<{ chapterId: string; userId: string; name: string } | null>(null);
+  const [memberToRemove, setMemberToRemove] = useState<{
+    chapterId: string;
+    userId: string;
+    name: string;
+  } | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -41,15 +67,49 @@ function ChapterAdminPage() {
     }
   }
 
-  async function onApproveStory(id: string) { try { await approveStory({ data: { storyId: id } }); toast.success("Story approved"); load(); } catch (e: any) { toast.error(e.message); } }
-  async function onRejectStory(id: string) { try { await rejectStory({ data: { storyId: id } }); toast.success("Story rejected"); load(); } catch (e: any) { toast.error(e.message); } }
-  async function onApproveEvent(id: string) { try { await approveEvent({ data: { eventId: id } }); toast.success("Event approved"); load(); } catch (e: any) { toast.error(e.message); } }
-  async function onRejectEvent(id: string) { try { await rejectEvent({ data: { eventId: id } }); toast.success("Event rejected"); load(); } catch (e: any) { toast.error(e.message); } }
+  async function onApproveStory(id: string) {
+    try {
+      await approveStory({ data: { storyId: id } });
+      toast.success("Story approved");
+      load();
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  }
+  async function onRejectStory(id: string) {
+    try {
+      await rejectStory({ data: { storyId: id } });
+      toast.success("Story rejected");
+      load();
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  }
+  async function onApproveEvent(id: string) {
+    try {
+      await approveEvent({ data: { eventId: id } });
+      toast.success("Event approved");
+      load();
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  }
+  async function onRejectEvent(id: string) {
+    try {
+      await rejectEvent({ data: { eventId: id } });
+      toast.success("Event rejected");
+      load();
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  }
 
   async function handleRemove() {
     if (!memberToRemove) return;
     try {
-      await removeChapterMember({ data: { chapterId: memberToRemove.chapterId, targetUserId: memberToRemove.userId } });
+      await removeChapterMember({
+        data: { chapterId: memberToRemove.chapterId, targetUserId: memberToRemove.userId },
+      });
       toast.success(`${memberToRemove.name} removed from chapter.`);
       setMemberToRemove(null);
       load();
@@ -81,8 +141,10 @@ function ChapterAdminPage() {
       <div className="mx-auto w-full max-w-7xl text-center py-24">
         <MapPin className="mx-auto h-12 w-12 text-muted-foreground opacity-50 mb-4" />
         <h1 className="font-display text-3xl font-medium mb-2">No Chapters Found</h1>
-        <p className="text-muted-foreground mb-8">You are not currently assigned as a lead for any chapters.</p>
-        <Button variant="outline" onClick={() => navigate({ to: '/app/chapters' })}>
+        <p className="text-muted-foreground mb-8">
+          You are not currently assigned as a lead for any chapters.
+        </p>
+        <Button variant="outline" onClick={() => navigate({ to: "/app/chapters" })}>
           Browse Chapters
         </Button>
       </div>
@@ -103,9 +165,12 @@ function ChapterAdminPage() {
       {(inbox.stories.length > 0 || inbox.events.length > 0) && (
         <section className="rounded-3xl border border-[var(--saffron)]/40 bg-[var(--saffron)]/5 p-6">
           <h2 className="font-display text-2xl font-medium flex items-center gap-2 text-[var(--indigo-night)]">
-            <Inbox className="h-5 w-5" /> Pending submissions ({inbox.stories.length + inbox.events.length})
+            <Inbox className="h-5 w-5" /> Pending submissions (
+            {inbox.stories.length + inbox.events.length})
           </h2>
-          <p className="text-sm text-muted-foreground mt-1">Review what your members have submitted to your chapters.</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            Review what your members have submitted to your chapters.
+          </p>
 
           {inbox.stories.length > 0 && (
             <div className="mt-6">
@@ -116,12 +181,18 @@ function ChapterAdminPage() {
                     <div className="flex flex-wrap justify-between gap-3">
                       <div className="min-w-0 flex-1">
                         <p className="font-semibold">{s.title}</p>
-                        <p className="text-xs text-muted-foreground">by {s.profiles?.display_name || "Member"}</p>
+                        <p className="text-xs text-muted-foreground">
+                          by {s.profiles?.display_name || "Member"}
+                        </p>
                         <p className="mt-2 text-sm line-clamp-3">{s.content}</p>
                       </div>
                       <div className="flex gap-2">
-                        <Button size="sm" onClick={() => onApproveStory(s.id)}><Check className="h-4 w-4 mr-1" /> Approve</Button>
-                        <Button size="sm" variant="outline" onClick={() => onRejectStory(s.id)}><XIcon className="h-4 w-4 mr-1" /> Reject</Button>
+                        <Button size="sm" onClick={() => onApproveStory(s.id)}>
+                          <Check className="h-4 w-4 mr-1" /> Approve
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => onRejectStory(s.id)}>
+                          <XIcon className="h-4 w-4 mr-1" /> Reject
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -139,12 +210,19 @@ function ChapterAdminPage() {
                     <div className="flex flex-wrap justify-between gap-3">
                       <div className="min-w-0 flex-1">
                         <p className="font-semibold">{ev.title}</p>
-                        <p className="text-xs text-muted-foreground">by {ev.profiles?.display_name || "Member"} · {new Date(ev.start_time).toLocaleString()}</p>
+                        <p className="text-xs text-muted-foreground">
+                          by {ev.profiles?.display_name || "Member"} ·{" "}
+                          {new Date(ev.start_time).toLocaleString()} · {formatEventLocation(ev)}
+                        </p>
                         <p className="mt-2 text-sm line-clamp-3">{ev.description}</p>
                       </div>
                       <div className="flex gap-2">
-                        <Button size="sm" onClick={() => onApproveEvent(ev.id)}><Check className="h-4 w-4 mr-1" /> Approve</Button>
-                        <Button size="sm" variant="outline" onClick={() => onRejectEvent(ev.id)}><XIcon className="h-4 w-4 mr-1" /> Reject</Button>
+                        <Button size="sm" onClick={() => onApproveEvent(ev.id)}>
+                          <Check className="h-4 w-4 mr-1" /> Approve
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => onRejectEvent(ev.id)}>
+                          <XIcon className="h-4 w-4 mr-1" /> Reject
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -157,9 +235,10 @@ function ChapterAdminPage() {
 
       {chapters.map((chapter) => {
         const members = chapter.chapter_members || [];
-        const filteredMembers = members.filter((m: any) => 
-          m.profiles?.display_name?.toLowerCase().includes(search.toLowerCase()) ||
-          m.profiles?.headline?.toLowerCase().includes(search.toLowerCase())
+        const filteredMembers = members.filter(
+          (m: any) =>
+            m.profiles?.display_name?.toLowerCase().includes(search.toLowerCase()) ||
+            m.profiles?.headline?.toLowerCase().includes(search.toLowerCase()),
         );
 
         return (
@@ -168,8 +247,14 @@ function ChapterAdminPage() {
               <div>
                 <h2 className="font-display text-3xl font-medium text-[var(--indigo-night)] flex items-center gap-3">
                   {chapter.name}
-                  <Badge variant="secondary" className="text-xs uppercase tracking-wider">{members.length} members</Badge>
+                  <Badge variant="secondary" className="text-xs uppercase tracking-wider">
+                    {members.length} members
+                  </Badge>
                 </h2>
+                <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <MapPin className="h-3.5 w-3.5" />
+                  Base: {formatChapterBaseLocation(chapter)}
+                </p>
               </div>
             </div>
 
@@ -180,26 +265,46 @@ function ChapterAdminPage() {
                   <h3 className="font-display text-xl font-medium mb-6 flex items-center gap-2">
                     <Settings className="h-5 w-5 text-muted-foreground" /> Settings
                   </h3>
-                  
+
                   <form onSubmit={(e) => handleUpdate(e, chapter)} className="space-y-4">
                     <div className="space-y-2">
-                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">City</label>
-                      <Input name="city" defaultValue={chapter.city || ""} placeholder="e.g. Bangalore" />
+                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Base city
+                      </label>
+                      <Input
+                        name="city"
+                        defaultValue={chapter.city || ""}
+                        placeholder="e.g. Bangalore"
+                      />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Country</label>
-                      <Input name="country" defaultValue={chapter.country || ""} placeholder="e.g. India" />
+                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Base country
+                      </label>
+                      <Input
+                        name="country"
+                        defaultValue={chapter.country || ""}
+                        placeholder="e.g. India"
+                      />
                     </div>
+                    <p className="rounded-xl bg-muted/40 p-3 text-xs leading-5 text-muted-foreground">
+                      Exact venue addresses belong on individual events. A chapter only stores its
+                      public base location for discovery.
+                    </p>
                     <div className="space-y-2">
-                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Description</label>
-                      <Textarea 
-                        name="description" 
-                        defaultValue={chapter.description || ""} 
+                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Description
+                      </label>
+                      <Textarea
+                        name="description"
+                        defaultValue={chapter.description || ""}
                         placeholder="What is this chapter about?"
                         className="resize-none h-32"
                       />
                     </div>
-                    <Button type="submit" className="w-full">Save Details</Button>
+                    <Button type="submit" className="w-full">
+                      Save Details
+                    </Button>
                   </form>
                 </div>
               </div>
@@ -213,8 +318,8 @@ function ChapterAdminPage() {
                     </h3>
                     <div className="relative w-full sm:w-64">
                       <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                      <Input 
-                        placeholder="Search members..." 
+                      <Input
+                        placeholder="Search members..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         className="pl-9 bg-muted/50"
@@ -227,18 +332,29 @@ function ChapterAdminPage() {
                       <p className="py-8 text-center text-muted-foreground">No members found.</p>
                     ) : (
                       filteredMembers.map((m: any) => (
-                        <div key={m.user_id} className="flex items-center justify-between py-4 group">
+                        <div
+                          key={m.user_id}
+                          className="flex items-center justify-between py-4 group"
+                        >
                           <div className="flex items-center gap-4">
                             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--indigo-night)] text-sm font-semibold text-[var(--parchment)]">
                               {(m.profiles?.display_name ?? "?").charAt(0).toUpperCase()}
                             </div>
                             <div>
                               <div className="flex items-center gap-2">
-                                <Link to="/profile/$id" params={{ id: m.user_id }} className="font-semibold hover:text-[var(--indigo-night)] transition">
+                                <Link
+                                  to="/profile/$id"
+                                  params={{ id: m.user_id }}
+                                  className="font-semibold hover:text-[var(--indigo-night)] transition"
+                                >
                                   {m.profiles?.display_name || "Unknown"}
                                 </Link>
                                 {m.profiles?.is_verified && <VerifiedBadge />}
-                                {m.role === "lead" && <Badge className="bg-[var(--saffron)] text-[var(--indigo-night)] border-none text-[10px] uppercase tracking-wider py-0 h-4">Lead</Badge>}
+                                {m.role === "lead" && (
+                                  <Badge className="bg-[var(--saffron)] text-[var(--indigo-night)] border-none text-[10px] uppercase tracking-wider py-0 h-4">
+                                    Lead
+                                  </Badge>
+                                )}
                               </div>
                               <p className="text-xs text-muted-foreground line-clamp-1">
                                 {m.profiles?.headline || "No headline"}
@@ -247,11 +363,17 @@ function ChapterAdminPage() {
                           </div>
 
                           {m.role !== "lead" && (
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
+                            <Button
+                              variant="ghost"
+                              size="icon"
                               className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:bg-destructive/10"
-                              onClick={() => setMemberToRemove({ chapterId: chapter.id, userId: m.user_id, name: m.profiles?.display_name || "Unknown" })}
+                              onClick={() =>
+                                setMemberToRemove({
+                                  chapterId: chapter.id,
+                                  userId: m.user_id,
+                                  name: m.profiles?.display_name || "Unknown",
+                                })
+                              }
                               title="Remove from chapter"
                             >
                               <Trash2 className="h-4 w-4" />
@@ -274,11 +396,17 @@ function ChapterAdminPage() {
             <DialogTitle>Remove Member</DialogTitle>
           </DialogHeader>
           <p className="py-4 text-sm text-muted-foreground">
-            Are you sure you want to remove <span className="font-semibold text-foreground">{memberToRemove?.name}</span> from this chapter?
+            Are you sure you want to remove{" "}
+            <span className="font-semibold text-foreground">{memberToRemove?.name}</span> from this
+            chapter?
           </p>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setMemberToRemove(null)}>Cancel</Button>
-            <Button variant="destructive" onClick={handleRemove}>Remove Member</Button>
+            <Button variant="outline" onClick={() => setMemberToRemove(null)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleRemove}>
+              Remove Member
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

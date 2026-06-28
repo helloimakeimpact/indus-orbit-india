@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { sendNotification } from "@/server/notification.functions";
 
 // Get all connections (accepted) so we know who you can message
 export async function getConnections() {
@@ -14,15 +15,14 @@ export async function getConnections() {
 
   if (error) throw new Error(error.message);
 
-  const otherIds = (data ?? []).map((r) =>
-    r.sender_id === userId ? r.recipient_id : r.sender_id
-  );
+  const otherIds = (data ?? []).map((r) => (r.sender_id === userId ? r.recipient_id : r.sender_id));
   if (!otherIds.length) return [];
 
-  const { data: profiles } = await supabase
+  const { data: profiles, error: profilesError } = await supabase
     .from("profiles")
     .select("user_id, display_name, avatar_url, headline")
     .in("user_id", otherIds);
+  if (profilesError) throw new Error(profilesError.message);
 
   return profiles ?? [];
 }
@@ -37,7 +37,7 @@ export async function getConversation(otherUserId: string) {
     .from("direct_messages")
     .select("*")
     .or(
-      `and(sender_id.eq.${userId},recipient_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},recipient_id.eq.${userId})`
+      `and(sender_id.eq.${userId},recipient_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},recipient_id.eq.${userId})`,
     )
     .order("created_at", { ascending: true });
 
@@ -51,18 +51,20 @@ export async function sendMessage(recipientId: string, content: string) {
   if (!userData.user) throw new Error("Unauthorized");
   const userId = userData.user.id;
 
+  if (recipientId === userId) throw new Error("You cannot message yourself.");
   if (!content.trim()) throw new Error("Message cannot be empty.");
 
   // Verify they are connected
-  const { data: conn } = await supabase
+  const { data: conn, error: connError } = await supabase
     .from("connection_requests")
     .select("id")
     .eq("status", "accepted")
     .or(
-      `and(sender_id.eq.${userId},recipient_id.eq.${recipientId}),and(sender_id.eq.${recipientId},recipient_id.eq.${userId})`
+      `and(sender_id.eq.${userId},recipient_id.eq.${recipientId}),and(sender_id.eq.${recipientId},recipient_id.eq.${userId})`,
     )
     .maybeSingle();
 
+  if (connError) throw new Error(connError.message);
   if (!conn) throw new Error("You can only message connected members.");
 
   const { data: msg, error } = await supabase
@@ -74,9 +76,8 @@ export async function sendMessage(recipientId: string, content: string) {
   if (error) throw new Error(error.message);
 
   // Notify recipient (in-app)
-  await supabase.from("notifications").insert({
-    user_id: recipientId,
-    category: "connect_requests",
+  await sendNotification({
+    userId: recipientId,
     type: "connect_requests",
     message: "You have a new message.",
     link: `/app/messages?user=${userId}`,

@@ -20,23 +20,28 @@ export async function getPersonalizedFeed(): Promise<FeedItem[]> {
   const feed: FeedItem[] = [];
 
   // 1. Get mission updates for missions the user joined
-  const { data: userMissions } = await supabase
+  const { data: userMissions, error: userMissionsError } = await supabase
     .from("mission_members")
     .select("mission_id, missions(title)")
     .eq("user_id", userId);
+  if (userMissionsError) throw new Error(userMissionsError.message);
 
   if (userMissions && userMissions.length > 0) {
     const missionIds = userMissions.map((m: any) => m.mission_id);
-    const { data: updates } = await supabase
+    const { data: updates, error: updatesError } = await supabase
       .from("mission_updates")
-      .select("id, content, created_at, mission_id, profiles!mission_updates_author_id_fkey(display_name, avatar_url)")
+      .select(
+        "id, content, created_at, mission_id, profiles!mission_updates_author_id_fkey(display_name, avatar_url)",
+      )
       .in("mission_id", missionIds)
       .order("created_at", { ascending: false })
       .limit(5);
+    if (updatesError) throw new Error(updatesError.message);
 
     if (updates) {
       updates.forEach((u: any) => {
-        const missionTitle = userMissions.find(m => m.mission_id === u.mission_id)?.missions?.title || "Mission";
+        const missionTitle =
+          userMissions.find((m) => m.mission_id === u.mission_id)?.missions?.title || "Mission";
         feed.push({
           id: u.id,
           type: "mission_update",
@@ -52,12 +57,15 @@ export async function getPersonalizedFeed(): Promise<FeedItem[]> {
   }
 
   // 2. Get recent published stories
-  const { data: stories } = await supabase
+  const { data: stories, error: storiesError } = await supabase
     .from("stories")
-    .select("id, title, content, published_at, profiles(display_name, avatar_url)")
-    .eq("status", "published")
+    .select(
+      "id, title, content, published_at, profiles!stories_author_id_fkey(display_name, avatar_url)",
+    )
+    .in("status", ["approved", "featured"])
     .order("published_at", { ascending: false })
     .limit(3);
+  if (storiesError) throw new Error(storiesError.message);
 
   if (stories) {
     stories.forEach((s: any) => {
@@ -77,12 +85,16 @@ export async function getPersonalizedFeed(): Promise<FeedItem[]> {
   }
 
   // 3. Get upcoming events
-  const { data: events } = await supabase
+  const { data: events, error: eventsError } = await supabase
     .from("events")
-    .select("id, title, description, start_time, location_type, profiles(display_name, avatar_url)")
+    .select(
+      "id, title, description, start_time, location_type, profiles!events_organizer_id_fkey(display_name, avatar_url)",
+    )
+    .eq("status", "approved")
     .gte("start_time", new Date().toISOString())
     .order("start_time", { ascending: true })
     .limit(3);
+  if (eventsError) throw new Error(eventsError.message);
 
   if (events) {
     events.forEach((e: any) => {

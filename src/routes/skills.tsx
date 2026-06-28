@@ -1,0 +1,158 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
+import { ArrowRight, BookOpenCheck, Search, Sparkles } from "lucide-react";
+import { SiteShell } from "@/components/site/SiteShell";
+import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
+
+type Skill = Database["public"]["Tables"]["skills"]["Row"];
+
+export const Route = createFileRoute("/skills")({
+  head: () => ({
+    meta: [
+      { title: "Skills — Indus Orbit" },
+      {
+        name: "description",
+        content:
+          "Practical Indus Orbit playbooks for founders, operators, researchers, experts, investors and students building for India.",
+      },
+      { property: "og:title", content: "Skills — Indus Orbit" },
+      {
+        property: "og:description",
+        content: "Field-tested skills and templates for acting on India-specific opportunities.",
+      },
+    ],
+  }),
+  component: SkillsPage,
+});
+
+function SkillsPage() {
+  const [skills, setSkills] = useState<Skill[]>([]);
+  const [loaded, setLoaded] = useState(false);
+  const [query, setQuery] = useState("");
+
+  useEffect(() => {
+    let alive = true;
+
+    async function loadSkills() {
+      try {
+        const { data } = await supabase
+          .from("skills")
+          .select("*")
+          .eq("status", "published")
+          .order("featured_on", { ascending: false, nullsFirst: false })
+          .order("published_at", { ascending: false, nullsFirst: false });
+
+        if (alive) setSkills(data ?? []);
+      } finally {
+        if (alive) setLoaded(true);
+      }
+    }
+
+    loadSkills();
+
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return skills;
+    return skills.filter((skill) =>
+      [skill.title, skill.summary, skill.category, skill.when_to_use, ...skill.tags]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase()
+        .includes(q),
+    );
+  }, [skills, query]);
+
+  return (
+    <SiteShell navTone="dark">
+      <section className="bg-[var(--indigo-night)] px-6 pb-16 pt-32 text-[var(--parchment)]">
+        <div className="mx-auto max-w-6xl">
+          <span className="inline-flex items-center gap-2 rounded-full border border-[var(--parchment)]/20 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-[var(--saffron)]">
+            <BookOpenCheck className="h-3.5 w-3.5" /> Practical library
+          </span>
+          <h1 className="mt-5 max-w-3xl font-display text-4xl font-medium leading-tight md:text-6xl">
+            Skills for building in India.
+          </h1>
+          <p className="mt-5 max-w-2xl text-base leading-7 text-[var(--parchment)]/75">
+            Playbooks, templates and working patterns that turn S.O.D.A opportunities into
+            repeatable execution.
+          </p>
+        </div>
+      </section>
+
+      <section className="px-6 py-14">
+        <div className="mx-auto max-w-6xl">
+          <div className="flex flex-col gap-4 border-b border-border pb-5 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-[var(--saffron)]">
+                Browse
+              </p>
+              <h2 className="mt-2 font-display text-3xl font-medium">Published skills</h2>
+            </div>
+            <div className="relative w-full md:w-80">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <input
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search skills"
+                className="w-full rounded-full border border-border bg-card py-2 pl-9 pr-4 text-sm outline-none transition focus:ring-2 focus:ring-[var(--saffron)]/35"
+              />
+            </div>
+          </div>
+
+          {!loaded ? (
+            <p className="mt-8 text-sm text-muted-foreground">Loading skills...</p>
+          ) : filtered.length > 0 ? (
+            <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {filtered.map((skill) => (
+                <article key={skill.id} className="rounded-2xl border border-border bg-card p-5">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="rounded-full bg-[var(--indigo-night)]/5 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-[var(--indigo-night)]">
+                      {skill.category}
+                    </span>
+                    {skill.time_estimate && (
+                      <span className="text-xs text-muted-foreground">{skill.time_estimate}</span>
+                    )}
+                  </div>
+                  <h3 className="mt-4 font-display text-xl font-medium">{skill.title}</h3>
+                  {skill.summary && (
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">{skill.summary}</p>
+                  )}
+                  {skill.tags.length > 0 && (
+                    <div className="mt-4 flex flex-wrap gap-1.5">
+                      {skill.tags.slice(0, 4).map((tag) => (
+                        <span key={tag} className="rounded-full bg-muted px-2.5 py-1 text-xs">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-6 rounded-2xl border border-dashed border-border bg-card p-8">
+              <Sparkles className="h-6 w-6 text-[var(--saffron)]" />
+              <h3 className="mt-4 font-display text-2xl font-medium">Skills are being curated.</h3>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+                The schema is ready; the public library will fill with repeatable playbooks for
+                S.O.D.A ideas, missions, capital, research and operating work.
+              </p>
+              <Link
+                to="/soda"
+                className="mt-5 inline-flex items-center gap-2 rounded-full bg-[var(--indigo-night)] px-4 py-2 text-sm font-semibold text-[var(--parchment)]"
+              >
+                Explore S.O.D.A <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          )}
+        </div>
+      </section>
+    </SiteShell>
+  );
+}

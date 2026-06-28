@@ -5,6 +5,21 @@ import { supabase } from "@/integrations/supabase/client";
 import footerBand from "@/assets/footer-band.jpg";
 import logo from "@/assets/indus-orbit-logo.png";
 
+const platformLinks = [
+  { to: "/soda", label: "S.O.D.A" },
+  { to: "/skills", label: "Skills" },
+  { to: "/loops", label: "Loops" },
+  { to: "/members", label: "Members" },
+] as const;
+
+const companyLinks = [
+  { to: "/what-is-indus-orbit", label: "What is Indus Orbit?" },
+  { to: "/our-work", label: "Our Work" },
+  { to: "/about", label: "About" },
+  { to: "/writing", label: "Writing" },
+  { to: "/contact", label: "Contact" },
+] as const;
+
 export function SiteFooter() {
   const [email, setEmail] = useState("");
   const [num1, setNum1] = useState(Math.floor(Math.random() * 10) + 1);
@@ -19,8 +34,8 @@ export function SiteFooter() {
         aria-hidden
       />
       <div className="bg-[var(--indigo-night)] text-[var(--parchment)]">
-        <div className="mx-auto grid max-w-6xl gap-10 px-6 py-14 md:grid-cols-4">
-          <div className="md:col-span-2">
+        <div className="mx-auto grid max-w-6xl gap-10 px-6 py-14 md:grid-cols-12">
+          <div className="md:col-span-5">
             <div className="flex items-center gap-2">
               <img src={logo} alt="" width={32} height={32} className="h-8 w-8 invert" />
               <span className="font-display text-2xl font-semibold">Indus Orbit</span>
@@ -33,15 +48,15 @@ export function SiteFooter() {
             <div className="mt-6 mb-2 flex flex-wrap gap-3">
               <Link
                 to="/what-is-indus-orbit"
-                className="inline-flex items-center gap-2 rounded-full border border-[var(--parchment)]/40 px-5 py-2 text-sm font-medium text-[var(--parchment)] hover:bg-[var(--parchment)]/10 transition"
+                className="inline-flex items-center gap-2 rounded-full border border-[var(--parchment)]/40 px-4 py-2 text-sm font-medium text-[var(--parchment)] transition hover:bg-[var(--parchment)]/10"
               >
-                What is Indus Orbit?
+                The model
               </Link>
               <Link
                 to="/soda"
-                className="inline-flex items-center gap-2 rounded-full border border-[var(--saffron)]/60 bg-[var(--saffron)]/10 px-5 py-2 text-sm font-medium text-[var(--saffron)] hover:bg-[var(--saffron)] hover:text-[var(--indigo-night)] transition"
+                className="inline-flex items-center gap-2 rounded-full border border-[var(--saffron)]/60 bg-[var(--saffron)]/10 px-4 py-2 text-sm font-medium text-[var(--saffron)] transition hover:bg-[var(--saffron)] hover:text-[var(--indigo-night)]"
               >
-                SODA Program
+                S.O.D.A
               </Link>
             </div>
             <form
@@ -51,9 +66,9 @@ export function SiteFooter() {
                   toast.error("Incorrect math answer");
                   return;
                 }
-                const { error } = await supabase.from('newsletter_subscriptions').insert([{ email }]);
+                const { error } = await supabase.from("newsletter_subscriptions").insert([{ email }]);
                 if (error) {
-                  if (error.code === '23505') toast.error("You are already subscribed!");
+                  if (error.code === "23505") toast.error("You are already subscribed!");
                   else toast.error("Failed to subscribe.");
                 } else {
                   toast.success("Subscribed successfully!");
@@ -83,8 +98,8 @@ export function SiteFooter() {
               </div>
               <div className="flex items-center gap-2 px-2 text-sm text-[var(--parchment)]/80">
                 <span>Verify you're human: {num1} + {num2} = </span>
-                <input 
-                  type="number" 
+                <input
+                  type="number"
                   value={answer}
                   onChange={(e) => setAnswer(e.target.value)}
                   className="w-16 bg-white/10 px-2 py-1 rounded text-center outline-none"
@@ -94,19 +109,37 @@ export function SiteFooter() {
             </form>
           </div>
 
-          <div>
+          <div className="md:col-span-2">
             <h4 className="font-display text-sm uppercase tracking-wider text-[var(--parchment)]/60">
-              Explore
+              Platform
             </h4>
             <ul className="mt-4 space-y-2 text-sm">
-              <li><Link to="/about" className="hover:text-[var(--saffron)]">About</Link></li>
-              <li><Link to="/our-work" className="hover:text-[var(--saffron)]">Our Work</Link></li>
-              <li><Link to="/writing" className="hover:text-[var(--saffron)]">Writing</Link></li>
-              <li><Link to="/contact" className="hover:text-[var(--saffron)]">Contact</Link></li>
+              {platformLinks.map((link) => (
+                <li key={link.to}>
+                  <Link to={link.to} className="text-[var(--parchment)]/80 transition hover:text-[var(--saffron)]">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
-          <div>
+          <div className="md:col-span-2">
+            <h4 className="font-display text-sm uppercase tracking-wider text-[var(--parchment)]/60">
+              Company
+            </h4>
+            <ul className="mt-4 space-y-2 text-sm">
+              {companyLinks.map((link) => (
+                <li key={link.to}>
+                  <Link to={link.to} className="text-[var(--parchment)]/80 transition hover:text-[var(--saffron)]">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="md:col-span-3">
             <h4 className="font-display text-sm uppercase tracking-wider text-[var(--parchment)]/60">
               Based in
             </h4>

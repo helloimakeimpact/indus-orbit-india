@@ -1,34 +1,41 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Bell, BellDot, CheckCircle2 } from "lucide-react";
 import { getNotifications, markNotificationsRead } from "@/server/notification.functions";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/app/notifications")({
-  head: () => ({ meta: [{ title: "Notifications — Indus Orbit" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({
+    meta: [{ title: "Notifications — Indus Orbit" }, { name: "robots", content: "noindex" }],
+  }),
   component: NotificationsPage,
 });
 
 function NotificationsPage() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [busy, setBusy] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
       try {
         const data = await getNotifications();
+        setError(null);
         setNotifications(data);
-        
+
         // Mark as read after a short delay
-        if (data.some(n => !n.is_read)) {
+        if (data.some((n) => !n.is_read)) {
           setTimeout(() => {
             markNotificationsRead();
             // Optimistically update local state
-            setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+            setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
           }, 2000);
         }
       } catch (err) {
-        console.error(err);
+        const message = err instanceof Error ? err.message : "Could not load notifications";
+        setError(message);
+        toast.error(message);
       } finally {
         setBusy(false);
       }
@@ -48,7 +55,11 @@ function NotificationsPage() {
         Alerts about connections, mentorships, and community updates.
       </p>
 
-      {notifications.length === 0 ? (
+      {error ? (
+        <div className="rounded-3xl border border-dashed border-destructive/30 p-12 text-center text-destructive">
+          Could not load notifications: {error}
+        </div>
+      ) : notifications.length === 0 ? (
         <div className="rounded-3xl border border-dashed border-border p-12 text-center text-muted-foreground">
           <CheckCircle2 className="mx-auto h-8 w-8 opacity-50 mb-4 text-green-600" />
           <p className="font-medium text-foreground">You're all caught up!</p>
@@ -59,14 +70,14 @@ function NotificationsPage() {
           {notifications.map((n) => {
             const isUnread = !n.is_read;
             return (
-              <Link 
-                key={n.id} 
+              <Link
+                key={n.id}
                 to={n.link || "/app"}
                 className={cn(
                   "block p-5 rounded-2xl border transition group",
-                  isUnread 
-                    ? "bg-muted/30 border-[var(--saffron)]/50 hover:bg-muted/50" 
-                    : "bg-card border-border hover:border-foreground/20"
+                  isUnread
+                    ? "bg-muted/30 border-[var(--saffron)]/50 hover:bg-muted/50"
+                    : "bg-card border-border hover:border-foreground/20",
                 )}
               >
                 <div className="flex items-start gap-4">
@@ -78,10 +89,12 @@ function NotificationsPage() {
                     )}
                   </div>
                   <div className="flex-1">
-                    <p className={cn(
-                      "text-sm font-medium",
-                      isUnread ? "text-foreground" : "text-muted-foreground"
-                    )}>
+                    <p
+                      className={cn(
+                        "text-sm font-medium",
+                        isUnread ? "text-foreground" : "text-muted-foreground",
+                      )}
+                    >
                       {n.message}
                     </p>
                     <p className="mt-1.5 text-xs text-muted-foreground opacity-75 uppercase tracking-wider">

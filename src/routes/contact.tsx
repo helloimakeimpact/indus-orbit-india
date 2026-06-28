@@ -18,8 +18,7 @@ export const Route = createFileRoute("/contact")({
       { property: "og:title", content: "Get in touch — Indus Orbit" },
       {
         property: "og:description",
-        content:
-          "Reach out to Indus Orbit. Tell us who you are and what you'd like to build.",
+        content: "Reach out to Indus Orbit. Tell us who you are and what you'd like to build.",
       },
       { property: "og:image", content: contactImg },
       { name: "twitter:card", content: "summary_large_image" },
@@ -40,32 +39,35 @@ function ContactPage() {
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
+
     if (parseInt(answer) !== num1 + num2) {
       toast.error("Incorrect math answer. Are you human?");
       return;
     }
 
     setSubmitting(true);
-    
+
     const formData = new FormData(e.currentTarget);
     const name = formData.get("name") as string;
     const email = formData.get("email") as string;
     const message = formData.get("message") as string;
 
-    const { error } = await supabase.from('contact_submissions').insert([{
-      name,
-      email,
-      role,
-      message,
-      source: 'contact_page'
-    }]);
+    const { error } = await supabase.from("contact_submissions").insert([
+      {
+        name,
+        email,
+        role,
+        message,
+        source: "contact_page",
+      },
+    ]);
 
     setSubmitting(false);
 
     if (error) {
-      toast.error("Failed to send message. Please try again later.");
-      console.error(error);
+      toast.error("Failed to send message. Please try again later.", {
+        description: error.message,
+      });
     } else {
       (e.target as HTMLFormElement).reset();
       setAnswer("");
@@ -103,12 +105,10 @@ function ContactPage() {
       <section className="px-6 py-20">
         <div className="mx-auto grid max-w-5xl gap-12 md:grid-cols-[1fr_1.2fr]">
           <div>
-            <h2 className="font-display text-2xl font-medium md:text-3xl">
-              Reach the orbit.
-            </h2>
+            <h2 className="font-display text-2xl font-medium md:text-3xl">Reach the orbit.</h2>
             <p className="mt-4 text-foreground/70">
-              We read everything. Tell us who you are, what you're working on,
-              and how we might move together.
+              We read everything. Tell us who you are, what you're working on, and how we might move
+              together.
             </p>
             <dl className="mt-8 space-y-5 text-sm">
               <div>
@@ -122,8 +122,12 @@ function ContactPage() {
               <div>
                 <dt className="text-xs uppercase tracking-wider text-foreground/50">Social</dt>
                 <dd className="mt-1 flex gap-3 font-medium">
-                  <a className="hover:text-[var(--saffron)]" href="#">Twitter</a>
-                  <a className="hover:text-[var(--saffron)]" href="#">LinkedIn</a>
+                  <a className="hover:text-[var(--saffron)]" href="#">
+                    Twitter
+                  </a>
+                  <a className="hover:text-[var(--saffron)]" href="#">
+                    LinkedIn
+                  </a>
                 </dd>
               </div>
             </dl>
@@ -135,7 +139,13 @@ function ContactPage() {
           >
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Your name" name="name" placeholder="Aarav Sharma" required />
-              <Field label="Email" name="email" type="email" placeholder="you@domain.com" required />
+              <Field
+                label="Email"
+                name="email"
+                type="email"
+                placeholder="you@domain.com"
+                required
+              />
             </div>
 
             <div className="mt-5">

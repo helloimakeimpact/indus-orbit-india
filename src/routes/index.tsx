@@ -2,7 +2,18 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteShell } from "@/components/site/SiteShell";
 import heroImg from "@/assets/hero-india-dawn.jpg";
 import lotusImg from "@/assets/lotus-pixel.png";
-import { ArrowRight, Sparkles, Users, Globe2, Sunrise, Flame, TrendingUp, Zap } from "lucide-react";
+import {
+  ArrowRight,
+  Sparkles,
+  Users,
+  Globe2,
+  Sunrise,
+  Flame,
+  TrendingUp,
+  Zap,
+  Lightbulb,
+  BadgeCheck,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { getSpotlights } from "@/server/society.functions";
 
@@ -32,7 +43,9 @@ export const Route = createFileRoute("/")({
 function HomePage() {
   const [spotlights, setSpotlights] = useState<any[]>([]);
   useEffect(() => {
-    getSpotlights().then((rows) => setSpotlights(rows ?? [])).catch(() => {});
+    getSpotlights()
+      .then((rows) => setSpotlights(rows ?? []))
+      .catch(() => {});
   }, []);
 
   return (
@@ -73,9 +86,9 @@ function HomePage() {
                 Building the intelligence layer for India's builders.
               </h2>
               <p className="mt-4 text-sm font-light text-[var(--parchment)]/85">
-                Indus Orbit is a research and product company creating AI
-                tools and human networks that bring India's youth, experts,
-                founders, investors and the diaspora into one orbit.
+                Indus Orbit is a research and product company creating AI tools and human networks
+                that bring India's youth, experts, founders, investors and the diaspora into one
+                orbit.
               </p>
               <div className="mt-5 flex flex-wrap items-center gap-3">
                 <Link
@@ -117,13 +130,93 @@ function HomePage() {
               AI should connect people, not isolate them.
             </h2>
             <p className="mt-6 text-lg text-foreground/70 text-balance">
-              By building the right tools and the right networks, we can lift
-              India together — across cities, generations and industries.
+              By building the right tools and the right networks, we can lift India together —
+              across cities, generations and industries.
             </p>
             <p className="mt-4 text-sm text-foreground/60 italic">
-              A lotus rises from still water — slow, deliberate, unmistakably of this place. So does what we're building.
+              A lotus rises from still water — slow, deliberate, unmistakably of this place. So does
+              what we're building.
             </p>
           </div>
+        </div>
+      </section>
+
+      {/* IDEAS + SKILLS */}
+      <section className="px-6 pb-24">
+        <div className="mx-auto grid w-full max-w-7xl gap-5 md:grid-cols-2">
+          <section className="relative overflow-hidden rounded-3xl border border-border bg-card p-6 shadow-sm md:p-8">
+            <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-[var(--saffron)]/15 blur-3xl" />
+            <div className="relative">
+              <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[var(--saffron)] text-[var(--indigo-night)]">
+                <Lightbulb className="h-5 w-5" />
+              </span>
+              <p className="mt-5 text-xs font-semibold uppercase tracking-[0.24em] text-[var(--saffron)]">
+                Ideas
+              </p>
+              <h3 className="mt-3 font-display text-3xl font-light leading-tight md:text-4xl">
+                Opportunity maps for people ready to build.
+              </h3>
+              <p className="mt-4 text-sm leading-6 text-foreground/70">
+                We turn weak signals into practical starting points: sectors, customer pain, timing,
+                and the first experiments worth running.
+              </p>
+              <ul className="mt-7 divide-y divide-border text-sm">
+                {[
+                  "Startup theses across Bharat, AI, climate, health, commerce and education",
+                  "Why-now signals: infrastructure, policy, behavior and capital movement",
+                  "Action prompts that help founders move from curiosity to prototype",
+                ].map((item) => (
+                  <li key={item} className="flex gap-3 py-3 text-foreground/80">
+                    <Sparkles className="mt-0.5 h-4 w-4 flex-none text-[var(--saffron)]" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+              <Link
+                to="/soda"
+                className="mt-7 inline-flex items-center gap-2 text-sm font-semibold text-[var(--indigo-night)] transition hover:gap-3"
+              >
+                Explore SODA ideas <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </section>
+
+          <section className="relative overflow-hidden rounded-3xl border border-border bg-[var(--indigo-night)] p-6 text-[var(--parchment)] shadow-xl md:p-8">
+            <div className="pointer-events-none absolute -bottom-20 -left-12 h-56 w-56 rounded-full bg-[var(--monsoon)]/25 blur-3xl" />
+            <div className="relative">
+              <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[var(--parchment)] text-[var(--indigo-night)]">
+                <BadgeCheck className="h-5 w-5" />
+              </span>
+              <p className="mt-5 text-xs font-semibold uppercase tracking-[0.24em] text-[var(--saffron)]">
+                Skills
+              </p>
+              <h3 className="mt-3 font-display text-3xl font-light leading-tight md:text-4xl">
+                AI agent skill sets for builders of the next internet.
+              </h3>
+              <p className="mt-4 text-sm leading-6 text-[var(--parchment)]/72">
+                We focus on the practical capabilities behind agent-native work: designing,
+                prompting, evaluating, automating, and shipping AI systems with others.
+              </p>
+              <ul className="mt-7 divide-y divide-[color-mix(in_oklab,var(--parchment)_18%,transparent)] text-sm">
+                {[
+                  "Agent design: goals, tools, memory, routing, permissions and handoffs",
+                  "Agent operations: workflow automation, evals, monitoring and safety checks",
+                  "Agent product craft: prompt systems, UX patterns, integrations and launch loops",
+                ].map((item) => (
+                  <li key={item} className="flex gap-3 py-3 text-[var(--parchment)]/82">
+                    <Zap className="mt-0.5 h-4 w-4 flex-none text-[var(--saffron)]" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+              <Link
+                to="/skills"
+                className="mt-7 inline-flex items-center gap-2 text-sm font-semibold text-[var(--saffron)] transition hover:gap-3"
+              >
+                See skill pathways <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </section>
         </div>
       </section>
 
@@ -139,17 +232,25 @@ function HomePage() {
                 One orbit. Many walks of life.
               </h3>
               <p className="mt-5 text-[var(--parchment)]/75">
-                India's next breakthroughs won't come from a lone founder in a
-                garage — they'll come from networks of mentors, makers,
-                investors, NRIs and young builders moving together. We design
-                the gravity that holds them in the same orbit.
+                India's next breakthroughs won't come from a lone founder in a garage — they'll come
+                from networks of mentors, makers, investors, NRIs and young builders moving
+                together. We design the gravity that holds them in the same orbit.
               </p>
 
               <ul className="mt-8 space-y-3 text-sm">
                 {[
-                  { i: <Sparkles className="h-4 w-4" />, t: "Tools for agent-native youth builders" },
-                  { i: <Users className="h-4 w-4" />, t: "Mentorship from India's industry veterans" },
-                  { i: <Globe2 className="h-4 w-4" />, t: "Bridges to global capital and the diaspora" },
+                  {
+                    i: <Sparkles className="h-4 w-4" />,
+                    t: "Tools for agent-native youth builders",
+                  },
+                  {
+                    i: <Users className="h-4 w-4" />,
+                    t: "Mentorship from India's industry veterans",
+                  },
+                  {
+                    i: <Globe2 className="h-4 w-4" />,
+                    t: "Bridges to global capital and the diaspora",
+                  },
                 ].map((row) => (
                   <li key={row.t} className="flex items-start gap-3">
                     <span className="mt-0.5 inline-flex h-7 w-7 flex-none items-center justify-center rounded-full bg-[var(--saffron)] text-[var(--indigo-night)]">
@@ -185,9 +286,8 @@ function HomePage() {
                   SODA — the idea database for India's next builders.
                 </h3>
                 <p className="mt-4 max-w-xl text-foreground/70">
-                  Startup Opportunities, Development &amp; Action. A weekly,
-                  signal-scored map of where to build next — sector by sector,
-                  with the timing thesis baked in.
+                  Startup Opportunities, Development &amp; Action. A weekly, signal-scored map of
+                  where to build next — sector by sector, with the timing thesis baked in.
                 </p>
                 <span className="mt-6 inline-flex items-center gap-1 text-sm font-semibold text-[var(--indigo-night)] group-hover:gap-2 transition-all">
                   Open the database <ArrowRight className="h-4 w-4" />
@@ -228,9 +328,8 @@ function HomePage() {
             We're building tools for an India that builds itself.
           </h3>
           <p className="mt-5 text-foreground/70">
-            If this resonates with you — as a founder, expert, investor,
-            student, or someone who simply cares about India's next chapter —
-            we'd love to hear from you.
+            If this resonates with you — as a founder, expert, investor, student, or someone who
+            simply cares about India's next chapter — we'd love to hear from you.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Link
@@ -313,10 +412,17 @@ function HomePage() {
               SODA by Indus Orbit
             </h3>
             <p className="mt-6 text-xl font-light text-foreground/90 leading-relaxed text-balance">
-              SODA is the creative and communication engine of Indus Orbit. We document and distribute high-signal stories from India’s builders. 
+              SODA is the creative and communication engine of Indus Orbit. We document and
+              distribute high-signal stories from India’s builders.
             </p>
             <p className="mt-4 text-[1.05rem] text-foreground/70 leading-relaxed">
-              As part of its mission, SODA runs the <strong className="font-semibold text-[var(--indigo-night)]">SODA Cohort Program</strong> (Startup Opportunities, Development & Action)—a flagship initiative designed to identify and accelerate India’s highest-potential young builders under 24. We don't optimize for attention; we optimize for alignment.
+              As part of its mission, SODA runs the{" "}
+              <strong className="font-semibold text-[var(--indigo-night)]">
+                SODA Cohort Program
+              </strong>{" "}
+              (Startup Opportunities, Development & Action)—a flagship initiative designed to
+              identify and accelerate India’s highest-potential young builders under 24. We don't
+              optimize for attention; we optimize for alignment.
             </p>
             <div className="mt-6 p-5 border-l-4 border-[var(--saffron)] bg-white/50 backdrop-blur rounded-r-2xl shadow-sm">
               <p className="text-[15px] font-medium text-foreground italic">
@@ -333,16 +439,29 @@ function HomePage() {
             </div>
           </div>
           <div className="order-1 md:order-2 h-[400px] sm:h-[450px] md:h-full w-full bg-muted overflow-hidden relative group">
-            <img src="/soda-2.jpg" alt="SODA Cohort Program Builders" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+            <img
+              src="/soda-2.jpg"
+              alt="SODA Cohort Program Builders"
+              className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+            />
             <div className="absolute inset-0 bg-gradient-to-t from-[var(--indigo-night)]/90 via-black/20 to-transparent mix-blend-multiply" />
-            
+
             {/* SPONSOR BANNER OVER IMAGE */}
             <div className="absolute bottom-6 inset-x-6 rounded-2xl bg-white/10 border border-white/20 p-6 backdrop-blur-md shadow-2xl transition-transform duration-500 hover:-translate-y-1">
               <div className="flex flex-col gap-1.5">
-                <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[var(--saffron)]">Sponsored Cohort</span>
+                <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[var(--saffron)]">
+                  Sponsored Cohort
+                </span>
                 <p className="text-[15px] text-white/95 leading-relaxed mt-1">
-                  Powered by <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--saffron)] to-[#ffeaa7] font-display text-[1.6rem] font-bold tracking-wide drop-shadow-md">Jri.AI</span><br/>
-                  <span className="font-medium text-white">The AI+Human business automation platform.</span> From set up to scale.
+                  Powered by{" "}
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--saffron)] to-[#ffeaa7] font-display text-[1.6rem] font-bold tracking-wide drop-shadow-md">
+                    Jri.AI
+                  </span>
+                  <br />
+                  <span className="font-medium text-white">
+                    The AI+Human business automation platform.
+                  </span>{" "}
+                  From set up to scale.
                 </p>
               </div>
             </div>

@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { sendNotification } from "@/server/notification.functions";
 
 function generateCode(): string {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -66,10 +67,29 @@ export async function getMyVouchStatus() {
   const [remaining, quota, settingsRes, codesRes, eventsRes, requestsRes] = await Promise.all([
     getRemainingForUser(userId),
     getQuotaForUser(userId),
-    supabase.from("vouch_settings").select("window_days, code_ttl_days, default_quota").eq("id", "global").maybeSingle(),
-    supabase.from("vouch_codes").select("*").eq("issuer_id", userId).order("created_at", { ascending: false }).limit(20),
-    supabase.from("vouch_events").select("*").eq("issuer_id", userId).order("created_at", { ascending: false }).limit(20),
-    supabase.from("vouch_requests").select("*").eq("requester_id", userId).order("created_at", { ascending: false }).limit(20),
+    supabase
+      .from("vouch_settings")
+      .select("window_days, code_ttl_days, default_quota")
+      .eq("id", "global")
+      .maybeSingle(),
+    supabase
+      .from("vouch_codes")
+      .select("*")
+      .eq("issuer_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(20),
+    supabase
+      .from("vouch_events")
+      .select("*")
+      .eq("issuer_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(20),
+    supabase
+      .from("vouch_requests")
+      .select("*")
+      .eq("requester_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(20),
   ]);
 
   return {
@@ -106,7 +126,10 @@ export async function issueCode() {
       .insert({ issuer_id: userId, code, expires_at: expires })
       .select("id, code")
       .single();
-    if (!error && data) { inserted = data; break; }
+    if (!error && data) {
+      inserted = data;
+      break;
+    }
   }
   if (!inserted) throw new Error("Could not generate code, please retry.");
 
@@ -169,8 +192,8 @@ export async function requestVouch(message: string, targetVerifierId?: string | 
 
   // Notify the target verifier if one was specified
   if (targetVerifierId) {
-    await supabase.from("notifications").insert({
-      user_id: targetVerifierId,
+    await sendNotification({
+      userId: targetVerifierId,
       type: "vouch_request",
       message: "Someone has requested a vouch from you.",
       link: "/app/vouch",

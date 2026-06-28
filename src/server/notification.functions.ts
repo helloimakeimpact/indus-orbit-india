@@ -1,5 +1,25 @@
 import { supabase } from "@/integrations/supabase/client";
 
+export async function sendNotification({
+  userId,
+  type,
+  message,
+  link,
+}: {
+  userId: string;
+  type: string;
+  message: string;
+  link?: string | null;
+}) {
+  const { error } = await supabase.rpc("send_notification", {
+    _user_id: userId,
+    _type: type,
+    _message: message,
+    _link: link || undefined,
+  });
+  if (error) throw new Error(error.message);
+}
+
 export const getUnreadNotificationCount = async () => {
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) return 0;

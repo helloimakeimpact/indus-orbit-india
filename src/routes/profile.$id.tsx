@@ -1,77 +1,391 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { MapPin, Globe, Linkedin, ArrowLeft, Send, ShieldCheck, Award, Orbit } from "lucide-react";
+import {
+  ArrowLeft,
+  BookOpen,
+  CalendarDays,
+  Flag,
+  Globe2,
+  MessageSquare,
+  Rocket,
+  Send,
+  Share2,
+  ShieldCheck,
+  ThumbsUp,
+} from "lucide-react";
 import QRCodeLib from "qrcode";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { SiteShell } from "@/components/site/SiteShell";
 import { AppShell } from "@/components/app/AppShell";
-import { Badge } from "@/components/ui/badge";
-import { VerifiedBadge } from "@/components/auth/VerifiedBadge";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { ReachOutDialog } from "@/components/connect/ReachOutDialog";
-import { SEGMENT_META, type Segment } from "@/components/auth/segments";
-import logo from "@/assets/indus-orbit-logo.png";
+import { BookMentorDialog } from "@/components/connect/BookMentorDialog";
+import {
+  ProfileAboutCard,
+  ProfileActivityTabs,
+  ProfileIdentityHero,
+  ProfileLinksCard,
+  ProfileSegmentSnapshot,
+  ProfileStatsStrip,
+  ProfileTrustCard,
+  type ProfileActivityItem,
+  type ProfileStat,
+  type SocialProfileRecord,
+} from "@/components/profile/SocialProfile";
+import {
+  formatChapterBaseLocation,
+  formatEventLocation,
+  formatLocationTypeLabel,
+} from "@/lib/location";
 
 export const Route = createFileRoute("/profile/$id")({
   component: PublicProfilePage,
 });
 
+type SocialData = {
+  stats: ProfileStat[];
+  activities: ProfileActivityItem[];
+  endorsementCount: number;
+  missionCount: number;
+  chapterCount: number;
+  qrDataUrl: string;
+};
+
+const emptySocial: SocialData = {
+  stats: [],
+  activities: [],
+  endorsementCount: 0,
+  missionCount: 0,
+  chapterCount: 0,
+  qrDataUrl: "",
+};
+
+type EndorsementRow = {
+  id: string;
+  created_at: string | null;
+};
+
+type MissionSummary = {
+  id: string;
+  title: string | null;
+  theme: string | null;
+  status: string | null;
+  description?: string | null;
+};
+
+type ChapterSummary = {
+  id: string;
+  name: string | null;
+  city: string | null;
+  country: string | null;
+};
+
+type AskOfferRow = {
+  id: string;
+  kind: string | null;
+  title: string;
+  body: string | null;
+  region: string | null;
+  sector: string | null;
+  created_at: string | null;
+};
+
+type MissionMemberRow = {
+  role: string | null;
+  commitment_type: string | null;
+  created_at: string | null;
+  missions: MissionSummary | MissionSummary[] | null;
+};
+
+type ChapterMemberRow = {
+  role: string | null;
+  created_at: string | null;
+  chapters: ChapterSummary | ChapterSummary[] | null;
+};
+
+type StoryRow = {
+  id: string;
+  title: string;
+  content: string | null;
+  status: string | null;
+  published_at: string | null;
+  created_at: string | null;
+};
+
+type EventRow = {
+  id: string;
+  title: string;
+  description: string | null;
+  start_time: string | null;
+  location: string | null;
+  location_type: string | null;
+  status: string | null;
+};
+
+type MissionUpdateRow = {
+  id: string;
+  content: string | null;
+  created_at: string | null;
+  mission_id: string | null;
+  missions: Pick<MissionSummary, "id" | "title"> | Pick<MissionSummary, "id" | "title">[] | null;
+};
+
+function relationOne<T>(value: T | T[] | null | undefined): T | null {
+  if (Array.isArray(value)) return value[0] ?? null;
+  return value ?? null;
+}
+
+function excerpt(value?: string | null, length = 150) {
+  if (!value) return "";
+  return value.length > length ? `${value.slice(0, length).trim()}...` : value;
+}
+
+async function loadSocialData(userId: string, profileUrl: string): Promise<SocialData> {
+  const now = new Date().toISOString();
+  const [endorsementsRes, asksRes, missionsRes, chaptersRes, storiesRes, eventsRes, updatesRes] =
+    await Promise.all([
+      supabase
+        .from("endorsements")
+        .select("id, segment, note, created_at, endorser_id")
+        .eq("endorsee_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(12),
+      supabase
+        .from("asks_offers")
+        .select("id, kind, title, body, region, sector, created_at, expires_at")
+        .eq("author_id", userId)
+        .eq("status", "active")
+        .gt("expires_at", now)
+        .order("created_at", { ascending: false })
+        .limit(8),
+      supabase
+        .from("mission_members")
+        .select(
+          "role, commitment_type, message, created_at, missions(id, title, theme, status, description)",
+        )
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(8),
+      supabase
+        .from("chapter_members")
+        .select("role, created_at, chapters(id, name, city, country)")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(8),
+      supabase
+        .from("stories")
+        .select("id, title, content, status, published_at, created_at")
+        .eq("author_id", userId)
+        .in("status", ["approved", "featured", "published"])
+        .order("created_at", { ascending: false })
+        .limit(8),
+      supabase
+        .from("events")
+        .select("id, title, description, start_time, location, location_type, status")
+        .eq("organizer_id", userId)
+        .eq("status", "approved")
+        .order("start_time", { ascending: false })
+        .limit(8),
+      supabase
+        .from("mission_updates")
+        .select("id, content, created_at, mission_id, missions(id, title)")
+        .eq("author_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(8),
+    ]);
+
+  const endorsements = (endorsementsRes.data as EndorsementRow[] | null) ?? [];
+  const asks = (asksRes.data as AskOfferRow[] | null) ?? [];
+  const missions = (missionsRes.data as MissionMemberRow[] | null) ?? [];
+  const chapters = (chaptersRes.data as ChapterMemberRow[] | null) ?? [];
+  const stories = (storiesRes.data as StoryRow[] | null) ?? [];
+  const events = (eventsRes.data as EventRow[] | null) ?? [];
+  const updates = (updatesRes.data as MissionUpdateRow[] | null) ?? [];
+
+  const missionActivities: ProfileActivityItem[] = missions.map((row) => {
+    const mission = relationOne<MissionSummary>(row.missions);
+    return {
+      id: mission?.id ?? `${row.created_at}-mission`,
+      type: "mission",
+      emoji: row.role === "lead" ? "👑" : "🚀",
+      title: mission?.title ?? "Mission",
+      subtitle: [row.role, row.commitment_type, mission?.theme].filter(Boolean).join(" · "),
+      body: mission?.description,
+      status: mission?.status,
+      date: row.created_at,
+      href: mission?.id ? `/app/missions/${mission.id}` : undefined,
+    };
+  });
+
+  const chapterActivities: ProfileActivityItem[] = chapters.map((row) => {
+    const chapter = relationOne<ChapterSummary>(row.chapters);
+    return {
+      id: chapter?.id ?? `${row.created_at}-chapter`,
+      type: "chapter",
+      emoji: row.role === "lead" ? "👑" : "🌍",
+      title: chapter?.name ?? "Chapter",
+      subtitle: [row.role, chapter ? `Base: ${formatChapterBaseLocation(chapter)}` : ""]
+        .filter(Boolean)
+        .join(" · "),
+      date: row.created_at,
+      href: chapter?.id ? `/app/chapters/${chapter.id}` : undefined,
+    };
+  });
+
+  const postActivities: ProfileActivityItem[] = asks.map((post) => ({
+    id: post.id,
+    type: "post",
+    emoji: post.kind === "offer" ? "🎁" : "🙏",
+    title: post.title,
+    subtitle: [post.kind, post.sector, post.region].filter(Boolean).join(" · "),
+    body: post.body,
+    date: post.created_at,
+    status: "active",
+  }));
+
+  const storyActivities: ProfileActivityItem[] = stories.map((story) => ({
+    id: story.id,
+    type: "story",
+    emoji: story.status === "featured" ? "🌟" : "📖",
+    title: story.title,
+    body: excerpt(story.content),
+    date: story.published_at ?? story.created_at,
+    status: story.status,
+    href: `/app/stories/${story.id}`,
+  }));
+
+  const eventActivities: ProfileActivityItem[] = events.map((event) => ({
+    id: event.id,
+    type: "event",
+    emoji: event.location_type === "virtual" ? "💻" : "🗓️",
+    title: event.title,
+    subtitle: [formatLocationTypeLabel(event.location_type), formatEventLocation(event)]
+      .filter(Boolean)
+      .join(" · "),
+    body: excerpt(event.description),
+    date: event.start_time,
+    status: event.status,
+    href: `/app/events/${event.id}`,
+  }));
+
+  const updateActivities: ProfileActivityItem[] = updates.map((update) => {
+    const mission = relationOne<Pick<MissionSummary, "id" | "title">>(update.missions);
+    return {
+      id: update.id,
+      type: "mission",
+      emoji: "🛰️",
+      title: mission?.title ? `Update in ${mission.title}` : "Mission update",
+      body: excerpt(update.content),
+      date: update.created_at,
+      href: update.mission_id ? `/app/missions/${update.mission_id}` : undefined,
+    };
+  });
+
+  const activities = [
+    ...missionActivities,
+    ...chapterActivities,
+    ...postActivities,
+    ...storyActivities,
+    ...eventActivities,
+    ...updateActivities,
+  ];
+
+  const qrDataUrl = await new Promise<string>((resolve) => {
+    QRCodeLib.toDataURL(profileUrl, { margin: 2, scale: 4 }, (err, url) => resolve(err ? "" : url));
+  });
+
+  return {
+    endorsementCount: endorsements.length,
+    missionCount: missions.length,
+    chapterCount: chapters.length,
+    qrDataUrl,
+    activities,
+    stats: [
+      {
+        label: "Endorsements",
+        value: endorsements.length,
+        detail: "Member trust signals",
+        icon: ThumbsUp,
+      },
+      {
+        label: "Missions",
+        value: missions.length,
+        detail: `${missions.filter((m) => m.role === "lead").length} led`,
+        icon: Rocket,
+      },
+      {
+        label: "Chapters",
+        value: chapters.length,
+        detail: `${chapters.filter((c) => c.role === "lead").length} led`,
+        icon: Globe2,
+      },
+      {
+        label: "Public activity",
+        value: activities.length,
+        detail: "Posts, stories, events, updates",
+        icon: MessageSquare,
+      },
+    ],
+  };
+}
+
 function PublicProfilePage() {
   const { id } = Route.useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<SocialProfileRecord | null>(null);
+  const [social, setSocial] = useState<SocialData>(emptySocial);
   const [busy, setBusy] = useState(true);
   const [reachOutOpen, setReachOutOpen] = useState(false);
-  const [certData, setCertData] = useState<{ totalChapters: number; totalMissions: number; isLead: boolean } | null>(null);
-  const [qrDataUrl, setQrDataUrl] = useState("");
+  const [bookOpen, setBookOpen] = useState(false);
 
   useEffect(() => {
     async function load() {
-      // Find the user by user_id OR ID
-      const { data, error } = await supabase
+      setBusy(true);
+      const { data } = await supabase
         .from("profiles")
         .select("*")
         .eq("user_id", id)
         .eq("is_public", true)
         .maybeSingle();
-        
-      setProfile(data);
-      setBusy(false);
 
-      // If profile is verified, load certificate metrics
-      if (data?.is_verified) {
-        const profileUrl = typeof window !== 'undefined' 
-          ? `${window.location.origin}/profile/${id}`
-          : `https://indus-orbit-india.com/profile/${id}`;
-        QRCodeLib.toDataURL(profileUrl, { margin: 2, scale: 4 }, (err: any, url: string) => {
-          if (!err) setQrDataUrl(url);
-        });
-
-        const [chRes, msRes] = await Promise.all([
-          supabase.from("chapter_members").select("role").eq("user_id", id),
-          supabase.from("mission_members").select("role").eq("user_id", id)
-        ]);
-        const chapters = chRes.data || [];
-        const missions = msRes.data || [];
-        setCertData({
-          totalChapters: chapters.length,
-          totalMissions: missions.length,
-          isLead: chapters.some((c: any) => c.role === "lead") || missions.some((m: any) => m.role === "lead")
-        });
+      const nextProfile = data as unknown as SocialProfileRecord | null;
+      setProfile(nextProfile);
+      if (nextProfile) {
+        const profileUrl =
+          typeof window !== "undefined"
+            ? `${window.location.origin}/profile/${id}`
+            : `/profile/${id}`;
+        setSocial(await loadSocialData(id, profileUrl));
       }
+      setBusy(false);
     }
     load();
   }, [id]);
 
   const Shell = user ? AppShell : SiteShell;
+  const isOwner = user?.id === profile?.user_id;
+  const canContact = user && profile && !isOwner;
+  const canBook = canContact && profile.orbit_segment === "expert";
+
+  async function copyProfile() {
+    const url = typeof window !== "undefined" ? window.location.href : `/profile/${id}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("Profile link copied");
+    } catch {
+      toast.error("Could not copy profile link");
+    }
+  }
 
   if (busy) {
     return (
       <Shell>
         <div className="flex min-h-[50vh] items-center justify-center">
-          <p className="text-muted-foreground">Loading profile…</p>
+          <p className="text-muted-foreground">Loading profile...</p>
         </div>
       </Shell>
     );
@@ -80,227 +394,140 @@ function PublicProfilePage() {
   if (!profile) {
     return (
       <Shell>
-        <div className="mx-auto w-full max-w-7xl py-24 px-6 text-center">
-          <h1 className="font-display text-4xl font-semibold mb-4">Profile Not Found</h1>
-          <p className="text-muted-foreground mb-8">This member's profile is either private or does not exist.</p>
-          <Button onClick={() => navigate({ to: '/members' })}>
-            View Directory
+        <div className="mx-auto w-full max-w-3xl px-4 py-16 text-center">
+          <h1 className="text-3xl font-semibold">Profile not found</h1>
+          <p className="mt-3 text-muted-foreground">
+            This member profile is private or does not exist.
+          </p>
+          <Button
+            className="mt-6"
+            onClick={() => navigate({ to: user ? "/app/directory" : "/members" })}
+          >
+            View directory
           </Button>
         </div>
       </Shell>
     );
   }
 
-  const initial = (profile.display_name ?? "?").charAt(0).toUpperCase();
-
   return (
     <Shell>
-      <div className="mx-auto w-full max-w-7xl py-12 px-6 lg:px-8">
-        <Link to={user ? "/app/directory" : "/members"} className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-[var(--indigo-night)] mb-12 transition">
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Directory
+      <div className="mx-auto w-full max-w-none space-y-4 px-0 py-2 sm:px-2 lg:px-4">
+        <Link
+          to={user ? "/app/directory" : "/members"}
+          className="inline-flex items-center gap-2 px-1 text-sm font-medium text-muted-foreground transition hover:text-[var(--indigo-night)]"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to directory
         </Link>
 
-        <div className="grid md:grid-cols-3 gap-12">
-          {/* Left Column: Core Info */}
-          <div className="md:col-span-1 space-y-8">
-            <div className="flex h-32 w-32 items-center justify-center rounded-3xl bg-[var(--indigo-night)] text-5xl font-display font-semibold text-[var(--parchment)] shadow-xl">
-              {initial}
-            </div>
-
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <h1 className="font-display text-3xl font-semibold leading-tight text-[var(--indigo-night)]">
-                  {profile.display_name}
-                </h1>
-                {profile.is_verified && <VerifiedBadge />}
-              </div>
-              {profile.orbit_segment && (
-                <Badge className="mb-4 uppercase tracking-wider text-[10px]">{profile.orbit_segment}</Badge>
-              )}
-              <p className="text-foreground/80 leading-relaxed font-medium">
-                {profile.headline}
-              </p>
-            </div>
-
-            <div className="space-y-4 pt-6 border-t border-border">
-              {(profile.city || profile.country) && (
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <MapPin className="mr-3 h-4 w-4 text-[var(--indigo-night)]" />
-                  {[profile.city, profile.country].filter(Boolean).join(", ")}
-                </div>
-              )}
-              {profile.website_url && (
-                <div className="flex items-center text-sm">
-                  <Globe className="mr-3 h-4 w-4 text-[var(--indigo-night)]" />
-                  <a href={profile.website_url} target="_blank" rel="noreferrer" className="text-foreground hover:underline">
-                    Website
-                  </a>
-                </div>
-              )}
-              {profile.linkedin_url && (
-                <div className="flex items-center text-sm">
-                  <Linkedin className="mr-3 h-4 w-4 text-[#0A66C2]" />
-                  <a href={profile.linkedin_url} target="_blank" rel="noreferrer" className="text-foreground hover:underline">
-                    LinkedIn
-                  </a>
-                </div>
-              )}
-            </div>
-
-            {user && user.id !== profile.user_id && (
-              <div className="pt-6 border-t border-border">
-                <Button className="w-full" onClick={() => setReachOutOpen(true)}>
-                  <Send className="mr-2 h-4 w-4" /> Reach out
+        <ProfileIdentityHero
+          profile={profile}
+          actions={
+            <>
+              {canContact && (
+                <Button onClick={() => setReachOutOpen(true)} className="rounded-full">
+                  <Send className="h-4 w-4" /> Reach out
                 </Button>
-              </div>
-            )}
-            
-            {!user && (
-              <div className="pt-6 border-t border-border">
-                <div className="rounded-xl bg-muted p-4 text-center text-sm text-muted-foreground">
-                  <Link to="/auth" className="font-medium text-[var(--indigo-night)] underline underline-offset-4">Log in</Link> to connect with {profile.display_name}.
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Right Column: Details */}
-          <div className="md:col-span-2 space-y-8">
-            <div className="rounded-3xl border border-border bg-card p-8">
-              <h2 className="font-display text-2xl font-medium mb-6">About</h2>
-              {profile.bio ? (
-                <p className="prose prose-base text-foreground/90 whitespace-pre-wrap leading-relaxed">
-                  {profile.bio}
-                </p>
-              ) : (
-                <p className="text-muted-foreground italic">No biography provided.</p>
               )}
-            </div>
+              {canBook && (
+                <Button
+                  onClick={() => setBookOpen(true)}
+                  variant="outline"
+                  className="rounded-full"
+                >
+                  <CalendarDays className="h-4 w-4" /> Book session
+                </Button>
+              )}
+              {isOwner && (
+                <Button asChild className="rounded-full">
+                  <Link to="/app/profile">Edit profile</Link>
+                </Button>
+              )}
+              {!user && (
+                <Button asChild className="rounded-full">
+                  <Link to="/auth">Join to connect</Link>
+                </Button>
+              )}
+              <Button onClick={copyProfile} variant="outline" className="rounded-full">
+                <Share2 className="h-4 w-4" /> Share
+              </Button>
+            </>
+          }
+        />
 
-            {/* Verification & Network CTA (Public View Only) */}
-            {!user && (
-              <div className="rounded-3xl border border-[var(--saffron)]/30 bg-gradient-to-br from-[var(--saffron)]/5 to-transparent p-8 mt-8">
-                <div className="flex items-start gap-4">
-                  <div className="rounded-full bg-[var(--saffron)]/20 p-3 mt-1">
-                    <ShieldCheck className="h-6 w-6 text-[var(--saffron)]" />
-                  </div>
-                  <div>
-                    <h2 className="font-display text-2xl font-medium mb-2">Verified Ecosystem Member</h2>
-                    <p className="text-foreground/80 mb-6 leading-relaxed">
-                      This profile is an officially verified node within the Indus Orbit intelligence layer. 
-                      You have scanned a trusted certification. 
-                    </p>
-                    <div className="flex flex-col sm:flex-row gap-4">
-                      <Button asChild className="bg-[var(--indigo-night)] text-[var(--parchment)] hover:bg-[var(--indigo-night)]/90">
-                        <Link to="/auth">Join the Network</Link>
-                      </Button>
-                      <Button asChild variant="outline" className="border-[var(--indigo-night)] text-[var(--indigo-night)] hover:bg-[var(--indigo-night)]/5">
-                        <Link to="/what-is-indus-orbit">What is Indus Orbit?</Link>
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
+        <ProfileStatsStrip stats={social.stats} />
 
-            {/* Certificate Preview (Verified Profiles Only) */}
-            {profile.is_verified && certData && (
-              <div className="rounded-3xl overflow-hidden" style={{ backgroundColor: "#0e0a1f", color: "#fcfaf5", border: "1px solid rgba(255,255,255,0.15)" }}>
-                <div className="relative p-8 overflow-hidden">
-                  {/* Background orbits */}
-                  <div className="absolute -right-16 -top-16 opacity-5 pointer-events-none text-white">
-                    <Orbit className="h-64 w-64" />
-                  </div>
-                  <div className="absolute -left-16 -bottom-16 opacity-5 pointer-events-none text-white">
-                    <Orbit className="h-64 w-64" />
-                  </div>
-
-                  <div className="relative z-10 flex flex-col items-center text-center">
-                    <div className="mb-6 flex items-center gap-3">
-                      <img src={logo} alt="Indus Orbit" className="h-10 w-10" style={{ filter: "invert(1)" }} />
-                      <h3 className="font-display text-2xl font-semibold" style={{ color: "#fcfaf5" }}>Indus Orbit</h3>
-                    </div>
-
-                    <div className="mb-6" style={{ color: "#f97316" }}>
-                      <ShieldCheck className="mx-auto h-8 w-8 mb-2" />
-                      <p className="text-xs font-semibold uppercase tracking-[0.25em]">Official Certification</p>
-                    </div>
-
-                    <p className="text-sm mb-1" style={{ color: "rgba(252,250,245,0.7)" }}>This is to certify that</p>
-                    <h2 className="font-display text-3xl font-semibold mb-4">{profile.display_name}</h2>
-                    <p className="text-sm font-light italic max-w-md mb-6" style={{ color: "rgba(252,250,245,0.85)" }}>
-                      is recognized as a Verified {profile.orbit_segment ? SEGMENT_META[profile.orbit_segment as Segment]?.label : "Member"} within the Indus Orbit ecosystem.
-                    </p>
-
-                    {/* Metrics */}
-                    <div className="flex gap-8 pt-4 mb-4 justify-center" style={{ borderTop: "1px solid rgba(255,255,255,0.15)" }}>
-                      {certData.isLead && (
-                        <div className="flex flex-col items-center">
-                          <span className="text-lg font-bold" style={{ color: "#f97316" }}>Platform Lead</span>
-                          <span className="text-[10px] uppercase tracking-wider mt-1" style={{ color: "rgba(252,250,245,0.5)" }}>Status</span>
-                        </div>
-                      )}
-                      <div className="flex flex-col items-center">
-                        <span className="text-lg font-bold">{certData.totalChapters}</span>
-                        <span className="text-[10px] uppercase tracking-wider mt-1" style={{ color: "rgba(252,250,245,0.5)" }}>Chapters</span>
-                      </div>
-                      <div className="flex flex-col items-center">
-                        <span className="text-lg font-bold">{certData.totalMissions}</span>
-                        <span className="text-[10px] uppercase tracking-wider mt-1" style={{ color: "rgba(252,250,245,0.5)" }}>Missions</span>
-                      </div>
-                    </div>
-
-                    {/* QR & ID footer */}
-                    <div className="flex w-full justify-between items-end pt-4 px-2" style={{ borderTop: "1px solid rgba(255,255,255,0.15)" }}>
-                      <div className="flex items-center gap-3 text-left">
-                        {qrDataUrl && (
-                          <div className="p-1 rounded-lg bg-white">
-                            <img src={qrDataUrl} alt="Profile QR" style={{ width: "48px", height: "48px", display: "block" }} />
-                          </div>
-                        )}
-                        <div>
-                          <p className="font-display text-sm" style={{ color: "#fcfaf5" }}>Indus Orbit Trust Layer</p>
-                          <p className="text-[10px] uppercase tracking-widest" style={{ color: "rgba(252,250,245,0.6)" }}>Scan to verify or join</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xs font-mono" style={{ color: "#f97316" }}>ID: {id.split('-')[0].toUpperCase()}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {profile.segment_details && Object.keys(profile.segment_details).length > 0 && (
-              <div className="rounded-3xl border border-border bg-card p-8">
-                <h2 className="font-display text-2xl font-medium mb-6">Segment Details</h2>
-                <div className="grid gap-6 sm:grid-cols-2">
-                  {Object.entries(profile.segment_details).map(([key, value]) => (
-                    <div key={key}>
-                      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-                        {key.replace(/_/g, " ")}
-                      </p>
-                      <p className="text-sm font-medium">
-                        {typeof value === 'boolean' ? (value ? 'Yes' : 'No') : String(value)}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
+          <div className="space-y-4">
+            <ProfileAboutCard profile={profile} />
+            <ProfileActivityTabs items={social.activities} />
           </div>
+
+          <aside className="space-y-4">
+            <ProfileSegmentSnapshot profile={profile} />
+            <ProfileTrustCard
+              profile={profile}
+              endorsementCount={social.endorsementCount}
+              qrDataUrl={profile.is_verified ? social.qrDataUrl : ""}
+            />
+            <ProfileLinksCard profile={profile} />
+            {!user && (
+              <section className="app-glass rounded-2xl p-4">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="h-4 w-4 text-[var(--saffron)]" />
+                  <h2 className="text-base font-semibold">Join the Orbit</h2>
+                </div>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  Indus Orbit profiles become useful when members can connect, vouch, mentor, and
+                  build in public.
+                </p>
+                <Button asChild className="mt-4 w-full rounded-full">
+                  <Link to="/auth">Create account</Link>
+                </Button>
+              </section>
+            )}
+          </aside>
         </div>
       </div>
 
-      {reachOutOpen && user && (
+      {reachOutOpen && canContact && (
         <ReachOutDialog
           open={reachOutOpen}
           onOpenChange={setReachOutOpen}
           recipientId={profile.user_id}
-          recipientName={profile.display_name}
+          recipientName={profile.display_name ?? "Member"}
           senderId={user.id}
         />
+      )}
+      {bookOpen && canBook && (
+        <BookMentorDialog
+          open={bookOpen}
+          onOpenChange={setBookOpen}
+          expertId={profile.user_id}
+          expertName={profile.display_name ?? "this expert"}
+        />
+      )}
+
+      {canContact && (
+        <div className="fixed inset-x-3 bottom-3 z-40 flex gap-2 rounded-2xl border border-white/60 bg-card/85 p-2 shadow-2xl backdrop-blur-2xl md:hidden">
+          <Button onClick={() => setReachOutOpen(true)} className="flex-1 rounded-xl">
+            <Send className="h-4 w-4" /> Reach out
+          </Button>
+          {canBook ? (
+            <Button
+              onClick={() => setBookOpen(true)}
+              variant="outline"
+              className="flex-1 rounded-xl"
+            >
+              <CalendarDays className="h-4 w-4" /> Book
+            </Button>
+          ) : (
+            <Button onClick={copyProfile} variant="outline" className="flex-1 rounded-xl">
+              <Share2 className="h-4 w-4" /> Share
+            </Button>
+          )}
+        </div>
       )}
     </Shell>
   );

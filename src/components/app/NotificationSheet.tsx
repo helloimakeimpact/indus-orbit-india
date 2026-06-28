@@ -7,6 +7,17 @@ import { getNotifications, getUnreadNotificationCount, markNotificationsRead } f
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 
+const SETTINGS_KEY = "indus-orbit:settings";
+
+function readQuietNotifications() {
+  if (typeof window === "undefined") return false;
+  try {
+    return Boolean(JSON.parse(window.localStorage.getItem(SETTINGS_KEY) ?? "{}").quietNotifications);
+  } catch {
+    return false;
+  }
+}
+
 export function NotificationSheet() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -14,6 +25,17 @@ export function NotificationSheet() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [busy, setBusy] = useState(false);
+  const [quietNotifications, setQuietNotifications] = useState(readQuietNotifications);
+
+  useEffect(() => {
+    const syncQuiet = () => setQuietNotifications(readQuietNotifications());
+    window.addEventListener("storage", syncQuiet);
+    window.addEventListener("indus-orbit:settings-change", syncQuiet);
+    return () => {
+      window.removeEventListener("storage", syncQuiet);
+      window.removeEventListener("indus-orbit:settings-change", syncQuiet);
+    };
+  }, []);
 
   // Poll for unread count
   useEffect(() => {
@@ -57,7 +79,14 @@ export function NotificationSheet() {
           {unreadCount > 0 ? (
             <>
               <BellDot className="h-5 w-5" />
-              <span className="absolute right-2 top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--saffron)] px-1 text-[9px] font-bold text-[var(--indigo-night)]">
+              <span
+                className={cn(
+                  "absolute right-2 top-2 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-bold",
+                  quietNotifications
+                    ? "bg-muted text-muted-foreground"
+                    : "bg-[var(--saffron)] text-[var(--indigo-night)]",
+                )}
+              >
                 {unreadCount > 9 ? "9+" : unreadCount}
               </span>
             </>
@@ -93,15 +122,15 @@ export function NotificationSheet() {
                   onClick={() => setOpen(false)}
                   className={cn(
                     "block p-4 rounded-xl border transition group",
-                    isUnread 
-                      ? "bg-muted/30 border-[var(--saffron)]/50 hover:bg-muted/50" 
+                    isUnread && !quietNotifications
+                      ? "bg-muted/30 border-[var(--saffron)]/50 hover:bg-muted/50"
                       : "bg-card border-border hover:border-foreground/20"
                   )}
                 >
                   <div className="flex items-start gap-4">
                     <div className="mt-0.5 flex-shrink-0">
                       {isUnread ? (
-                        <span className="flex h-2 w-2 mt-1.5 rounded-full bg-[var(--saffron)]" />
+                        <span className={cn("flex h-2 w-2 mt-1.5 rounded-full", quietNotifications ? "bg-muted-foreground/35" : "bg-[var(--saffron)]")} />
                       ) : (
                         <span className="flex h-2 w-2 mt-1.5 rounded-full bg-border" />
                       )}

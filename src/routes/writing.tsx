@@ -1,6 +1,7 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute } from "@tanstack/react-router";
 
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { SiteShell } from "@/components/site/SiteShell";
 import { cn } from "@/lib/utils";
 import { getPublishedStories } from "@/server/society.functions";
@@ -11,14 +12,12 @@ export const Route = createFileRoute("/writing")({
       { title: "Writing — Indus Orbit" },
       {
         name: "description",
-        content:
-          "Announcements, research notes and vision essays from the team at Indus Orbit.",
+        content: "Announcements, research notes and vision essays from the team at Indus Orbit.",
       },
       { property: "og:title", content: "Writing — Indus Orbit" },
       {
         property: "og:description",
-        content:
-          "Notes from a general intelligence company built for India.",
+        content: "Notes from a general intelligence company built for India.",
       },
     ],
   }),
@@ -27,7 +26,13 @@ export const Route = createFileRoute("/writing")({
 
 type Tag = "All" | "Announcements" | "Research" | "Vision" | "Community";
 
-const posts: Array<{ title: string; excerpt: string; author: string; tag: Exclude<Tag, "All">; gradient: string }> = [
+const posts: Array<{
+  title: string;
+  excerpt: string;
+  author: string;
+  tag: Exclude<Tag, "All">;
+  gradient: string;
+}> = [
   {
     title: "Announcing Indus Orbit",
     excerpt:
@@ -81,18 +86,28 @@ const posts: Array<{ title: string; excerpt: string; author: string; tag: Exclud
 function WritingPage() {
   const [active, setActive] = useState<Tag>("All");
   const [memberStories, setMemberStories] = useState<any[]>([]);
+  const [storyError, setStoryError] = useState<string | null>(null);
   const tags: Tag[] = ["All", "Announcements", "Research", "Vision", "Community"];
 
   useEffect(() => {
-    getPublishedStories().then(setMemberStories).catch(console.error);
+    getPublishedStories()
+      .then((stories) => {
+        setStoryError(null);
+        setMemberStories(stories);
+      })
+      .catch((err) => {
+        const message = err instanceof Error ? err.message : "Could not load community writing";
+        setStoryError(message);
+        toast.error(message);
+      });
   }, []);
 
-  const dynamicPosts = memberStories.map(s => ({
+  const dynamicPosts = memberStories.map((s) => ({
     title: s.title,
-    excerpt: s.content.substring(0, 100) + '...', // Simple excerpt extraction
-    author: s.profiles?.display_name || 'Member',
+    excerpt: `${s.content.substring(0, 100)}...`, // Simple excerpt extraction
+    author: s.profiles?.display_name || "Member",
     tag: "Community" as Exclude<Tag, "All">,
-    gradient: "from-[var(--saffron)]/40 via-[var(--indigo-night)]/50 to-[var(--monsoon)]/80" // default gradient
+    gradient: "from-[var(--saffron)]/40 via-[var(--indigo-night)]/50 to-[var(--monsoon)]/80", // default gradient
   }));
 
   const allPosts = [...dynamicPosts, ...posts];
@@ -109,8 +124,8 @@ function WritingPage() {
             Notes from the orbit.
           </h1>
           <p className="mt-5 max-w-2xl text-foreground/70">
-            Announcements, research and essays on intelligence, India, and the
-            networks we are building between the two.
+            Announcements, research and essays on intelligence, India, and the networks we are
+            building between the two.
           </p>
 
           <div className="mt-10 flex flex-wrap gap-2">
@@ -129,6 +144,11 @@ function WritingPage() {
               </button>
             ))}
           </div>
+          {storyError && (
+            <p className="mt-6 text-sm text-destructive">
+              Could not load community writing: {storyError}
+            </p>
+          )}
         </div>
       </section>
 
@@ -145,9 +165,7 @@ function WritingPage() {
                   <span className="inline-flex w-fit rounded-full bg-foreground/5 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-foreground/60">
                     {p.tag}
                   </span>
-                  <h3 className="mt-4 font-display text-xl font-medium leading-tight">
-                    {p.title}
-                  </h3>
+                  <h3 className="mt-4 font-display text-xl font-medium leading-tight">{p.title}</h3>
                   <p className="mt-3 text-sm text-foreground/70">{p.excerpt}</p>
                   <p className="mt-6 text-xs uppercase tracking-wider text-foreground/50">
                     {p.author}

@@ -52,20 +52,25 @@ export function ReachOutDialog({
       reason,
       note: trimmed,
     });
-    
+
     if (error) {
       setBusy(false);
-      if (error.code === "23505") return toast.error("You already have a pending request to this member");
+      if (error.code === "23505")
+        return toast.error("You already have a pending request to this member");
       return toast.error(error.message);
     }
 
     // Notify the recipient via SECURITY DEFINER RPC
-    await supabase.rpc("send_notification", {
+    const { error: notifyError } = await supabase.rpc("send_notification", {
       _user_id: recipientId,
       _type: "connection_request",
       _message: "You have a new connection request.",
-      _link: "/app/connect",
+      _link: "/app/directory",
     });
+    if (notifyError) {
+      setBusy(false);
+      return toast.error(notifyError.message);
+    }
 
     setBusy(false);
     toast.success("Request sent");
@@ -79,7 +84,8 @@ export function ReachOutDialog({
         <DialogHeader>
           <DialogTitle>Reach out to {recipientName}</DialogTitle>
           <DialogDescription>
-            Pick a reason and write a short note (max 280 chars). They'll see it and choose to accept or decline.
+            Pick a reason and write a short note (max 280 chars). They'll see it and choose to
+            accept or decline.
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-wrap gap-2">
@@ -108,8 +114,12 @@ export function ReachOutDialog({
         />
         <p className="text-xs text-muted-foreground text-right">{note.length}/280</p>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={send} disabled={busy}>{busy ? "Sending…" : "Send request"}</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button onClick={send} disabled={busy}>
+            {busy ? "Sending…" : "Send request"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

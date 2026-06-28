@@ -6,7 +6,7 @@ export const getEventRsvpState = async (eventId: string) => {
   const { data: userData } = await supabase.auth.getUser();
   const userId = userData.user?.id ?? null;
 
-  const [{ data: counts }, mineRes] = await Promise.all([
+  const [countsRes, mineRes] = await Promise.all([
     (supabase.rpc as any)("event_rsvp_counts", { _event_id: eventId }),
     userId
       ? (supabase.from as any)("event_rsvps")
@@ -16,9 +16,14 @@ export const getEventRsvpState = async (eventId: string) => {
           .maybeSingle()
       : Promise.resolve({ data: null }),
   ]);
+  if (countsRes.error) throw new Error(countsRes.error.message);
+  if (mineRes?.error) throw new Error(mineRes.error.message);
 
   return {
-    counts: (counts ?? { going: 0, interested: 0, not_going: 0 }) as Record<RsvpStatus, number>,
+    counts: (countsRes.data ?? { going: 0, interested: 0, not_going: 0 }) as Record<
+      RsvpStatus,
+      number
+    >,
     mine: (mineRes?.data?.status ?? null) as RsvpStatus | null,
   };
 };
@@ -59,10 +64,11 @@ export const getEventAttendees = async (eventId: string) => {
   const list = (rsvps ?? []) as { status: string; created_at: string; user_id: string }[];
   if (list.length === 0) return [];
   const ids = Array.from(new Set(list.map((r) => r.user_id)));
-  const { data: profiles } = await supabase
+  const { data: profiles, error: profilesError } = await supabase
     .from("profiles")
     .select("user_id, display_name, headline, avatar_url")
     .in("user_id", ids);
+  if (profilesError) throw new Error(profilesError.message);
   const byId = new Map(((profiles ?? []) as any[]).map((p) => [p.user_id, p]));
   return list.map((r) => ({ ...r, profile: byId.get(r.user_id) ?? null }));
 };
