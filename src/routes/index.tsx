@@ -8,14 +8,16 @@ import {
   Users,
   Globe2,
   Sunrise,
-  Flame,
-  TrendingUp,
   Zap,
   Lightbulb,
   BadgeCheck,
+  BookOpen,
+  GraduationCap,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getSpotlights } from "@/server/society.functions";
+
+type Spotlight = Awaited<ReturnType<typeof getSpotlights>>[number];
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -41,11 +43,11 @@ export const Route = createFileRoute("/")({
 });
 
 function HomePage() {
-  const [spotlights, setSpotlights] = useState<any[]>([]);
+  const [spotlights, setSpotlights] = useState<Spotlight[]>([]);
   useEffect(() => {
     getSpotlights()
       .then((rows) => setSpotlights(rows ?? []))
-      .catch(() => {});
+      .catch(() => setSpotlights([]));
   }, []);
 
   return (
@@ -141,9 +143,9 @@ function HomePage() {
         </div>
       </section>
 
-      {/* IDEAS + SKILLS */}
+      {/* IDEAS + EDUCATION + SKILLS */}
       <section className="px-6 pb-24">
-        <div className="mx-auto grid w-full max-w-7xl gap-5 md:grid-cols-2">
+        <div className="mx-auto grid w-full max-w-7xl gap-5 md:grid-cols-2 lg:grid-cols-3">
           <section className="relative overflow-hidden rounded-3xl border border-border bg-card p-6 shadow-sm md:p-8">
             <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-[var(--saffron)]/15 blur-3xl" />
             <div className="relative">
@@ -176,7 +178,44 @@ function HomePage() {
                 to="/soda"
                 className="mt-7 inline-flex items-center gap-2 text-sm font-semibold text-[var(--indigo-night)] transition hover:gap-3"
               >
-                Explore SODA ideas <ArrowRight className="h-4 w-4" />
+                Explore S.O.D.A ideas <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </section>
+
+          <section className="relative overflow-hidden rounded-3xl border border-border bg-card p-6 shadow-sm md:p-8">
+            <div className="pointer-events-none absolute -left-14 -bottom-16 h-48 w-48 rounded-full bg-[var(--monsoon)]/15 blur-3xl" />
+            <div className="relative">
+              <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[var(--indigo-night)] text-[var(--parchment)]">
+                <GraduationCap className="h-5 w-5" />
+              </span>
+              <p className="mt-5 text-xs font-semibold uppercase tracking-[0.24em] text-[var(--saffron)]">
+                Education
+              </p>
+              <h3 className="mt-3 font-display text-3xl font-light leading-tight md:text-4xl">
+                Step-by-step courses for people shipping with AI tools.
+              </h3>
+              <p className="mt-4 text-sm leading-6 text-foreground/70">
+                Academy turns tools into repeatable practice: app-builder workflows, product
+                judgment, launch checklists, quizzes, and resources members can revisit.
+              </p>
+              <ul className="mt-7 divide-y divide-border text-sm">
+                {[
+                  "Builder tracks for Lovable, Bolt, Cursor, Replit Agent and v0",
+                  "Lessons with video links, checklists, quizzes and completion progress",
+                  "Operating habits: scoping, testing, deployment, feedback and iteration",
+                ].map((item) => (
+                  <li key={item} className="flex gap-3 py-3 text-foreground/80">
+                    <BookOpen className="mt-0.5 h-4 w-4 flex-none text-[var(--saffron)]" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+              <Link
+                to="/app/education"
+                className="mt-7 inline-flex items-center gap-2 text-sm font-semibold text-[var(--indigo-night)] transition hover:gap-3"
+              >
+                Open Academy <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
           </section>
@@ -267,60 +306,6 @@ function HomePage() {
         </div>
       </section>
 
-      {/* SODA TEASER — sits right below the "One orbit. Many walks of life." card */}
-      <section className="px-6 pb-24">
-        <div className="mx-auto w-full max-w-7xl">
-          <Link
-            to="/soda"
-            className="group relative block overflow-hidden rounded-3xl border border-border bg-card p-8 shadow-sm transition hover:-translate-y-0.5 hover:shadow-2xl md:p-10"
-          >
-            <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-[var(--saffron)]/15 blur-3xl" />
-            <div className="pointer-events-none absolute -bottom-20 -left-10 h-56 w-56 rounded-full bg-[var(--indigo-night)]/10 blur-3xl" />
-
-            <div className="relative grid gap-8 md:grid-cols-[1.4fr_1fr] md:items-center">
-              <div>
-                <span className="inline-flex items-center gap-2 rounded-full bg-[var(--indigo-night)] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--saffron)]">
-                  <Sparkles className="h-3 w-3" /> New from Indus Orbit
-                </span>
-                <h3 className="mt-4 font-display text-3xl font-medium leading-tight md:text-4xl">
-                  SODA — the idea database for India's next builders.
-                </h3>
-                <p className="mt-4 max-w-xl text-foreground/70">
-                  Startup Opportunities, Development &amp; Action. A weekly, signal-scored map of
-                  where to build next — sector by sector, with the timing thesis baked in.
-                </p>
-                <span className="mt-6 inline-flex items-center gap-1 text-sm font-semibold text-[var(--indigo-night)] group-hover:gap-2 transition-all">
-                  Open the database <ArrowRight className="h-4 w-4" />
-                </span>
-              </div>
-
-              <div className="grid gap-3">
-                {[
-                  { i: Flame, k: "Idea of the day", v: "Vernacular voice agents for Bharat SMBs" },
-                  { i: TrendingUp, k: "127 ideas indexed", v: "Across 12 sectors and counting" },
-                  { i: Zap, k: "Why now, not why", v: "Regulation, infra and behaviour signals" },
-                ].map(({ i: Icon, k, v }) => (
-                  <div
-                    key={k}
-                    className="flex items-start gap-3 rounded-2xl border border-border bg-background/60 p-4"
-                  >
-                    <span className="mt-0.5 inline-flex h-8 w-8 flex-none items-center justify-center rounded-full bg-[var(--saffron)] text-[var(--indigo-night)]">
-                      <Icon className="h-4 w-4" />
-                    </span>
-                    <div>
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/55">
-                        {k}
-                      </p>
-                      <p className="mt-1 text-sm font-medium text-foreground/85">{v}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </Link>
-        </div>
-      </section>
-
       {/* CTA */}
       <section className="px-6 pb-24">
         <div className="mx-auto w-full max-w-7xl text-center">
@@ -401,7 +386,7 @@ function HomePage() {
         </section>
       )}
 
-      {/* SODA COHORT PROGRAM */}
+      {/* S.O.D.A COHORT PROGRAM */}
       <section className="px-6 pb-24">
         <div className="mx-auto grid max-w-7xl gap-12 md:grid-cols-2 md:items-center rounded-3xl overflow-hidden bg-[var(--indigo-night)]/5 border border-border shadow-2xl relative">
           <div className="order-2 md:order-1 p-8 md:p-14 lg:p-16 relative z-10">
@@ -409,16 +394,16 @@ function HomePage() {
               The Communication Wing
             </p>
             <h3 className="mt-4 font-display text-4xl font-medium leading-tight md:text-5xl text-[var(--indigo-night)]">
-              SODA by Indus Orbit
+              S.O.D.A by Indus Orbit
             </h3>
             <p className="mt-6 text-xl font-light text-foreground/90 leading-relaxed text-balance">
-              SODA is the creative and communication engine of Indus Orbit. We document and
+              S.O.D.A is the creative and communication engine of Indus Orbit. We document and
               distribute high-signal stories from India’s builders.
             </p>
             <p className="mt-4 text-[1.05rem] text-foreground/70 leading-relaxed">
-              As part of its mission, SODA runs the{" "}
+              As part of its mission, S.O.D.A runs the{" "}
               <strong className="font-semibold text-[var(--indigo-night)]">
-                SODA Cohort Program
+                S.O.D.A Cohort Program
               </strong>{" "}
               (Startup Opportunities, Development & Action)—a flagship initiative designed to
               identify and accelerate India’s highest-potential young builders under 24. We don't
@@ -434,14 +419,14 @@ function HomePage() {
                 to="/soda"
                 className="inline-flex items-center gap-2 rounded-full bg-[var(--indigo-night)] px-7 py-3.5 text-sm font-semibold text-[var(--parchment)] hover:bg-[var(--saffron)] hover:text-[var(--indigo-night)] shadow-md transition"
               >
-                Explore the SODA Program <ArrowRight className="h-4 w-4" />
+                Explore the S.O.D.A Program <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
           </div>
           <div className="order-1 md:order-2 h-[400px] sm:h-[450px] md:h-full w-full bg-muted overflow-hidden relative group">
             <img
               src="/soda-2.jpg"
-              alt="SODA Cohort Program Builders"
+              alt="S.O.D.A Cohort Program Builders"
               className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[var(--indigo-night)]/90 via-black/20 to-transparent mix-blend-multiply" />

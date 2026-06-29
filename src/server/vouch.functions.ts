@@ -192,12 +192,16 @@ export async function requestVouch(message: string, targetVerifierId?: string | 
 
   // Notify the target verifier if one was specified
   if (targetVerifierId) {
-    await sendNotification({
-      userId: targetVerifierId,
-      type: "vouch_request",
-      message: "Someone has requested a vouch from you.",
-      link: "/app/vouch",
-    });
+    try {
+      await sendNotification({
+        userId: targetVerifierId,
+        type: "vouch_request",
+        message: "Someone has requested a vouch from you.",
+        link: "/app/vouch",
+      });
+    } catch {
+      // Vouch requests are still valid if notification delivery is unavailable.
+    }
   }
 
   return { ok: true };

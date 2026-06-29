@@ -1,6 +1,38 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { Home, Users, User as UserIcon, Shield, UserCog, LogOut, Menu, Megaphone, LayoutDashboard, ClipboardList, Flag, ScrollText, ShieldCheck, KeyRound, CalendarClock, TrendingUp, Globe2, BookOpen, MapPin, CalendarDays, Compass, Target, Sparkles, FileCheck, GraduationCap, Lightbulb, Settings, PanelLeftOpen, PanelLeftClose } from "lucide-react";
+import {
+  Home,
+  Users,
+  User as UserIcon,
+  Shield,
+  UserCog,
+  LogOut,
+  Menu,
+  Megaphone,
+  LayoutDashboard,
+  ClipboardList,
+  Flag,
+  ScrollText,
+  ShieldCheck,
+  KeyRound,
+  CalendarClock,
+  TrendingUp,
+  Globe2,
+  BookOpen,
+  MapPin,
+  CalendarDays,
+  Compass,
+  Target,
+  Sparkles,
+  FileCheck,
+  GraduationCap,
+  Lightbulb,
+  BadgeCheck,
+  Zap,
+  Settings,
+  PanelLeftOpen,
+  PanelLeftClose,
+} from "lucide-react";
 import logo from "@/assets/indus-orbit-logo.png";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
@@ -25,6 +57,8 @@ const ITEMS: Item[] = [
   { to: "/app/events", label: "Events", icon: CalendarDays },
   { to: "/app/stories", label: "Stories", icon: BookOpen },
   { to: "/app/education", label: "Academy", icon: GraduationCap },
+  { to: "/app/skills", label: "Skills", icon: BadgeCheck },
+  { to: "/app/loops", label: "Loops", icon: Zap },
   { to: "/app/soda", label: "S.O.D.A List", icon: Lightbulb },
   { to: "/app/vouch", label: "Vouch", icon: ShieldCheck },
   { to: "/app/mentor", label: "Mentorship", icon: CalendarClock },
@@ -54,7 +88,10 @@ function readSidebarPrefs() {
     return {
       ...defaultPrefs,
       ...stored,
-      sidebarExpanded: legacySidebar == null ? stored.sidebarExpanded ?? defaultPrefs.sidebarExpanded : legacySidebar === "true",
+      sidebarExpanded:
+        legacySidebar == null
+          ? (stored.sidebarExpanded ?? defaultPrefs.sidebarExpanded)
+          : legacySidebar === "true",
     };
   } catch {
     return defaultPrefs;
@@ -69,18 +106,35 @@ function saveSidebarExpanded(expanded: boolean) {
   } catch {
     stored = {};
   }
-  window.localStorage.setItem(SETTINGS_KEY, JSON.stringify({ ...stored, sidebarExpanded: expanded }));
+  window.localStorage.setItem(
+    SETTINGS_KEY,
+    JSON.stringify({ ...stored, sidebarExpanded: expanded }),
+  );
   window.localStorage.setItem(SIDEBAR_KEY, String(expanded));
   window.dispatchEvent(new CustomEvent("indus-orbit:settings-change"));
 }
 
-function NavList({ pathname, onNavigate, expanded = true, surface = "dark" }: { pathname: string; onNavigate?: () => void; expanded?: boolean; surface?: Surface }) {
+function NavList({
+  pathname,
+  onNavigate,
+  expanded = true,
+  surface = "dark",
+}: {
+  pathname: string;
+  onNavigate?: () => void;
+  expanded?: boolean;
+  surface?: Surface;
+}) {
   const { isAdmin, isChapterLead, isMissionLead, userSegment } = useAuth();
-  
+
   const navItems = [...ITEMS];
   if (userSegment === "investor") {
-    const boardIndex = navItems.findIndex(i => i.to === "/app/board");
-    navItems.splice(boardIndex + 1, 0, { to: "/app/investor-feed", label: "Deal Flow", icon: TrendingUp });
+    const boardIndex = navItems.findIndex((i) => i.to === "/app/board");
+    navItems.splice(boardIndex + 1, 0, {
+      to: "/app/investor-feed",
+      label: "Deal Flow",
+      icon: TrendingUp,
+    });
   }
 
   return (
@@ -98,7 +152,12 @@ function NavList({ pathname, onNavigate, expanded = true, surface = "dark" }: { 
       {(isChapterLead || isMissionLead) && (
         <>
           {expanded ? (
-            <p className={cn("mb-1 mt-2 px-2.5 text-[10px] font-semibold uppercase tracking-[0.16em]", surface === "dark" ? "text-[var(--parchment)]/40" : "text-muted-foreground")}>
+            <p
+              className={cn(
+                "mb-1 mt-2 px-2.5 text-[10px] font-semibold uppercase tracking-[0.16em]",
+                surface === "dark" ? "text-[var(--parchment)]/40" : "text-muted-foreground",
+              )}
+            >
               Lead workspace
             </p>
           ) : (
@@ -127,7 +186,12 @@ function NavList({ pathname, onNavigate, expanded = true, surface = "dark" }: { 
       {isAdmin && (
         <>
           {expanded ? (
-            <p className={cn("mb-1 mt-2 px-2.5 text-[10px] font-semibold uppercase tracking-[0.16em]", surface === "dark" ? "text-[var(--parchment)]/40" : "text-muted-foreground")}>
+            <p
+              className={cn(
+                "mb-1 mt-2 px-2.5 text-[10px] font-semibold uppercase tracking-[0.16em]",
+                surface === "dark" ? "text-[var(--parchment)]/40" : "text-muted-foreground",
+              )}
+            >
               Admin
             </p>
           ) : (
@@ -137,7 +201,9 @@ function NavList({ pathname, onNavigate, expanded = true, surface = "dark" }: { 
             <NavRow
               key={item.to}
               item={item}
-              active={item.to === "/app/admin" ? pathname === "/app/admin" : pathname.startsWith(item.to)}
+              active={
+                item.to === "/app/admin" ? pathname === "/app/admin" : pathname.startsWith(item.to)
+              }
               onClick={onNavigate}
               expanded={expanded}
               surface={surface}
@@ -179,10 +245,16 @@ function NavRow({
           ? "flex h-9 items-center justify-between gap-2 rounded-xl px-2.5 text-[13px]"
           : "flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground",
         active && darkExpanded && "bg-[var(--parchment)]/10 text-[var(--parchment)] shadow-sm",
-        !active && darkExpanded && "text-[var(--parchment)]/70 hover:bg-[var(--parchment)]/5 hover:text-[var(--parchment)]",
-        active && lightExpanded && "bg-white/80 text-[var(--indigo-night)] shadow-sm ring-1 ring-border/70",
+        !active &&
+          darkExpanded &&
+          "text-[var(--parchment)]/70 hover:bg-[var(--parchment)]/5 hover:text-[var(--parchment)]",
+        active &&
+          lightExpanded &&
+          "bg-white/80 text-[var(--indigo-night)] shadow-sm ring-1 ring-border/70",
         !active && lightExpanded && "text-muted-foreground hover:bg-white/55 hover:text-foreground",
-        active && !expanded && "bg-white/80 text-[var(--indigo-night)] shadow-sm ring-1 ring-border/70",
+        active &&
+          !expanded &&
+          "bg-white/80 text-[var(--indigo-night)] shadow-sm ring-1 ring-border/70",
         !active && !expanded && "hover:bg-white/65 hover:text-foreground",
       )}
     >
@@ -240,7 +312,12 @@ function SidebarBody({
         contained && "rounded-[1.35rem] border border-white/60 shadow-2xl",
       )}
     >
-      <div className={cn("flex h-14 shrink-0 items-center", expanded ? "gap-2 px-3" : "justify-center px-2")}>
+      <div
+        className={cn(
+          "flex h-14 shrink-0 items-center",
+          expanded ? "gap-2 px-3" : "justify-center px-2",
+        )}
+      >
         <Link
           to="/app"
           onClick={onNavigate}
@@ -255,7 +332,9 @@ function SidebarBody({
           >
             <img src={logo} alt="Indus Orbit" className="pixelated h-6 w-6" />
           </span>
-          {expanded && <span className="truncate text-[15px] font-semibold tracking-tight">Indus Orbit</span>}
+          {expanded && (
+            <span className="truncate text-[15px] font-semibold tracking-tight">Indus Orbit</span>
+          )}
         </Link>
 
         {onToggleExpanded && expanded && (
@@ -290,18 +369,47 @@ function SidebarBody({
         </div>
       )}
 
-      <div className={cn("app-sidebar-scroll min-h-0 flex-1 overflow-y-auto pb-2", expanded ? "px-2" : "w-full px-1.5")}>
-        <NavList pathname={pathname} onNavigate={onNavigate} expanded={expanded} surface={surface} />
+      <div
+        className={cn(
+          "app-sidebar-scroll min-h-0 flex-1 overflow-y-auto pb-2",
+          expanded ? "px-2" : "w-full px-1.5",
+        )}
+      >
+        <NavList
+          pathname={pathname}
+          onNavigate={onNavigate}
+          expanded={expanded}
+          surface={surface}
+        />
       </div>
 
-      <div className={cn("shrink-0 p-2", expanded && isDark ? "border-t border-[var(--parchment)]/10" : "w-full border-t border-border/80")}>
+      <div
+        className={cn(
+          "shrink-0 p-2",
+          expanded && isDark
+            ? "border-t border-[var(--parchment)]/10"
+            : "w-full border-t border-border/80",
+        )}
+      >
         {expanded ? (
-          <div className={cn("flex items-center gap-2 rounded-xl p-2", isDark ? "bg-[var(--parchment)]/5" : "bg-white/55 ring-1 ring-border/60")}>
+          <div
+            className={cn(
+              "flex items-center gap-2 rounded-xl p-2",
+              isDark ? "bg-[var(--parchment)]/5" : "bg-white/55 ring-1 ring-border/60",
+            )}
+          >
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--saffron)] text-xs font-semibold text-[var(--indigo-night)]">
               {initial}
             </div>
             <div className="min-w-0 flex-1">
-              <p className={cn("truncate text-xs font-medium", isDark ? "text-[var(--parchment)]" : "text-foreground")}>{user?.email}</p>
+              <p
+                className={cn(
+                  "truncate text-xs font-medium",
+                  isDark ? "text-[var(--parchment)]" : "text-foreground",
+                )}
+              >
+                {user?.email}
+              </p>
             </div>
             <button
               type="button"
@@ -367,7 +475,12 @@ export function AppSidebar() {
   return (
     <>
       {/* Desktop */}
-      <aside className={cn("hidden md:flex md:flex-shrink-0", desktopExpanded ? "md:w-[216px]" : "md:w-[68px]")}>
+      <aside
+        className={cn(
+          "hidden md:flex md:flex-shrink-0",
+          desktopExpanded ? "md:w-[216px]" : "md:w-[68px]",
+        )}
+      >
         <div className={cn("fixed inset-y-0 left-0", desktopExpanded ? "w-[216px]" : "w-[68px]")}>
           <SidebarBody
             pathname={pathname}
@@ -390,8 +503,17 @@ export function AppSidebar() {
 
       {/* Mobile drawer */}
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent side="left" className="w-[min(88vw,320px)] border-0 bg-transparent p-2 text-foreground shadow-none sm:p-2">
-          <SidebarBody pathname={pathname} onNavigate={() => setOpen(false)} surface="light" expanded contained />
+        <SheetContent
+          side="left"
+          className="w-[min(88vw,320px)] border-0 bg-transparent p-2 text-foreground shadow-none sm:p-2"
+        >
+          <SidebarBody
+            pathname={pathname}
+            onNavigate={() => setOpen(false)}
+            surface="light"
+            expanded
+            contained
+          />
         </SheetContent>
       </Sheet>
     </>

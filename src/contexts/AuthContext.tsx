@@ -13,6 +13,18 @@ type AuthContextValue = {
   signOut: () => Promise<void>;
 };
 
+type AccessState = Pick<
+  AuthContextValue,
+  "isAdmin" | "isChapterLead" | "isMissionLead" | "userSegment"
+>;
+
+const emptyAccessState: AccessState = {
+  isAdmin: false,
+  isChapterLead: false,
+  isMissionLead: false,
+  userSegment: null,
+};
+
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -25,55 +37,96 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set up listener FIRST
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => {
+    let active = true;
+
+    const applyAccessState = (access: AccessState) => {
+      setIsAdmin(access.isAdmin);
+      setIsChapterLead(access.isChapterLead);
+      setIsMissionLead(access.isMissionLead);
+      setUserSegment(access.userSegment);
+    };
+
+    const applySession = (newSession: Session | null, deferAccessCheck: boolean) => {
       setSession(newSession);
       setUser(newSession?.user ?? null);
-      if (newSession?.user) {
-        // Defer Supabase call to avoid deadlock
-        setTimeout(() => {
-          checkAdmin(newSession.user.id);
-        }, 0);
-      } else {
-        setIsAdmin(false);
-        setIsChapterLead(false);
-        setIsMissionLead(false);
+
+      if (!newSession?.user) {
+        applyAccessState(emptyAccessState);
+        setLoading(false);
+        return;
       }
+
+      setLoading(true);
+      applyAccessState(emptyAccessState);
+      const run = () => {
+        loadAccessState(newSession.user.id)
+          .then((access) => {
+            if (active) applyAccessState(access);
+          })
+          .catch(() => {
+            if (active) applyAccessState(emptyAccessState);
+          })
+          .finally(() => {
+            if (active) setLoading(false);
+          });
+      };
+
+      if (deferAccessCheck) {
+        setTimeout(run, 0);
+      } else {
+        run();
+      }
+    };
+
+    // Set up listener FIRST
+    const { data: sub } = supabase.auth.onAuthStateChange((event, newSession) => {
+      if (event === "INITIAL_SESSION") return;
+      applySession(newSession, true);
     });
 
     // THEN check existing session
-    supabase.auth.getSession().then(({ data: { session: existing } }) => {
-      setSession(existing);
-      setUser(existing?.user ?? null);
-      if (existing?.user) {
-        checkAdmin(existing.user.id);
-      }
-      setLoading(false);
-    });
+    supabase.auth
+      .getSession()
+      .then(({ data: { session: existing }, error }) => {
+        if (!active) return;
+        if (error) {
+          applySession(null, false);
+          return;
+        }
+        applySession(existing, false);
+      })
+      .catch(() => {
+        if (active) applySession(null, false);
+      });
 
-    return () => sub.subscription.unsubscribe();
+    return () => {
+      active = false;
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
-  async function checkAdmin(userId: string) {
-    const { data: roleData } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .eq("role", "admin")
-      .maybeSingle();
-    setIsAdmin(!!roleData);
+  async function loadAccessState(userId: string): Promise<AccessState> {
+    const [roleRes, profileRes, leadRes] = await Promise.all([
+      supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId)
+        .eq("role", "admin")
+        .maybeSingle(),
+      supabase.from("profiles").select("orbit_segment").eq("user_id", userId).maybeSingle(),
+      supabase.rpc("my_lead_summary"),
+    ]);
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("orbit_segment")
-      .eq("user_id", userId)
-      .maybeSingle();
-    setUserSegment(profile?.orbit_segment ?? null);
+    if (roleRes.error || profileRes.error || leadRes.error) return emptyAccessState;
+    const leadSummary = leadRes.data ?? {};
+    const summary = leadSummary as { chapter_lead_count?: number; mission_lead_count?: number };
 
-    const { data: leadSummary } = await (supabase.rpc as any)("my_lead_summary");
-    const summary = (leadSummary ?? {}) as { chapter_lead_count?: number; mission_lead_count?: number };
-    setIsChapterLead((summary.chapter_lead_count ?? 0) > 0);
-    setIsMissionLead((summary.mission_lead_count ?? 0) > 0);
+    return {
+      isAdmin: !!roleRes.data,
+      isChapterLead: (summary.chapter_lead_count ?? 0) > 0,
+      isMissionLead: (summary.mission_lead_count ?? 0) > 0,
+      userSegment: profileRes.data?.orbit_segment ?? null,
+    };
   }
 
   async function signOut() {
@@ -81,7 +134,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ session, user, isAdmin, isChapterLead, isMissionLead, userSegment, loading, signOut }}>
+    <AuthContext.Provider
+      value={{
+        session,
+        user,
+        isAdmin,
+        isChapterLead,
+        isMissionLead,
+        userSegment,
+        loading,
+        signOut,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

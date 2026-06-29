@@ -313,13 +313,16 @@ export const approveChapterProposal = async ({
     .eq("id", data.proposalId);
   if (proposalError) throw new Error(proposalError.message);
 
-  // 4. Send Notification
-  await sendNotification({
-    userId: data.proposerId,
-    type: "chapter_approved",
-    message: `Your proposal for ${data.name} was approved! You are now the Lead.`,
-    link: "/app/chapters",
-  });
+  try {
+    await sendNotification({
+      userId: data.proposerId,
+      type: "chapter_approved",
+      message: `Your proposal for ${data.name} was approved! You are now the Lead.`,
+      link: "/app/chapters",
+    });
+  } catch {
+    // Approval should not fail if notification delivery is unavailable.
+  }
 
   return { ok: true };
 };

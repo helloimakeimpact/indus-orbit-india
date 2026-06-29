@@ -4,10 +4,31 @@ import { SiteShell } from "@/components/site/SiteShell";
 import sodaHero from "@/assets/soda-hero.jpg";
 import { listPublishedSodaIdeas, type SodaIdea } from "@/server/soda.functions";
 import {
-  Search, Sparkles, TrendingUp, Zap, ArrowRight, Filter, Flame,
-  Cpu, GraduationCap, HeartPulse, Leaf, Wallet, Tractor, Factory,
-  ShoppingBag, Plane, Building2, Radio, Layers, Calendar, Target, BarChart3, Compass,
+  Search,
+  Sparkles,
+  TrendingUp,
+  Zap,
+  ArrowRight,
+  Filter,
+  Flame,
+  Cpu,
+  GraduationCap,
+  HeartPulse,
+  Leaf,
+  Wallet,
+  Tractor,
+  Factory,
+  ShoppingBag,
+  Plane,
+  Building2,
+  Radio,
+  Layers,
+  Calendar,
+  Target,
+  BarChart3,
+  Compass,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 export const Route = createFileRoute("/soda")({
   head: () => ({
@@ -19,17 +40,21 @@ export const Route = createFileRoute("/soda")({
           "S.O.D.A (Startup Opportunities, Development & Action) is Indus Orbit's living database of startup opportunities for India — daily ideas, market signals, sector deep-dives and the builders moving on them.",
       },
       { property: "og:title", content: "S.O.D.A — Startup Opportunities, Development & Action" },
-      { property: "og:description", content: "A living database of India-specific startup opportunities — refreshed daily." },
+      {
+        property: "og:description",
+        content: "A living database of India-specific startup opportunities — refreshed daily.",
+      },
       { property: "og:url", content: "https://indus-spark-connect.lovable.app/soda" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "S.O.D.A — Startup Opportunities, Development & Action" },
-      { name: "twitter:description", content: "A living database of India-specific startup opportunities — refreshed daily." },
+      {
+        name: "twitter:description",
+        content: "A living database of India-specific startup opportunities — refreshed daily.",
+      },
       { property: "og:image", content: sodaHero },
     ],
-    links: [
-      { rel: "canonical", href: "https://indus-spark-connect.lovable.app/soda" },
-    ],
+    links: [{ rel: "canonical", href: "https://indus-spark-connect.lovable.app/soda" }],
   }),
   component: SodaPage,
 });
@@ -93,8 +118,7 @@ function deriveStage(score: number): Idea["stage"] {
 function ideaFromRow(row: SodaIdea): Idea {
   const sectorKey = SECTOR_ALIAS[(row.sector ?? "").toLowerCase()] ?? "all";
   const marketSize =
-    row.market_label ||
-    (row.volume ? `${row.volume.toLocaleString()} monthly searches` : "—");
+    row.market_label || (row.volume ? `${row.volume.toLocaleString()} monthly searches` : "—");
   return {
     slug: row.slug,
     title: row.title,
@@ -116,18 +140,162 @@ function ideaFromRow(row: SodaIdea): Idea {
 }
 
 const FALLBACK_IDEAS: Idea[] = [
-  { slug: "vernacular-voice-agents", title: "Vernacular voice agents for Bharat SMBs", one_liner: "Always-on Hindi/Tamil/Telugu voice agents that take orders, book appointments and chase payments for 60M small businesses.", sector: "ai", stage: "Heating up", why_now: "Cheap inference + Sarvam/IndicTrans2 reaching parity with English on Indic ASR. WhatsApp Business API rolled out flow-based payments.", market_size: "$8B SMB software TAM in India by 2030", signal_score: 92, tags: ["voice", "vernacular", "smb", "whatsapp"] },
-  { slug: "ai-tutor-jee-neet", title: "AI tutor for JEE / NEET tier-3 towns", one_liner: "A personalised AI prep companion priced at ₹299/month that replaces the ₹50k coaching gap for tier-3 aspirants.", sector: "edu", stage: "Heating up", why_now: "Byju's collapse opened the affordable mid-market. ~3M aspirants annually have no good option between free YouTube and unaffordable coaching.", market_size: "₹58,000 Cr test-prep market", signal_score: 88, tags: ["edtech", "jee", "neet", "regional"] },
-  { slug: "rooftop-solar-financing", title: "BNPL rails for rooftop solar", one_liner: "Embedded financing layer that lets installers close residential solar in one visit — paperwork, underwriting and subsidy in 10 minutes.", sector: "climate", stage: "Early signal", why_now: "PM Surya Ghar Yojana targets 1 Cr homes by 2027. Discoms now mandated to net-meter within 30 days. Installer fragmentation = distribution wedge.", market_size: "$50B installed-capacity opportunity by 2030", signal_score: 84, tags: ["climate", "fintech", "embedded"] },
-  { slug: "diagnostics-supply-rails", title: "Diagnostics supply rails for tier-2", one_liner: "Asset-light platform that lets standalone path labs match Thyrocare's pricing through pooled reagent procurement and reporting.", sector: "health", stage: "Whitespace", why_now: "Insurance penetration crossed 40% post-Ayushman Bharat. ~100k standalone labs squeezed by chains. Generic reagents now sub-30% the branded SKUs.", market_size: "$15B Indian diagnostics market", signal_score: 79, tags: ["b2b", "healthcare", "supply-chain"] },
-  { slug: "ugc-msme-credit", title: "Cash-flow underwriting for kirana credit", one_liner: "Underwrite working-capital loans for kirana stores using UPI + GST + e-way bill data — no collateral, no paperwork, 24-hour disbursal.", sector: "fintech", stage: "Heating up", why_now: "Account Aggregator framework now covers 1.5B accounts. GSTN public APIs went live for fintechs in Q1. NBFC license backlog clearing.", market_size: "$340B MSME credit gap", signal_score: 90, tags: ["lending", "aa", "msme"] },
-  { slug: "farm-to-export-fpo", title: "FPO-to-export operating system", one_liner: "Software + supply chain that lets Farmer Producer Organisations sell directly into Gulf & EU retailers, skipping 4 layers of mandi.", sector: "agri", stage: "Whitespace", why_now: "10,000 FPO scheme crossed funding milestone. UAE-India CEPA tariffs at 0% on most agri SKUs. Cold-chain density up 3x since 2020.", market_size: "$50B India agri-export TAM", signal_score: 76, tags: ["agritech", "export", "fpo"] },
-  { slug: "design-for-india-mfg", title: "DFM copilots for India's contract manufacturers", one_liner: "AI assistant that converts a Western OEM's CAD pack into a ready-to-quote BOM for an Indian contract manufacturer in 4 hours instead of 4 weeks.", sector: "mfg", stage: "Early signal", why_now: "PLI 2.0 + China+1 pushed $40B of contract manufacturing inquiries to India in 2025. Engineering bandwidth is the bottleneck, not capacity.", market_size: "$300B contract manufacturing TAM by 2030", signal_score: 81, tags: ["pli", "supply-chain", "ai"] },
-  { slug: "creator-commerce-tier2", title: "Live commerce stack for tier-2 creators", one_liner: "Shopify-for-livestreams aimed at 100k regional creators selling sarees, kitchenware and devotional goods on Instagram & Meesho Live.", sector: "commerce", stage: "Heating up", why_now: "Meesho Live and YouTube Shopping rolled out India SDKs. Reels commerce GMV crossed $2B run-rate. UPI payouts now T+0 for sellers.", market_size: "$20B social commerce by 2028", signal_score: 83, tags: ["creator", "social-commerce"] },
-  { slug: "bharat-bleisure", title: "Bharat bleisure booking layer", one_liner: "B2B booking rails for the 200M Indian middle-class travellers MakeMyTrip is too expensive to serve — vernacular-first, EMI-default.", sector: "travel", stage: "Whitespace", why_now: "Domestic flyers crossed 150M in 2025. Tier-2 airport count doubled in 4 years. UPI on autopay finally cleared for travel.", market_size: "$75B domestic travel by 2030", signal_score: 71, tags: ["travel", "tier-2"] },
-  { slug: "municipal-data-os", title: "Operating system for Indian municipalities", one_liner: "Plug-and-play data + payments stack for India's 4,000+ urban local bodies — property tax, water bills, complaints in one app.", sector: "govtech", stage: "Whitespace", why_now: "15th Finance Commission ringfenced ₹4.36 lakh Cr for ULB digitisation. AMRUT 2.0 mandates digital revenue reporting by 2027.", market_size: "₹50,000 Cr govtech TAM", signal_score: 74, tags: ["govtech", "urban", "data"] },
-  { slug: "podcast-network-indic", title: "Indic-language podcast monetisation network", one_liner: "An ad + sponsorship network purpose-built for the 50k Hindi/Marathi/Tamil podcasters who can't get onto Spotify's brand deals.", sector: "media", stage: "Early signal", why_now: "Indic podcast listenership crossed English in 2025. Brand spend on audio still <2% of total digital — gap closing fast.", market_size: "₹4,000 Cr audio ad market by 2027", signal_score: 68, tags: ["audio", "indic", "creator"] },
-  { slug: "campus-agent-builder", title: "Agent-builder studio for college clubs", one_liner: "A no-code agent studio that lets every IIT/NIT tech club ship one AI product per semester — distribution into 500 campuses on day one.", sector: "ai", stage: "Whitespace", why_now: "Bolt/Lovable normalized agent-native dev. 1.4M engineering grads/year. College clubs are the most underrated GTM in India.", market_size: "Unbounded — talent pipeline play", signal_score: 86, tags: ["ai", "campus", "community"] },
+  {
+    slug: "vernacular-voice-agents",
+    title: "Vernacular voice agents for Bharat SMBs",
+    one_liner:
+      "Always-on Hindi/Tamil/Telugu voice agents that take orders, book appointments and chase payments for 60M small businesses.",
+    sector: "ai",
+    stage: "Heating up",
+    why_now:
+      "Cheap inference + Sarvam/IndicTrans2 reaching parity with English on Indic ASR. WhatsApp Business API rolled out flow-based payments.",
+    market_size: "$8B SMB software TAM in India by 2030",
+    signal_score: 92,
+    tags: ["voice", "vernacular", "smb", "whatsapp"],
+  },
+  {
+    slug: "ai-tutor-jee-neet",
+    title: "AI tutor for JEE / NEET tier-3 towns",
+    one_liner:
+      "A personalised AI prep companion priced at ₹299/month that replaces the ₹50k coaching gap for tier-3 aspirants.",
+    sector: "edu",
+    stage: "Heating up",
+    why_now:
+      "Byju's collapse opened the affordable mid-market. ~3M aspirants annually have no good option between free YouTube and unaffordable coaching.",
+    market_size: "₹58,000 Cr test-prep market",
+    signal_score: 88,
+    tags: ["edtech", "jee", "neet", "regional"],
+  },
+  {
+    slug: "rooftop-solar-financing",
+    title: "BNPL rails for rooftop solar",
+    one_liner:
+      "Embedded financing layer that lets installers close residential solar in one visit — paperwork, underwriting and subsidy in 10 minutes.",
+    sector: "climate",
+    stage: "Early signal",
+    why_now:
+      "PM Surya Ghar Yojana targets 1 Cr homes by 2027. Discoms now mandated to net-meter within 30 days. Installer fragmentation = distribution wedge.",
+    market_size: "$50B installed-capacity opportunity by 2030",
+    signal_score: 84,
+    tags: ["climate", "fintech", "embedded"],
+  },
+  {
+    slug: "diagnostics-supply-rails",
+    title: "Diagnostics supply rails for tier-2",
+    one_liner:
+      "Asset-light platform that lets standalone path labs match Thyrocare's pricing through pooled reagent procurement and reporting.",
+    sector: "health",
+    stage: "Whitespace",
+    why_now:
+      "Insurance penetration crossed 40% post-Ayushman Bharat. ~100k standalone labs squeezed by chains. Generic reagents now sub-30% the branded SKUs.",
+    market_size: "$15B Indian diagnostics market",
+    signal_score: 79,
+    tags: ["b2b", "healthcare", "supply-chain"],
+  },
+  {
+    slug: "ugc-msme-credit",
+    title: "Cash-flow underwriting for kirana credit",
+    one_liner:
+      "Underwrite working-capital loans for kirana stores using UPI + GST + e-way bill data — no collateral, no paperwork, 24-hour disbursal.",
+    sector: "fintech",
+    stage: "Heating up",
+    why_now:
+      "Account Aggregator framework now covers 1.5B accounts. GSTN public APIs went live for fintechs in Q1. NBFC license backlog clearing.",
+    market_size: "$340B MSME credit gap",
+    signal_score: 90,
+    tags: ["lending", "aa", "msme"],
+  },
+  {
+    slug: "farm-to-export-fpo",
+    title: "FPO-to-export operating system",
+    one_liner:
+      "Software + supply chain that lets Farmer Producer Organisations sell directly into Gulf & EU retailers, skipping 4 layers of mandi.",
+    sector: "agri",
+    stage: "Whitespace",
+    why_now:
+      "10,000 FPO scheme crossed funding milestone. UAE-India CEPA tariffs at 0% on most agri SKUs. Cold-chain density up 3x since 2020.",
+    market_size: "$50B India agri-export TAM",
+    signal_score: 76,
+    tags: ["agritech", "export", "fpo"],
+  },
+  {
+    slug: "design-for-india-mfg",
+    title: "DFM copilots for India's contract manufacturers",
+    one_liner:
+      "AI assistant that converts a Western OEM's CAD pack into a ready-to-quote BOM for an Indian contract manufacturer in 4 hours instead of 4 weeks.",
+    sector: "mfg",
+    stage: "Early signal",
+    why_now:
+      "PLI 2.0 + China+1 pushed $40B of contract manufacturing inquiries to India in 2025. Engineering bandwidth is the bottleneck, not capacity.",
+    market_size: "$300B contract manufacturing TAM by 2030",
+    signal_score: 81,
+    tags: ["pli", "supply-chain", "ai"],
+  },
+  {
+    slug: "creator-commerce-tier2",
+    title: "Live commerce stack for tier-2 creators",
+    one_liner:
+      "Shopify-for-livestreams aimed at 100k regional creators selling sarees, kitchenware and devotional goods on Instagram & Meesho Live.",
+    sector: "commerce",
+    stage: "Heating up",
+    why_now:
+      "Meesho Live and YouTube Shopping rolled out India SDKs. Reels commerce GMV crossed $2B run-rate. UPI payouts now T+0 for sellers.",
+    market_size: "$20B social commerce by 2028",
+    signal_score: 83,
+    tags: ["creator", "social-commerce"],
+  },
+  {
+    slug: "bharat-bleisure",
+    title: "Bharat bleisure booking layer",
+    one_liner:
+      "B2B booking rails for the 200M Indian middle-class travellers MakeMyTrip is too expensive to serve — vernacular-first, EMI-default.",
+    sector: "travel",
+    stage: "Whitespace",
+    why_now:
+      "Domestic flyers crossed 150M in 2025. Tier-2 airport count doubled in 4 years. UPI on autopay finally cleared for travel.",
+    market_size: "$75B domestic travel by 2030",
+    signal_score: 71,
+    tags: ["travel", "tier-2"],
+  },
+  {
+    slug: "municipal-data-os",
+    title: "Operating system for Indian municipalities",
+    one_liner:
+      "Plug-and-play data + payments stack for India's 4,000+ urban local bodies — property tax, water bills, complaints in one app.",
+    sector: "govtech",
+    stage: "Whitespace",
+    why_now:
+      "15th Finance Commission ringfenced ₹4.36 lakh Cr for ULB digitisation. AMRUT 2.0 mandates digital revenue reporting by 2027.",
+    market_size: "₹50,000 Cr govtech TAM",
+    signal_score: 74,
+    tags: ["govtech", "urban", "data"],
+  },
+  {
+    slug: "podcast-network-indic",
+    title: "Indic-language podcast monetisation network",
+    one_liner:
+      "An ad + sponsorship network purpose-built for the 50k Hindi/Marathi/Tamil podcasters who can't get onto Spotify's brand deals.",
+    sector: "media",
+    stage: "Early signal",
+    why_now:
+      "Indic podcast listenership crossed English in 2025. Brand spend on audio still <2% of total digital — gap closing fast.",
+    market_size: "₹4,000 Cr audio ad market by 2027",
+    signal_score: 68,
+    tags: ["audio", "indic", "creator"],
+  },
+  {
+    slug: "campus-agent-builder",
+    title: "Agent-builder studio for college clubs",
+    one_liner:
+      "A no-code agent studio that lets every IIT/NIT tech club ship one AI product per semester — distribution into 500 campuses on day one.",
+    sector: "ai",
+    stage: "Whitespace",
+    why_now:
+      "Bolt/Lovable normalized agent-native dev. 1.4M engineering grads/year. College clubs are the most underrated GTM in India.",
+    market_size: "Unbounded — talent pipeline play",
+    signal_score: 86,
+    tags: ["ai", "campus", "community"],
+  },
 ];
 
 const STAGE_TONE: Record<Idea["stage"], string> = {
@@ -143,24 +311,29 @@ function SodaPage() {
   const [sort, setSort] = useState<"signal" | "newest">("signal");
   const [rows, setRows] = useState<SodaIdea[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
     listPublishedSodaIdeas()
-      .then((r) => setRows(r))
-      .catch(() => setRows([]))
+      .then((r) => {
+        setLoadError(false);
+        setRows(r);
+      })
+      .catch(() => {
+        setLoadError(true);
+        setRows([]);
+      })
       .finally(() => setLoaded(true));
   }, []);
 
   // Public preview: top-5 by score + 5 latest by published_at (deduped).
   const publicIdeas: Idea[] = useMemo(() => {
-    if (rows.length === 0) return loaded ? [] : FALLBACK_IDEAS;
+    if (rows.length === 0) return loaded && !loadError ? [] : FALLBACK_IDEAS;
     const byScore = [...rows].sort(
       (a, b) => (b.score_opportunity ?? 0) - (a.score_opportunity ?? 0),
     );
     const byDate = [...rows].sort(
-      (a, b) =>
-        new Date(b.published_at ?? 0).getTime() -
-        new Date(a.published_at ?? 0).getTime(),
+      (a, b) => new Date(b.published_at ?? 0).getTime() - new Date(a.published_at ?? 0).getTime(),
     );
     const picks: SodaIdea[] = [];
     const seen = new Set<string>();
@@ -177,14 +350,15 @@ function SodaPage() {
       }
     }
     return picks.map(ideaFromRow);
-  }, [rows, loaded]);
+  }, [rows, loaded, loadError]);
 
   const ideaOfDay: Idea = publicIdeas[0] ?? FALLBACK_IDEAS[0];
 
   // Inject dynamic SEO once Idea-of-the-Day & list are known.
   useEffect(() => {
     if (!ideaOfDay) return;
-    const dynamicDesc = `Today's Idea of the Day: ${ideaOfDay.title} — ${ideaOfDay.one_liner}`.slice(0, 300);
+    const dynamicDesc =
+      `Today's Idea of the Day: ${ideaOfDay.title} — ${ideaOfDay.one_liner}`.slice(0, 300);
     const setMeta = (sel: string, attr: string, value: string) => {
       let el = document.head.querySelector<HTMLMetaElement>(sel);
       if (!el) {
@@ -217,7 +391,9 @@ function SodaPage() {
       })),
     });
     document.head.appendChild(script);
-    return () => { document.getElementById(ldId)?.remove(); };
+    return () => {
+      document.getElementById(ldId)?.remove();
+    };
   }, [ideaOfDay, publicIdeas]);
 
   const filtered = useMemo(() => {
@@ -257,9 +433,8 @@ function SodaPage() {
             Startup Opportunities, Development &amp; Action
           </p>
           <p className="mx-auto mt-6 max-w-2xl text-base text-[var(--parchment)]/85 md:text-lg">
-            Every week, we surface the highest-signal startup ideas for India —
-            with the market data, the timing thesis and the builders already
-            moving on them.
+            Every week, we surface the highest-signal startup ideas for India — with the market
+            data, the timing thesis and the builders already moving on them.
           </p>
 
           {/* Search */}
@@ -385,14 +560,19 @@ function SodaPage() {
                 A peek at what India needs next.
               </h2>
               <p className="mt-2 text-sm text-foreground/60">
-                Showing this week's top-signal and freshest ideas. The full S.O.D.A database lives behind the Orbit — <Link to="/auth" className="font-semibold text-[var(--indigo-night)] underline">sign in</Link> to browse all {rows.length || ""} entries.
+                Showing this week's top-signal and freshest ideas. The full S.O.D.A database lives
+                behind the Orbit —{" "}
+                <Link to="/auth" className="font-semibold text-[var(--indigo-night)] underline">
+                  sign in
+                </Link>{" "}
+                to browse all {rows.length || ""} entries.
               </p>
             </div>
             <div className="flex items-center gap-2 text-sm">
               <Filter className="h-4 w-4 text-foreground/60" />
               <select
                 value={sort}
-                onChange={(e) => setSort(e.target.value as any)}
+                onChange={(e) => setSort(e.target.value as "signal" | "newest")}
                 className="rounded-full border border-border bg-card px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--saffron)]/40"
               >
                 <option value="signal">Sort: Signal score</option>
@@ -440,7 +620,7 @@ function SodaPage() {
         </div>
       </section>
 
-      {/* WHY SODA */}
+      {/* WHY S.O.D.A */}
       <section className="bg-[var(--indigo-night)] px-6 py-24 text-[var(--parchment)]">
         <div className="mx-auto grid w-full max-w-7xl gap-12 md:grid-cols-2 md:items-center">
           <div>
@@ -451,10 +631,9 @@ function SodaPage() {
               A research desk for the people building India next.
             </h2>
             <p className="mt-5 text-[var(--parchment)]/75">
-              S.O.D.A is not a newsletter and not a fund. It's the research desk
-              we wish we had when we started: every idea pressure-tested against
-              market size, regulatory timing, distribution wedges and the
-              builders already in motion.
+              S.O.D.A is not a newsletter and not a fund. It's the research desk we wish we had when
+              we started: every idea pressure-tested against market size, regulatory timing,
+              distribution wedges and the builders already in motion.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
@@ -474,9 +653,21 @@ function SodaPage() {
 
           <div className="grid gap-4">
             {[
-              { i: TrendingUp, t: "Market timing, not just market size", d: "Every idea ships with a 'why now' thesis — regulation, infra, behaviour change." },
-              { i: Compass, t: "Built for India, not transplanted", d: "We index for distribution in Bharat: vernacular, UPI rails, trust ladders." },
-              { i: Sparkles, t: "Builders, not just bystanders", d: "Each idea links to the people already moving — find your co-founder in the Orbit." },
+              {
+                i: TrendingUp,
+                t: "Market timing, not just market size",
+                d: "Every idea ships with a 'why now' thesis — regulation, infra, behaviour change.",
+              },
+              {
+                i: Compass,
+                t: "Built for India, not transplanted",
+                d: "We index for distribution in Bharat: vernacular, UPI rails, trust ladders.",
+              },
+              {
+                i: Sparkles,
+                t: "Builders, not just bystanders",
+                d: "Each idea links to the people already moving — find your co-founder in the Orbit.",
+              },
             ].map(({ i: Icon, t, d }) => (
               <div
                 key={t}
@@ -502,8 +693,8 @@ function SodaPage() {
             Get one high-signal idea in your inbox every Sunday.
           </h2>
           <p className="mt-5 text-foreground/70">
-            Curated by the Indus Orbit research team — no spam, no fluff, just the one
-            opportunity worth thinking about this week.
+            Curated by the Indus Orbit research team — no spam, no fluff, just the one opportunity
+            worth thinking about this week.
           </p>
           <Link
             to="/auth"
@@ -517,7 +708,7 @@ function SodaPage() {
   );
 }
 
-function Stat({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
+function Stat({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
   return (
     <div className="rounded-2xl border border-border bg-background/50 p-4">
       <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/55">

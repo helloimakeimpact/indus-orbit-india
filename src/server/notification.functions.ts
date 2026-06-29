@@ -24,12 +24,13 @@ export const getUnreadNotificationCount = async () => {
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) return 0;
 
-  const { count } = await supabase
+  const { count, error } = await supabase
     .from("notifications")
     .select("*", { count: "exact", head: true })
     .eq("user_id", userData.user.id)
     .eq("is_read", false);
 
+  if (error) throw new Error(error.message);
   return count || 0;
 };
 

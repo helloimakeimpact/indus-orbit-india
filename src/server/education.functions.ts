@@ -46,7 +46,7 @@ export async function getCourseBySlug(slug: string) {
   if (moduleIds.length) {
     const { data: ls } = await sb
       .from("lessons")
-      .select("id, module_id, slug, title, duration_mins, sort_order, status")
+      .select("id, module_id, slug, title, duration_mins, sort_order, status, video_url")
       .in("module_id", moduleIds)
       .order("sort_order", { ascending: true });
     lessons = ls ?? [];
@@ -60,7 +60,10 @@ export async function getCourseBySlug(slug: string) {
       .from("lesson_progress")
       .select("lesson_id")
       .eq("user_id", userData.user.id)
-      .in("lesson_id", lessons.map((l) => l.id));
+      .in(
+        "lesson_id",
+        lessons.map((l) => l.id),
+      );
     progress = Object.fromEntries((prog ?? []).map((p: any) => [p.lesson_id, true]));
   }
 
@@ -114,7 +117,10 @@ export async function getLessonBySlug(courseSlug: string, lessonSlug: string) {
       const { data: opts } = await sb
         .from("quiz_options")
         .select("id, question_id, label, sort_order")
-        .in("question_id", questions.map((q) => q.id))
+        .in(
+          "question_id",
+          questions.map((q) => q.id),
+        )
         .order("sort_order", { ascending: true });
       questions = questions.map((q: any) => ({
         ...q,
@@ -147,7 +153,16 @@ export async function getLessonBySlug(courseSlug: string, lessonSlug: string) {
     }
   }
 
-  return { course, modules: modules ?? [], lesson, attachments: attachments ?? [], quiz, questions, completed, lastAttempt };
+  return {
+    course,
+    modules: modules ?? [],
+    lesson,
+    attachments: attachments ?? [],
+    quiz,
+    questions,
+    completed,
+    lastAttempt,
+  };
 }
 
 export async function markLessonComplete(lessonId: string) {
@@ -155,7 +170,10 @@ export async function markLessonComplete(lessonId: string) {
   if (!userData.user) throw new Error("Sign in required");
   const { error } = await sb
     .from("lesson_progress")
-    .upsert({ user_id: userData.user.id, lesson_id: lessonId }, { onConflict: "user_id,lesson_id" });
+    .upsert(
+      { user_id: userData.user.id, lesson_id: lessonId },
+      { onConflict: "user_id,lesson_id" },
+    );
   if (error) throw new Error(error.message);
 }
 
@@ -208,7 +226,11 @@ export async function submitQuiz(quizId: string, answers: Record<string, string>
 // ---------- Resources ----------
 
 export async function listResources(opts: { query?: string; category?: string } = {}) {
-  let q = sb.from("resources").select("*").eq("status", "published").order("created_at", { ascending: false });
+  let q = sb
+    .from("resources")
+    .select("*")
+    .eq("status", "published")
+    .order("created_at", { ascending: false });
   if (opts.category) q = q.eq("category", opts.category);
   if (opts.query) q = q.ilike("title", `%${opts.query}%`);
   const { data, error } = await q;
@@ -248,7 +270,12 @@ export async function getSignedEducationUrl(path: string) {
 
 // ---------- Admin CRUD ----------
 
-export async function createCourse(input: { slug: string; title: string; summary?: string; cover_url?: string }) {
+export async function createCourse(input: {
+  slug: string;
+  title: string;
+  summary?: string;
+  cover_url?: string;
+}) {
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) throw new Error("Sign in required");
   const { data, error } = await sb
@@ -270,7 +297,12 @@ export async function deleteCourse(id: string) {
   if (error) throw new Error(error.message);
 }
 
-export async function createModule(input: { course_id: string; title: string; summary?: string; sort_order?: number }) {
+export async function createModule(input: {
+  course_id: string;
+  title: string;
+  summary?: string;
+  sort_order?: number;
+}) {
   const { data, error } = await sb.from("course_modules").insert(input).select().single();
   if (error) throw new Error(error.message);
   return data;
@@ -366,7 +398,11 @@ export async function deleteResource(id: string) {
 // ---------- Quiz admin ----------
 
 export async function getQuizForEditing(lessonId: string) {
-  const { data: quiz } = await sb.from("quizzes").select("*").eq("lesson_id", lessonId).maybeSingle();
+  const { data: quiz } = await sb
+    .from("quizzes")
+    .select("*")
+    .eq("lesson_id", lessonId)
+    .maybeSingle();
   if (!quiz) return { quiz: null, questions: [] };
   const { data: qs } = await sb
     .from("quiz_questions")
@@ -385,14 +421,20 @@ export async function getQuizForEditing(lessonId: string) {
   }
   return {
     quiz,
-    questions: (qs ?? []).map((q: any) => ({ ...q, options: opts.filter((o) => o.question_id === q.id) })),
+    questions: (qs ?? []).map((q: any) => ({
+      ...q,
+      options: opts.filter((o) => o.question_id === q.id),
+    })),
   };
 }
 
 export async function upsertQuiz(lessonId: string, title: string, passingScore: number) {
   const existing = await sb.from("quizzes").select("id").eq("lesson_id", lessonId).maybeSingle();
   if (existing.data) {
-    const { error } = await sb.from("quizzes").update({ title, passing_score: passingScore }).eq("id", existing.data.id);
+    const { error } = await sb
+      .from("quizzes")
+      .update({ title, passing_score: passingScore })
+      .eq("id", existing.data.id);
     if (error) throw new Error(error.message);
     return existing.data.id as string;
   }

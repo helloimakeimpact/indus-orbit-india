@@ -18,7 +18,9 @@ import {
 import { getMyVouchStatus, issueCode, vouchDirectly } from "@/server/vouch.functions";
 
 export const Route = createFileRoute("/app/vouch")({
-  head: () => ({ meta: [{ title: "Vouch — Indus Orbit" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({
+    meta: [{ title: "Vouch — Indus Orbit" }, { name: "robots", content: "noindex" }],
+  }),
   component: VouchPage,
 });
 
@@ -41,20 +43,29 @@ function VouchPage() {
       toast.error((e as Error).message);
     }
     if (user) {
-      const { data } = await supabase.from("profiles").select("is_verified").eq("user_id", user.id).maybeSingle();
+      const { data } = await supabase
+        .from("profiles")
+        .select("is_verified")
+        .eq("user_id", user.id)
+        .maybeSingle();
       setVerified(!!data?.is_verified);
     }
     setBusy(false);
   }
 
-  useEffect(() => { if (user) load(); }, [user]); // eslint-disable-line
+  useEffect(() => {
+    if (user) load();
+  }, [user]); // eslint-disable-line
 
   async function onIssue() {
     try {
       const r = await issueCode();
       toast.success("Code generated");
       setIssueOpen(false);
-      await navigator.clipboard.writeText(r.code).catch(() => {});
+      await navigator.clipboard
+        .writeText(r.code)
+        .then(() => toast.success("Code copied"))
+        .catch(() => toast.error("Code generated, but clipboard copy failed."));
       load();
     } catch (e) {
       toast.error((e as Error).message);
@@ -69,11 +80,13 @@ function VouchPage() {
 
   return (
     <div className="mx-auto w-full max-w-7xl">
-      <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">Vouch</p>
+      <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">
+        Vouch
+      </p>
       <h1 className="mt-2 font-display text-3xl font-medium md:text-4xl">Build the trust web</h1>
       <p className="mt-2 max-w-2xl text-sm text-foreground/70">
-        Verified members can vouch for others. Each vouch — by direct selection or by handing out a code —
-        counts against your {status?.windowDays ?? 28}-day budget.
+        Verified members can vouch for others. Each vouch — by direct selection or by handing out a
+        code — counts against your {status?.windowDays ?? 28}-day budget.
       </p>
 
       {!canIssue && verified === false && (
@@ -83,7 +96,8 @@ function VouchPage() {
             <div>
               <p className="font-semibold">You're not yet verified.</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                Have a code? Paste it on your profile page. Or ask an existing verified member to vouch for you.
+                Have a code? Paste it on your profile page. Or ask an existing verified member to
+                vouch for you.
               </p>
             </div>
           </div>
@@ -106,7 +120,11 @@ function VouchPage() {
               <Button onClick={() => setIssueOpen(true)} disabled={!isAdmin && remaining <= 0}>
                 <Plus className="mr-1 h-4 w-4" /> Generate code
               </Button>
-              <Button variant="outline" onClick={() => setDirectOpen(true)} disabled={!isAdmin && remaining <= 0}>
+              <Button
+                variant="outline"
+                onClick={() => setDirectOpen(true)}
+                disabled={!isAdmin && remaining <= 0}
+              >
                 <Sparkles className="mr-1 h-4 w-4" /> Vouch directly
               </Button>
             </div>
@@ -125,7 +143,10 @@ function VouchPage() {
             ) : (
               <div className="mt-3 space-y-2">
                 {status.codes.map((c) => (
-                  <div key={c.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4">
+                  <div
+                    key={c.id}
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4"
+                  >
                     <div>
                       <code className="rounded bg-muted px-2 py-1 font-mono text-sm">{c.code}</code>
                       <span className="ml-3 text-xs text-muted-foreground">
@@ -135,13 +156,17 @@ function VouchPage() {
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Badge variant={c.status === "active" ? "default" : "secondary"}>{c.status}</Badge>
+                      <Badge variant={c.status === "active" ? "default" : "secondary"}>
+                        {c.status}
+                      </Badge>
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() => {
-                          navigator.clipboard.writeText(c.code);
-                          toast.success("Copied");
+                          navigator.clipboard
+                            .writeText(c.code)
+                            .then(() => toast.success("Copied"))
+                            .catch(() => toast.error("Clipboard copy failed"));
                         }}
                       >
                         <Copy className="h-3 w-3" />
@@ -161,7 +186,9 @@ function VouchPage() {
               <div className="mt-3 space-y-2">
                 {status.events.map((e) => (
                   <div key={e.id} className="rounded-2xl border border-border bg-card p-4 text-sm">
-                    <span className="text-xs uppercase tracking-wider text-muted-foreground">{e.channel}</span>
+                    <span className="text-xs uppercase tracking-wider text-muted-foreground">
+                      {e.channel}
+                    </span>
                     <span className="ml-3">
                       {e.recipient_id ? `→ ${e.recipient_id.slice(0, 8)}…` : "code unredeemed"}
                     </span>
@@ -181,22 +208,20 @@ function VouchPage() {
           <DialogHeader>
             <DialogTitle>Generate a vouch code</DialogTitle>
             <DialogDescription>
-              The code expires in {status?.codeTtlDays ?? 14} days. It counts against your budget the moment it's
-              created — even if no one redeems it.
+              The code expires in {status?.codeTtlDays ?? 14} days. It counts against your budget
+              the moment it's created — even if no one redeems it.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIssueOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setIssueOpen(false)}>
+              Cancel
+            </Button>
             <Button onClick={onIssue}>Generate</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <DirectVouchDialog
-        open={directOpen}
-        onOpenChange={setDirectOpen}
-        onDone={load}
-      />
+      <DirectVouchDialog open={directOpen} onOpenChange={setDirectOpen} onDone={load} />
     </div>
   );
 }
@@ -211,20 +236,36 @@ function DirectVouchDialog({
   onDone: () => void;
 }) {
   const [q, setQ] = useState("");
-  const [results, setResults] = useState<Array<{ user_id: string; display_name: string | null; is_verified: boolean }>>([]);
+  const [results, setResults] = useState<
+    Array<{ user_id: string; display_name: string | null; is_verified: boolean }>
+  >([]);
+  const [searchError, setSearchError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
-    if (q.trim().length < 2) { setResults([]); return; }
+    if (q.trim().length < 2) {
+      setResults([]);
+      setSearchError(null);
+      return;
+    }
     (async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("profiles")
         .select("user_id, display_name, is_verified")
         .ilike("display_name", `%${q.trim()}%`)
         .limit(8);
-      if (active) setResults((data as never) ?? []);
+      if (!active) return;
+      if (error) {
+        setResults([]);
+        setSearchError(error.message);
+        return;
+      }
+      setSearchError(null);
+      setResults((data as never) ?? []);
     })();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [q]);
 
   async function vouch(uid: string) {
@@ -249,11 +290,21 @@ function DirectVouchDialog({
         </DialogHeader>
         <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search members…" />
         <div className="mt-2 max-h-72 space-y-2 overflow-y-auto">
+          {searchError && (
+            <p className="rounded-xl border border-destructive/30 p-3 text-sm text-destructive">
+              Could not search members: {searchError}
+            </p>
+          )}
           {results.map((r) => (
-            <div key={r.user_id} className="flex items-center justify-between rounded-xl border border-border p-3">
+            <div
+              key={r.user_id}
+              className="flex items-center justify-between rounded-xl border border-border p-3"
+            >
               <div>
                 <p className="font-medium">{r.display_name ?? "Member"}</p>
-                <p className="text-xs text-muted-foreground">{r.is_verified ? "Already verified" : "Unverified"}</p>
+                <p className="text-xs text-muted-foreground">
+                  {r.is_verified ? "Already verified" : "Unverified"}
+                </p>
               </div>
               <Button size="sm" onClick={() => vouch(r.user_id)}>
                 <Send className="mr-1 h-3 w-3" /> Vouch

@@ -25,6 +25,11 @@ type CertificateData = {
   segment: Segment | null;
 };
 
+const certificateThemes = [
+  { id: "dark", label: "Dark Mode" },
+  { id: "light", label: "Light Mode" },
+] as const;
+
 export function CertificateDialog({
   userId,
   isVerified,
@@ -51,7 +56,11 @@ export function CertificateDialog({
         : `https://indus-orbit-india.com/profile/${userId}`;
 
     QRCodeLib.toDataURL(url, { margin: 2, scale: 4 }, (err, dataUrl) => {
-      if (!err) setQrDataUrl(dataUrl);
+      if (err) {
+        toast.error("Could not generate certificate QR code.");
+        return;
+      }
+      setQrDataUrl(dataUrl);
     });
   }, [userId]);
 
@@ -65,6 +74,14 @@ export function CertificateDialog({
         supabase.from("chapter_members").select("role").eq("user_id", userId),
         supabase.from("mission_members").select("role").eq("user_id", userId),
       ]);
+
+      if (chRes.error || msRes.error) {
+        toast.error(
+          chRes.error?.message ?? msRes.error?.message ?? "Could not load certificate data.",
+        );
+        setLoading(false);
+        return;
+      }
 
       const chapters = chRes.data || [];
       const missions = msRes.data || [];
@@ -142,13 +159,10 @@ export function CertificateDialog({
         {/* Background Selector */}
         <div className="mb-4 mt-8 flex items-center justify-center gap-3">
           <span className="text-sm font-medium text-white drop-shadow-md">Theme:</span>
-          {[
-            { id: "dark", label: "Dark Mode" },
-            { id: "light", label: "Light Mode" },
-          ].map((t) => (
+          {certificateThemes.map((t) => (
             <button
               key={t.id}
-              onClick={() => setBgTheme(t.id as any)}
+              onClick={() => setBgTheme(t.id)}
               className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition ${
                 bgTheme === t.id
                   ? "bg-white text-black border-white"

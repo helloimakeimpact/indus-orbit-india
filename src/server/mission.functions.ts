@@ -292,7 +292,7 @@ export const postMissionUpdate = async ({
     .single();
 
   if (members && mission) {
-    await Promise.all(
+    await Promise.allSettled(
       members
         .filter((m) => m.user_id !== userData.user!.id)
         .map((m) =>

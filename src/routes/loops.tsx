@@ -30,6 +30,7 @@ export const Route = createFileRoute("/loops")({
 function LoopsPage() {
   const [loops, setLoops] = useState<Loop[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
 
   useEffect(() => {
@@ -37,14 +38,23 @@ function LoopsPage() {
 
     async function loadLoops() {
       try {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from("loops")
           .select("*")
           .eq("status", "published")
           .order("featured_on", { ascending: false, nullsFirst: false })
           .order("published_at", { ascending: false, nullsFirst: false });
 
-        if (alive) setLoops(data ?? []);
+        if (error) throw new Error(error.message);
+        if (alive) {
+          setLoadError(null);
+          setLoops(data ?? []);
+        }
+      } catch (error) {
+        if (alive) {
+          setLoadError(error instanceof Error ? error.message : "Could not load loops.");
+          setLoops([]);
+        }
       } finally {
         if (alive) setLoaded(true);
       }
@@ -116,6 +126,10 @@ function LoopsPage() {
 
           {!loaded ? (
             <p className="mt-8 text-sm text-muted-foreground">Loading loops...</p>
+          ) : loadError ? (
+            <div className="mt-6 rounded-2xl border border-dashed border-destructive/30 bg-card p-8 text-sm text-destructive">
+              Could not load loops: {loadError}
+            </div>
           ) : filtered.length > 0 ? (
             <div className="mt-6 grid gap-4 md:grid-cols-2">
               {filtered.map((loop) => (

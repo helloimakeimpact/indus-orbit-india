@@ -60,18 +60,14 @@ export async function listAllSodaIdeasForAdmin() {
 }
 
 export async function getSodaIdeaBySlug(slug: string) {
-  const { data, error } = await sb
-    .from("soda_ideas")
-    .select("*")
-    .eq("slug", slug)
-    .maybeSingle();
+  const { data, error } = await sb.from("soda_ideas").select("*").eq("slug", slug).maybeSingle();
   if (error) throw new Error(error.message);
   return data as SodaIdea | null;
 }
 
 export async function getIdeaOfTheDay() {
   const today = new Date().toISOString().slice(0, 10);
-  const { data } = await sb
+  const { data, error } = await sb
     .from("soda_ideas")
     .select("*")
     .eq("status", "published")
@@ -79,15 +75,17 @@ export async function getIdeaOfTheDay() {
     .order("featured_on", { ascending: false, nullsFirst: false })
     .limit(1)
     .maybeSingle();
+  if (error) throw new Error(error.message);
   if (data) return data as SodaIdea;
   // fallback to most recent
-  const { data: fallback } = await sb
+  const { data: fallback, error: fallbackError } = await sb
     .from("soda_ideas")
     .select("*")
     .eq("status", "published")
     .order("published_at", { ascending: false })
     .limit(1)
     .maybeSingle();
+  if (fallbackError) throw new Error(fallbackError.message);
   return (fallback ?? null) as SodaIdea | null;
 }
 

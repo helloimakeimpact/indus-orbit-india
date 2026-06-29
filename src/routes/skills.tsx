@@ -29,6 +29,7 @@ export const Route = createFileRoute("/skills")({
 function SkillsPage() {
   const [skills, setSkills] = useState<Skill[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
 
   useEffect(() => {
@@ -36,14 +37,23 @@ function SkillsPage() {
 
     async function loadSkills() {
       try {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from("skills")
           .select("*")
           .eq("status", "published")
           .order("featured_on", { ascending: false, nullsFirst: false })
           .order("published_at", { ascending: false, nullsFirst: false });
 
-        if (alive) setSkills(data ?? []);
+        if (error) throw new Error(error.message);
+        if (alive) {
+          setLoadError(null);
+          setSkills(data ?? []);
+        }
+      } catch (error) {
+        if (alive) {
+          setLoadError(error instanceof Error ? error.message : "Could not load skills.");
+          setSkills([]);
+        }
       } finally {
         if (alive) setLoaded(true);
       }
@@ -107,6 +117,10 @@ function SkillsPage() {
 
           {!loaded ? (
             <p className="mt-8 text-sm text-muted-foreground">Loading skills...</p>
+          ) : loadError ? (
+            <div className="mt-6 rounded-2xl border border-dashed border-destructive/30 bg-card p-8 text-sm text-destructive">
+              Could not load skills: {loadError}
+            </div>
           ) : filtered.length > 0 ? (
             <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {filtered.map((skill) => (

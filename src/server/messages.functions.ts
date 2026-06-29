@@ -75,13 +75,16 @@ export async function sendMessage(recipientId: string, content: string) {
 
   if (error) throw new Error(error.message);
 
-  // Notify recipient (in-app)
-  await sendNotification({
-    userId: recipientId,
-    type: "connect_requests",
-    message: "You have a new message.",
-    link: `/app/messages?user=${userId}`,
-  });
+  try {
+    await sendNotification({
+      userId: recipientId,
+      type: "connect_requests",
+      message: "You have a new message.",
+      link: `/app/messages?user=${userId}`,
+    });
+  } catch {
+    // Message delivery should not fail if notification delivery is unavailable.
+  }
 
   return msg;
 }
@@ -106,11 +109,12 @@ export async function getUnreadMessageCount() {
   if (!userData.user) return 0;
   const userId = userData.user.id;
 
-  const { count } = await supabase
+  const { count, error } = await supabase
     .from("direct_messages")
     .select("id", { count: "exact", head: true })
     .eq("recipient_id", userId)
     .is("read_at", null);
 
+  if (error) throw new Error(error.message);
   return count ?? 0;
 }

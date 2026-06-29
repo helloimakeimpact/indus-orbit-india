@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState, useCallback } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
-import { MessageSquare, Send, ArrowRight, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
+import { MessageSquare, Send, ArrowRight, AlertCircle } from "lucide-react";
+import { toast } from "sonner";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -40,11 +41,13 @@ export function ChatDropdown() {
   // Contact list
   const [connections, setConnections] = useState<Profile[]>([]);
   const [loadingConns, setLoadingConns] = useState(false);
+  const [connectionsError, setConnectionsError] = useState<string | null>(null);
 
   // Inline chat
   const [activeContact, setActiveContact] = useState<Profile | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loadingMsgs, setLoadingMsgs] = useState(false);
+  const [messagesError, setMessagesError] = useState<string | null>(null);
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -52,7 +55,10 @@ export function ChatDropdown() {
   // Poll unread count
   useEffect(() => {
     if (!user) return;
-    const load = () => getUnreadMessageCount().then(setUnreadCount).catch(() => {});
+    const load = () =>
+      getUnreadMessageCount()
+        .then(setUnreadCount)
+        .catch(() => setUnreadCount(0));
     load();
     const id = setInterval(load, 15000);
     return () => clearInterval(id);
@@ -62,9 +68,13 @@ export function ChatDropdown() {
   useEffect(() => {
     if (!open) return;
     setLoadingConns(true);
+    setConnectionsError(null);
     getConnections()
       .then(setConnections)
-      .catch(() => {})
+      .catch((error) => {
+        setConnections([]);
+        setConnectionsError(error instanceof Error ? error.message : "Could not load messages.");
+      })
       .finally(() => setLoadingConns(false));
   }, [open]);
 
@@ -72,9 +82,15 @@ export function ChatDropdown() {
   useEffect(() => {
     if (!activeContact) return;
     setLoadingMsgs(true);
+    setMessagesError(null);
     getConversation(activeContact.user_id)
       .then(setMessages)
-      .catch(() => {})
+      .catch((error) => {
+        setMessages([]);
+        setMessagesError(
+          error instanceof Error ? error.message : "Could not load this conversation.",
+        );
+      })
       .finally(() => setLoadingMsgs(false));
     markConversationRead(activeContact.user_id);
   }, [activeContact]);
@@ -98,10 +114,12 @@ export function ChatDropdown() {
             setMessages((prev) => [...prev, msg]);
             markConversationRead(activeContact.user_id);
           }
-        }
+        },
       )
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [activeContact, user]);
 
   // Scroll to bottom on new messages
@@ -116,8 +134,8 @@ export function ChatDropdown() {
       const msg = await sendMessage(activeContact.user_id, newMessage);
       setMessages((prev) => [...prev, msg as Message]);
       setNewMessage("");
-    } catch {
-      // ignore
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not send message.");
     } finally {
       setSending(false);
     }
@@ -131,7 +149,13 @@ export function ChatDropdown() {
   }
 
   return (
-    <Sheet open={open} onOpenChange={(o) => { setOpen(o); if (!o) setActiveContact(null); }}>
+    <Sheet
+      open={open}
+      onOpenChange={(o) => {
+        setOpen(o);
+        if (!o) setActiveContact(null);
+      }}
+    >
       <SheetTrigger asChild>
         <Button variant="ghost" size="icon" className="relative h-10 w-10 text-foreground">
           <MessageSquare className="h-5 w-5" />
@@ -152,7 +176,7 @@ export function ChatDropdown() {
                   className="text-muted-foreground hover:text-foreground transition mr-1"
                   onClick={() => setActiveContact(null)}
                 >
-                  ← 
+                  ←
                 </button>
                 <Avatar className="h-7 w-7">
                   <AvatarImage src={activeContact.avatar_url ?? undefined} />
@@ -175,6 +199,12 @@ export function ChatDropdown() {
           <div className="flex-1 overflow-y-auto">
             {loadingConns ? (
               <p className="p-6 text-center text-sm text-muted-foreground">Loading…</p>
+            ) : connectionsError ? (
+              <div className="flex flex-col items-center justify-center p-8 text-center mt-8">
+                <AlertCircle className="h-10 w-10 text-destructive/50 mb-3" />
+                <p className="font-medium text-destructive">Messages could not load</p>
+                <p className="mt-1 text-xs text-muted-foreground">{connectionsError}</p>
+              </div>
             ) : connections.length === 0 ? (
               <div className="flex flex-col items-center justify-center p-8 text-center mt-8">
                 <MessageSquare className="h-10 w-10 text-muted-foreground/30 mb-3" />
@@ -214,6 +244,14 @@ export function ChatDropdown() {
             <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
               {loadingMsgs ? (
                 <p className="text-center text-sm text-muted-foreground py-8">Loading…</p>
+              ) : messagesError ? (
+                <div className="flex flex-col items-center justify-center h-full text-center">
+                  <AlertCircle className="h-8 w-8 text-destructive/50 mb-3" />
+                  <p className="text-sm font-medium text-destructive">
+                    Conversation could not load
+                  </p>
+                  <p className="mt-1 max-w-xs text-xs text-muted-foreground">{messagesError}</p>
+                </div>
               ) : messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-center">
                   <MessageSquare className="h-8 w-8 text-muted-foreground/30 mb-3" />
@@ -225,18 +263,29 @@ export function ChatDropdown() {
                 messages.map((msg) => {
                   const isMine = msg.sender_id === user?.id;
                   return (
-                    <div key={msg.id} className={cn("flex", isMine ? "justify-end" : "justify-start")}>
+                    <div
+                      key={msg.id}
+                      className={cn("flex", isMine ? "justify-end" : "justify-start")}
+                    >
                       <div
                         className={cn(
                           "max-w-[80%] rounded-2xl px-4 py-2.5 text-sm shadow-sm",
                           isMine
                             ? "bg-[var(--indigo-night)] text-[var(--parchment)] rounded-br-sm"
-                            : "bg-muted text-foreground rounded-bl-sm"
+                            : "bg-muted text-foreground rounded-bl-sm",
                         )}
                       >
                         <p className="whitespace-pre-wrap break-words">{msg.content}</p>
-                        <p className={cn("mt-1 text-[10px] text-right", isMine ? "text-[var(--parchment)]/50" : "text-muted-foreground")}>
-                          {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        <p
+                          className={cn(
+                            "mt-1 text-[10px] text-right",
+                            isMine ? "text-[var(--parchment)]/50" : "text-muted-foreground",
+                          )}
+                        >
+                          {new Date(msg.created_at).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
                         </p>
                       </div>
                     </div>
@@ -251,7 +300,7 @@ export function ChatDropdown() {
               <div className="flex items-end gap-2">
                 <textarea
                   className="flex-1 resize-none rounded-2xl border border-border bg-muted/40 px-4 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--indigo-night)]/30 min-h-[44px] max-h-[100px]"
-                  placeholder={`Message ${activeContact.display_name}…`}
+                  placeholder={`Message ${activeContact.display_name ?? "member"}…`}
                   rows={1}
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
@@ -275,7 +324,10 @@ export function ChatDropdown() {
           <Button
             variant="outline"
             className="w-full"
-            onClick={() => { setOpen(false); navigate({ to: "/app/messages" }); }}
+            onClick={() => {
+              setOpen(false);
+              navigate({ to: "/app/messages" });
+            }}
           >
             Open Full Messaging Page <ArrowRight className="ml-2 h-4 w-4" />
           </Button>

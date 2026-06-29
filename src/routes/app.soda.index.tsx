@@ -1,9 +1,20 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import {
-  Search, Sparkles, Flame, Filter, ArrowRight, Calendar, TrendingUp, Zap,
-  BarChart3, Layers, Compass,
+  Search,
+  Sparkles,
+  Flame,
+  Filter,
+  ArrowRight,
+  Calendar,
+  TrendingUp,
+  Zap,
+  BarChart3,
+  Layers,
+  Compass,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import sodaHero from "@/assets/soda-hero.jpg";
 import { listPublishedSodaIdeas, getIdeaOfTheDay, type SodaIdea } from "@/server/soda.functions";
 
@@ -15,14 +26,23 @@ function SodaInAppPage() {
   const [ideas, setIdeas] = useState<SodaIdea[]>([]);
   const [iotd, setIotd] = useState<SodaIdea | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [q, setQ] = useState("");
   const [sector, setSector] = useState("all");
 
   useEffect(() => {
     Promise.all([listPublishedSodaIdeas(), getIdeaOfTheDay()])
       .then(([list, day]) => {
+        setLoadError(null);
         setIdeas(list);
         setIotd(day);
+      })
+      .catch((error) => {
+        const message = error instanceof Error ? error.message : "Could not load S.O.D.A ideas.";
+        setLoadError(message);
+        setIdeas([]);
+        setIotd(null);
+        toast.error(message);
       })
       .finally(() => setLoading(false));
   }, []);
@@ -50,7 +70,12 @@ function SodaInAppPage() {
     <div className="min-h-screen bg-background">
       {/* HERO */}
       <section className="relative overflow-hidden bg-[var(--indigo-night)] text-[var(--parchment)]">
-        <img src={sodaHero} aria-hidden alt="" className="absolute inset-0 h-full w-full object-cover opacity-40" />
+        <img
+          src={sodaHero}
+          aria-hidden
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover opacity-40"
+        />
         <div className="absolute inset-0 bg-gradient-to-b from-[var(--indigo-night)]/70 to-[var(--indigo-night)]" />
         <div className="relative z-10 mx-auto max-w-6xl px-6 py-16 md:py-20">
           <span className="inline-flex items-center gap-2 rounded-full border border-[var(--parchment)]/25 bg-[var(--indigo-night)]/40 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">
@@ -63,8 +88,8 @@ function SodaInAppPage() {
             Startup Opportunities, Development &amp; Action
           </p>
           <p className="mt-5 max-w-2xl text-sm text-[var(--parchment)]/80 md:text-base">
-            A living database of validated, India-first opportunities — with the
-            market data, the timing thesis and the offer ladder you'd need to ship next week.
+            A living database of validated, India-first opportunities — with the market data, the
+            timing thesis and the offer ladder you'd need to ship next week.
           </p>
 
           <form
@@ -94,9 +119,7 @@ function SodaInAppPage() {
                 <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">
                   Idea of the day
                 </p>
-                <h2 className="mt-2 font-display text-3xl font-medium md:text-4xl">
-                  {iotd.title}
-                </h2>
+                <h2 className="mt-2 font-display text-3xl font-medium md:text-4xl">{iotd.title}</h2>
               </div>
               <span className="hidden items-center gap-2 rounded-full bg-foreground/5 px-3 py-1 text-xs text-foreground/60 md:inline-flex">
                 <Calendar className="h-3 w-3" /> {iotd.featured_on ?? "Featured"}
@@ -119,7 +142,10 @@ function SodaInAppPage() {
                 </p>
                 <div className="mt-6 flex flex-wrap gap-2">
                   {(iotd.badges ?? []).map((b) => (
-                    <span key={b} className="rounded-full border border-[var(--parchment)]/25 px-2.5 py-1 text-[11px]">
+                    <span
+                      key={b}
+                      className="rounded-full border border-[var(--parchment)]/25 px-2.5 py-1 text-[11px]"
+                    >
                       {b}
                     </span>
                   ))}
@@ -139,7 +165,11 @@ function SodaInAppPage() {
                 <ScorePill label="Why Now" v={iotd.score_why_now} tone="saffron" />
                 <div className="grid grid-cols-2 gap-3 pt-2">
                   <Stat icon={BarChart3} label="Keyword" value={iotd.keyword ?? "—"} />
-                  <Stat icon={TrendingUp} label="Growth" value={iotd.growth_pct ? `+${iotd.growth_pct}%` : "—"} />
+                  <Stat
+                    icon={TrendingUp}
+                    label="Growth"
+                    value={iotd.growth_pct ? `+${iotd.growth_pct}%` : "—"}
+                  />
                 </div>
               </div>
             </article>
@@ -177,6 +207,10 @@ function SodaInAppPage() {
 
           {loading ? (
             <p className="text-sm text-foreground/60">Loading ideas…</p>
+          ) : loadError ? (
+            <div className="rounded-3xl border border-dashed border-destructive/30 bg-card p-12 text-center text-sm text-destructive">
+              Could not load S.O.D.A ideas: {loadError}
+            </div>
           ) : filtered.length === 0 ? (
             <div className="rounded-3xl border border-dashed border-border bg-card p-12 text-center text-foreground/60">
               No ideas yet. Admins can add the first one from the S.O.D.A admin.
@@ -235,7 +269,8 @@ function IdeaCard({ idea }: { idea: SodaIdea }) {
             Keyword
           </p>
           <p className="mt-1 text-xs font-medium text-foreground/80">
-            {idea.keyword ?? "—"}{idea.growth_pct ? ` · +${idea.growth_pct}%` : ""}
+            {idea.keyword ?? "—"}
+            {idea.growth_pct ? ` · +${idea.growth_pct}%` : ""}
           </p>
         </div>
         <span className="inline-flex items-center gap-1 rounded-full bg-[var(--indigo-night)] px-3 py-1.5 text-[11px] font-semibold text-[var(--parchment)] group-hover:bg-[var(--saffron)] group-hover:text-[var(--indigo-night)] transition">
@@ -246,7 +281,7 @@ function IdeaCard({ idea }: { idea: SodaIdea }) {
   );
 }
 
-function Stat({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
+function Stat({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
   return (
     <div className="rounded-2xl border border-border bg-background/50 p-3">
       <p className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/55">
@@ -257,7 +292,15 @@ function Stat({ icon: Icon, label, value }: { icon: any; label: string; value: s
   );
 }
 
-function ScorePill({ label, v, tone }: { label: string; v: number; tone: "emerald" | "rose" | "sky" | "saffron" }) {
+function ScorePill({
+  label,
+  v,
+  tone,
+}: {
+  label: string;
+  v: number;
+  tone: "emerald" | "rose" | "sky" | "saffron";
+}) {
   const toneClass = {
     emerald: "bg-emerald-400",
     rose: "bg-rose-400",

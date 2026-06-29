@@ -16,17 +16,26 @@ function AppLayout() {
 
   useEffect(() => {
     if (loading) return;
+    let active = true;
+    setChecked(false);
+
     if (!user) {
       navigate({ to: "/auth" });
-      return;
+      return () => {
+        active = false;
+      };
     }
+
+    const userId = user.id;
+
     // Onboarding gate: must have orbit_segment set
     supabase
       .from("profiles")
       .select("orbit_segment")
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .maybeSingle()
       .then(({ data, error }) => {
+        if (!active) return;
         if (error) {
           toast.error(error.message);
           setChecked(true);
@@ -39,6 +48,10 @@ function AppLayout() {
           setChecked(true);
         }
       });
+
+    return () => {
+      active = false;
+    };
   }, [user, loading, navigate]);
 
   if (loading || !user || !checked) {

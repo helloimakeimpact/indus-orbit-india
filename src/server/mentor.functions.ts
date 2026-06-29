@@ -49,13 +49,16 @@ export const requestMentorSession = async ({
 
   if (error) throw new Error(error.message);
 
-  // Notify the expert
-  await sendNotification({
-    userId: data.expertId,
-    type: "mentor_request",
-    message: "You have a new mentorship session request.",
-    link: "/app/mentor",
-  });
+  try {
+    await sendNotification({
+      userId: data.expertId,
+      type: "mentor_request",
+      message: "You have a new mentorship session request.",
+      link: "/app/mentor",
+    });
+  } catch {
+    // Booking should not fail if notification delivery is unavailable.
+  }
 
   return { ok: true, sessionId: session.id };
 };
@@ -107,14 +110,17 @@ export const updateMentorSession = async ({
 
   if (error) throw new Error(error.message);
 
-  // Notify the other party
   const notifyId = isExpert ? session.booker_id : session.expert_id;
-  await sendNotification({
-    userId: notifyId,
-    type: "mentor_update",
-    message: `Your mentorship session was marked as ${data.status}.`,
-    link: "/app/mentor",
-  });
+  try {
+    await sendNotification({
+      userId: notifyId,
+      type: "mentor_update",
+      message: `Your mentorship session was marked as ${data.status}.`,
+      link: "/app/mentor",
+    });
+  } catch {
+    // Session updates should not fail if notification delivery is unavailable.
+  }
 
   // If accepted and we are the expert, trigger the email dispatcher
   if (isExpert && data.status === "accepted") {
