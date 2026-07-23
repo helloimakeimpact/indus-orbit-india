@@ -68,10 +68,12 @@ import { Route as AppAdminVouchesRouteImport } from './routes/app.admin.vouches'
 import { Route as AppAdminSubmissionsRouteImport } from './routes/app.admin.submissions'
 import { Route as AppAdminSpotlightsRouteImport } from './routes/app.admin.spotlights'
 import { Route as AppAdminSodaRouteImport } from './routes/app.admin.soda'
+import { Route as AppAdminSkillsRouteImport } from './routes/app.admin.skills'
 import { Route as AppAdminRolesRouteImport } from './routes/app.admin.roles'
 import { Route as AppAdminReportsRouteImport } from './routes/app.admin.reports'
 import { Route as AppAdminQueueRouteImport } from './routes/app.admin.queue'
 import { Route as AppAdminMembersRouteImport } from './routes/app.admin.members'
+import { Route as AppAdminLoopRouteImport } from './routes/app.admin.loop'
 import { Route as AppAdminHubsRouteImport } from './routes/app.admin.hubs'
 import { Route as AppAdminEducationRouteImport } from './routes/app.admin.education'
 import { Route as AppAdminContentRouteImport } from './routes/app.admin.content'
@@ -374,6 +376,11 @@ const AppAdminSodaRoute = AppAdminSodaRouteImport.update({
   path: '/admin/soda',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAdminSkillsRoute = AppAdminSkillsRouteImport.update({
+  id: '/admin/skills',
+  path: '/admin/skills',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAdminRolesRoute = AppAdminRolesRouteImport.update({
   id: '/admin/roles',
   path: '/admin/roles',
@@ -392,6 +399,11 @@ const AppAdminQueueRoute = AppAdminQueueRouteImport.update({
 const AppAdminMembersRoute = AppAdminMembersRouteImport.update({
   id: '/admin/members',
   path: '/admin/members',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdminLoopRoute = AppAdminLoopRouteImport.update({
+  id: '/admin/loop',
+  path: '/admin/loop',
   getParentRoute: () => AppRoute,
 } as any)
 const AppAdminHubsRoute = AppAdminHubsRouteImport.update({
@@ -469,10 +481,12 @@ export interface FileRoutesByFullPath {
   '/app/admin/content': typeof AppAdminContentRoute
   '/app/admin/education': typeof AppAdminEducationRoute
   '/app/admin/hubs': typeof AppAdminHubsRoute
+  '/app/admin/loop': typeof AppAdminLoopRoute
   '/app/admin/members': typeof AppAdminMembersRoute
   '/app/admin/queue': typeof AppAdminQueueRoute
   '/app/admin/reports': typeof AppAdminReportsRoute
   '/app/admin/roles': typeof AppAdminRolesRoute
+  '/app/admin/skills': typeof AppAdminSkillsRoute
   '/app/admin/soda': typeof AppAdminSodaRoute
   '/app/admin/spotlights': typeof AppAdminSpotlightsRoute
   '/app/admin/submissions': typeof AppAdminSubmissionsRoute
@@ -532,10 +546,12 @@ export interface FileRoutesByTo {
   '/app/admin/content': typeof AppAdminContentRoute
   '/app/admin/education': typeof AppAdminEducationRoute
   '/app/admin/hubs': typeof AppAdminHubsRoute
+  '/app/admin/loop': typeof AppAdminLoopRoute
   '/app/admin/members': typeof AppAdminMembersRoute
   '/app/admin/queue': typeof AppAdminQueueRoute
   '/app/admin/reports': typeof AppAdminReportsRoute
   '/app/admin/roles': typeof AppAdminRolesRoute
+  '/app/admin/skills': typeof AppAdminSkillsRoute
   '/app/admin/soda': typeof AppAdminSodaRoute
   '/app/admin/spotlights': typeof AppAdminSpotlightsRoute
   '/app/admin/submissions': typeof AppAdminSubmissionsRoute
@@ -603,10 +619,12 @@ export interface FileRoutesById {
   '/app/admin/content': typeof AppAdminContentRoute
   '/app/admin/education': typeof AppAdminEducationRoute
   '/app/admin/hubs': typeof AppAdminHubsRoute
+  '/app/admin/loop': typeof AppAdminLoopRoute
   '/app/admin/members': typeof AppAdminMembersRoute
   '/app/admin/queue': typeof AppAdminQueueRoute
   '/app/admin/reports': typeof AppAdminReportsRoute
   '/app/admin/roles': typeof AppAdminRolesRoute
+  '/app/admin/skills': typeof AppAdminSkillsRoute
   '/app/admin/soda': typeof AppAdminSodaRoute
   '/app/admin/spotlights': typeof AppAdminSpotlightsRoute
   '/app/admin/submissions': typeof AppAdminSubmissionsRoute
@@ -676,10 +694,12 @@ export interface FileRouteTypes {
     | '/app/admin/content'
     | '/app/admin/education'
     | '/app/admin/hubs'
+    | '/app/admin/loop'
     | '/app/admin/members'
     | '/app/admin/queue'
     | '/app/admin/reports'
     | '/app/admin/roles'
+    | '/app/admin/skills'
     | '/app/admin/soda'
     | '/app/admin/spotlights'
     | '/app/admin/submissions'
@@ -739,10 +759,12 @@ export interface FileRouteTypes {
     | '/app/admin/content'
     | '/app/admin/education'
     | '/app/admin/hubs'
+    | '/app/admin/loop'
     | '/app/admin/members'
     | '/app/admin/queue'
     | '/app/admin/reports'
     | '/app/admin/roles'
+    | '/app/admin/skills'
     | '/app/admin/soda'
     | '/app/admin/spotlights'
     | '/app/admin/submissions'
@@ -809,10 +831,12 @@ export interface FileRouteTypes {
     | '/app/admin/content'
     | '/app/admin/education'
     | '/app/admin/hubs'
+    | '/app/admin/loop'
     | '/app/admin/members'
     | '/app/admin/queue'
     | '/app/admin/reports'
     | '/app/admin/roles'
+    | '/app/admin/skills'
     | '/app/admin/soda'
     | '/app/admin/spotlights'
     | '/app/admin/submissions'
@@ -1274,6 +1298,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminSodaRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/admin/skills': {
+      id: '/app/admin/skills'
+      path: '/admin/skills'
+      fullPath: '/app/admin/skills'
+      preLoaderRoute: typeof AppAdminSkillsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/admin/roles': {
       id: '/app/admin/roles'
       path: '/admin/roles'
@@ -1300,6 +1331,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/members'
       fullPath: '/app/admin/members'
       preLoaderRoute: typeof AppAdminMembersRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/admin/loop': {
+      id: '/app/admin/loop'
+      path: '/admin/loop'
+      fullPath: '/app/admin/loop'
+      preLoaderRoute: typeof AppAdminLoopRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/admin/hubs': {
@@ -1485,10 +1523,12 @@ interface AppRouteChildren {
   AppAdminContentRoute: typeof AppAdminContentRoute
   AppAdminEducationRoute: typeof AppAdminEducationRoute
   AppAdminHubsRoute: typeof AppAdminHubsRoute
+  AppAdminLoopRoute: typeof AppAdminLoopRoute
   AppAdminMembersRoute: typeof AppAdminMembersRoute
   AppAdminQueueRoute: typeof AppAdminQueueRoute
   AppAdminReportsRoute: typeof AppAdminReportsRoute
   AppAdminRolesRoute: typeof AppAdminRolesRoute
+  AppAdminSkillsRoute: typeof AppAdminSkillsRoute
   AppAdminSodaRoute: typeof AppAdminSodaRoute
   AppAdminSpotlightsRoute: typeof AppAdminSpotlightsRoute
   AppAdminSubmissionsRoute: typeof AppAdminSubmissionsRoute
@@ -1524,10 +1564,12 @@ const AppRouteChildren: AppRouteChildren = {
   AppAdminContentRoute: AppAdminContentRoute,
   AppAdminEducationRoute: AppAdminEducationRoute,
   AppAdminHubsRoute: AppAdminHubsRoute,
+  AppAdminLoopRoute: AppAdminLoopRoute,
   AppAdminMembersRoute: AppAdminMembersRoute,
   AppAdminQueueRoute: AppAdminQueueRoute,
   AppAdminReportsRoute: AppAdminReportsRoute,
   AppAdminRolesRoute: AppAdminRolesRoute,
+  AppAdminSkillsRoute: AppAdminSkillsRoute,
   AppAdminSodaRoute: AppAdminSodaRoute,
   AppAdminSpotlightsRoute: AppAdminSpotlightsRoute,
   AppAdminSubmissionsRoute: AppAdminSubmissionsRoute,
