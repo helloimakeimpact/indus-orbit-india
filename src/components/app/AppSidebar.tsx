@@ -58,7 +58,7 @@ const ITEMS: Item[] = [
   { to: "/app/stories", label: "Stories", icon: BookOpen },
   { to: "/app/education", label: "Academy", icon: GraduationCap },
   { to: "/app/skills", label: "Skills", icon: BadgeCheck },
-  { to: "/app/loops", label: "Loops", icon: Zap },
+  { to: "/app/loop", label: "Loop", icon: Zap },
   { to: "/app/soda", label: "S.O.D.A List", icon: Lightbulb },
   { to: "/app/vouch", label: "Vouch", icon: ShieldCheck },
   { to: "/app/mentor", label: "Mentorship", icon: CalendarClock },
@@ -78,6 +78,8 @@ const ADMIN_ITEMS: Item[] = [
   { to: "/app/admin/content", label: "Content", icon: FileCheck, admin: true },
   { to: "/app/admin/education", label: "Education", icon: GraduationCap, admin: true },
   { to: "/app/admin/soda", label: "S.O.D.A ideas", icon: Lightbulb, admin: true },
+  { to: "/app/admin/skills", label: "Skills", icon: BadgeCheck, admin: true },
+  { to: "/app/admin/loop", label: "Loop", icon: Zap, admin: true },
 ];
 
 function readSidebarPrefs() {
