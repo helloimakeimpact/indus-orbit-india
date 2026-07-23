@@ -1,172 +1,129 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowRight, BookOpenCheck, Search, Sparkles } from "lucide-react";
 import { SiteShell } from "@/components/site/SiteShell";
-import { supabase } from "@/integrations/supabase/client";
-import type { Database } from "@/integrations/supabase/types";
-
-type Skill = Database["public"]["Tables"]["skills"]["Row"];
+import { listPublishedSkills, type Skill } from "@/server/skill.functions";
+import { ArrowRight, Sparkles, Search, GraduationCap, Compass, Flame } from "lucide-react";
 
 export const Route = createFileRoute("/skills")({
   head: () => ({
     meta: [
-      { title: "Skills — Indus Orbit" },
-      {
-        name: "description",
-        content:
-          "Practical Indus Orbit playbooks for founders, operators, researchers, experts, investors and students building for India.",
-      },
+      { title: "Skills — India's reusable founder playbooks | Indus Orbit" },
+      { name: "description", content: "A living library of India-specific founder playbooks: legal, GTM, hiring, ops and AI — battle-tested and refreshed by the Orbit." },
       { property: "og:title", content: "Skills — Indus Orbit" },
-      {
-        property: "og:description",
-        content: "Field-tested skills and templates for acting on India-specific opportunities.",
-      },
+      { property: "og:description", content: "Reusable, India-specific founder playbooks." },
+      { property: "og:url", content: "https://indus-spark-connect.lovable.app/skills" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
+    links: [{ rel: "canonical", href: "https://indus-spark-connect.lovable.app/skills" }],
   }),
-  component: SkillsPage,
+  component: SkillsPublic,
 });
 
-function SkillsPage() {
-  const [skills, setSkills] = useState<Skill[]>([]);
-  const [loaded, setLoaded] = useState(false);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [query, setQuery] = useState("");
+function score(s: Skill) {
+  return (s.score_clarity + s.score_completeness + s.score_india_fit + s.score_freshness) / 4;
+}
 
-  useEffect(() => {
-    let alive = true;
+function SkillsPublic() {
+  const [rows, setRows] = useState<Skill[]>([]);
+  const [q, setQ] = useState("");
+  useEffect(() => { listPublishedSkills().then(setRows).catch(() => setRows([])); }, []);
 
-    async function loadSkills() {
-      try {
-        const { data, error } = await supabase
-          .from("skills")
-          .select("*")
-          .eq("status", "published")
-          .order("featured_on", { ascending: false, nullsFirst: false })
-          .order("published_at", { ascending: false, nullsFirst: false });
+  const publicList = useMemo(() => {
+    const byScore = [...rows].sort((a, b) => score(b) - score(a));
+    const byDate = [...rows].sort((a, b) => new Date(b.published_at ?? 0).getTime() - new Date(a.published_at ?? 0).getTime());
+    const seen = new Set<string>(); const out: Skill[] = [];
+    for (const r of byScore.slice(0, 5)) { if (!seen.has(r.id)) { out.push(r); seen.add(r.id); } }
+    for (const r of byDate.slice(0, 5)) { if (!seen.has(r.id)) { out.push(r); seen.add(r.id); } }
+    return out;
+  }, [rows]);
 
-        if (error) throw new Error(error.message);
-        if (alive) {
-          setLoadError(null);
-          setSkills(data ?? []);
-        }
-      } catch (error) {
-        if (alive) {
-          setLoadError(error instanceof Error ? error.message : "Could not load skills.");
-          setSkills([]);
-        }
-      } finally {
-        if (alive) setLoaded(true);
-      }
-    }
-
-    loadSkills();
-
-    return () => {
-      alive = false;
-    };
-  }, []);
-
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return skills;
-    return skills.filter((skill) =>
-      [skill.title, skill.summary, skill.category, skill.when_to_use, ...skill.tags]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase()
-        .includes(q),
-    );
-  }, [skills, query]);
+  const ofDay = publicList[0];
+  const filtered = publicList.filter(s => !q.trim() || [s.title, s.summary, s.category, ...s.tags].join(" ").toLowerCase().includes(q.toLowerCase()));
 
   return (
     <SiteShell navTone="dark">
-      <section className="bg-[var(--indigo-night)] px-6 pb-16 pt-32 text-[var(--parchment)]">
-        <div className="mx-auto max-w-6xl">
-          <span className="inline-flex items-center gap-2 rounded-full border border-[var(--parchment)]/20 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-[var(--saffron)]">
-            <BookOpenCheck className="h-3.5 w-3.5" /> Practical library
+      <section className="relative w-full overflow-hidden bg-[var(--indigo-night)] pt-36 pb-20 text-[var(--parchment)]">
+        <div className="relative z-10 mx-auto max-w-5xl px-6 text-center">
+          <span className="inline-flex items-center gap-2 rounded-full border border-[var(--parchment)]/25 bg-[var(--indigo-night)]/40 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">
+            <Sparkles className="h-3 w-3" /> A living library from Indus Orbit
           </span>
-          <h1 className="mt-5 max-w-3xl font-display text-4xl font-medium leading-tight md:text-6xl">
-            Skills for building in India.
-          </h1>
-          <p className="mt-5 max-w-2xl text-base leading-7 text-[var(--parchment)]/75">
-            Playbooks, templates and working patterns that turn S.O.D.A opportunities into
-            repeatable execution.
+          <h1 className="mt-6 font-display text-5xl font-light leading-[1.05] text-glow md:text-7xl">Skills</h1>
+          <p className="mt-3 font-display text-xl text-[var(--saffron)] md:text-2xl">Reusable founder playbooks — built for India.</p>
+          <p className="mx-auto mt-6 max-w-2xl text-base text-[var(--parchment)]/85 md:text-lg">
+            Tight, repeatable procedures the Orbit has run before. From MCA incorporation to a kirana-store pilot — read, copy, ship.
           </p>
+          <form onSubmit={(e) => e.preventDefault()} className="relative mx-auto mt-10 flex max-w-2xl items-center gap-2 rounded-full border border-[var(--parchment)]/25 bg-[var(--parchment)]/10 px-2 py-2 backdrop-blur-md">
+            <Search className="ml-3 h-4 w-4 text-[var(--parchment)]/70" />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search skills, categories, tools…" className="w-full bg-transparent px-2 py-2 text-sm text-[var(--parchment)] placeholder:text-[var(--parchment)]/60 focus:outline-none" />
+            <a href="#list" className="rounded-full bg-[var(--saffron)] px-4 py-2 text-xs font-semibold text-[var(--indigo-night)] hover:opacity-90">Browse all</a>
+          </form>
         </div>
       </section>
 
-      <section className="px-6 py-14">
-        <div className="mx-auto max-w-6xl">
-          <div className="flex flex-col gap-4 border-b border-border pb-5 md:flex-row md:items-end md:justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-[var(--saffron)]">
-                Browse
-              </p>
-              <h2 className="mt-2 font-display text-3xl font-medium">Published skills</h2>
-            </div>
-            <div className="relative w-full md:w-80">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search skills"
-                className="w-full rounded-full border border-border bg-card py-2 pl-9 pr-4 text-sm outline-none transition focus:ring-2 focus:ring-[var(--saffron)]/35"
-              />
-            </div>
-          </div>
-
-          {!loaded ? (
-            <p className="mt-8 text-sm text-muted-foreground">Loading skills...</p>
-          ) : loadError ? (
-            <div className="mt-6 rounded-2xl border border-dashed border-destructive/30 bg-card p-8 text-sm text-destructive">
-              Could not load skills: {loadError}
-            </div>
-          ) : filtered.length > 0 ? (
-            <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {filtered.map((skill) => (
-                <article key={skill.id} className="rounded-2xl border border-border bg-card p-5">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="rounded-full bg-[var(--indigo-night)]/5 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-[var(--indigo-night)]">
-                      {skill.category}
-                    </span>
-                    {skill.time_estimate && (
-                      <span className="text-xs text-muted-foreground">{skill.time_estimate}</span>
-                    )}
-                  </div>
-                  <h3 className="mt-4 font-display text-xl font-medium">{skill.title}</h3>
-                  {skill.summary && (
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground">{skill.summary}</p>
-                  )}
-                  {skill.tags.length > 0 && (
-                    <div className="mt-4 flex flex-wrap gap-1.5">
-                      {skill.tags.slice(0, 4).map((tag) => (
-                        <span key={tag} className="rounded-full bg-muted px-2.5 py-1 text-xs">
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </article>
-              ))}
-            </div>
-          ) : (
-            <div className="mt-6 rounded-2xl border border-dashed border-border bg-card p-8">
-              <Sparkles className="h-6 w-6 text-[var(--saffron)]" />
-              <h3 className="mt-4 font-display text-2xl font-medium">Skills are being curated.</h3>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-                The schema is ready; the public library will fill with repeatable playbooks for
-                S.O.D.A ideas, missions, capital, research and operating work.
-              </p>
-              <Link
-                to="/soda"
-                className="mt-5 inline-flex items-center gap-2 rounded-full bg-[var(--indigo-night)] px-4 py-2 text-sm font-semibold text-[var(--parchment)]"
-              >
-                Explore S.O.D.A <ArrowRight className="h-4 w-4" />
+      {ofDay && (
+        <section className="px-6 py-20">
+          <div className="mx-auto w-full max-w-7xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">Skill of the day</p>
+            <h2 className="mt-2 font-display text-3xl font-medium md:text-4xl">{ofDay.title}</h2>
+            <p className="mt-4 max-w-3xl text-foreground/75">{ofDay.summary}</p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link to="/auth" className="inline-flex items-center gap-2 rounded-full bg-[var(--indigo-night)] px-5 py-2.5 text-sm font-semibold text-[var(--parchment)] hover:bg-[var(--saffron)] hover:text-[var(--indigo-night)] transition">
+                Open the full playbook <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
-          )}
+          </div>
+        </section>
+      )}
+
+      <section id="list" className="px-6 pb-24">
+        <div className="mx-auto w-full max-w-7xl">
+          <div className="mb-6 flex items-end justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">The library</p>
+              <h2 className="mt-2 font-display text-3xl font-medium md:text-4xl">A peek at what the Orbit has already figured out.</h2>
+              <p className="mt-2 text-sm text-foreground/60">Top-signal and freshest playbooks. <Link to="/auth" className="font-semibold text-[var(--indigo-night)] underline">Sign in</Link> for the full library of {rows.length}.</p>
+            </div>
+          </div>
+          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+            {filtered.map(s => <SkillCard key={s.id} s={s} />)}
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-[var(--indigo-night)] px-6 py-24 text-[var(--parchment)]">
+        <div className="mx-auto max-w-3xl text-center">
+          <GraduationCap className="mx-auto h-8 w-8 text-[var(--saffron)]" />
+          <h2 className="mt-6 font-display text-3xl font-medium md:text-5xl">Every skill you don't have to invent.</h2>
+          <p className="mt-5 text-[var(--parchment)]/75">Join the Orbit to access every playbook, contribute your own, and see who in the network has run each one.</p>
+          <Link to="/auth" className="mt-8 inline-flex items-center gap-2 rounded-full bg-[var(--saffron)] px-6 py-3 text-sm font-semibold text-[var(--indigo-night)] hover:opacity-90">
+            Join Indus Orbit <ArrowRight className="h-4 w-4" />
+          </Link>
         </div>
       </section>
     </SiteShell>
+  );
+}
+
+function SkillCard({ s }: { s: Skill }) {
+  return (
+    <article className="group flex h-full flex-col rounded-3xl border border-border bg-card p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
+      <div className="flex items-center justify-between gap-3">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--saffron)]/15 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--indigo-night)]">
+          <Compass className="h-3 w-3" /> {s.category}
+        </span>
+        <span className="inline-flex items-center gap-1 text-xs font-semibold text-foreground/70">
+          <Flame className="h-3.5 w-3.5 text-[var(--saffron)]" />{Math.round(score(s) * 10)}
+        </span>
+      </div>
+      <h3 className="mt-4 font-display text-xl font-medium leading-snug">{s.title}</h3>
+      <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-foreground/70">{s.summary}</p>
+      <div className="mt-auto pt-5 flex items-end justify-between gap-3">
+        <div className="text-xs text-foreground/60">{s.time_estimate ?? "—"}</div>
+        <Link to="/auth" className="inline-flex items-center gap-1 rounded-full bg-[var(--indigo-night)] px-3 py-1.5 text-[11px] font-semibold text-[var(--parchment)] hover:bg-[var(--saffron)] hover:text-[var(--indigo-night)] transition">
+          Open <ArrowRight className="h-3 w-3" />
+        </Link>
+      </div>
+    </article>
   );
 }
