@@ -48,14 +48,18 @@ import { Route as AppChapterAdminRouteImport } from './routes/app.chapter-admin'
 import { Route as AppBoardRouteImport } from './routes/app.board'
 import { Route as AppStoriesIndexRouteImport } from './routes/app.stories.index'
 import { Route as AppSodaIndexRouteImport } from './routes/app.soda.index'
+import { Route as AppSkillsIndexRouteImport } from './routes/app.skills.index'
 import { Route as AppMissionsIndexRouteImport } from './routes/app.missions.index'
+import { Route as AppLoopIndexRouteImport } from './routes/app.loop.index'
 import { Route as AppEventsIndexRouteImport } from './routes/app.events.index'
 import { Route as AppEducationIndexRouteImport } from './routes/app.education.index'
 import { Route as AppChaptersIndexRouteImport } from './routes/app.chapters.index'
 import { Route as AppAdminIndexRouteImport } from './routes/app.admin.index'
 import { Route as AppStoriesIdRouteImport } from './routes/app.stories.$id'
 import { Route as AppSodaSlugRouteImport } from './routes/app.soda.$slug'
+import { Route as AppSkillsSlugRouteImport } from './routes/app.skills.$slug'
 import { Route as AppMissionsMissionIdRouteImport } from './routes/app.missions.$missionId'
+import { Route as AppLoopSlugRouteImport } from './routes/app.loop.$slug'
 import { Route as AppEventsIdRouteImport } from './routes/app.events.$id'
 import { Route as AppEducationCourseSlugRouteImport } from './routes/app.education.$courseSlug'
 import { Route as AppChaptersProposeRouteImport } from './routes/app.chapters.propose'
@@ -270,10 +274,20 @@ const AppSodaIndexRoute = AppSodaIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppSodaRoute,
 } as any)
+const AppSkillsIndexRoute = AppSkillsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppSkillsRoute,
+} as any)
 const AppMissionsIndexRoute = AppMissionsIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AppMissionsRoute,
+} as any)
+const AppLoopIndexRoute = AppLoopIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppLoopRoute,
 } as any)
 const AppEventsIndexRoute = AppEventsIndexRouteImport.update({
   id: '/',
@@ -305,10 +319,20 @@ const AppSodaSlugRoute = AppSodaSlugRouteImport.update({
   path: '/$slug',
   getParentRoute: () => AppSodaRoute,
 } as any)
+const AppSkillsSlugRoute = AppSkillsSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => AppSkillsRoute,
+} as any)
 const AppMissionsMissionIdRoute = AppMissionsMissionIdRouteImport.update({
   id: '/$missionId',
   path: '/$missionId',
   getParentRoute: () => AppMissionsRoute,
+} as any)
+const AppLoopSlugRoute = AppLoopSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => AppLoopRoute,
 } as any)
 const AppEventsIdRoute = AppEventsIdRouteImport.update({
   id: '/$id',
@@ -425,7 +449,7 @@ export interface FileRoutesByFullPath {
   '/app/education': typeof AppEducationRouteWithChildren
   '/app/events': typeof AppEventsRouteWithChildren
   '/app/investor-feed': typeof AppInvestorFeedRoute
-  '/app/loop': typeof AppLoopRoute
+  '/app/loop': typeof AppLoopRouteWithChildren
   '/app/loops': typeof AppLoopsRoute
   '/app/mentor': typeof AppMentorRoute
   '/app/messages': typeof AppMessagesRoute
@@ -434,7 +458,7 @@ export interface FileRoutesByFullPath {
   '/app/notifications': typeof AppNotificationsRoute
   '/app/profile': typeof AppProfileRoute
   '/app/settings': typeof AppSettingsRoute
-  '/app/skills': typeof AppSkillsRoute
+  '/app/skills': typeof AppSkillsRouteWithChildren
   '/app/soda': typeof AppSodaRouteWithChildren
   '/app/stories': typeof AppStoriesRouteWithChildren
   '/app/vouch': typeof AppVouchRoute
@@ -457,14 +481,18 @@ export interface FileRoutesByFullPath {
   '/app/chapters/propose': typeof AppChaptersProposeRoute
   '/app/education/$courseSlug': typeof AppEducationCourseSlugRouteWithChildren
   '/app/events/$id': typeof AppEventsIdRoute
+  '/app/loop/$slug': typeof AppLoopSlugRoute
   '/app/missions/$missionId': typeof AppMissionsMissionIdRoute
+  '/app/skills/$slug': typeof AppSkillsSlugRoute
   '/app/soda/$slug': typeof AppSodaSlugRoute
   '/app/stories/$id': typeof AppStoriesIdRoute
   '/app/admin/': typeof AppAdminIndexRoute
   '/app/chapters/': typeof AppChaptersIndexRoute
   '/app/education/': typeof AppEducationIndexRoute
   '/app/events/': typeof AppEventsIndexRoute
+  '/app/loop/': typeof AppLoopIndexRoute
   '/app/missions/': typeof AppMissionsIndexRoute
+  '/app/skills/': typeof AppSkillsIndexRoute
   '/app/soda/': typeof AppSodaIndexRoute
   '/app/stories/': typeof AppStoriesIndexRoute
   '/app/education/$courseSlug/$lessonSlug': typeof AppEducationCourseSlugLessonSlugRoute
@@ -489,7 +517,6 @@ export interface FileRoutesByTo {
   '/app/chapter-admin': typeof AppChapterAdminRoute
   '/app/directory': typeof AppDirectoryRoute
   '/app/investor-feed': typeof AppInvestorFeedRoute
-  '/app/loop': typeof AppLoopRoute
   '/app/loops': typeof AppLoopsRoute
   '/app/mentor': typeof AppMentorRoute
   '/app/messages': typeof AppMessagesRoute
@@ -497,7 +524,6 @@ export interface FileRoutesByTo {
   '/app/notifications': typeof AppNotificationsRoute
   '/app/profile': typeof AppProfileRoute
   '/app/settings': typeof AppSettingsRoute
-  '/app/skills': typeof AppSkillsRoute
   '/app/vouch': typeof AppVouchRoute
   '/profile/$id': typeof ProfileIdRoute
   '/redeem/$code': typeof RedeemCodeRoute
@@ -517,14 +543,18 @@ export interface FileRoutesByTo {
   '/app/chapters/$chapterId': typeof AppChaptersChapterIdRoute
   '/app/chapters/propose': typeof AppChaptersProposeRoute
   '/app/events/$id': typeof AppEventsIdRoute
+  '/app/loop/$slug': typeof AppLoopSlugRoute
   '/app/missions/$missionId': typeof AppMissionsMissionIdRoute
+  '/app/skills/$slug': typeof AppSkillsSlugRoute
   '/app/soda/$slug': typeof AppSodaSlugRoute
   '/app/stories/$id': typeof AppStoriesIdRoute
   '/app/admin': typeof AppAdminIndexRoute
   '/app/chapters': typeof AppChaptersIndexRoute
   '/app/education': typeof AppEducationIndexRoute
   '/app/events': typeof AppEventsIndexRoute
+  '/app/loop': typeof AppLoopIndexRoute
   '/app/missions': typeof AppMissionsIndexRoute
+  '/app/skills': typeof AppSkillsIndexRoute
   '/app/soda': typeof AppSodaIndexRoute
   '/app/stories': typeof AppStoriesIndexRoute
   '/app/education/$courseSlug/$lessonSlug': typeof AppEducationCourseSlugLessonSlugRoute
@@ -553,7 +583,7 @@ export interface FileRoutesById {
   '/app/education': typeof AppEducationRouteWithChildren
   '/app/events': typeof AppEventsRouteWithChildren
   '/app/investor-feed': typeof AppInvestorFeedRoute
-  '/app/loop': typeof AppLoopRoute
+  '/app/loop': typeof AppLoopRouteWithChildren
   '/app/loops': typeof AppLoopsRoute
   '/app/mentor': typeof AppMentorRoute
   '/app/messages': typeof AppMessagesRoute
@@ -562,7 +592,7 @@ export interface FileRoutesById {
   '/app/notifications': typeof AppNotificationsRoute
   '/app/profile': typeof AppProfileRoute
   '/app/settings': typeof AppSettingsRoute
-  '/app/skills': typeof AppSkillsRoute
+  '/app/skills': typeof AppSkillsRouteWithChildren
   '/app/soda': typeof AppSodaRouteWithChildren
   '/app/stories': typeof AppStoriesRouteWithChildren
   '/app/vouch': typeof AppVouchRoute
@@ -585,14 +615,18 @@ export interface FileRoutesById {
   '/app/chapters/propose': typeof AppChaptersProposeRoute
   '/app/education/$courseSlug': typeof AppEducationCourseSlugRouteWithChildren
   '/app/events/$id': typeof AppEventsIdRoute
+  '/app/loop/$slug': typeof AppLoopSlugRoute
   '/app/missions/$missionId': typeof AppMissionsMissionIdRoute
+  '/app/skills/$slug': typeof AppSkillsSlugRoute
   '/app/soda/$slug': typeof AppSodaSlugRoute
   '/app/stories/$id': typeof AppStoriesIdRoute
   '/app/admin/': typeof AppAdminIndexRoute
   '/app/chapters/': typeof AppChaptersIndexRoute
   '/app/education/': typeof AppEducationIndexRoute
   '/app/events/': typeof AppEventsIndexRoute
+  '/app/loop/': typeof AppLoopIndexRoute
   '/app/missions/': typeof AppMissionsIndexRoute
+  '/app/skills/': typeof AppSkillsIndexRoute
   '/app/soda/': typeof AppSodaIndexRoute
   '/app/stories/': typeof AppStoriesIndexRoute
   '/app/education/$courseSlug/$lessonSlug': typeof AppEducationCourseSlugLessonSlugRoute
@@ -654,14 +688,18 @@ export interface FileRouteTypes {
     | '/app/chapters/propose'
     | '/app/education/$courseSlug'
     | '/app/events/$id'
+    | '/app/loop/$slug'
     | '/app/missions/$missionId'
+    | '/app/skills/$slug'
     | '/app/soda/$slug'
     | '/app/stories/$id'
     | '/app/admin/'
     | '/app/chapters/'
     | '/app/education/'
     | '/app/events/'
+    | '/app/loop/'
     | '/app/missions/'
+    | '/app/skills/'
     | '/app/soda/'
     | '/app/stories/'
     | '/app/education/$courseSlug/$lessonSlug'
@@ -686,7 +724,6 @@ export interface FileRouteTypes {
     | '/app/chapter-admin'
     | '/app/directory'
     | '/app/investor-feed'
-    | '/app/loop'
     | '/app/loops'
     | '/app/mentor'
     | '/app/messages'
@@ -694,7 +731,6 @@ export interface FileRouteTypes {
     | '/app/notifications'
     | '/app/profile'
     | '/app/settings'
-    | '/app/skills'
     | '/app/vouch'
     | '/profile/$id'
     | '/redeem/$code'
@@ -714,14 +750,18 @@ export interface FileRouteTypes {
     | '/app/chapters/$chapterId'
     | '/app/chapters/propose'
     | '/app/events/$id'
+    | '/app/loop/$slug'
     | '/app/missions/$missionId'
+    | '/app/skills/$slug'
     | '/app/soda/$slug'
     | '/app/stories/$id'
     | '/app/admin'
     | '/app/chapters'
     | '/app/education'
     | '/app/events'
+    | '/app/loop'
     | '/app/missions'
+    | '/app/skills'
     | '/app/soda'
     | '/app/stories'
     | '/app/education/$courseSlug/$lessonSlug'
@@ -781,14 +821,18 @@ export interface FileRouteTypes {
     | '/app/chapters/propose'
     | '/app/education/$courseSlug'
     | '/app/events/$id'
+    | '/app/loop/$slug'
     | '/app/missions/$missionId'
+    | '/app/skills/$slug'
     | '/app/soda/$slug'
     | '/app/stories/$id'
     | '/app/admin/'
     | '/app/chapters/'
     | '/app/education/'
     | '/app/events/'
+    | '/app/loop/'
     | '/app/missions/'
+    | '/app/skills/'
     | '/app/soda/'
     | '/app/stories/'
     | '/app/education/$courseSlug/$lessonSlug'
@@ -1090,12 +1134,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSodaIndexRouteImport
       parentRoute: typeof AppSodaRoute
     }
+    '/app/skills/': {
+      id: '/app/skills/'
+      path: '/'
+      fullPath: '/app/skills/'
+      preLoaderRoute: typeof AppSkillsIndexRouteImport
+      parentRoute: typeof AppSkillsRoute
+    }
     '/app/missions/': {
       id: '/app/missions/'
       path: '/'
       fullPath: '/app/missions/'
       preLoaderRoute: typeof AppMissionsIndexRouteImport
       parentRoute: typeof AppMissionsRoute
+    }
+    '/app/loop/': {
+      id: '/app/loop/'
+      path: '/'
+      fullPath: '/app/loop/'
+      preLoaderRoute: typeof AppLoopIndexRouteImport
+      parentRoute: typeof AppLoopRoute
     }
     '/app/events/': {
       id: '/app/events/'
@@ -1139,12 +1197,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSodaSlugRouteImport
       parentRoute: typeof AppSodaRoute
     }
+    '/app/skills/$slug': {
+      id: '/app/skills/$slug'
+      path: '/$slug'
+      fullPath: '/app/skills/$slug'
+      preLoaderRoute: typeof AppSkillsSlugRouteImport
+      parentRoute: typeof AppSkillsRoute
+    }
     '/app/missions/$missionId': {
       id: '/app/missions/$missionId'
       path: '/$missionId'
       fullPath: '/app/missions/$missionId'
       preLoaderRoute: typeof AppMissionsMissionIdRouteImport
       parentRoute: typeof AppMissionsRoute
+    }
+    '/app/loop/$slug': {
+      id: '/app/loop/$slug'
+      path: '/$slug'
+      fullPath: '/app/loop/$slug'
+      preLoaderRoute: typeof AppLoopSlugRouteImport
+      parentRoute: typeof AppLoopRoute
     }
     '/app/events/$id': {
       id: '/app/events/$id'
@@ -1320,6 +1392,19 @@ const AppEventsRouteWithChildren = AppEventsRoute._addFileChildren(
   AppEventsRouteChildren,
 )
 
+interface AppLoopRouteChildren {
+  AppLoopSlugRoute: typeof AppLoopSlugRoute
+  AppLoopIndexRoute: typeof AppLoopIndexRoute
+}
+
+const AppLoopRouteChildren: AppLoopRouteChildren = {
+  AppLoopSlugRoute: AppLoopSlugRoute,
+  AppLoopIndexRoute: AppLoopIndexRoute,
+}
+
+const AppLoopRouteWithChildren =
+  AppLoopRoute._addFileChildren(AppLoopRouteChildren)
+
 interface AppMissionsRouteChildren {
   AppMissionsMissionIdRoute: typeof AppMissionsMissionIdRoute
   AppMissionsIndexRoute: typeof AppMissionsIndexRoute
@@ -1332,6 +1417,20 @@ const AppMissionsRouteChildren: AppMissionsRouteChildren = {
 
 const AppMissionsRouteWithChildren = AppMissionsRoute._addFileChildren(
   AppMissionsRouteChildren,
+)
+
+interface AppSkillsRouteChildren {
+  AppSkillsSlugRoute: typeof AppSkillsSlugRoute
+  AppSkillsIndexRoute: typeof AppSkillsIndexRoute
+}
+
+const AppSkillsRouteChildren: AppSkillsRouteChildren = {
+  AppSkillsSlugRoute: AppSkillsSlugRoute,
+  AppSkillsIndexRoute: AppSkillsIndexRoute,
+}
+
+const AppSkillsRouteWithChildren = AppSkillsRoute._addFileChildren(
+  AppSkillsRouteChildren,
 )
 
 interface AppSodaRouteChildren {
@@ -1368,7 +1467,7 @@ interface AppRouteChildren {
   AppEducationRoute: typeof AppEducationRouteWithChildren
   AppEventsRoute: typeof AppEventsRouteWithChildren
   AppInvestorFeedRoute: typeof AppInvestorFeedRoute
-  AppLoopRoute: typeof AppLoopRoute
+  AppLoopRoute: typeof AppLoopRouteWithChildren
   AppLoopsRoute: typeof AppLoopsRoute
   AppMentorRoute: typeof AppMentorRoute
   AppMessagesRoute: typeof AppMessagesRoute
@@ -1377,7 +1476,7 @@ interface AppRouteChildren {
   AppNotificationsRoute: typeof AppNotificationsRoute
   AppProfileRoute: typeof AppProfileRoute
   AppSettingsRoute: typeof AppSettingsRoute
-  AppSkillsRoute: typeof AppSkillsRoute
+  AppSkillsRoute: typeof AppSkillsRouteWithChildren
   AppSodaRoute: typeof AppSodaRouteWithChildren
   AppStoriesRoute: typeof AppStoriesRouteWithChildren
   AppVouchRoute: typeof AppVouchRoute
@@ -1407,7 +1506,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppEducationRoute: AppEducationRouteWithChildren,
   AppEventsRoute: AppEventsRouteWithChildren,
   AppInvestorFeedRoute: AppInvestorFeedRoute,
-  AppLoopRoute: AppLoopRoute,
+  AppLoopRoute: AppLoopRouteWithChildren,
   AppLoopsRoute: AppLoopsRoute,
   AppMentorRoute: AppMentorRoute,
   AppMessagesRoute: AppMessagesRoute,
@@ -1416,7 +1515,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppNotificationsRoute: AppNotificationsRoute,
   AppProfileRoute: AppProfileRoute,
   AppSettingsRoute: AppSettingsRoute,
-  AppSkillsRoute: AppSkillsRoute,
+  AppSkillsRoute: AppSkillsRouteWithChildren,
   AppSodaRoute: AppSodaRouteWithChildren,
   AppStoriesRoute: AppStoriesRouteWithChildren,
   AppVouchRoute: AppVouchRoute,
