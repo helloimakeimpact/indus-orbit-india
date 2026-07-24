@@ -54,7 +54,6 @@ type ModelRow = {
   tier: "Frontier" | "Fast" | "Efficient";
 };
 
-const MODELS: ModelRow[] = [
 // Sourced from artificialanalysis.ai/models — latest observatory pass.
 // Prices are USD per 1M tokens (list); INR is derived at ₹83.5/USD in the UI.
 const MODELS: ModelRow[] = [
