@@ -278,7 +278,12 @@ function ModelsPage() {
           <div className="mt-8 grid gap-3 sm:grid-cols-3">
             <StatCard icon={<Star className="h-4 w-4" />} label="Most intelligent" value={topIntel.name} sub={`${topIntel.intelligence} · ${topIntel.org}`} />
             <StatCard icon={<Zap className="h-4 w-4" />} label="Fastest output" value={topSpeed.name} sub={`${topSpeed.speed} tok/s · ${topSpeed.org}`} />
-            <StatCard icon={<IndianRupee className="h-4 w-4" />} label="Best price" value={cheapest.name} sub={`$${cheapest.priceOut}/1M out · ${cheapest.org}`} />
+            <StatCard
+              icon={<IndianRupee className="h-4 w-4" />}
+              label="Best price"
+              value={cheapest.name}
+              sub={`${fmtUSD(cheapest.priceOut)} · ${fmtINR(cheapest.priceOut)} / 1M out`}
+            />
           </div>
         </div>
       </section>
@@ -327,13 +332,13 @@ function ModelsPage() {
           <ChartCard
             icon={<IndianRupee className="h-4 w-4" />}
             eyebrow="Price"
-            title="USD per 1M output tokens."
-            note="Blended output price. Lower is cheaper — critical for India-scale deployments."
+            title="Price per 1M output tokens."
+            note="Blended output price in USD (₹ conversion in the ledger). Lower is cheaper — critical for India-scale deployments."
           >
             <BarChart
               data={MODELS.map((m) => ({ label: m.name, value: m.priceOut, org: m.org }))}
               unit=""
-              format={(n) => `$${n.toFixed(2)}`}
+              format={(n) => `${fmtUSD(n)} · ${fmtINR(n)}`}
               higherIsBetter={false}
             />
           </ChartCard>
@@ -405,8 +410,8 @@ function ModelsPage() {
                     <th className="px-4 py-3 text-right font-semibold">Intel.</th>
                     <th className="px-4 py-3 text-right font-semibold">Speed</th>
                     <th className="px-4 py-3 text-right font-semibold">Latency</th>
-                    <th className="px-4 py-3 text-right font-semibold">$ / 1M in</th>
-                    <th className="px-4 py-3 text-right font-semibold">$ / 1M out</th>
+                    <th className="px-4 py-3 text-right font-semibold">In / 1M (USD · INR)</th>
+                    <th className="px-4 py-3 text-right font-semibold">Out / 1M (USD · INR)</th>
                     <th className="px-4 py-3 text-right font-semibold">Context</th>
                     <th className="px-4 py-3 font-semibold">License</th>
                   </tr>
@@ -430,8 +435,14 @@ function ModelsPage() {
                       <td className="px-4 py-3 text-right font-mono">{m.intelligence}</td>
                       <td className="px-4 py-3 text-right font-mono">{m.speed}</td>
                       <td className="px-4 py-3 text-right font-mono">{m.latency.toFixed(2)}s</td>
-                      <td className="px-4 py-3 text-right font-mono">${m.priceIn.toFixed(2)}</td>
-                      <td className="px-4 py-3 text-right font-mono">${m.priceOut.toFixed(2)}</td>
+                      <td className="px-4 py-3 text-right font-mono">
+                        <div>{fmtUSD(m.priceIn)}</div>
+                        <div className="text-[10px] text-muted-foreground">{fmtINR(m.priceIn)}</div>
+                      </td>
+                      <td className="px-4 py-3 text-right font-mono">
+                        <div>{fmtUSD(m.priceOut)}</div>
+                        <div className="text-[10px] text-muted-foreground">{fmtINR(m.priceOut)}</div>
+                      </td>
                       <td className="px-4 py-3 text-right font-mono">{fmtCtx(m.context)}</td>
                       <td className="px-4 py-3">
                         <span
@@ -452,8 +463,12 @@ function ModelsPage() {
           </div>
 
           <p className="mt-4 text-xs text-muted-foreground">
-            Figures are indicative — sourced from public benchmarks and vendor pricing pages as of the
-            latest observatory pass. Treat as a starting map, not a stopwatch.
+            Figures sourced from{" "}
+            <a href="https://artificialanalysis.ai/models" className="underline" target="_blank" rel="noreferrer">
+              artificialanalysis.ai/models
+            </a>{" "}
+            (latest pass) and public vendor pricing. INR converted at ₹{USD_TO_INR}/USD. Treat as a
+            starting map, not a stopwatch.
           </p>
         </div>
       </section>
