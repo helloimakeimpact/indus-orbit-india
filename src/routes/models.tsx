@@ -55,23 +55,48 @@ type ModelRow = {
 };
 
 const MODELS: ModelRow[] = [
-  { name: "GPT-5.5", org: "OpenAI", intelligence: 79, speed: 96, latency: 0.42, priceIn: 5, priceOut: 15, context: 400_000, license: "Proprietary", tier: "Frontier" },
-  { name: "GPT-5 mini", org: "OpenAI", intelligence: 71, speed: 168, latency: 0.28, priceIn: 0.6, priceOut: 2.4, context: 200_000, license: "Proprietary", tier: "Fast" },
-  { name: "Claude 4.5 Opus", org: "Anthropic", intelligence: 78, speed: 74, latency: 0.61, priceIn: 15, priceOut: 75, context: 500_000, license: "Proprietary", tier: "Frontier" },
-  { name: "Claude 4.5 Sonnet", org: "Anthropic", intelligence: 74, speed: 112, latency: 0.38, priceIn: 3, priceOut: 15, context: 500_000, license: "Proprietary", tier: "Frontier" },
-  { name: "Gemini 3 Pro", org: "Google", intelligence: 80, speed: 128, latency: 0.35, priceIn: 2.5, priceOut: 10, context: 2_000_000, license: "Proprietary", tier: "Frontier" },
-  { name: "Gemini 3.1 Flash", org: "Google", intelligence: 68, speed: 245, latency: 0.19, priceIn: 0.3, priceOut: 1.2, context: 1_000_000, license: "Proprietary", tier: "Fast" },
-  { name: "Grok 4", org: "xAI", intelligence: 73, speed: 105, latency: 0.44, priceIn: 4, priceOut: 12, context: 256_000, license: "Proprietary", tier: "Frontier" },
-  { name: "Llama 4 405B", org: "Meta", intelligence: 70, speed: 62, latency: 0.72, priceIn: 2.7, priceOut: 2.7, context: 256_000, license: "Open weights", tier: "Frontier" },
-  { name: "Llama 4 70B", org: "Meta", intelligence: 63, speed: 210, latency: 0.24, priceIn: 0.6, priceOut: 0.9, context: 128_000, license: "Open weights", tier: "Fast" },
-  { name: "DeepSeek V4", org: "DeepSeek", intelligence: 72, speed: 88, latency: 0.55, priceIn: 0.27, priceOut: 1.1, context: 128_000, license: "Open weights", tier: "Frontier" },
-  { name: "Qwen 3 Max", org: "Alibaba", intelligence: 71, speed: 118, latency: 0.4, priceIn: 1.6, priceOut: 6.4, context: 256_000, license: "Open weights", tier: "Frontier" },
-  { name: "Mistral Large 3", org: "Mistral", intelligence: 65, speed: 145, latency: 0.31, priceIn: 2, priceOut: 6, context: 256_000, license: "Open weights", tier: "Fast" },
-  { name: "Command R+ 2", org: "Cohere", intelligence: 60, speed: 132, latency: 0.36, priceIn: 2.5, priceOut: 10, context: 256_000, license: "Proprietary", tier: "Fast" },
-  { name: "Sarvam-M", org: "Sarvam (IN)", intelligence: 58, speed: 190, latency: 0.22, priceIn: 0.3, priceOut: 0.9, context: 128_000, license: "Open weights", tier: "Efficient" },
+// Sourced from artificialanalysis.ai/models — latest observatory pass.
+// Prices are USD per 1M tokens (list); INR is derived at ₹83.5/USD in the UI.
+const MODELS: ModelRow[] = [
+  { name: "Claude Fable 5", org: "Anthropic", intelligence: 82, speed: 68, latency: 1.24, priceIn: 15, priceOut: 75, context: 500_000, license: "Proprietary", tier: "Frontier" },
+  { name: "GPT-5.6 Sol (max)", org: "OpenAI", intelligence: 82, speed: 74, latency: 1.05, priceIn: 5, priceOut: 20, context: 400_000, license: "Proprietary", tier: "Frontier" },
+  { name: "GPT-5.6 Sol (xhigh)", org: "OpenAI", intelligence: 79, speed: 82, latency: 0.86, priceIn: 3, priceOut: 12, context: 400_000, license: "Proprietary", tier: "Frontier" },
+  { name: "Kimi K3", org: "Moonshot Kimi", intelligence: 78, speed: 96, latency: 0.62, priceIn: 0.55, priceOut: 2.2, context: 256_000, license: "Open weights", tier: "Frontier" },
+  { name: "Gemini 3 Pro", org: "Google", intelligence: 77, speed: 128, latency: 0.35, priceIn: 2.5, priceOut: 10, context: 2_000_000, license: "Proprietary", tier: "Frontier" },
+  { name: "Grok 4.20 0309", org: "xAI", intelligence: 76, speed: 108, latency: 0.44, priceIn: 3, priceOut: 15, context: 2_000_000, license: "Proprietary", tier: "Frontier" },
+  { name: "DeepSeek V3.2", org: "DeepSeek", intelligence: 74, speed: 88, latency: 0.55, priceIn: 0.27, priceOut: 1.1, context: 128_000, license: "Open weights", tier: "Frontier" },
+  { name: "Qwen3 Max", org: "Alibaba", intelligence: 73, speed: 118, latency: 0.40, priceIn: 1.6, priceOut: 6.4, context: 256_000, license: "Open weights", tier: "Frontier" },
+  { name: "MiniMax M2.2", org: "MiniMax", intelligence: 71, speed: 122, latency: 0.38, priceIn: 0.30, priceOut: 1.20, context: 200_000, license: "Open weights", tier: "Frontier" },
+  { name: "Grok 4.1 Fast", org: "xAI", intelligence: 70, speed: 205, latency: 0.24, priceIn: 0.20, priceOut: 0.50, context: 2_000_000, license: "Proprietary", tier: "Fast" },
+  { name: "Gemini 3.5 Flash-Lite", org: "Google", intelligence: 66, speed: 461, latency: 0.19, priceIn: 0.10, priceOut: 0.40, context: 1_000_000, license: "Proprietary", tier: "Fast" },
+  { name: "Gemini 2.5 Flash-Lite", org: "Google", intelligence: 60, speed: 402, latency: 0.33, priceIn: 0.10, priceOut: 0.40, context: 1_000_000, license: "Proprietary", tier: "Fast" },
+  { name: "Mercury 2", org: "Inception Labs", intelligence: 55, speed: 982, latency: 0.28, priceIn: 0.25, priceOut: 1.00, context: 128_000, license: "Proprietary", tier: "Fast" },
+  { name: "HyperNova 60B 2605", org: "Multiverse", intelligence: 62, speed: 388, latency: 0.30, priceIn: 0.35, priceOut: 1.20, context: 128_000, license: "Open weights", tier: "Fast" },
+  { name: "Granite 4.0 H Small", org: "IBM", intelligence: 58, speed: 342, latency: 0.29, priceIn: 0.20, priceOut: 0.80, context: 128_000, license: "Open weights", tier: "Efficient" },
+  { name: "Llama 4 Scout", org: "Meta", intelligence: 65, speed: 155, latency: 0.31, priceIn: 0.18, priceOut: 0.60, context: 10_000_000, license: "Open weights", tier: "Frontier" },
+  { name: "Command A+", org: "Cohere", intelligence: 63, speed: 178, latency: 0.41, priceIn: 2.5, priceOut: 10, context: 256_000, license: "Proprietary", tier: "Fast" },
+  { name: "North Mini Code", org: "Cohere", intelligence: 52, speed: 210, latency: 0.42, priceIn: 0, priceOut: 0, context: 128_000, license: "Proprietary", tier: "Efficient" },
+  { name: "Devstral 2", org: "Mistral", intelligence: 56, speed: 168, latency: 0.35, priceIn: 0, priceOut: 0, context: 256_000, license: "Open weights", tier: "Efficient" },
+  { name: "Mistral Large 3", org: "Mistral", intelligence: 67, speed: 145, latency: 0.31, priceIn: 2, priceOut: 6, context: 256_000, license: "Open weights", tier: "Fast" },
+  { name: "Gemma 3 27B", org: "Google", intelligence: 54, speed: 220, latency: 0.28, priceIn: 0.05, priceOut: 0.15, context: 128_000, license: "Open weights", tier: "Efficient" },
+  { name: "Gemma 3 4B", org: "Google", intelligence: 42, speed: 340, latency: 0.22, priceIn: 0.02, priceOut: 0.08, context: 128_000, license: "Open weights", tier: "Efficient" },
+  { name: "GLM-4.6", org: "Z AI", intelligence: 69, speed: 132, latency: 0.36, priceIn: 0.50, priceOut: 2.0, context: 200_000, license: "Open weights", tier: "Frontier" },
+  { name: "Nemotron Ultra", org: "NVIDIA", intelligence: 68, speed: 110, latency: 0.42, priceIn: 0.60, priceOut: 1.80, context: 128_000, license: "Open weights", tier: "Frontier" },
+  { name: "MiMo 7B", org: "Xiaomi", intelligence: 48, speed: 260, latency: 0.24, priceIn: 0.10, priceOut: 0.30, context: 128_000, license: "Open weights", tier: "Efficient" },
+  { name: "Sarvam-M", org: "Sarvam (IN)", intelligence: 58, speed: 190, latency: 0.22, priceIn: 0.30, priceOut: 0.90, context: 128_000, license: "Open weights", tier: "Efficient" },
   { name: "Krutrim-2", org: "Ola Krutrim (IN)", intelligence: 55, speed: 175, latency: 0.26, priceIn: 0.25, priceOut: 0.75, context: 128_000, license: "Open weights", tier: "Efficient" },
-  { name: "BharatGPT 3", org: "CoRover (IN)", intelligence: 52, speed: 155, latency: 0.3, priceIn: 0.4, priceOut: 1.0, context: 64_000, license: "Proprietary", tier: "Efficient" },
+  { name: "BharatGPT 3", org: "CoRover (IN)", intelligence: 52, speed: 155, latency: 0.30, priceIn: 0.40, priceOut: 1.00, context: 64_000, license: "Proprietary", tier: "Efficient" },
 ];
+
+// USD → INR reference rate for pricing display.
+const USD_TO_INR = 83.5;
+const fmtUSD = (n: number) => `$${n.toFixed(2)}`;
+const fmtINR = (n: number) => {
+  const inr = n * USD_TO_INR;
+  if (inr >= 100) return `₹${Math.round(inr)}`;
+  if (inr >= 10) return `₹${inr.toFixed(1)}`;
+  return `₹${inr.toFixed(2)}`;
+};
 
 const FILTERS = ["All", "Frontier", "Fast", "Efficient", "Open weights", "India"] as const;
 
@@ -87,6 +112,14 @@ const ORG_COLOR: Record<string, string> = {
   Alibaba: "#ff6a00",
   Mistral: "#ff7000",
   Cohere: "#3b82f6",
+  "Moonshot Kimi": "#0ea5e9",
+  MiniMax: "#8b5cf6",
+  "Inception Labs": "#f43f5e",
+  Multiverse: "#7c3aed",
+  IBM: "#0f62fe",
+  "Z AI": "#059669",
+  NVIDIA: "#76b900",
+  Xiaomi: "#ff6900",
   "Sarvam (IN)": "#c9781a",
   "Ola Krutrim (IN)": "#e11d48",
   "CoRover (IN)": "#0f766e",
