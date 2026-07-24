@@ -14,6 +14,8 @@ import {
   BookOpen,
   GraduationCap,
 } from "lucide-react";
+import { Cpu, Gauge, IndianRupee } from "lucide-react";
+import modelsHero from "@/assets/models-hero.jpg";
 import { useEffect, useState } from "react";
 import { getSpotlights } from "@/server/society.functions";
 

@@ -16,6 +16,7 @@ import { Route as SkillsRouteImport } from './routes/skills'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as OurWorkRouteImport } from './routes/our-work'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as ModelsRouteImport } from './routes/models'
 import { Route as MembersRouteImport } from './routes/members'
 import { Route as LoopsRouteImport } from './routes/loops'
 import { Route as LoopRouteImport } from './routes/loop'
@@ -114,6 +115,11 @@ const OurWorkRoute = OurWorkRouteImport.update({
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ModelsRoute = ModelsRouteImport.update({
+  id: '/models',
+  path: '/models',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MembersRoute = MembersRouteImport.update({
@@ -448,6 +454,7 @@ export interface FileRoutesByFullPath {
   '/loop': typeof LoopRoute
   '/loops': typeof LoopsRoute
   '/members': typeof MembersRoute
+  '/models': typeof ModelsRoute
   '/onboarding': typeof OnboardingRoute
   '/our-work': typeof OurWorkRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -520,6 +527,7 @@ export interface FileRoutesByTo {
   '/loop': typeof LoopRoute
   '/loops': typeof LoopsRoute
   '/members': typeof MembersRoute
+  '/models': typeof ModelsRoute
   '/onboarding': typeof OnboardingRoute
   '/our-work': typeof OurWorkRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -586,6 +594,7 @@ export interface FileRoutesById {
   '/loop': typeof LoopRoute
   '/loops': typeof LoopsRoute
   '/members': typeof MembersRoute
+  '/models': typeof ModelsRoute
   '/onboarding': typeof OnboardingRoute
   '/our-work': typeof OurWorkRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -661,6 +670,7 @@ export interface FileRouteTypes {
     | '/loop'
     | '/loops'
     | '/members'
+    | '/models'
     | '/onboarding'
     | '/our-work'
     | '/reset-password'
@@ -733,6 +743,7 @@ export interface FileRouteTypes {
     | '/loop'
     | '/loops'
     | '/members'
+    | '/models'
     | '/onboarding'
     | '/our-work'
     | '/reset-password'
@@ -798,6 +809,7 @@ export interface FileRouteTypes {
     | '/loop'
     | '/loops'
     | '/members'
+    | '/models'
     | '/onboarding'
     | '/our-work'
     | '/reset-password'
@@ -872,6 +884,7 @@ export interface RootRouteChildren {
   LoopRoute: typeof LoopRoute
   LoopsRoute: typeof LoopsRoute
   MembersRoute: typeof MembersRoute
+  ModelsRoute: typeof ModelsRoute
   OnboardingRoute: typeof OnboardingRoute
   OurWorkRoute: typeof OurWorkRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -932,6 +945,13 @@ declare module '@tanstack/react-router' {
       path: '/onboarding'
       fullPath: '/onboarding'
       preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/models': {
+      id: '/models'
+      path: '/models'
+      fullPath: '/models'
+      preLoaderRoute: typeof ModelsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/members': {
@@ -1591,6 +1611,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoopRoute: LoopRoute,
   LoopsRoute: LoopsRoute,
   MembersRoute: MembersRoute,
+  ModelsRoute: ModelsRoute,
   OnboardingRoute: OnboardingRoute,
   OurWorkRoute: OurWorkRoute,
   ResetPasswordRoute: ResetPasswordRoute,
