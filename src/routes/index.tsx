@@ -14,6 +14,8 @@ import {
   BookOpen,
   GraduationCap,
 } from "lucide-react";
+import { Cpu, Gauge, IndianRupee } from "lucide-react";
+import modelsHero from "@/assets/models-hero.jpg";
 import { useEffect, useState } from "react";
 import { getSpotlights } from "@/server/society.functions";
 
@@ -328,6 +330,70 @@ function HomePage() {
               className="inline-flex items-center gap-2 rounded-full border border-foreground/15 px-6 py-3 text-sm font-medium hover:bg-foreground/5"
             >
               See our work
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* MODEL OBSERVATORY teaser */}
+      <section className="px-6 pb-24">
+        <div className="mx-auto grid max-w-7xl gap-0 overflow-hidden rounded-3xl border border-border bg-card shadow-2xl md:grid-cols-2">
+          <div className="relative min-h-[320px] md:min-h-full">
+            <img
+              src={modelsHero}
+              alt="Pixel-art observatory tracking AI models across the sky"
+              className="absolute inset-0 h-full w-full object-cover"
+              loading="lazy"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[var(--indigo-night)]/80 via-[var(--indigo-night)]/20 to-transparent" />
+            <div className="absolute bottom-5 left-5 right-5 flex flex-wrap gap-2">
+              {[
+                { i: <Cpu className="h-3 w-3" />, t: "Intelligence" },
+                { i: <Gauge className="h-3 w-3" />, t: "Speed" },
+                { i: <IndianRupee className="h-3 w-3" />, t: "Price" },
+              ].map((c) => (
+                <span
+                  key={c.t}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-[var(--parchment)]/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-[var(--parchment)] backdrop-blur"
+                >
+                  {c.i} {c.t}
+                </span>
+              ))}
+            </div>
+          </div>
+          <div className="p-8 md:p-12">
+            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">
+              The Model Observatory
+            </p>
+            <h3 className="mt-4 font-display text-3xl font-light leading-tight md:text-4xl">
+              The frontier of AI, charted for India's builders.
+            </h3>
+            <p className="mt-4 text-foreground/70">
+              A living side-by-side chart of frontier models — intelligence, output speed, latency
+              and price. Independent. Refreshed as the sky moves. Adapted for what actually matters
+              at India scale.
+            </p>
+            <ul className="mt-6 grid grid-cols-3 gap-3 text-center">
+              {[
+                { k: "16", v: "Models tracked" },
+                { k: "4", v: "Core metrics" },
+                { k: "3", v: "Indian labs" },
+              ].map((s) => (
+                <li key={s.v} className="rounded-2xl bg-[var(--indigo-night)]/[0.04] p-3">
+                  <div className="font-display text-2xl font-medium text-[var(--indigo-night)]">
+                    {s.k}
+                  </div>
+                  <div className="mt-1 text-[11px] uppercase tracking-wider text-muted-foreground">
+                    {s.v}
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <Link
+              to="/models"
+              className="mt-8 inline-flex items-center gap-2 rounded-full bg-[var(--indigo-night)] px-6 py-3 text-sm font-semibold text-[var(--parchment)] transition hover:bg-[var(--saffron)] hover:text-[var(--indigo-night)]"
+            >
+              Open the Model Observatory <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         </div>
