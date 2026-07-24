@@ -16,6 +16,7 @@ import {
 const links = [
   { to: "/about", label: "About" },
   { to: "/our-work", label: "Our Work" },
+  { to: "/models", label: "Models" },
   { to: "/writing", label: "Writing" },
   { to: "/members", label: "Members" },
   { to: "/contact", label: "Contact" },
