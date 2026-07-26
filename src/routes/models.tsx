@@ -176,54 +176,200 @@ function BarChart({
 }
 
 function ScatterChart({ data }: { data: ModelRow[] }) {
-  const width = 720;
-  const height = 360;
-  const padding = { top: 24, right: 24, bottom: 40, left: 48 };
-  const xs = data.map((d) => d.priceOut);
-  const ys = data.map((d) => d.intelligence);
-  const xMax = Math.max(...xs) * 1.05;
-  const yMin = Math.min(...ys) - 4;
-  const yMax = Math.max(...ys) + 3;
-  const px = (v: number) => padding.left + (v / xMax) * (width - padding.left - padding.right);
+  const width = 1040;
+  const height = 620;
+  const padding = { top: 34, right: 40, bottom: 64, left: 64 };
+  const innerW = width - padding.left - padding.right;
+  const innerH = height - padding.top - padding.bottom;
+
+  // Log-scale price so the low-cost cluster spreads out.
+  const clampPrice = (v: number) => Math.max(v, 0.05);
+  const xVals = data.map((d) => clampPrice(d.priceOut));
+  const xMinL = Math.log10(Math.min(...xVals) * 0.7);
+  const xMaxL = Math.log10(Math.max(...xVals) * 1.15);
+  const px = (v: number) =>
+    padding.left + ((Math.log10(clampPrice(v)) - xMinL) / (xMaxL - xMinL)) * innerW;
+
+  const yVals = data.map((d) => d.intelligence);
+  const yMin = Math.min(...yVals) - 5;
+  const yMax = Math.max(...yVals) + 5;
   const py = (v: number) =>
-    height - padding.bottom - ((v - yMin) / (yMax - yMin)) * (height - padding.top - padding.bottom);
+    padding.top + innerH - ((v - yMin) / (yMax - yMin)) * innerH;
+
+  // Nice log ticks along the x-axis: 0.05, 0.1, 0.5, 1, 5, 10, 50, 100
+  const xTicks = [0.05, 0.1, 0.5, 1, 5, 10, 50, 100].filter(
+    (t) => Math.log10(t) >= xMinL && Math.log10(t) <= xMaxL,
+  );
+  const yTicks = [40, 50, 60, 70, 80];
+
+  // Points with label placement (right by default; flip to left near right edge).
+  type P = {
+    m: ModelRow;
+    x: number;
+    y: number;
+    ly: number;
+    side: "left" | "right";
+  };
+  const rightEdge = padding.left + innerW;
+  const pts: P[] = data.map((d) => {
+    const x = px(d.priceOut);
+    const y = py(d.intelligence);
+    const side: "left" | "right" = x > rightEdge - 120 ? "left" : "right";
+    return { m: d, x, y, ly: y, side };
+  });
+
+  // Resolve label vertical collisions within each side.
+  const minGap = 14;
+  const relax = (side: "left" | "right") => {
+    const group = pts.filter((p) => p.side === side).sort((a, b) => a.ly - b.ly);
+    for (let iter = 0; iter < 80; iter++) {
+      let moved = false;
+      for (let i = 1; i < group.length; i++) {
+        const prev = group[i - 1];
+        const cur = group[i];
+        if (cur.ly - prev.ly < minGap) {
+          cur.ly = prev.ly + minGap;
+          moved = true;
+        }
+      }
+      // Nudge back up if we've drifted past the plot area.
+      for (let i = group.length - 1; i > 0; i--) {
+        const cur = group[i];
+        const max = padding.top + innerH - 4;
+        if (cur.ly > max) {
+          cur.ly = max;
+          const prev = group[i - 1];
+          if (cur.ly - prev.ly < minGap) prev.ly = cur.ly - minGap;
+          moved = true;
+        }
+      }
+      if (!moved) break;
+    }
+  };
+  relax("right");
+  relax("left");
+
+  const priceStr = (n: number) => (n < 1 ? `$${n.toFixed(2)}` : `$${n}`);
+
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} className="h-auto w-full" role="img" aria-label="Intelligence vs price scatter">
-      {/* grid */}
-      {[0, 0.25, 0.5, 0.75, 1].map((t) => {
-        const y = padding.top + t * (height - padding.top - padding.bottom);
-        return <line key={t} x1={padding.left} x2={width - padding.right} y1={y} y2={y} stroke="rgba(26,31,77,0.08)" />;
-      })}
-      {/* axes labels */}
-      <text x={padding.left} y={height - 12} fontSize="11" fill="rgba(26,31,77,0.6)" fontFamily="Inter">
-        Price (USD / 1M output tokens) →
-      </text>
-      <text x={12} y={padding.top - 8} fontSize="11" fill="rgba(26,31,77,0.6)" fontFamily="Inter">
-        ↑ Intelligence Index
-      </text>
-      {/* points */}
-      {data.map((d) => (
-        <g key={d.name}>
-          <circle
-            cx={px(d.priceOut)}
-            cy={py(d.intelligence)}
-            r={7}
-            fill={ORG_COLOR[d.org] ?? "#6b46c1"}
-            fillOpacity={0.85}
-            stroke="#fff"
-            strokeWidth={1.5}
+    <svg
+      viewBox={`0 0 ${width} ${height}`}
+      className="h-auto w-full"
+      role="img"
+      aria-label="Intelligence vs price scatter"
+    >
+      {/* horizontal grid */}
+      {yTicks.map((t) => (
+        <g key={`y-${t}`}>
+          <line
+            x1={padding.left}
+            x2={padding.left + innerW}
+            y1={py(t)}
+            y2={py(t)}
+            stroke="rgba(26,31,77,0.08)"
           />
           <text
-            x={px(d.priceOut) + 10}
-            y={py(d.intelligence) + 4}
+            x={padding.left - 10}
+            y={py(t) + 3}
             fontSize="10"
+            textAnchor="end"
+            fill="rgba(26,31,77,0.55)"
             fontFamily="Inter"
-            fill="rgba(26,31,77,0.85)"
           >
-            {d.name}
+            {t}
           </text>
         </g>
       ))}
+      {/* x ticks */}
+      {xTicks.map((t) => (
+        <g key={`x-${t}`}>
+          <line
+            x1={px(t)}
+            x2={px(t)}
+            y1={padding.top}
+            y2={padding.top + innerH}
+            stroke="rgba(26,31,77,0.05)"
+          />
+          <text
+            x={px(t)}
+            y={padding.top + innerH + 16}
+            fontSize="10"
+            textAnchor="middle"
+            fill="rgba(26,31,77,0.55)"
+            fontFamily="Inter"
+          >
+            {priceStr(t)}
+          </text>
+        </g>
+      ))}
+      {/* axis labels */}
+      <text
+        x={padding.left + innerW}
+        y={height - 16}
+        fontSize="11"
+        textAnchor="end"
+        fill="rgba(26,31,77,0.7)"
+        fontFamily="Inter"
+      >
+        Price · USD per 1M output tokens (log) →
+      </text>
+      <text
+        x={padding.left - 40}
+        y={padding.top - 12}
+        fontSize="11"
+        fill="rgba(26,31,77,0.7)"
+        fontFamily="Inter"
+      >
+        ↑ Intelligence Index
+      </text>
+
+      {/* leader lines */}
+      {pts.map((p) => {
+        const lx = p.side === "right" ? p.x + 12 : p.x - 12;
+        return (
+          <line
+            key={`lead-${p.m.name}`}
+            x1={p.x}
+            y1={p.y}
+            x2={lx}
+            y2={p.ly}
+            stroke="rgba(26,31,77,0.22)"
+            strokeWidth={0.75}
+          />
+        );
+      })}
+
+      {/* points */}
+      {pts.map((p) => (
+        <circle
+          key={`pt-${p.m.name}`}
+          cx={p.x}
+          cy={p.y}
+          r={6}
+          fill={ORG_COLOR[p.m.org] ?? "#6b46c1"}
+          fillOpacity={0.9}
+          stroke="#fff"
+          strokeWidth={1.5}
+        />
+      ))}
+
+      {/* labels */}
+      {pts.map((p) => {
+        const tx = p.side === "right" ? p.x + 15 : p.x - 15;
+        return (
+          <text
+            key={`lbl-${p.m.name}`}
+            x={tx}
+            y={p.ly + 3}
+            fontSize="10.5"
+            fontFamily="Inter"
+            textAnchor={p.side === "right" ? "start" : "end"}
+            fill="rgba(26,31,77,0.9)"
+          >
+            {p.m.name}
+          </text>
+        );
+      })}
     </svg>
   );
 }

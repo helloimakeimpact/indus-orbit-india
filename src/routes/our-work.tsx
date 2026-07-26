@@ -73,6 +73,14 @@ const items = [
 
 const featured = [
   {
+    name: "Indus Orbit",
+    tag: "Flagship",
+    tagline: "A general intelligence company built for India.",
+    body: "Indus Orbit is the mothership — the research, product and network layer that ties all our work together. Members' directory, Skills library, Loops, the Model Observatory and our writing all live here, orbiting one thesis: intelligence in India will be built through relationships, not just models.",
+    href: "/",
+    gradient: "from-[var(--saffron)]/70 via-[var(--gold)]/70 to-[var(--indigo-night)]",
+  },
+  {
     name: "JRI.ai — Just Resolve It",
     tag: "Venture",
     tagline: "AI-native business setup, operations & compliance for India.",
@@ -146,13 +154,15 @@ function WorkPage() {
               <a
                 key={f.name}
                 href={f.href}
-                target="_blank"
-                rel="noopener noreferrer"
+                target={f.href.startsWith("http") ? "_blank" : undefined}
+                rel={f.href.startsWith("http") ? "noopener noreferrer" : undefined}
                 className="group flex flex-col overflow-hidden rounded-3xl border border-border bg-card transition hover:-translate-y-1 hover:shadow-xl"
               >
                 <div className={cn("relative aspect-[4/3] w-full bg-gradient-to-br", f.gradient)}>
                   <div className="absolute right-4 top-4">
-                    <StatusPill tone="external">External ↗</StatusPill>
+                    <StatusPill tone={f.href.startsWith("http") ? "external" : "orbit"}>
+                      {f.href.startsWith("http") ? "External ↗" : "This site"}
+                    </StatusPill>
                   </div>
                 </div>
                 <div className="flex flex-1 flex-col p-6">
@@ -167,7 +177,9 @@ function WorkPage() {
                   </p>
                   <p className="mt-3 text-sm text-foreground/70">{f.body}</p>
                   <p className="mt-6 text-xs uppercase tracking-wider text-foreground/50 transition group-hover:text-[var(--indigo-night)]">
-                    Visit {new URL(f.href).hostname.replace(/^www\./, "")} →
+                    {f.href.startsWith("http")
+                      ? `Visit ${new URL(f.href).hostname.replace(/^www\./, "")} →`
+                      : "Explore Indus Orbit →"}
                   </p>
                 </div>
               </a>
