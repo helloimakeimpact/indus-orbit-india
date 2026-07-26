@@ -121,6 +121,35 @@ function AboutPage() {
         </div>
       </section>
 
+      {/* Manifesto strip */}
+      <section className="px-6 pb-24">
+        <div className="mx-auto w-full max-w-7xl rounded-3xl bg-[var(--indigo-night)] px-8 py-14 text-[var(--parchment)] md:px-14">
+          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">
+            The Orbit, in numbers
+          </p>
+          <div className="mt-8 grid gap-8 md:grid-cols-4">
+            {[
+              { k: "1.4B", v: "Indians the orbit is built for" },
+              { k: "22", v: "Official languages the runtime targets" },
+              { k: "3", v: "Pillars — Connection, Synergy, Society" },
+              { k: "0", v: "Investors we've taken who don't get India" },
+            ].map((s) => (
+              <div key={s.v}>
+                <p className="font-display text-5xl font-light leading-none text-[var(--saffron)]">
+                  {s.k}
+                </p>
+                <p className="mt-3 text-sm text-[var(--parchment)]/75">{s.v}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-10 max-w-3xl font-display text-2xl font-light leading-snug text-[var(--parchment)]/90 md:text-3xl">
+            We're not trying to build an Indian version of Silicon Valley. We're
+            trying to build the version of intelligence that could only have
+            come from here.
+          </p>
+        </div>
+      </section>
+
       <section className="px-6 pb-24">
         <div className="mx-auto w-full max-w-7xl">
           <h2 className="font-display text-3xl font-medium md:text-4xl">The team</h2>
