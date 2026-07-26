@@ -6,9 +6,9 @@ import footerBand from "@/assets/footer-band.jpg";
 import logo from "@/assets/indus-orbit-logo.png";
 
 const platformLinks = [
-  { to: "/soda", label: "S.O.D.A" },
   { to: "/skills", label: "Skills" },
   { to: "/loops", label: "Loops" },
+  { to: "/models", label: "Models" },
   { to: "/members", label: "Members" },
 ] as const;
 
@@ -53,10 +53,10 @@ export function SiteFooter() {
                 The model
               </Link>
               <Link
-                to="/soda"
+                to="/our-work"
                 className="inline-flex items-center gap-2 rounded-full border border-[var(--saffron)]/60 bg-[var(--saffron)]/10 px-4 py-2 text-sm font-medium text-[var(--saffron)] transition hover:bg-[var(--saffron)] hover:text-[var(--indigo-night)]"
               >
-                S.O.D.A
+                Our work
               </Link>
             </div>
             <form

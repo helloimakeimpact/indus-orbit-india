@@ -177,10 +177,10 @@ function HomePage() {
                 ))}
               </ul>
               <Link
-                to="/soda"
+                to="/our-work"
                 className="mt-7 inline-flex items-center gap-2 text-sm font-semibold text-[var(--indigo-night)] transition hover:gap-3"
               >
-                Explore S.O.D.A ideas <ArrowRight className="h-4 w-4" />
+                See what we're building <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
           </section>
