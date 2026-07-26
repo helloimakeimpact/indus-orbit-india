@@ -452,7 +452,8 @@ function HomePage() {
         </section>
       )}
 
-      {/* S.O.D.A COHORT PROGRAM */}
+      {/* S.O.D.A COHORT PROGRAM (hidden) */}
+      {false && (
       <section className="px-6 pb-24">
         <div className="mx-auto grid max-w-7xl gap-12 md:grid-cols-2 md:items-center rounded-3xl overflow-hidden bg-[var(--indigo-night)]/5 border border-border shadow-2xl relative">
           <div className="order-2 md:order-1 p-8 md:p-14 lg:p-16 relative z-10">
@@ -519,6 +520,7 @@ function HomePage() {
           </div>
         </div>
       </section>
+      )}
     </SiteShell>
   );
 }
