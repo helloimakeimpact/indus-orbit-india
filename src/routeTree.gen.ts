@@ -26,6 +26,7 @@ import { Route as AppRouteImport } from './routes/app'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as WritingSlugRouteImport } from './routes/writing.$slug'
 import { Route as RedeemCodeRouteImport } from './routes/redeem.$code'
 import { Route as ProfileIdRouteImport } from './routes/profile.$id'
 import { Route as AppVouchRouteImport } from './routes/app.vouch'
@@ -166,6 +167,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AppRoute,
+} as any)
+const WritingSlugRoute = WritingSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => WritingRoute,
 } as any)
 const RedeemCodeRoute = RedeemCodeRouteImport.update({
   id: '/redeem/$code',
@@ -461,7 +467,7 @@ export interface FileRoutesByFullPath {
   '/skills': typeof SkillsRoute
   '/soda': typeof SodaRoute
   '/what-is-indus-orbit': typeof WhatIsIndusOrbitRoute
-  '/writing': typeof WritingRoute
+  '/writing': typeof WritingRouteWithChildren
   '/app/board': typeof AppBoardRoute
   '/app/chapter-admin': typeof AppChapterAdminRoute
   '/app/directory': typeof AppDirectoryRoute
@@ -483,6 +489,7 @@ export interface FileRoutesByFullPath {
   '/app/vouch': typeof AppVouchRoute
   '/profile/$id': typeof ProfileIdRoute
   '/redeem/$code': typeof RedeemCodeRoute
+  '/writing/$slug': typeof WritingSlugRoute
   '/app/': typeof AppIndexRoute
   '/app/admin/audit': typeof AppAdminAuditRoute
   '/app/admin/content': typeof AppAdminContentRoute
@@ -534,7 +541,7 @@ export interface FileRoutesByTo {
   '/skills': typeof SkillsRoute
   '/soda': typeof SodaRoute
   '/what-is-indus-orbit': typeof WhatIsIndusOrbitRoute
-  '/writing': typeof WritingRoute
+  '/writing': typeof WritingRouteWithChildren
   '/app/board': typeof AppBoardRoute
   '/app/chapter-admin': typeof AppChapterAdminRoute
   '/app/directory': typeof AppDirectoryRoute
@@ -549,6 +556,7 @@ export interface FileRoutesByTo {
   '/app/vouch': typeof AppVouchRoute
   '/profile/$id': typeof ProfileIdRoute
   '/redeem/$code': typeof RedeemCodeRoute
+  '/writing/$slug': typeof WritingSlugRoute
   '/app': typeof AppIndexRoute
   '/app/admin/audit': typeof AppAdminAuditRoute
   '/app/admin/content': typeof AppAdminContentRoute
@@ -601,7 +609,7 @@ export interface FileRoutesById {
   '/skills': typeof SkillsRoute
   '/soda': typeof SodaRoute
   '/what-is-indus-orbit': typeof WhatIsIndusOrbitRoute
-  '/writing': typeof WritingRoute
+  '/writing': typeof WritingRouteWithChildren
   '/app/board': typeof AppBoardRoute
   '/app/chapter-admin': typeof AppChapterAdminRoute
   '/app/directory': typeof AppDirectoryRoute
@@ -623,6 +631,7 @@ export interface FileRoutesById {
   '/app/vouch': typeof AppVouchRoute
   '/profile/$id': typeof ProfileIdRoute
   '/redeem/$code': typeof RedeemCodeRoute
+  '/writing/$slug': typeof WritingSlugRoute
   '/app/': typeof AppIndexRoute
   '/app/admin/audit': typeof AppAdminAuditRoute
   '/app/admin/content': typeof AppAdminContentRoute
@@ -699,6 +708,7 @@ export interface FileRouteTypes {
     | '/app/vouch'
     | '/profile/$id'
     | '/redeem/$code'
+    | '/writing/$slug'
     | '/app/'
     | '/app/admin/audit'
     | '/app/admin/content'
@@ -765,6 +775,7 @@ export interface FileRouteTypes {
     | '/app/vouch'
     | '/profile/$id'
     | '/redeem/$code'
+    | '/writing/$slug'
     | '/app'
     | '/app/admin/audit'
     | '/app/admin/content'
@@ -838,6 +849,7 @@ export interface FileRouteTypes {
     | '/app/vouch'
     | '/profile/$id'
     | '/redeem/$code'
+    | '/writing/$slug'
     | '/app/'
     | '/app/admin/audit'
     | '/app/admin/content'
@@ -891,7 +903,7 @@ export interface RootRouteChildren {
   SkillsRoute: typeof SkillsRoute
   SodaRoute: typeof SodaRoute
   WhatIsIndusOrbitRoute: typeof WhatIsIndusOrbitRoute
-  WritingRoute: typeof WritingRoute
+  WritingRoute: typeof WritingRouteWithChildren
   ProfileIdRoute: typeof ProfileIdRoute
   RedeemCodeRoute: typeof RedeemCodeRoute
 }
@@ -1016,6 +1028,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/'
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/writing/$slug': {
+      id: '/writing/$slug'
+      path: '/$slug'
+      fullPath: '/writing/$slug'
+      preLoaderRoute: typeof WritingSlugRouteImport
+      parentRoute: typeof WritingRoute
     }
     '/redeem/$code': {
       id: '/redeem/$code'
@@ -1602,6 +1621,17 @@ const AppRouteChildren: AppRouteChildren = {
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
+interface WritingRouteChildren {
+  WritingSlugRoute: typeof WritingSlugRoute
+}
+
+const WritingRouteChildren: WritingRouteChildren = {
+  WritingSlugRoute: WritingSlugRoute,
+}
+
+const WritingRouteWithChildren =
+  WritingRoute._addFileChildren(WritingRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
@@ -1618,7 +1648,7 @@ const rootRouteChildren: RootRouteChildren = {
   SkillsRoute: SkillsRoute,
   SodaRoute: SodaRoute,
   WhatIsIndusOrbitRoute: WhatIsIndusOrbitRoute,
-  WritingRoute: WritingRoute,
+  WritingRoute: WritingRouteWithChildren,
   ProfileIdRoute: ProfileIdRoute,
   RedeemCodeRoute: RedeemCodeRoute,
 }
