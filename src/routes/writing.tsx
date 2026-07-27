@@ -54,6 +54,7 @@ function WritingPage() {
   }, []);
 
   const dynamicPosts: Post[] = memberStories.map((s) => ({
+    slug: slugify(s.title),
     title: s.title,
     excerpt: `${s.content.substring(0, 140)}${s.content.length > 140 ? "…" : ""}`,
     author: s.profiles?.display_name || "Member",
@@ -63,6 +64,7 @@ function WritingPage() {
       : "",
     readMin: Math.max(3, Math.round((s.content?.length ?? 600) / 900)),
     gradient: "from-[var(--saffron)]/40 via-[var(--indigo-night)]/50 to-[var(--monsoon)]/80",
+    body: [s.content],
   }));
 
   const allPosts = [...posts, ...dynamicPosts];
@@ -137,7 +139,11 @@ function WritingPage() {
       {featured && (
         <section className="px-6 pb-16">
           <div className="mx-auto w-full max-w-7xl">
-            <article className="group grid overflow-hidden rounded-3xl border border-border bg-card shadow-sm transition hover:shadow-xl md:grid-cols-5">
+            <Link
+              to="/writing/$slug"
+              params={{ slug: featured.slug }}
+              className="group grid overflow-hidden rounded-3xl border border-border bg-card shadow-sm transition hover:shadow-xl md:grid-cols-5"
+            >
               <div
                 className={cn(
                   "relative aspect-[16/10] w-full overflow-hidden bg-gradient-to-br md:col-span-3 md:aspect-auto",
@@ -177,7 +183,7 @@ function WritingPage() {
                   </span>
                 </div>
               </div>
-            </article>
+            </Link>
           </div>
         </section>
       )}
@@ -195,8 +201,10 @@ function WritingPage() {
           </div>
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             {rest.map((p) => (
-              <article
-                key={p.title}
+              <Link
+                key={p.slug}
+                to="/writing/$slug"
+                params={{ slug: p.slug }}
                 className="group flex flex-col overflow-hidden rounded-3xl border border-border bg-card transition hover:-translate-y-1 hover:shadow-xl"
               >
                 <div className={cn("relative aspect-[16/10] w-full overflow-hidden bg-gradient-to-br", p.gradient)}>
@@ -239,7 +247,7 @@ function WritingPage() {
                     </span>
                   </div>
                 </div>
-              </article>
+              </Link>
             ))}
           </div>
           {rest.length === 0 && (
