@@ -6,6 +6,12 @@ import { SiteShell } from "@/components/site/SiteShell";
 import { cn } from "@/lib/utils";
 import { getPublishedStories } from "@/server/society.functions";
 import { ArrowRight, Clock, Mail } from "lucide-react";
+import blogAnnouncements from "@/assets/blog-announcements.jpg";
+import blogVision from "@/assets/blog-vision.jpg";
+import blogResearch from "@/assets/blog-research.jpg";
+import blogPlaybooks from "@/assets/blog-playbooks.jpg";
+import blogBharat from "@/assets/blog-bharat.jpg";
+import blogCommunity from "@/assets/blog-community.jpg";
 
 export const Route = createFileRoute("/writing")({
   head: () => ({
@@ -35,6 +41,15 @@ type Post = {
   date: string;
   readMin: number;
   gradient: string;
+};
+
+const tagImage: Record<Exclude<Tag, "All">, string> = {
+  Announcements: blogAnnouncements,
+  Vision: blogVision,
+  Research: blogResearch,
+  Playbooks: blogPlaybooks,
+  Bharat: blogBharat,
+  Community: blogCommunity,
 };
 
 const posts: Post[] = [
@@ -158,6 +173,76 @@ const posts: Post[] = [
     readMin: 3,
     gradient: "from-[var(--saffron)]/60 via-[var(--indigo-night)]/80 to-[var(--indigo-night)]",
   },
+  {
+    title: "The context window is the new office",
+    excerpt:
+      "Adapted for India: as models grow long-memory, the real design surface is not the prompt — it is what your team, tools and customers persistently share with the model.",
+    author: "Orbit Build",
+    tag: "Vision",
+    date: "Mar 02, 2026",
+    readMin: 8,
+    gradient: "from-[var(--indigo-night)]/90 via-[var(--saffron)]/60 to-[var(--gold)]/50",
+  },
+  {
+    title: "Evals are the new PRDs",
+    excerpt:
+      "A working note on why Indian AI teams should ship an evaluation set before a spec — and how to build one out of real WhatsApp conversations, call recordings and CRM notes.",
+    author: "Orbit Research",
+    tag: "Playbooks",
+    date: "Feb 18, 2026",
+    readMin: 9,
+    gradient: "from-[var(--monsoon)]/70 via-[var(--indigo-night)]/85 to-[var(--saffron)]/60",
+  },
+  {
+    title: "Small models, big Bharat",
+    excerpt:
+      "The frontier is loud, but a lot of India's compounding will happen on 3B–8B open models fine-tuned on local voice, forms and receipts. What that unlocks — and what it costs.",
+    author: "Orbit Research",
+    tag: "Research",
+    date: "Feb 04, 2026",
+    readMin: 11,
+    gradient: "from-[var(--gold)]/70 via-[var(--saffron)]/60 to-[var(--indigo-night)]/85",
+  },
+  {
+    title: "From prompt engineering to system engineering",
+    excerpt:
+      "Prompts are a UI. Systems are the product. A field guide for Indian teams graduating past clever prompts into retrieval, tools, memory and guardrails.",
+    author: "Orbit Build",
+    tag: "Playbooks",
+    date: "Jan 22, 2026",
+    readMin: 10,
+    gradient: "from-[var(--indigo-night)]/90 via-[var(--monsoon)]/60 to-[var(--saffron)]/60",
+  },
+  {
+    title: "The agent is not the moat — the workflow is",
+    excerpt:
+      "A response to the agent-everything hype, from the vantage point of Indian services businesses where the real leverage is codifying the workflow, not personifying it.",
+    author: "Founders",
+    tag: "Vision",
+    date: "Jan 10, 2026",
+    readMin: 7,
+    gradient: "from-[var(--saffron)]/70 via-[var(--indigo-night)]/85 to-[var(--indigo-night)]",
+  },
+  {
+    title: "How Indian teams should think about GPU spend in 2026",
+    excerpt:
+      "A pragmatic breakdown of when to rent, when to reserve, when to burst on Lovable AI Gateway, and when to walk away from a workload. In USD and INR.",
+    author: "Orbit Build",
+    tag: "Research",
+    date: "Dec 20, 2025",
+    readMin: 12,
+    gradient: "from-[var(--indigo-night)]/95 via-[var(--gold)]/50 to-[var(--saffron)]/60",
+  },
+  {
+    title: "The founder archetypes of Indus Orbit",
+    excerpt:
+      "Six recurring shapes of India-first founders we keep meeting — the diaspora returner, the tier-2 operator, the ex-services builder — and what each one needs from the orbit.",
+    author: "The Orbit",
+    tag: "Community",
+    date: "Dec 06, 2025",
+    readMin: 8,
+    gradient: "from-[var(--saffron)]/60 via-[var(--indigo-night)]/85 to-[var(--monsoon)]/70",
+  },
 ];
 
 function WritingPage() {
@@ -274,10 +359,18 @@ function WritingPage() {
             <article className="group grid overflow-hidden rounded-3xl border border-border bg-card shadow-sm transition hover:shadow-xl md:grid-cols-5">
               <div
                 className={cn(
-                  "relative aspect-[16/10] w-full bg-gradient-to-br md:col-span-3 md:aspect-auto",
+                  "relative aspect-[16/10] w-full overflow-hidden bg-gradient-to-br md:col-span-3 md:aspect-auto",
                   featured.gradient,
                 )}
               >
+                <img
+                  src={tagImage[featured.tag]}
+                  alt=""
+                  loading="lazy"
+                  width={1280}
+                  height={800}
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
                 <span className="absolute left-5 top-5 inline-flex items-center rounded-full bg-[var(--parchment)]/95 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--indigo-night)]">
                   Featured · {featured.tag}
                 </span>
@@ -325,8 +418,16 @@ function WritingPage() {
                 key={p.title}
                 className="group flex flex-col overflow-hidden rounded-3xl border border-border bg-card transition hover:-translate-y-1 hover:shadow-xl"
               >
-                <div className={cn("aspect-[16/10] w-full bg-gradient-to-br", p.gradient)}>
-                  <div className="p-4">
+                <div className={cn("relative aspect-[16/10] w-full overflow-hidden bg-gradient-to-br", p.gradient)}>
+                  <img
+                    src={tagImage[p.tag]}
+                    alt=""
+                    loading="lazy"
+                    width={1280}
+                    height={800}
+                    className="absolute inset-0 h-full w-full object-cover"
+                  />
+                  <div className="relative p-4">
                     <span className="inline-flex items-center rounded-full bg-[var(--parchment)]/95 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--indigo-night)]">
                       {p.tag}
                     </span>
