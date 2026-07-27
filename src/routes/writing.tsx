@@ -1,17 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-
+import { Link } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { SiteShell } from "@/components/site/SiteShell";
 import { cn } from "@/lib/utils";
 import { getPublishedStories } from "@/server/society.functions";
 import { ArrowRight, Clock, Mail } from "lucide-react";
-import blogAnnouncements from "@/assets/blog-announcements.jpg";
-import blogVision from "@/assets/blog-vision.jpg";
-import blogResearch from "@/assets/blog-research.jpg";
-import blogPlaybooks from "@/assets/blog-playbooks.jpg";
-import blogBharat from "@/assets/blog-bharat.jpg";
-import blogCommunity from "@/assets/blog-community.jpg";
+import { posts, tagImage, slugify, type Post, type Tag } from "@/data/writing-posts";
 
 export const Route = createFileRoute("/writing")({
   head: () => ({
@@ -30,29 +25,6 @@ export const Route = createFileRoute("/writing")({
   }),
   component: WritingPage,
 });
-
-type Tag = "All" | "Announcements" | "Research" | "Vision" | "Playbooks" | "Bharat" | "Community";
-
-type Post = {
-  title: string;
-  excerpt: string;
-  author: string;
-  tag: Exclude<Tag, "All">;
-  date: string;
-  readMin: number;
-  gradient: string;
-};
-
-const tagImage: Record<Exclude<Tag, "All">, string> = {
-  Announcements: blogAnnouncements,
-  Vision: blogVision,
-  Research: blogResearch,
-  Playbooks: blogPlaybooks,
-  Bharat: blogBharat,
-  Community: blogCommunity,
-};
-
-const posts: Post[] = [
   {
     title: "Announcing Indus Orbit",
     excerpt:
