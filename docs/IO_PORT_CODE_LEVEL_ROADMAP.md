@@ -6,6 +6,7 @@ Related documents:
 
 - `IO_PORT_IMPLEMENTATION_PLAN.md` — product, design and commercial direction.
 - `IO_PORT_OPERATIONS_GUIDE.md` — what is actually deployed in the demo project and how to activate it safely.
+- `IO_PORT_PROVIDER_INVENTORY.md` — the 20-provider research inventory and the ordered implementation gates for converting it into routable capacity.
 - `CONVERSATION_SYSTEM_IMPLEMENTATION_PLAN.md` — the shared Indus Orbit conversation and Discord-like shell plan.
 - `SUPABASE_SCHEMA_RECONCILIATION.md` — remote/local migration-history evidence and recovery sequence.
 

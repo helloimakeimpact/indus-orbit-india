@@ -2,6 +2,8 @@
 
 Status: research and onboarding decision record, 31 July 2026. Prices, catalogues and capacity claims change quickly; treat linked provider pages as the source of truth at the time of contracting. This document does not activate a provider, imply resale rights, or claim data residency without a contract.
 
+The companion [20-provider implementation inventory](IO_PORT_PROVIDER_INVENTORY.md) records the current research snapshot, model examples, price/capacity signals and the phased registry-to-router delivery plan. It does not change the activation gates in this decision record.
+
 ## 1. Decision frame
 
 I/O Port is not a generic model catalogue. It is a people-centred routing layer that makes five facts visible before and after a run:
