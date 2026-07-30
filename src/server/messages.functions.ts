@@ -52,7 +52,9 @@ export async function sendMessage(recipientId: string, content: string) {
   const userId = userData.user.id;
 
   if (recipientId === userId) throw new Error("You cannot message yourself.");
-  if (!content.trim()) throw new Error("Message cannot be empty.");
+  const message = content.trim();
+  if (!message) throw new Error("Message cannot be empty.");
+  if (message.length > 4000) throw new Error("Messages cannot exceed 4,000 characters.");
 
   // Verify they are connected
   const { data: conn, error: connError } = await supabase
@@ -69,7 +71,7 @@ export async function sendMessage(recipientId: string, content: string) {
 
   const { data: msg, error } = await supabase
     .from("direct_messages")
-    .insert({ sender_id: userId, recipient_id: recipientId, content: content.trim() })
+    .insert({ sender_id: userId, recipient_id: recipientId, content: message })
     .select()
     .single();
 
@@ -95,12 +97,14 @@ export async function markConversationRead(otherUserId: string) {
   if (!userData.user) return;
   const userId = userData.user.id;
 
-  await supabase
+  const { error } = await supabase
     .from("direct_messages")
     .update({ read_at: new Date().toISOString() })
     .eq("sender_id", otherUserId)
     .eq("recipient_id", userId)
     .is("read_at", null);
+
+  if (error) throw new Error(error.message);
 }
 
 // Get unread message count

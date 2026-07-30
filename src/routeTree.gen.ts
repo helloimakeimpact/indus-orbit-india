@@ -20,6 +20,7 @@ import { Route as ModelsRouteImport } from './routes/models'
 import { Route as MembersRouteImport } from './routes/members'
 import { Route as LoopsRouteImport } from './routes/loops'
 import { Route as LoopRouteImport } from './routes/loop'
+import { Route as IoPortRouteImport } from './routes/io-port'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AppRouteImport } from './routes/app'
@@ -42,6 +43,7 @@ import { Route as AppMessagesRouteImport } from './routes/app.messages'
 import { Route as AppMentorRouteImport } from './routes/app.mentor'
 import { Route as AppLoopsRouteImport } from './routes/app.loops'
 import { Route as AppLoopRouteImport } from './routes/app.loop'
+import { Route as AppIoRouteImport } from './routes/app.io'
 import { Route as AppInvestorFeedRouteImport } from './routes/app.investor-feed'
 import { Route as AppEventsRouteImport } from './routes/app.events'
 import { Route as AppEducationRouteImport } from './routes/app.education'
@@ -53,6 +55,7 @@ import { Route as AppSodaIndexRouteImport } from './routes/app.soda.index'
 import { Route as AppSkillsIndexRouteImport } from './routes/app.skills.index'
 import { Route as AppMissionsIndexRouteImport } from './routes/app.missions.index'
 import { Route as AppLoopIndexRouteImport } from './routes/app.loop.index'
+import { Route as AppIoIndexRouteImport } from './routes/app.io.index'
 import { Route as AppEventsIndexRouteImport } from './routes/app.events.index'
 import { Route as AppEducationIndexRouteImport } from './routes/app.education.index'
 import { Route as AppChaptersIndexRouteImport } from './routes/app.chapters.index'
@@ -136,6 +139,11 @@ const LoopsRoute = LoopsRouteImport.update({
 const LoopRoute = LoopRouteImport.update({
   id: '/loop',
   path: '/loop',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IoPortRoute = IoPortRouteImport.update({
+  id: '/io-port',
+  path: '/io-port',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactRoute = ContactRouteImport.update({
@@ -248,6 +256,11 @@ const AppLoopRoute = AppLoopRouteImport.update({
   path: '/loop',
   getParentRoute: () => AppRoute,
 } as any)
+const AppIoRoute = AppIoRouteImport.update({
+  id: '/io',
+  path: '/io',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppInvestorFeedRoute = AppInvestorFeedRouteImport.update({
   id: '/investor-feed',
   path: '/investor-feed',
@@ -302,6 +315,11 @@ const AppLoopIndexRoute = AppLoopIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AppLoopRoute,
+} as any)
+const AppIoIndexRoute = AppIoIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppIoRoute,
 } as any)
 const AppEventsIndexRoute = AppEventsIndexRouteImport.update({
   id: '/',
@@ -457,6 +475,7 @@ export interface FileRoutesByFullPath {
   '/app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
+  '/io-port': typeof IoPortRoute
   '/loop': typeof LoopRoute
   '/loops': typeof LoopsRoute
   '/members': typeof MembersRoute
@@ -474,6 +493,7 @@ export interface FileRoutesByFullPath {
   '/app/education': typeof AppEducationRouteWithChildren
   '/app/events': typeof AppEventsRouteWithChildren
   '/app/investor-feed': typeof AppInvestorFeedRoute
+  '/app/io': typeof AppIoRouteWithChildren
   '/app/loop': typeof AppLoopRouteWithChildren
   '/app/loops': typeof AppLoopsRoute
   '/app/mentor': typeof AppMentorRoute
@@ -518,6 +538,7 @@ export interface FileRoutesByFullPath {
   '/app/chapters/': typeof AppChaptersIndexRoute
   '/app/education/': typeof AppEducationIndexRoute
   '/app/events/': typeof AppEventsIndexRoute
+  '/app/io/': typeof AppIoIndexRoute
   '/app/loop/': typeof AppLoopIndexRoute
   '/app/missions/': typeof AppMissionsIndexRoute
   '/app/skills/': typeof AppSkillsIndexRoute
@@ -531,6 +552,7 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
+  '/io-port': typeof IoPortRoute
   '/loop': typeof LoopRoute
   '/loops': typeof LoopsRoute
   '/members': typeof MembersRoute
@@ -584,6 +606,7 @@ export interface FileRoutesByTo {
   '/app/chapters': typeof AppChaptersIndexRoute
   '/app/education': typeof AppEducationIndexRoute
   '/app/events': typeof AppEventsIndexRoute
+  '/app/io': typeof AppIoIndexRoute
   '/app/loop': typeof AppLoopIndexRoute
   '/app/missions': typeof AppMissionsIndexRoute
   '/app/skills': typeof AppSkillsIndexRoute
@@ -599,6 +622,7 @@ export interface FileRoutesById {
   '/app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
+  '/io-port': typeof IoPortRoute
   '/loop': typeof LoopRoute
   '/loops': typeof LoopsRoute
   '/members': typeof MembersRoute
@@ -616,6 +640,7 @@ export interface FileRoutesById {
   '/app/education': typeof AppEducationRouteWithChildren
   '/app/events': typeof AppEventsRouteWithChildren
   '/app/investor-feed': typeof AppInvestorFeedRoute
+  '/app/io': typeof AppIoRouteWithChildren
   '/app/loop': typeof AppLoopRouteWithChildren
   '/app/loops': typeof AppLoopsRoute
   '/app/mentor': typeof AppMentorRoute
@@ -660,6 +685,7 @@ export interface FileRoutesById {
   '/app/chapters/': typeof AppChaptersIndexRoute
   '/app/education/': typeof AppEducationIndexRoute
   '/app/events/': typeof AppEventsIndexRoute
+  '/app/io/': typeof AppIoIndexRoute
   '/app/loop/': typeof AppLoopIndexRoute
   '/app/missions/': typeof AppMissionsIndexRoute
   '/app/skills/': typeof AppSkillsIndexRoute
@@ -676,6 +702,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/auth'
     | '/contact'
+    | '/io-port'
     | '/loop'
     | '/loops'
     | '/members'
@@ -693,6 +720,7 @@ export interface FileRouteTypes {
     | '/app/education'
     | '/app/events'
     | '/app/investor-feed'
+    | '/app/io'
     | '/app/loop'
     | '/app/loops'
     | '/app/mentor'
@@ -737,6 +765,7 @@ export interface FileRouteTypes {
     | '/app/chapters/'
     | '/app/education/'
     | '/app/events/'
+    | '/app/io/'
     | '/app/loop/'
     | '/app/missions/'
     | '/app/skills/'
@@ -750,6 +779,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/auth'
     | '/contact'
+    | '/io-port'
     | '/loop'
     | '/loops'
     | '/members'
@@ -803,6 +833,7 @@ export interface FileRouteTypes {
     | '/app/chapters'
     | '/app/education'
     | '/app/events'
+    | '/app/io'
     | '/app/loop'
     | '/app/missions'
     | '/app/skills'
@@ -817,6 +848,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/auth'
     | '/contact'
+    | '/io-port'
     | '/loop'
     | '/loops'
     | '/members'
@@ -834,6 +866,7 @@ export interface FileRouteTypes {
     | '/app/education'
     | '/app/events'
     | '/app/investor-feed'
+    | '/app/io'
     | '/app/loop'
     | '/app/loops'
     | '/app/mentor'
@@ -878,6 +911,7 @@ export interface FileRouteTypes {
     | '/app/chapters/'
     | '/app/education/'
     | '/app/events/'
+    | '/app/io/'
     | '/app/loop/'
     | '/app/missions/'
     | '/app/skills/'
@@ -893,6 +927,7 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   AuthRoute: typeof AuthRoute
   ContactRoute: typeof ContactRoute
+  IoPortRoute: typeof IoPortRoute
   LoopRoute: typeof LoopRoute
   LoopsRoute: typeof LoopsRoute
   MembersRoute: typeof MembersRoute
@@ -985,6 +1020,13 @@ declare module '@tanstack/react-router' {
       path: '/loop'
       fullPath: '/loop'
       preLoaderRoute: typeof LoopRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/io-port': {
+      id: '/io-port'
+      path: '/io-port'
+      fullPath: '/io-port'
+      preLoaderRoute: typeof IoPortRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contact': {
@@ -1141,6 +1183,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppLoopRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/io': {
+      id: '/app/io'
+      path: '/io'
+      fullPath: '/app/io'
+      preLoaderRoute: typeof AppIoRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/investor-feed': {
       id: '/app/investor-feed'
       path: '/investor-feed'
@@ -1217,6 +1266,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/loop/'
       preLoaderRoute: typeof AppLoopIndexRouteImport
       parentRoute: typeof AppLoopRoute
+    }
+    '/app/io/': {
+      id: '/app/io/'
+      path: '/'
+      fullPath: '/app/io/'
+      preLoaderRoute: typeof AppIoIndexRouteImport
+      parentRoute: typeof AppIoRoute
     }
     '/app/events/': {
       id: '/app/events/'
@@ -1469,6 +1525,16 @@ const AppEventsRouteWithChildren = AppEventsRoute._addFileChildren(
   AppEventsRouteChildren,
 )
 
+interface AppIoRouteChildren {
+  AppIoIndexRoute: typeof AppIoIndexRoute
+}
+
+const AppIoRouteChildren: AppIoRouteChildren = {
+  AppIoIndexRoute: AppIoIndexRoute,
+}
+
+const AppIoRouteWithChildren = AppIoRoute._addFileChildren(AppIoRouteChildren)
+
 interface AppLoopRouteChildren {
   AppLoopSlugRoute: typeof AppLoopSlugRoute
   AppLoopIndexRoute: typeof AppLoopIndexRoute
@@ -1544,6 +1610,7 @@ interface AppRouteChildren {
   AppEducationRoute: typeof AppEducationRouteWithChildren
   AppEventsRoute: typeof AppEventsRouteWithChildren
   AppInvestorFeedRoute: typeof AppInvestorFeedRoute
+  AppIoRoute: typeof AppIoRouteWithChildren
   AppLoopRoute: typeof AppLoopRouteWithChildren
   AppLoopsRoute: typeof AppLoopsRoute
   AppMentorRoute: typeof AppMentorRoute
@@ -1585,6 +1652,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppEducationRoute: AppEducationRouteWithChildren,
   AppEventsRoute: AppEventsRouteWithChildren,
   AppInvestorFeedRoute: AppInvestorFeedRoute,
+  AppIoRoute: AppIoRouteWithChildren,
   AppLoopRoute: AppLoopRouteWithChildren,
   AppLoopsRoute: AppLoopsRoute,
   AppMentorRoute: AppMentorRoute,
@@ -1638,6 +1706,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   AuthRoute: AuthRoute,
   ContactRoute: ContactRoute,
+  IoPortRoute: IoPortRoute,
   LoopRoute: LoopRoute,
   LoopsRoute: LoopsRoute,
   MembersRoute: MembersRoute,

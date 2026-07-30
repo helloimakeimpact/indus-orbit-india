@@ -1,19 +1,15 @@
-import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
-import { useEffect, useRef, useState, useCallback } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { MessageSquare, Send, ArrowLeft, Search } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
-import {
-  getConnections,
-  getConversation,
-  sendMessage,
-  markConversationRead,
-} from "@/server/messages.functions";
+import { useConversationContacts } from "@/features/conversations/useConversationContacts";
+import { useDirectConversation } from "@/features/conversations/useDirectConversation";
+import type { ConversationContact } from "@/features/conversations/types";
 import { z } from "zod";
 
 const searchSchema = z.object({ user: z.string().optional() });
@@ -21,52 +17,32 @@ const searchSchema = z.object({ user: z.string().optional() });
 export const Route = createFileRoute("/app/messages")({
   validateSearch: searchSchema,
   head: () => ({
-    meta: [
-      { title: "Messages — Indus Orbit" },
-      { name: "robots", content: "noindex" },
-    ],
+    meta: [{ title: "Messages — Indus Orbit" }, { name: "robots", content: "noindex" }],
   }),
   component: MessagesPage,
 });
-
-type Profile = {
-  user_id: string;
-  display_name: string | null;
-  avatar_url: string | null;
-  headline: string | null;
-};
-
-type Message = {
-  id: string;
-  sender_id: string;
-  recipient_id: string;
-  content: string;
-  created_at: string;
-  read_at: string | null;
-};
 
 function MessagesPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { user: queryUserId } = Route.useSearch();
 
-  const [connections, setConnections] = useState<Profile[]>([]);
-  const [activeContact, setActiveContact] = useState<Profile | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const {
+    contacts: connections,
+    loading: loadingConns,
+    error: connectionsError,
+  } = useConversationContacts();
+  const [activeContact, setActiveContact] = useState<ConversationContact | null>(null);
   const [newMessage, setNewMessage] = useState("");
-  const [sending, setSending] = useState(false);
-  const [loadingConns, setLoadingConns] = useState(true);
-  const [loadingMsgs, setLoadingMsgs] = useState(false);
   const [search, setSearch] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
-
-  // Load connections list
-  useEffect(() => {
-    getConnections()
-      .then(setConnections)
-      .catch((e) => toast.error(e.message))
-      .finally(() => setLoadingConns(false));
-  }, []);
+  const {
+    messages,
+    loading: loadingMsgs,
+    error: messagesError,
+    sending,
+    send,
+  } = useDirectConversation(user?.id, activeContact?.user_id);
 
   // Auto-select contact from URL param
   useEffect(() => {
@@ -76,48 +52,18 @@ function MessagesPage() {
     }
   }, [queryUserId, connections]);
 
-  // Load conversation when active contact changes
   useEffect(() => {
     if (!activeContact) return;
-    setLoadingMsgs(true);
     navigate({ to: "/app/messages", search: { user: activeContact.user_id } });
+  }, [activeContact, navigate]);
 
-    getConversation(activeContact.user_id)
-      .then(setMessages)
-      .catch((e) => toast.error(e.message))
-      .finally(() => setLoadingMsgs(false));
-
-    markConversationRead(activeContact.user_id);
-  }, [activeContact]);
-
-  // Realtime subscription for new messages
   useEffect(() => {
-    if (!activeContact || !user) return;
+    if (connectionsError) toast.error(connectionsError);
+  }, [connectionsError]);
 
-    const channel = supabase
-      .channel(`messages:${user.id}:${activeContact.user_id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "direct_messages",
-          filter: `recipient_id=eq.${user.id}`,
-        },
-        (payload) => {
-          const msg = payload.new as Message;
-          if (msg.sender_id === activeContact.user_id) {
-            setMessages((prev) => [...prev, msg]);
-            markConversationRead(activeContact.user_id);
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [activeContact, user]);
+  useEffect(() => {
+    if (messagesError) toast.error(messagesError);
+  }, [messagesError]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -126,15 +72,11 @@ function MessagesPage() {
 
   async function handleSend() {
     if (!activeContact || !newMessage.trim()) return;
-    setSending(true);
     try {
-      const msg = await sendMessage(activeContact.user_id, newMessage);
-      setMessages((prev) => [...prev, msg as Message]);
+      await send(newMessage);
       setNewMessage("");
-    } catch (e: any) {
-      toast.error(e.message);
-    } finally {
-      setSending(false);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not send message.");
     }
   }
 
@@ -146,7 +88,7 @@ function MessagesPage() {
   }
 
   const filtered = connections.filter((c) =>
-    (c.display_name ?? "").toLowerCase().includes(search.toLowerCase())
+    (c.display_name ?? "").toLowerCase().includes(search.toLowerCase()),
   );
 
   return (
@@ -155,14 +97,12 @@ function MessagesPage() {
       <div
         className={cn(
           "flex w-full flex-col border-r border-border md:w-80 md:flex-shrink-0",
-          activeContact ? "hidden md:flex" : "flex"
+          activeContact ? "hidden md:flex" : "flex",
         )}
       >
         <div className="p-4 border-b border-border">
           <h1 className="font-display text-xl font-semibold">Messages</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Chat with your connections
-          </p>
+          <p className="text-xs text-muted-foreground mt-0.5">Chat with your connections</p>
           <div className="mt-3 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -181,9 +121,7 @@ function MessagesPage() {
             <div className="flex flex-col items-center justify-center p-8 text-center">
               <MessageSquare className="h-8 w-8 text-muted-foreground/40 mb-3" />
               <p className="text-sm text-muted-foreground">
-                {connections.length === 0
-                  ? "No accepted connections yet."
-                  : "No matches found."}
+                {connections.length === 0 ? "No accepted connections yet." : "No matches found."}
               </p>
             </div>
           ) : (
@@ -193,7 +131,7 @@ function MessagesPage() {
                 onClick={() => setActiveContact(c)}
                 className={cn(
                   "w-full flex items-center gap-3 p-4 text-left transition hover:bg-muted/50 border-b border-border/50",
-                  activeContact?.user_id === c.user_id && "bg-muted/70"
+                  activeContact?.user_id === c.user_id && "bg-muted/70",
                 )}
               >
                 <Avatar className="h-10 w-10 flex-shrink-0">
@@ -203,12 +141,8 @@ function MessagesPage() {
                   </AvatarFallback>
                 </Avatar>
                 <div className="overflow-hidden">
-                  <p className="font-medium text-sm truncate">
-                    {c.display_name ?? "Member"}
-                  </p>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {c.headline ?? ""}
-                  </p>
+                  <p className="font-medium text-sm truncate">{c.display_name ?? "Member"}</p>
+                  <p className="text-xs text-muted-foreground truncate">{c.headline ?? ""}</p>
                 </div>
               </button>
             ))
@@ -230,18 +164,12 @@ function MessagesPage() {
             <Avatar className="h-9 w-9">
               <AvatarImage src={activeContact.avatar_url ?? undefined} />
               <AvatarFallback className="bg-[var(--indigo-night)] text-[var(--parchment)] text-sm font-semibold">
-                {(activeContact.display_name ?? "?")
-                  .substring(0, 2)
-                  .toUpperCase()}
+                {(activeContact.display_name ?? "?").substring(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div>
-              <p className="font-semibold text-sm">
-                {activeContact.display_name}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {activeContact.headline}
-              </p>
+              <p className="font-semibold text-sm">{activeContact.display_name}</p>
+              <p className="text-xs text-muted-foreground">{activeContact.headline}</p>
             </div>
           </div>
 
@@ -254,9 +182,7 @@ function MessagesPage() {
             ) : messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center">
                 <MessageSquare className="h-10 w-10 text-muted-foreground/30 mb-3" />
-                <p className="font-medium text-muted-foreground">
-                  No messages yet
-                </p>
+                <p className="font-medium text-muted-foreground">No messages yet</p>
                 <p className="text-xs text-muted-foreground mt-1">
                   Say hello to {activeContact.display_name}!
                 </p>
@@ -267,28 +193,21 @@ function MessagesPage() {
                 return (
                   <div
                     key={msg.id}
-                    className={cn(
-                      "flex",
-                      isMine ? "justify-end" : "justify-start"
-                    )}
+                    className={cn("flex", isMine ? "justify-end" : "justify-start")}
                   >
                     <div
                       className={cn(
                         "max-w-[75%] rounded-2xl px-4 py-2.5 text-sm shadow-sm",
                         isMine
                           ? "bg-[var(--indigo-night)] text-[var(--parchment)] rounded-br-sm"
-                          : "bg-muted text-foreground rounded-bl-sm"
+                          : "bg-muted text-foreground rounded-bl-sm",
                       )}
                     >
-                      <p className="whitespace-pre-wrap break-words">
-                        {msg.content}
-                      </p>
+                      <p className="whitespace-pre-wrap break-words">{msg.content}</p>
                       <p
                         className={cn(
                           "mt-1 text-[10px] text-right",
-                          isMine
-                            ? "text-[var(--parchment)]/50"
-                            : "text-muted-foreground"
+                          isMine ? "text-[var(--parchment)]/50" : "text-muted-foreground",
                         )}
                       >
                         {new Date(msg.created_at).toLocaleTimeString([], {

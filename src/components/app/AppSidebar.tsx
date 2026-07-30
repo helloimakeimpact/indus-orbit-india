@@ -32,6 +32,8 @@ import {
   Settings,
   PanelLeftOpen,
   PanelLeftClose,
+  MessageCircle,
+  Terminal,
 } from "lucide-react";
 import logo from "@/assets/indus-orbit-logo.png";
 import { useAuth } from "@/contexts/AuthContext";
@@ -41,33 +43,70 @@ import { Sheet, SheetContent } from "@/components/ui/sheet";
 const SETTINGS_KEY = "indus-orbit:settings";
 const SIDEBAR_KEY = "indus-orbit:sidebar-expanded";
 
-type Item = { to: string; label: string; icon: typeof Home; admin?: boolean };
+type Item = {
+  to: string;
+  label: string;
+  icon: typeof Home;
+  admin?: boolean;
+  exact?: boolean;
+};
+type NavGroup = { label: string; items: Item[] };
 type Surface = "dark" | "light";
 
 const defaultPrefs = {
   sidebarExpanded: false,
 };
 
-const ITEMS: Item[] = [
-  { to: "/app", label: "Home", icon: Home },
-  { to: "/app/directory", label: "Network", icon: Users },
-  { to: "/app/board", label: "Board", icon: Megaphone },
-  { to: "/app/missions", label: "India Missions", icon: Globe2 },
-  { to: "/app/chapters", label: "Chapters", icon: MapPin },
-  { to: "/app/events", label: "Events", icon: CalendarDays },
-  { to: "/app/stories", label: "Stories", icon: BookOpen },
-  { to: "/app/education", label: "Academy", icon: GraduationCap },
-  { to: "/app/skills", label: "Skills", icon: BadgeCheck },
-  { to: "/app/loop", label: "Loop", icon: Zap },
-  { to: "/app/soda", label: "S.O.D.A List", icon: Lightbulb },
-  { to: "/app/vouch", label: "Vouch", icon: ShieldCheck },
-  { to: "/app/mentor", label: "Mentorship", icon: CalendarClock },
-  { to: "/app/profile", label: "My profile", icon: UserIcon },
-  { to: "/app/settings", label: "Settings", icon: Settings },
+const BASE_GROUPS: NavGroup[] = [
+  {
+    label: "Orbit",
+    items: [
+      { to: "/app", label: "Home", icon: Home, exact: true },
+      { to: "/app/board", label: "Board", icon: Megaphone },
+      { to: "/app/stories", label: "Stories", icon: BookOpen },
+      { to: "/app/events", label: "Events", icon: CalendarDays },
+    ],
+  },
+  {
+    label: "People",
+    items: [
+      { to: "/app/directory", label: "Network", icon: Users },
+      { to: "/app/messages", label: "Messages", icon: MessageCircle },
+      { to: "/app/vouch", label: "Vouch", icon: ShieldCheck },
+      { to: "/app/mentor", label: "Mentorship", icon: CalendarClock },
+      { to: "/app/profile", label: "My profile", icon: UserIcon },
+    ],
+  },
+  {
+    label: "Action",
+    items: [
+      { to: "/app/missions", label: "India Missions", icon: Globe2 },
+      { to: "/app/chapters", label: "Chapters", icon: MapPin },
+    ],
+  },
+  {
+    label: "Learn",
+    items: [
+      { to: "/app/education", label: "Academy", icon: GraduationCap },
+      { to: "/app/skills", label: "Skills", icon: BadgeCheck },
+      { to: "/app/loop", label: "Loop", icon: Zap },
+      { to: "/app/soda", label: "S.O.D.A List", icon: Lightbulb },
+    ],
+  },
+  {
+    label: "I/O",
+    items: [{ to: "/app/io", label: "I/O Port", icon: Terminal }],
+  },
 ];
 
 const ADMIN_ITEMS: Item[] = [
-  { to: "/app/admin", label: "Dashboard", icon: LayoutDashboard, admin: true },
+  {
+    to: "/app/admin",
+    label: "Dashboard",
+    icon: LayoutDashboard,
+    admin: true,
+    exact: true,
+  },
   { to: "/app/admin/queue", label: "Queue", icon: ClipboardList, admin: true },
   { to: "/app/admin/vouches", label: "Vouches", icon: KeyRound, admin: true },
   { to: "/app/admin/reports", label: "Reports", icon: Flag, admin: true },
@@ -81,6 +120,8 @@ const ADMIN_ITEMS: Item[] = [
   { to: "/app/admin/skills", label: "Skills", icon: BadgeCheck, admin: true },
   { to: "/app/admin/loop", label: "Loop", icon: Zap, admin: true },
 ];
+
+const SETTINGS_ITEM: Item = { to: "/app/settings", label: "Settings", icon: Settings };
 
 function readSidebarPrefs() {
   if (typeof window === "undefined") return defaultPrefs;
@@ -116,6 +157,58 @@ function saveSidebarExpanded(expanded: boolean) {
   window.dispatchEvent(new CustomEvent("indus-orbit:settings-change"));
 }
 
+function isRouteActive(pathname: string, item: Item) {
+  const path = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
+  const destination = item.to.length > 1 ? item.to.replace(/\/+$/, "") : item.to;
+
+  if (item.exact) return path === destination;
+  return path === destination || path.startsWith(`${destination}/`);
+}
+
+function GroupLabel({
+  label,
+  expanded,
+  surface,
+  first = false,
+}: {
+  label: string;
+  expanded: boolean;
+  surface: Surface;
+  first?: boolean;
+}) {
+  if (!expanded) {
+    if (first) return null;
+    return (
+      <div
+        role="separator"
+        aria-label={`${label} space`}
+        className={cn(
+          "my-1.5 h-px w-7",
+          surface === "dark" ? "bg-[var(--parchment)]/15" : "bg-border",
+        )}
+      />
+    );
+  }
+
+  return (
+    <p
+      className={cn(
+        "mb-1 flex items-center gap-2 px-2.5 text-[10px] font-semibold uppercase tracking-[0.16em]",
+        surface === "dark" ? "text-[var(--parchment)]/40" : "text-muted-foreground",
+      )}
+    >
+      <span
+        className={cn(
+          "h-1 w-1 rounded-full",
+          surface === "dark" ? "bg-[var(--saffron)]/70" : "bg-[var(--saffron)]",
+        )}
+        aria-hidden="true"
+      />
+      {label}
+    </p>
+  );
+}
+
 function NavList({
   pathname,
   onNavigate,
@@ -129,90 +222,58 @@ function NavList({
 }) {
   const { isAdmin, isChapterLead, isMissionLead, userSegment } = useAuth();
 
-  const navItems = [...ITEMS];
+  const groups = BASE_GROUPS.map((group) => ({ ...group, items: [...group.items] }));
+
   if (userSegment === "investor") {
-    const boardIndex = navItems.findIndex((i) => i.to === "/app/board");
-    navItems.splice(boardIndex + 1, 0, {
+    const orbitItems = groups.find((group) => group.label === "Orbit")?.items;
+    const boardIndex = orbitItems?.findIndex((item) => item.to === "/app/board") ?? -1;
+    orbitItems?.splice(boardIndex + 1, 0, {
       to: "/app/investor-feed",
       label: "Deal Flow",
       icon: TrendingUp,
     });
   }
 
+  const actionItems = groups.find((group) => group.label === "Action")?.items;
+  if (isChapterLead) {
+    actionItems?.push({ to: "/app/chapter-admin", label: "Chapter admin", icon: Compass });
+  }
+  if (isMissionLead) {
+    actionItems?.push({ to: "/app/mission-admin", label: "Mission admin", icon: Target });
+  }
+
+  if (isAdmin) groups.push({ label: "Admin", items: ADMIN_ITEMS });
+
   return (
-    <nav className={cn("flex flex-col", expanded ? "gap-0.5" : "items-center gap-1")}>
-      {navItems.map((item) => (
-        <NavRow
-          key={item.to}
-          item={item}
-          active={pathname === item.to}
-          onClick={onNavigate}
-          expanded={expanded}
-          surface={surface}
-        />
-      ))}
-      {(isChapterLead || isMissionLead) && (
-        <>
-          {expanded ? (
-            <p
-              className={cn(
-                "mb-1 mt-2 px-2.5 text-[10px] font-semibold uppercase tracking-[0.16em]",
-                surface === "dark" ? "text-[var(--parchment)]/40" : "text-muted-foreground",
-              )}
-            >
-              Lead workspace
-            </p>
-          ) : (
-            <div className="my-1.5 h-px w-7 bg-border" />
-          )}
-          {isChapterLead && (
-            <NavRow
-              item={{ to: "/app/chapter-admin", label: "Chapter admin", icon: Compass }}
-              active={pathname.startsWith("/app/chapter-admin")}
-              onClick={onNavigate}
-              expanded={expanded}
-              surface={surface}
-            />
-          )}
-          {isMissionLead && (
-            <NavRow
-              item={{ to: "/app/mission-admin", label: "Mission admin", icon: Target }}
-              active={pathname.startsWith("/app/mission-admin")}
-              onClick={onNavigate}
-              expanded={expanded}
-              surface={surface}
-            />
-          )}
-        </>
-      )}
-      {isAdmin && (
-        <>
-          {expanded ? (
-            <p
-              className={cn(
-                "mb-1 mt-2 px-2.5 text-[10px] font-semibold uppercase tracking-[0.16em]",
-                surface === "dark" ? "text-[var(--parchment)]/40" : "text-muted-foreground",
-              )}
-            >
-              Admin
-            </p>
-          ) : (
-            <div className="my-1.5 h-px w-7 bg-border" />
-          )}
-          {ADMIN_ITEMS.map((item) => (
+    <nav
+      aria-label="Workspace spaces"
+      className={cn("flex flex-col", expanded ? "gap-0.5" : "items-center gap-1")}
+    >
+      {groups.map((group, index) => (
+        <div
+          key={group.label}
+          role="group"
+          aria-label={`${group.label} space`}
+          className={cn("flex flex-col", expanded ? "mt-2 first:mt-0" : "items-center")}
+        >
+          <GroupLabel
+            label={group.label}
+            expanded={expanded}
+            surface={surface}
+            first={index === 0}
+          />
+          {group.items.map((item) => (
             <NavRow
               key={item.to}
               item={item}
-              active={
-                item.to === "/app/admin" ? pathname === "/app/admin" : pathname.startsWith(item.to)
-              }
+              active={isRouteActive(pathname, item)}
               onClick={onNavigate}
               expanded={expanded}
               surface={surface}
             />
           ))}
-        </>
-      )}
+        </div>
+      ))}
     </nav>
   );
 }
@@ -383,6 +444,19 @@ function SidebarBody({
           expanded={expanded}
           surface={surface}
         />
+      </div>
+
+      <div className={cn("shrink-0 pb-1", expanded ? "px-2" : "flex justify-center px-1.5")}>
+        <nav aria-label="Utility" className={cn("flex flex-col", !expanded && "items-center")}>
+          <GroupLabel label="Utility" expanded={expanded} surface={surface} />
+          <NavRow
+            item={SETTINGS_ITEM}
+            active={isRouteActive(pathname, SETTINGS_ITEM)}
+            onClick={onNavigate}
+            expanded={expanded}
+            surface={surface}
+          />
+        </nav>
       </div>
 
       <div

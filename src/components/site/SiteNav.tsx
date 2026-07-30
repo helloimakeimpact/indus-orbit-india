@@ -17,6 +17,7 @@ const links = [
   { to: "/about", label: "About" },
   { to: "/our-work", label: "Our Work" },
   { to: "/models", label: "Models" },
+  { to: "/io-port", label: "I/O Port" },
   { to: "/writing", label: "Writing" },
   { to: "/members", label: "Members" },
   { to: "/contact", label: "Contact" },
@@ -118,18 +119,19 @@ export function SiteNav({ tone = "light" }: { tone?: "light" | "dark" }) {
             height={48}
             className="pixelated h-12 w-12"
           />
-          <span className="font-display text-lg font-medium tracking-tight">
-            Indus Orbit
-          </span>
+          <span className="font-display text-lg font-medium tracking-tight">Indus Orbit</span>
         </Link>
 
-        <nav className="hidden md:flex items-center gap-1">
+        <nav className="hidden lg:flex items-center gap-1">
           {links.map((l) => (
             <Link
               key={l.to}
               to={l.to}
               className="rounded-full px-3 py-1.5 text-sm font-medium opacity-80 transition hover:bg-foreground/5 hover:opacity-100"
-              activeProps={{ className: "rounded-full px-3 py-1.5 text-sm font-semibold opacity-100 bg-foreground/5" }}
+              activeProps={{
+                className:
+                  "rounded-full px-3 py-1.5 text-sm font-semibold opacity-100 bg-foreground/5",
+              }}
             >
               {l.label}
             </Link>
@@ -152,7 +154,7 @@ export function SiteNav({ tone = "light" }: { tone?: "light" | "dark" }) {
           <button
             type="button"
             aria-label="Toggle menu"
-            className="md:hidden rounded-full p-2 hover:bg-foreground/10"
+            className="lg:hidden rounded-full p-2 hover:bg-foreground/10"
             onClick={() => setOpen((v) => !v)}
           >
             {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -161,7 +163,7 @@ export function SiteNav({ tone = "light" }: { tone?: "light" | "dark" }) {
       </div>
 
       {open && (
-        <div className="md:hidden mx-auto mt-2 max-w-6xl rounded-3xl glass-card p-3 shadow-xl">
+        <div className="lg:hidden mx-auto mt-2 max-w-6xl rounded-3xl glass-card p-3 shadow-xl">
           <nav className="flex flex-col">
             {links.map((l) => (
               <Link

@@ -7,120 +7,31 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-import {
-  getConnections,
-  getConversation,
-  sendMessage,
-  markConversationRead,
-  getUnreadMessageCount,
-} from "@/server/messages.functions";
-
-type Profile = {
-  user_id: string;
-  display_name: string | null;
-  avatar_url: string | null;
-  headline: string | null;
-};
-
-type Message = {
-  id: string;
-  sender_id: string;
-  recipient_id: string;
-  content: string;
-  created_at: string;
-  read_at: string | null;
-};
+import { useConversationContacts } from "@/features/conversations/useConversationContacts";
+import { useDirectConversation } from "@/features/conversations/useDirectConversation";
+import { useUnreadMessageCount } from "@/features/conversations/useUnreadMessageCount";
+import type { ConversationContact } from "@/features/conversations/types";
 
 export function ChatDropdown() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
-
-  // Contact list
-  const [connections, setConnections] = useState<Profile[]>([]);
-  const [loadingConns, setLoadingConns] = useState(false);
-  const [connectionsError, setConnectionsError] = useState<string | null>(null);
-
-  // Inline chat
-  const [activeContact, setActiveContact] = useState<Profile | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [loadingMsgs, setLoadingMsgs] = useState(false);
-  const [messagesError, setMessagesError] = useState<string | null>(null);
+  const { unreadCount } = useUnreadMessageCount(user?.id);
+  const {
+    contacts: connections,
+    loading: loadingConns,
+    error: connectionsError,
+  } = useConversationContacts(open);
+  const [activeContact, setActiveContact] = useState<ConversationContact | null>(null);
   const [newMessage, setNewMessage] = useState("");
-  const [sending, setSending] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
-
-  // Poll unread count
-  useEffect(() => {
-    if (!user) return;
-    const load = () =>
-      getUnreadMessageCount()
-        .then(setUnreadCount)
-        .catch(() => setUnreadCount(0));
-    load();
-    const id = setInterval(load, 15000);
-    return () => clearInterval(id);
-  }, [user]);
-
-  // Load connections when panel opens
-  useEffect(() => {
-    if (!open) return;
-    setLoadingConns(true);
-    setConnectionsError(null);
-    getConnections()
-      .then(setConnections)
-      .catch((error) => {
-        setConnections([]);
-        setConnectionsError(error instanceof Error ? error.message : "Could not load messages.");
-      })
-      .finally(() => setLoadingConns(false));
-  }, [open]);
-
-  // Load conversation when active contact changes
-  useEffect(() => {
-    if (!activeContact) return;
-    setLoadingMsgs(true);
-    setMessagesError(null);
-    getConversation(activeContact.user_id)
-      .then(setMessages)
-      .catch((error) => {
-        setMessages([]);
-        setMessagesError(
-          error instanceof Error ? error.message : "Could not load this conversation.",
-        );
-      })
-      .finally(() => setLoadingMsgs(false));
-    markConversationRead(activeContact.user_id);
-  }, [activeContact]);
-
-  // Realtime for inline chat
-  useEffect(() => {
-    if (!activeContact || !user) return;
-    const channel = supabase
-      .channel(`chat-dropdown:${user.id}:${activeContact.user_id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "direct_messages",
-          filter: `recipient_id=eq.${user.id}`,
-        },
-        (payload) => {
-          const msg = payload.new as Message;
-          if (msg.sender_id === activeContact.user_id) {
-            setMessages((prev) => [...prev, msg]);
-            markConversationRead(activeContact.user_id);
-          }
-        },
-      )
-      .subscribe();
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [activeContact, user]);
+  const {
+    messages,
+    loading: loadingMsgs,
+    error: messagesError,
+    sending,
+    send,
+  } = useDirectConversation(user?.id, activeContact?.user_id);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -129,15 +40,11 @@ export function ChatDropdown() {
 
   async function handleSend() {
     if (!activeContact || !newMessage.trim()) return;
-    setSending(true);
     try {
-      const msg = await sendMessage(activeContact.user_id, newMessage);
-      setMessages((prev) => [...prev, msg as Message]);
+      await send(newMessage);
       setNewMessage("");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not send message.");
-    } finally {
-      setSending(false);
     }
   }
 
