@@ -35,6 +35,7 @@ export type PartnerRunResult = {
   requestId: string;
   provider: string;
   model: string;
+  modelSelection?: "latest_affordable";
   content: string;
   usage: { inputTokens?: number; outputTokens?: number } | null;
   capacitySource: string;

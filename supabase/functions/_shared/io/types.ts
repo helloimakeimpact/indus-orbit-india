@@ -22,7 +22,20 @@ export type GatewayActor = {
 export type PartnerConfig = {
   baseUrl: string;
   apiKey: string;
+  providerKey: string;
+  selection: {
+    tier: "economy" | "balanced" | "premium";
+    freshnessDays: number;
+    affordabilityMultiplier: number;
+  };
+};
+
+export type PartnerModelSelection = {
   model: string;
+  strategy: "latest_affordable";
+  tier: "economy" | "balanced" | "premium";
+  releasedAt: string;
+  candidateCount: number;
 };
 
 export type PartnerResult = {

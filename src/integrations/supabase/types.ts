@@ -1042,6 +1042,7 @@ export type Database = {
       }
       io_models: {
         Row: {
+          auto_route_tier: string
           commercial_hosting_rights: string
           commercial_redistribution_rights: string
           created_at: string
@@ -1059,10 +1060,12 @@ export type Database = {
           origin_country_code: string | null
           provider_id: string
           provider_model_id: string
+          released_at: string | null
           revision: string | null
           updated_at: string
         }
         Insert: {
+          auto_route_tier?: string
           commercial_hosting_rights?: string
           commercial_redistribution_rights?: string
           created_at?: string
@@ -1080,10 +1083,12 @@ export type Database = {
           origin_country_code?: string | null
           provider_id: string
           provider_model_id: string
+          released_at?: string | null
           revision?: string | null
           updated_at?: string
         }
         Update: {
+          auto_route_tier?: string
           commercial_hosting_rights?: string
           commercial_redistribution_rights?: string
           created_at?: string
@@ -1101,6 +1106,7 @@ export type Database = {
           origin_country_code?: string | null
           provider_id?: string
           provider_model_id?: string
+          released_at?: string | null
           revision?: string | null
           updated_at?: string
         }

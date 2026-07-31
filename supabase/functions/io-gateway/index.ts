@@ -7,7 +7,11 @@ import {
 } from "../_shared/io/auth.ts";
 import { asGatewayError, GatewayError } from "../_shared/io/errors.ts";
 import { requireActivePartnerEntitlement } from "../_shared/io/policy.ts";
-import { readPartnerConfig, sendOpenAiCompatibleChat } from "../_shared/io/provider-adapter.ts";
+import {
+  readPartnerConfig,
+  resolveLatestAffordableModel,
+  sendOpenAiCompatibleChat,
+} from "../_shared/io/provider-adapter.ts";
 import type { PartnerResult } from "../_shared/io/types.ts";
 import { parseGatewayRequest } from "../_shared/io/validation.ts";
 
@@ -71,7 +75,11 @@ Deno.serve(async (request) => {
       const configured = Boolean(readPartnerConfig());
       return json(request, {
         ok: true,
-        partner: { configured, mode: configured ? "server-gated" : "needs-server-secret" },
+        partner: {
+          configured,
+          mode: configured ? "registry-selected" : "needs-server-secret",
+          modelSelection: configured ? "latest-affordable" : null,
+        },
         opencode: { mode: "local-direct", loopbackOnly: true },
       });
     }
@@ -105,6 +113,7 @@ Deno.serve(async (request) => {
     const id = requestId();
     const messages = body.messages!;
     const mode = body.mode ?? "plan";
+    const selectedModel = await resolveLatestAffordableModel(admin, config, messages);
 
     await writeIoAuditEvent(admin, {
       workspaceId: body.workspaceId,
@@ -114,7 +123,11 @@ Deno.serve(async (request) => {
       requestId: id,
       payload: {
         capacity_source: entitlement.sourceKey,
-        model: config.model,
+        model: selectedModel.model,
+        model_selection: selectedModel.strategy,
+        model_tier: selectedModel.tier,
+        model_release_date: selectedModel.releasedAt,
+        model_candidate_count: selectedModel.candidateCount,
         mode,
         message_count: messages.length,
         character_count: messages.reduce((sum, message) => sum + message.content.length, 0),
@@ -123,7 +136,7 @@ Deno.serve(async (request) => {
 
     let result: PartnerResult;
     try {
-      result = await sendOpenAiCompatibleChat(config, messages);
+      result = await sendOpenAiCompatibleChat(config, selectedModel.model, messages);
     } catch (error) {
       const gatewayError = asGatewayError(error);
       try {
@@ -134,7 +147,8 @@ Deno.serve(async (request) => {
           requestId: id,
           payload: {
             capacity_source: entitlement.sourceKey,
-            model: config.model,
+            model: selectedModel.model,
+            model_selection: selectedModel.strategy,
             status: gatewayError.status,
             code: gatewayError.code,
           },
@@ -155,7 +169,8 @@ Deno.serve(async (request) => {
       requestId: id,
       payload: {
         capacity_source: entitlement.sourceKey,
-        model: config.model,
+        model: selectedModel.model,
+        model_selection: selectedModel.strategy,
         input_tokens: result.usage.inputTokens ?? null,
         output_tokens: result.usage.outputTokens ?? null,
       },
@@ -165,7 +180,8 @@ Deno.serve(async (request) => {
       ok: true,
       requestId: id,
       provider: entitlement.displayName,
-      model: config.model,
+      model: selectedModel.model,
+      modelSelection: selectedModel.strategy,
       content: result.content,
       usage: result.usage,
       capacitySource: entitlement.sourceKey,

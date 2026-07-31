@@ -51,13 +51,25 @@ For a deployed Indus Orbit site, include its exact origin as an additional `--co
 
 The server gateway is deployed but deliberately has no provider credentials. Configure these as Supabase Edge Function secrets, never in the browser or source repository:
 
-| Secret                     | Required value                                                |
-| -------------------------- | ------------------------------------------------------------- |
-| `IO_PARTNER_BASE_URL`      | HTTPS OpenAI-compatible API base URL, usually ending in `/v1` |
-| `IO_PARTNER_API_KEY`       | Provider-issued credential                                    |
-| `IO_PARTNER_DEFAULT_MODEL` | Approved model identifier                                     |
+| Secret                    | Required value                                                |
+| ------------------------- | ------------------------------------------------------------- |
+| `IO_PARTNER_BASE_URL`     | HTTPS OpenAI-compatible API base URL, usually ending in `/v1` |
+| `IO_PARTNER_API_KEY`      | Provider-issued credential                                    |
+| `IO_PARTNER_PROVIDER_KEY` | Matching `io_providers.provider_key`, for example `openai`    |
 
-Then change `partner-gateway` and the target workspace grant from `onboarding` / `pending` to `active` through an audited admin workflow. The gateway will refuse to route if any of those conditions are unmet.
+`IO_PARTNER_DEFAULT_MODEL` is deliberately retired. The gateway selects a model from the reviewed I/O registry at request time; a provider-key or model-ID in an Edge Function secret must not be treated as an enduring product decision.
+
+Optional server-only selector controls have safe defaults:
+
+| Secret                                        | Default    | Meaning                                                                                          |
+| --------------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------ |
+| `IO_MODEL_SELECTION_TIER`                     | `balanced` | One of `economy`, `balanced`, or `premium`. Models marked `manual_only` are never auto-selected. |
+| `IO_MODEL_SELECTION_FRESHNESS_DAYS`           | `180`      | How close to the newest reviewed release a candidate must be.                                    |
+| `IO_MODEL_SELECTION_AFFORDABILITY_MULTIPLIER` | `1.35`     | Maximum estimated-cost multiple above the cheapest fresh candidate.                              |
+
+For each request, I/O considers only models whose provider is active; model is listed, release-dated and not deprecated; endpoint is active/member-visible; latest capability certificate verifies chat; and a published price card is currently effective. It estimates the current request cost from the message length plus the 1,024-token output cap, removes candidates outside the selected freshness and affordability bands, then chooses the newest remaining model. The selected model and selector strategy are appended to the redacted route audit event. This is routing, not billing: paid use still requires the P2 reserve-and-settle ledger.
+
+The registry begins empty in the demo. Before any route is activated, record and review the provider, models, release dates, `economy`/`balanced`/`premium` tier, verified chat capability and a current published price card. Then change `partner-gateway` and the target workspace grant from `onboarding` / `pending` to `active` through an audited admin workflow. The gateway will refuse to route if any of those conditions are unmet.
 
 ## Current demo records
 
