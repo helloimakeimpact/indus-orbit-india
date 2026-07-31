@@ -108,6 +108,8 @@ io_route_receipts
 io_provider_attempts
 ```
 
+**Implemented in the demo project:** `supabase/migrations/20260731113000_create_io_provider_registry.sql` establishes the provider, model, endpoint, versioned capability and versioned price-card records. It keeps endpoint URLs, secret-manager references and conformance-run details in the non-exposed `private` schema; public tables contain only member-appropriate catalogue/evidence data and use RLS plus explicit Data API grants. `20260731123500_add_io_provider_registry_fk_indexes.sql` completes the foreign-key indexes identified by the post-deployment Performance Advisor. The generated browser client types now include the five public registry tables. No provider, model, endpoint, URL or credential has been seeded into this demo registry.
+
 Provider, model and endpoint records must capture the research gates before they can be activated: `terms_version`, `contracted_region`, `residency_evidence`, retention/training class, resale rights, model revision/licence, commercial-hosting rights, `capacity_mode`, `metering_basis`, health/queue signal, feature support and a versioned price card. See `IO_PORT_PROVIDER_LANDSCAPE.md` for evidence, licence constraints and the proposed commercial model.
 
 The route request transaction is:
