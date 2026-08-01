@@ -1,0 +1,64 @@
+name: Database quality
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/database.yml"
+      - "package.json"
+      - "package-lock.json"
+      - "supabase/**"
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/database.yml"
+      - "package.json"
+      - "package-lock.json"
+      - "supabase/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: database-quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  database:
+    name: Migration replay and database contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SUPABASE_TELEMETRY_DISABLED: "1"
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Start local Supabase
+        run: npx --no-install supabase start
+
+      - name: Replay every migration from an empty database
+        run: npx --no-install supabase db reset --local --no-seed
+
+      - name: Run database contract tests
+        run: npx --no-install supabase test db --local supabase/tests/database
+
+      - name: Lint public and private schemas
+        run: >-
+          npx --no-install supabase db lint --local
+          --schema public,private
+          --level error
+          --fail-on error
+
+      - name: Stop local Supabase
+        if: always()
+        run: npx --no-install supabase stop

@@ -20,7 +20,8 @@ begin
   limit 1;
 
   if operator_id is null then
-    raise exception 'The Indus Orbit demo workspace must exist before staging providers';
+    raise notice 'Skipping demo provider staging: the indus-demo workspace is not present';
+    return;
   end if;
 
   select source.id
@@ -29,7 +30,8 @@ begin
   where source.source_key = 'partner-gateway';
 
   if partner_capacity_id is null then
-    raise exception 'The partner-gateway capacity source must exist before staging providers';
+    raise notice 'Skipping demo provider staging: the partner-gateway capacity source is not present';
+    return;
   end if;
 
   update public.io_capacity_sources

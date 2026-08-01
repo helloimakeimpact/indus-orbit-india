@@ -82,6 +82,14 @@ CREATE POLICY "Leads can update mission members" ON public.mission_members
 -- ============================================
 -- FIX 3: Allow chapter leads to CREATE missions for their chapter
 -- ============================================
+-- Historical reconciliation note (2026-08-01): the deployed demo schema had
+-- this column when the policies below were created, but the recovered local
+-- migration ledger did not contain the out-of-band ALTER TABLE. Restore the
+-- missing prerequisite here so an empty database can replay the recorded
+-- policy migration deterministically.
+ALTER TABLE public.missions
+  ADD COLUMN IF NOT EXISTS chapter_id uuid REFERENCES public.chapters(id) ON DELETE SET NULL;
+
 DROP POLICY IF EXISTS "Chapter leads can insert missions" ON public.missions;
 CREATE POLICY "Chapter leads can insert missions" ON public.missions
   FOR INSERT WITH CHECK (
@@ -171,4 +179,3 @@ CREATE POLICY "Chapter leads can update chapter events" ON public.events
         AND cm.role = 'lead'
     ))
   );
-

@@ -97,15 +97,27 @@ GRANT EXECUTE ON FUNCTION public.get_connection_email(uuid) TO authenticated;
 
 -- 9) Realtime: only sender/recipient can subscribe to a direct-message conversation channel
 -- Channel topic convention: 'dm:<user_a>:<user_b>' (sorted)
-ALTER TABLE IF EXISTS realtime.messages ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS "DM participants can subscribe" ON realtime.messages;
-CREATE POLICY "DM participants can subscribe"
-ON realtime.messages
-FOR SELECT
-TO authenticated
-USING (
-  -- Allow only if topic encodes the caller's uid as a participant
-  (realtime.topic() LIKE 'dm:%' AND position(auth.uid()::text in realtime.topic()) > 0)
-  OR realtime.topic() NOT LIKE 'dm:%'
-);
+-- Historical reconciliation note (2026-08-01): realtime.messages is owned by
+-- Supabase's managed realtime role. A normal CLI migration role cannot alter
+-- it or SET ROLE in a fresh local stack. Preserve the recovered operation when
+-- the runner owns the table, but make local schema replay deterministic and
+-- report the owner-scoped policy as a separate environment verification item.
+DO $realtime_policy$
+BEGIN
+  EXECUTE 'ALTER TABLE realtime.messages ENABLE ROW LEVEL SECURITY';
+  EXECUTE 'DROP POLICY IF EXISTS "DM participants can subscribe" ON realtime.messages';
+  EXECUTE $policy$
+    CREATE POLICY "DM participants can subscribe"
+    ON realtime.messages
+    FOR SELECT
+    TO authenticated
+    USING (
+      (realtime.topic() LIKE 'dm:%' AND position(auth.uid()::text in realtime.topic()) > 0)
+      OR realtime.topic() NOT LIKE 'dm:%'
+    )
+  $policy$;
+EXCEPTION
+  WHEN insufficient_privilege THEN
+    RAISE NOTICE 'Skipping owner-scoped realtime.messages policy during CLI replay';
+END;
+$realtime_policy$;

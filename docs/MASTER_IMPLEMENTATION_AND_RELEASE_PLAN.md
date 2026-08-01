@@ -204,6 +204,16 @@ Exit criteria:
 - Performance Advisor findings are resolved or documented with benchmark evidence and an owner;
 - authorization tests pass in CI and after deployment.
 
+Implementation evidence on 1 August 2026:
+
+- **Verified locally:** the full checked-in migration chain replays from an empty database after three documented historical/environment recovery corrections;
+- **Verified locally:** 115 pgTAP assertions cover critical schema/grants, notification owner access, endpoint-bound latest-conformance routing and guarded vouch/audit contracts;
+- **Verified locally:** public/private schema lint and error-level Supabase security/performance advisors report no findings;
+- **Implemented, remote evidence pending:** `.github/workflows/database.yml` replays migrations, runs pgTAP and fails on database lint errors with the locked Supabase CLI dependency;
+- **Partial containment:** anonymous notification access is removed locally, but the authenticated generic notification RPC remains temporarily compatible and high risk;
+- **Blocked for release:** the deployed browser-callable email dispatcher accepts arbitrary recipient/subject/HTML and must be replaced by a fixed-template, service-only outbox worker;
+- **Still required:** local/demo schema comparison, generated-type drift, managed Realtime policy verification, full SECURITY DEFINER inventory, backup/restore and environment separation.
+
 ### W2. Engineering foundation, CI/CD, and observability
 
 **Goal:** make every merge and deployment repeatable, diagnosable, and reversible.
@@ -318,6 +328,7 @@ Deliverables:
 - add scoped group conversations only after direct-message contracts pass load and authorization tests;
 - keep human direct messages separate from I/O prompts, model responses, tool traces, and terminal artifacts; link them only through explicit references and consent;
 - implement an idempotent notification/outbox pipeline with delivery attempts, preference checks, retries, and dead-letter handling.
+- make every email worker service-only and template-driven; no browser contract may accept an arbitrary recipient, subject or HTML body.
 
 Exit criteria:
 

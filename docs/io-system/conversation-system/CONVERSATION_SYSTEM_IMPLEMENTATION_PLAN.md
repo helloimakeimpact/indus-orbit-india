@@ -1,6 +1,6 @@
 # Indus Orbit conversation and Discord-like system plan
 
-Status: active code-level plan, reviewed 31 July 2026. Direct-message P0 hardening is deployed to the demo project. The first P1 shared-client extraction is implemented in the web app; the shared spatial shell, pagination, RPC boundary and private Broadcast remain planned. The I/O nested shell is a branded preview, not the completed shared Discord-like system. This extends the existing conversation product; it does not authorize a Discord clone or a replacement social system.
+Status: active code-level plan, reviewed 1 August 2026. Direct-message P0 hardening is deployed to the demo project. Local notification-table containment and its pgTAP suite are Verified but not Released. The first P1 shared-client extraction is implemented in the web app; event-specific notification/email boundaries, the shared spatial shell, pagination, message RPC boundary and private Broadcast remain planned. The I/O nested shell is a branded preview, not the completed shared Discord-like system. This extends the existing conversation product; it does not authorize a Discord clone or a replacement social system.
 
 Operational cross-reference: `../io-port-system/IO_PORT_IMPLEMENTATION_STATUS.md` records the current done/partial/not-started boundary for I/O, terminal, and conversation integration. `DISCORD_LIKE_CAPABILITY_PLAN.md` expands the full intended collaboration feature set.
 
@@ -24,17 +24,32 @@ The Discord-like work must make this system easier to navigate, more coherent ac
 
 ## 2. Evidence-backed baseline and corrections
 
-| Area                   | Current implementation                                                     | Required correction                                                                                                                                                                       |
-| ---------------------- | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Message route          | `src/routes/app.messages.tsx` + shared conversation hooks                  | Now uses the shared contact/history/send/realtime hooks. Add cursor pagination before message volume grows.                                                                               |
-| Quick chat             | `src/components/app/ChatDropdown.tsx` + shared conversation hooks          | Now uses the same hooks and Realtime unread reconciliation; no 15-second unread polling. A cross-surface cache/store remains the next extraction.                                         |
-| Data access            | `src/server/messages.functions.ts`                                         | Treat this as browser-facing data access; keep privileged actions in RPC/Edge Functions only.                                                                                             |
-| Durable data           | `public.direct_messages`                                                   | Keep it as the canonical one-to-one human message source. Add no I/O prompt/tool content here.                                                                                            |
-| Realtime               | Shared Postgres Changes subscriptions, locally filtered by participants    | The P1 proof uses a stable `dm:<sorted-user-ids>` subscription name, durable-row deduplication and read acknowledgement. Move to authorized private Broadcast after the RLS/proof phase.  |
-| Existing authorization | Client checks accepted connections before insert                           | **Fixed in demo:** the RLS policy now requires an accepted relationship, distinct sender/recipient and active accounts. The future RPC adds rate limits and atomic notification handling. |
-| Read updates           | Recipient had a broad row-update policy                                    | **Fixed in demo:** table-wide UPDATE is revoked and authenticated users receive only `read_at` column privilege. The future RPC centralises audit and rate-limit behavior.                |
-| Existing query shape   | Full two-way history query with per-column indexes                         | Add a canonical conversation key/index and cursor paging after migration/profiling.                                                                                                       |
-| Migration history      | Current remote message schema is not fully represented by local migrations | Reconcile and generate a fresh schema baseline before adding conversation DDL.                                                                                                            |
+| Area                   | Current implementation                                                        | Required correction                                                                                                                                                                       |
+| ---------------------- | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Message route          | `src/routes/app.messages.tsx` + shared conversation hooks                     | Now uses the shared contact/history/send/realtime hooks. Add cursor pagination before message volume grows.                                                                               |
+| Quick chat             | `src/components/app/ChatDropdown.tsx` + shared conversation hooks             | Now uses the same hooks and Realtime unread reconciliation; no 15-second unread polling. A cross-surface cache/store remains the next extraction.                                         |
+| Data access            | `src/server/messages.functions.ts`                                            | Treat this as browser-facing data access; keep privileged actions in RPC/Edge Functions only.                                                                                             |
+| Durable data           | `public.direct_messages`                                                      | Keep it as the canonical one-to-one human message source. Add no I/O prompt/tool content here.                                                                                            |
+| Realtime               | Shared Postgres Changes subscriptions, locally filtered by participants       | The P1 proof uses a stable `dm:<sorted-user-ids>` subscription name, durable-row deduplication and read acknowledgement. Move to authorized private Broadcast after the RLS/proof phase.  |
+| Existing authorization | Client checks accepted connections before insert                              | **Fixed in demo:** the RLS policy now requires an accepted relationship, distinct sender/recipient and active accounts. The future RPC adds rate limits and atomic notification handling. |
+| Read updates           | Recipient had a broad row-update policy                                       | **Fixed in demo:** table-wide UPDATE is revoked and authenticated users receive only `read_at` column privilege. The future RPC centralises audit and rate-limit behavior.                |
+| Existing query shape   | Full two-way history query with per-column indexes                            | Add a canonical conversation key/index and cursor paging after migration/profiling.                                                                                                       |
+| Migration history      | Current remote message schema is not fully represented by local migrations    | Reconcile and generate a fresh schema baseline before adding conversation DDL.                                                                                                            |
+| Notification table     | Generic owner UI plus a caller-controlled `send_notification` RPC             | Local Verified migration removes anonymous table access and limits members to owner reads/`is_read` updates. Replace the generic RPC with domain events before Release.                   |
+| Email delivery         | Deployed `resend-email-dispatcher` accepts browser-provided recipient/content | **Critical:** replace it with a service-only outbox worker using fixed templates; ordinary user JWTs must receive 403 and arbitrary subject/HTML must never enter the contract.           |
+
+### 2.1 Immediate notification containment
+
+`20260801152820_contain_notification_privileges.sql` is locally replayed and tested. It deliberately preserves the generic RPC only for compatibility while the seven browser callers are replaced. It:
+
+- removes all anonymous table privileges;
+- gives authenticated clients only `SELECT` and `UPDATE (is_read)`;
+- enforces owner-bound SELECT and UPDATE policies with both `USING` and `WITH CHECK`;
+- adds owner/recent and owner/unread indexes;
+- removes direct browser execution from notification trigger helpers;
+- marks `send_notification(uuid,text,text,text)` as deprecated/high risk.
+
+This is containment, not completion. The deployed email dispatcher remains a critical release blocker until removed or replaced, and generic notification injection remains a high-risk blocker until authenticated execution is revoked after caller cutover.
 
 ## 3. Data taxonomy: do not blur these boundaries
 
@@ -64,6 +79,8 @@ The first migration was created through the Supabase CLI and deployed as `202607
 4. test the relationship predicate with the actual RLS behavior of `connection_requests` before deployment;
 5. add a canonical, generated conversation pair/key and an index suitable for cursor pagination only after confirming existing data migration/backfill behavior;
 6. add a migration test matrix for sender, recipient, disconnected member, blocked/suspended member, anonymous actor and cross-device actor.
+
+The send RPC must emit `direct_message.received` through the private outbox in the same transaction. It must not call the generic notification RPC or accept caller-authored notification text/link fields.
 
 Use explicit `TO authenticated` policies plus ownership predicates. Do not use user-editable JWT metadata for roles. If a privileged helper is genuinely required, keep it in `private`, fix `search_path`, revoke `PUBLIC` execution and make its authorization rule explicit; a `SECURITY DEFINER` function is not a shortcut around RLS.
 
@@ -225,6 +242,9 @@ The message composer can offer **Share I/O session** only after the owner select
 - I/O session members cannot be inferred from direct-message membership;
 - private Broadcast topic join/send matrix;
 - RLS and performance advisors reviewed after each migration.
+- ordinary authenticated users cannot choose another notification recipient, template, link, email subject or HTML body;
+- notification ACL tests retain owner-only reads/updates and deny anonymous access and content rewrites;
+- the email worker is service-only, idempotent, preference-aware and never logs recipient addresses or provider bodies.
 
 ### UI and realtime
 
@@ -243,10 +263,11 @@ Test with builder/student, founder/team, expert/mentor, mission/Chapter lead and
 
 1. **Done in demo:** fix message insertion authorization, update-column privilege and message length, with rolled-back RLS role tests.
 2. **Started in code:** extract shared conversation contracts/hooks and retain the current UI. The page and quick chat now share contact, history, send, Realtime and unread-count behavior.
-3. Add a cross-surface cache/store, pagination, optimistic-idempotent sends and the RPC-backed unread/read path.
-4. Prove private Broadcast in demo and migrate after load/security checks.
-5. Introduce the shared shell around existing route content without changing data models.
-6. Introduce scope-specific generic conversations for I/O, mission and Chapter collaboration—while keeping DMs virtual and single-write.
-7. Add I/O session/handoff tables only once I/O session persistence exists.
+3. Replace generic notification calls and the browser-controlled email dispatcher with atomic domain events, a private outbox and fixed-template service worker; then revoke authenticated `send_notification` execution.
+4. Add a cross-surface cache/store, pagination, optimistic-idempotent sends and the RPC-backed unread/read path.
+5. Prove private Broadcast in demo and migrate after load/security checks.
+6. Introduce the shared shell around existing route content without changing data models.
+7. Introduce scope-specific generic conversations for I/O, mission and Chapter collaboration—while keeping DMs virtual and single-write.
+8. Add I/O session/handoff tables only once I/O session persistence exists.
 
 This order protects existing member conversations while making the navigation system and I/O collaboration genuinely shared.

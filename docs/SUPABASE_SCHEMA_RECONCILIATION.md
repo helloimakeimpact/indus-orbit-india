@@ -1,6 +1,20 @@
 # Supabase schema-reconciliation record
 
-Status: historical recovery staged locally; forward migrations continue; resettable non-production replay equivalence still pending, 1 August 2026.
+Status: empty local replay verified; demo-schema comparison and owner-scoped Realtime verification remain pending, 1 August 2026.
+
+## Empty local replay evidence — 1 August 2026
+
+The locked project dependency `supabase@2.111.0` started a fresh local Supabase stack and replayed the complete checked-in migration chain from an empty Postgres database. No paid hosted branch was created and no hosted database was reset. The recovery checkpoint first applied all 51 migrations through `20260801130427_add_admin_control_plane_fk_indexes.sql`; the final phase gate then applied all 54 migrations through `20260801153734_fix_vouch_audit_contracts.sql` and passed 115/115 pgTAP assertions, public/private schema lint, and both error-level Supabase advisors.
+
+The first replay found three pieces of recovered or environment-specific history that could not execute on a clean CLI database. Each correction is explicitly commented in its source file; none was applied to or used to rewrite the remote migration ledger:
+
+| File                                                      | Replay defect                                                                                                        | Recovery behaviour                                                                                                                                 |
+| --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `20260427103400_fix_leads_rls_and_create_permissions.sql` | Policies referenced `missions.chapter_id`, but the recovered ledger did not contain the out-of-band column creation. | Restores the nullable chapter foreign key immediately before those policies.                                                                       |
+| `20260505084656_6d71cafe-feeb-45dc-bbef-bbc7ec24e27c.sql` | The CLI migration role does not own managed `realtime.messages` and cannot assume its owner role.                    | Applies the recovered policy only when the runner has sufficient ownership; otherwise records a notice. Environment verification remains required. |
+| `20260801121231_seed_io_direct_provider_registry.sql`     | Demo provider staging required out-of-band `indus-demo` workspace and `partner-gateway` rows.                        | Treats staging as optional demo data and exits with a notice when either prerequisite is absent.                                                   |
+
+This proves that the local chain is replayable. It does **not** yet prove full equivalence with the demo project: schema/grant/function comparison, the managed Realtime policy, generated type drift, and upgrade replay from a production-like snapshot remain open gates.
 
 ## What was verified
 
@@ -81,13 +95,13 @@ These are additive hardening migrations. They do not modify or delete existing m
 ## Safe recovery sequence for the remaining history
 
 1. Make a version mapping for the locally present baseline files whose timestamps differ from remote by a few seconds. Do not rename or rewrite deployed migration history in place.
-2. Use a resettable local or non-production database, replay the recovered local history there, and compare schema, grants, policies, functions, triggers, extensions and enum values with the demo project.
+2. The empty local replay now passes. Compare schema, grants, policies, functions, triggers, extensions and enum values with the demo project; separately verify the owner-scoped `realtime.messages` policy.
 3. Generate fresh `src/integrations/supabase/types.ts` from the reconciled database and run application type checks.
 4. Only after the comparison is clean, make local history the source of truth for future migrations and add CI migration-replay checks.
 
 ## Guardrails
 
-- New feature migrations remain forward-only and receive a fresh CLI-generated version.
+- New feature migrations remain forward-only and receive a fresh CLI-generated version. The three commented historical amendments above are limited replay-recovery exceptions for source that had already diverged from the deployed environment.
 - The database records the actual apply time as its migration version. Keep the local filename → remote-name mapping above; do not rename either side to manufacture timestamp equality.
 - Do not use a schema dump as a substitute for policy/function review; RLS, grants, triggers and Security Definer functions must be compared deliberately.
 - Do not backfill or consolidate direct messages while conversation history is being reconciled. The current hardening migration is intentionally independent of that work.
