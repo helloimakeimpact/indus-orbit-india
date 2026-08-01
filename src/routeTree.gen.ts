@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AboutRouteImport } from './routes/about'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ContactRouteImport } from './routes/contact'
@@ -27,6 +28,7 @@ import { Route as SodaRouteImport } from './routes/soda'
 import { Route as WhatIsIndusOrbitRouteImport } from './routes/what-is-indus-orbit'
 import { Route as WritingRouteImport } from './routes/writing'
 import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as AppAdminRouteImport } from './routes/app.admin'
 import { Route as AppBoardRouteImport } from './routes/app.board'
 import { Route as AppChapterAdminRouteImport } from './routes/app.chapter-admin'
 import { Route as AppDirectoryRouteImport } from './routes/app.directory'
@@ -94,6 +96,11 @@ const IndexRoute = IndexRouteImport.update({
 const AboutRoute = AboutRouteImport.update({
   id: '/about',
   path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppRoute = AppRouteImport.update({
@@ -174,6 +181,11 @@ const WritingRoute = WritingRouteImport.update({
 const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdminRoute = AppAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => AppRoute,
 } as any)
 const AppBoardRoute = AppBoardRouteImport.update({
@@ -292,79 +304,79 @@ const WritingSlugRoute = WritingSlugRouteImport.update({
   getParentRoute: () => WritingRoute,
 } as any)
 const AppAdminIndexRoute = AppAdminIndexRouteImport.update({
-  id: '/admin/',
-  path: '/admin/',
-  getParentRoute: () => AppRoute,
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppAdminRoute,
 } as any)
 const AppAdminAuditRoute = AppAdminAuditRouteImport.update({
-  id: '/admin/audit',
-  path: '/admin/audit',
-  getParentRoute: () => AppRoute,
+  id: '/audit',
+  path: '/audit',
+  getParentRoute: () => AppAdminRoute,
 } as any)
 const AppAdminContentRoute = AppAdminContentRouteImport.update({
-  id: '/admin/content',
-  path: '/admin/content',
-  getParentRoute: () => AppRoute,
+  id: '/content',
+  path: '/content',
+  getParentRoute: () => AppAdminRoute,
 } as any)
 const AppAdminEducationRoute = AppAdminEducationRouteImport.update({
-  id: '/admin/education',
-  path: '/admin/education',
-  getParentRoute: () => AppRoute,
+  id: '/education',
+  path: '/education',
+  getParentRoute: () => AppAdminRoute,
 } as any)
 const AppAdminHubsRoute = AppAdminHubsRouteImport.update({
-  id: '/admin/hubs',
-  path: '/admin/hubs',
-  getParentRoute: () => AppRoute,
+  id: '/hubs',
+  path: '/hubs',
+  getParentRoute: () => AppAdminRoute,
 } as any)
 const AppAdminLoopRoute = AppAdminLoopRouteImport.update({
-  id: '/admin/loop',
-  path: '/admin/loop',
-  getParentRoute: () => AppRoute,
+  id: '/loop',
+  path: '/loop',
+  getParentRoute: () => AppAdminRoute,
 } as any)
 const AppAdminMembersRoute = AppAdminMembersRouteImport.update({
-  id: '/admin/members',
-  path: '/admin/members',
-  getParentRoute: () => AppRoute,
+  id: '/members',
+  path: '/members',
+  getParentRoute: () => AppAdminRoute,
 } as any)
 const AppAdminQueueRoute = AppAdminQueueRouteImport.update({
-  id: '/admin/queue',
-  path: '/admin/queue',
-  getParentRoute: () => AppRoute,
+  id: '/queue',
+  path: '/queue',
+  getParentRoute: () => AppAdminRoute,
 } as any)
 const AppAdminReportsRoute = AppAdminReportsRouteImport.update({
-  id: '/admin/reports',
-  path: '/admin/reports',
-  getParentRoute: () => AppRoute,
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => AppAdminRoute,
 } as any)
 const AppAdminRolesRoute = AppAdminRolesRouteImport.update({
-  id: '/admin/roles',
-  path: '/admin/roles',
-  getParentRoute: () => AppRoute,
+  id: '/roles',
+  path: '/roles',
+  getParentRoute: () => AppAdminRoute,
 } as any)
 const AppAdminSkillsRoute = AppAdminSkillsRouteImport.update({
-  id: '/admin/skills',
-  path: '/admin/skills',
-  getParentRoute: () => AppRoute,
+  id: '/skills',
+  path: '/skills',
+  getParentRoute: () => AppAdminRoute,
 } as any)
 const AppAdminSodaRoute = AppAdminSodaRouteImport.update({
-  id: '/admin/soda',
-  path: '/admin/soda',
-  getParentRoute: () => AppRoute,
+  id: '/soda',
+  path: '/soda',
+  getParentRoute: () => AppAdminRoute,
 } as any)
 const AppAdminSpotlightsRoute = AppAdminSpotlightsRouteImport.update({
-  id: '/admin/spotlights',
-  path: '/admin/spotlights',
-  getParentRoute: () => AppRoute,
+  id: '/spotlights',
+  path: '/spotlights',
+  getParentRoute: () => AppAdminRoute,
 } as any)
 const AppAdminSubmissionsRoute = AppAdminSubmissionsRouteImport.update({
-  id: '/admin/submissions',
-  path: '/admin/submissions',
-  getParentRoute: () => AppRoute,
+  id: '/submissions',
+  path: '/submissions',
+  getParentRoute: () => AppAdminRoute,
 } as any)
 const AppAdminVouchesRoute = AppAdminVouchesRouteImport.update({
-  id: '/admin/vouches',
-  path: '/admin/vouches',
-  getParentRoute: () => AppRoute,
+  id: '/vouches',
+  path: '/vouches',
+  getParentRoute: () => AppAdminRoute,
 } as any)
 const AppChaptersIndexRoute = AppChaptersIndexRouteImport.update({
   id: '/chapters/',
@@ -472,6 +484,7 @@ const AppEducationCourseSlugLessonSlugRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/admin': typeof AdminRoute
   '/app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
@@ -487,6 +500,7 @@ export interface FileRoutesByFullPath {
   '/soda': typeof SodaRoute
   '/what-is-indus-orbit': typeof WhatIsIndusOrbitRoute
   '/writing': typeof WritingRouteWithChildren
+  '/app/admin': typeof AppAdminRouteWithChildren
   '/app/board': typeof AppBoardRoute
   '/app/chapter-admin': typeof AppChapterAdminRoute
   '/app/directory': typeof AppDirectoryRoute
@@ -550,6 +564,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/io-port': typeof IoPortRoute
@@ -619,6 +634,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/admin': typeof AdminRoute
   '/app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
@@ -634,6 +650,7 @@ export interface FileRoutesById {
   '/soda': typeof SodaRoute
   '/what-is-indus-orbit': typeof WhatIsIndusOrbitRoute
   '/writing': typeof WritingRouteWithChildren
+  '/app/admin': typeof AppAdminRouteWithChildren
   '/app/board': typeof AppBoardRoute
   '/app/chapter-admin': typeof AppChapterAdminRoute
   '/app/directory': typeof AppDirectoryRoute
@@ -699,6 +716,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
+    | '/admin'
     | '/app'
     | '/auth'
     | '/contact'
@@ -714,6 +732,7 @@ export interface FileRouteTypes {
     | '/soda'
     | '/what-is-indus-orbit'
     | '/writing'
+    | '/app/admin'
     | '/app/board'
     | '/app/chapter-admin'
     | '/app/directory'
@@ -777,6 +796,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
+    | '/admin'
     | '/auth'
     | '/contact'
     | '/io-port'
@@ -845,6 +865,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/about'
+    | '/admin'
     | '/app'
     | '/auth'
     | '/contact'
@@ -860,6 +881,7 @@ export interface FileRouteTypes {
     | '/soda'
     | '/what-is-indus-orbit'
     | '/writing'
+    | '/app/admin'
     | '/app/board'
     | '/app/chapter-admin'
     | '/app/directory'
@@ -924,6 +946,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
+  AdminRoute: typeof AdminRoute
   AppRoute: typeof AppRouteWithChildren
   AuthRoute: typeof AuthRoute
   ContactRoute: typeof ContactRoute
@@ -957,6 +980,13 @@ declare module '@tanstack/react-router' {
       path: '/about'
       fullPath: '/about'
       preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app': {
@@ -1069,6 +1099,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/app/'
       preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/admin': {
+      id: '/app/admin'
+      path: '/admin'
+      fullPath: '/app/admin'
+      preLoaderRoute: typeof AppAdminRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/board': {
@@ -1234,108 +1271,108 @@ declare module '@tanstack/react-router' {
     }
     '/app/admin/': {
       id: '/app/admin/'
-      path: '/admin'
+      path: '/'
       fullPath: '/app/admin/'
       preLoaderRoute: typeof AppAdminIndexRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAdminRoute
     }
     '/app/admin/audit': {
       id: '/app/admin/audit'
-      path: '/admin/audit'
+      path: '/audit'
       fullPath: '/app/admin/audit'
       preLoaderRoute: typeof AppAdminAuditRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAdminRoute
     }
     '/app/admin/content': {
       id: '/app/admin/content'
-      path: '/admin/content'
+      path: '/content'
       fullPath: '/app/admin/content'
       preLoaderRoute: typeof AppAdminContentRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAdminRoute
     }
     '/app/admin/education': {
       id: '/app/admin/education'
-      path: '/admin/education'
+      path: '/education'
       fullPath: '/app/admin/education'
       preLoaderRoute: typeof AppAdminEducationRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAdminRoute
     }
     '/app/admin/hubs': {
       id: '/app/admin/hubs'
-      path: '/admin/hubs'
+      path: '/hubs'
       fullPath: '/app/admin/hubs'
       preLoaderRoute: typeof AppAdminHubsRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAdminRoute
     }
     '/app/admin/loop': {
       id: '/app/admin/loop'
-      path: '/admin/loop'
+      path: '/loop'
       fullPath: '/app/admin/loop'
       preLoaderRoute: typeof AppAdminLoopRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAdminRoute
     }
     '/app/admin/members': {
       id: '/app/admin/members'
-      path: '/admin/members'
+      path: '/members'
       fullPath: '/app/admin/members'
       preLoaderRoute: typeof AppAdminMembersRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAdminRoute
     }
     '/app/admin/queue': {
       id: '/app/admin/queue'
-      path: '/admin/queue'
+      path: '/queue'
       fullPath: '/app/admin/queue'
       preLoaderRoute: typeof AppAdminQueueRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAdminRoute
     }
     '/app/admin/reports': {
       id: '/app/admin/reports'
-      path: '/admin/reports'
+      path: '/reports'
       fullPath: '/app/admin/reports'
       preLoaderRoute: typeof AppAdminReportsRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAdminRoute
     }
     '/app/admin/roles': {
       id: '/app/admin/roles'
-      path: '/admin/roles'
+      path: '/roles'
       fullPath: '/app/admin/roles'
       preLoaderRoute: typeof AppAdminRolesRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAdminRoute
     }
     '/app/admin/skills': {
       id: '/app/admin/skills'
-      path: '/admin/skills'
+      path: '/skills'
       fullPath: '/app/admin/skills'
       preLoaderRoute: typeof AppAdminSkillsRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAdminRoute
     }
     '/app/admin/soda': {
       id: '/app/admin/soda'
-      path: '/admin/soda'
+      path: '/soda'
       fullPath: '/app/admin/soda'
       preLoaderRoute: typeof AppAdminSodaRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAdminRoute
     }
     '/app/admin/spotlights': {
       id: '/app/admin/spotlights'
-      path: '/admin/spotlights'
+      path: '/spotlights'
       fullPath: '/app/admin/spotlights'
       preLoaderRoute: typeof AppAdminSpotlightsRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAdminRoute
     }
     '/app/admin/submissions': {
       id: '/app/admin/submissions'
-      path: '/admin/submissions'
+      path: '/submissions'
       fullPath: '/app/admin/submissions'
       preLoaderRoute: typeof AppAdminSubmissionsRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAdminRoute
     }
     '/app/admin/vouches': {
       id: '/app/admin/vouches'
-      path: '/admin/vouches'
+      path: '/vouches'
       fullPath: '/app/admin/vouches'
       preLoaderRoute: typeof AppAdminVouchesRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAdminRoute
     }
     '/app/chapters/': {
       id: '/app/chapters/'
@@ -1480,6 +1517,46 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AppAdminRouteChildren {
+  AppAdminAuditRoute: typeof AppAdminAuditRoute
+  AppAdminContentRoute: typeof AppAdminContentRoute
+  AppAdminEducationRoute: typeof AppAdminEducationRoute
+  AppAdminHubsRoute: typeof AppAdminHubsRoute
+  AppAdminLoopRoute: typeof AppAdminLoopRoute
+  AppAdminMembersRoute: typeof AppAdminMembersRoute
+  AppAdminQueueRoute: typeof AppAdminQueueRoute
+  AppAdminReportsRoute: typeof AppAdminReportsRoute
+  AppAdminRolesRoute: typeof AppAdminRolesRoute
+  AppAdminSkillsRoute: typeof AppAdminSkillsRoute
+  AppAdminSodaRoute: typeof AppAdminSodaRoute
+  AppAdminSpotlightsRoute: typeof AppAdminSpotlightsRoute
+  AppAdminSubmissionsRoute: typeof AppAdminSubmissionsRoute
+  AppAdminVouchesRoute: typeof AppAdminVouchesRoute
+  AppAdminIndexRoute: typeof AppAdminIndexRoute
+}
+
+const AppAdminRouteChildren: AppAdminRouteChildren = {
+  AppAdminAuditRoute: AppAdminAuditRoute,
+  AppAdminContentRoute: AppAdminContentRoute,
+  AppAdminEducationRoute: AppAdminEducationRoute,
+  AppAdminHubsRoute: AppAdminHubsRoute,
+  AppAdminLoopRoute: AppAdminLoopRoute,
+  AppAdminMembersRoute: AppAdminMembersRoute,
+  AppAdminQueueRoute: AppAdminQueueRoute,
+  AppAdminReportsRoute: AppAdminReportsRoute,
+  AppAdminRolesRoute: AppAdminRolesRoute,
+  AppAdminSkillsRoute: AppAdminSkillsRoute,
+  AppAdminSodaRoute: AppAdminSodaRoute,
+  AppAdminSpotlightsRoute: AppAdminSpotlightsRoute,
+  AppAdminSubmissionsRoute: AppAdminSubmissionsRoute,
+  AppAdminVouchesRoute: AppAdminVouchesRoute,
+  AppAdminIndexRoute: AppAdminIndexRoute,
+}
+
+const AppAdminRouteWithChildren = AppAdminRoute._addFileChildren(
+  AppAdminRouteChildren,
+)
+
 interface AppEducationCourseSlugRouteChildren {
   AppEducationCourseSlugLessonSlugRoute: typeof AppEducationCourseSlugLessonSlugRoute
   AppEducationCourseSlugIndexRoute: typeof AppEducationCourseSlugIndexRoute
@@ -1604,6 +1681,7 @@ const AppStoriesRouteWithChildren = AppStoriesRoute._addFileChildren(
 )
 
 interface AppRouteChildren {
+  AppAdminRoute: typeof AppAdminRouteWithChildren
   AppBoardRoute: typeof AppBoardRoute
   AppChapterAdminRoute: typeof AppChapterAdminRoute
   AppDirectoryRoute: typeof AppDirectoryRoute
@@ -1625,27 +1703,13 @@ interface AppRouteChildren {
   AppStoriesRoute: typeof AppStoriesRouteWithChildren
   AppVouchRoute: typeof AppVouchRoute
   AppIndexRoute: typeof AppIndexRoute
-  AppAdminAuditRoute: typeof AppAdminAuditRoute
-  AppAdminContentRoute: typeof AppAdminContentRoute
-  AppAdminEducationRoute: typeof AppAdminEducationRoute
-  AppAdminHubsRoute: typeof AppAdminHubsRoute
-  AppAdminLoopRoute: typeof AppAdminLoopRoute
-  AppAdminMembersRoute: typeof AppAdminMembersRoute
-  AppAdminQueueRoute: typeof AppAdminQueueRoute
-  AppAdminReportsRoute: typeof AppAdminReportsRoute
-  AppAdminRolesRoute: typeof AppAdminRolesRoute
-  AppAdminSkillsRoute: typeof AppAdminSkillsRoute
-  AppAdminSodaRoute: typeof AppAdminSodaRoute
-  AppAdminSpotlightsRoute: typeof AppAdminSpotlightsRoute
-  AppAdminSubmissionsRoute: typeof AppAdminSubmissionsRoute
-  AppAdminVouchesRoute: typeof AppAdminVouchesRoute
   AppChaptersChapterIdRoute: typeof AppChaptersChapterIdRoute
   AppChaptersProposeRoute: typeof AppChaptersProposeRoute
-  AppAdminIndexRoute: typeof AppAdminIndexRoute
   AppChaptersIndexRoute: typeof AppChaptersIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAdminRoute: AppAdminRouteWithChildren,
   AppBoardRoute: AppBoardRoute,
   AppChapterAdminRoute: AppChapterAdminRoute,
   AppDirectoryRoute: AppDirectoryRoute,
@@ -1667,23 +1731,8 @@ const AppRouteChildren: AppRouteChildren = {
   AppStoriesRoute: AppStoriesRouteWithChildren,
   AppVouchRoute: AppVouchRoute,
   AppIndexRoute: AppIndexRoute,
-  AppAdminAuditRoute: AppAdminAuditRoute,
-  AppAdminContentRoute: AppAdminContentRoute,
-  AppAdminEducationRoute: AppAdminEducationRoute,
-  AppAdminHubsRoute: AppAdminHubsRoute,
-  AppAdminLoopRoute: AppAdminLoopRoute,
-  AppAdminMembersRoute: AppAdminMembersRoute,
-  AppAdminQueueRoute: AppAdminQueueRoute,
-  AppAdminReportsRoute: AppAdminReportsRoute,
-  AppAdminRolesRoute: AppAdminRolesRoute,
-  AppAdminSkillsRoute: AppAdminSkillsRoute,
-  AppAdminSodaRoute: AppAdminSodaRoute,
-  AppAdminSpotlightsRoute: AppAdminSpotlightsRoute,
-  AppAdminSubmissionsRoute: AppAdminSubmissionsRoute,
-  AppAdminVouchesRoute: AppAdminVouchesRoute,
   AppChaptersChapterIdRoute: AppChaptersChapterIdRoute,
   AppChaptersProposeRoute: AppChaptersProposeRoute,
-  AppAdminIndexRoute: AppAdminIndexRoute,
   AppChaptersIndexRoute: AppChaptersIndexRoute,
 }
 
@@ -1703,6 +1752,7 @@ const WritingRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
+  AdminRoute: AdminRoute,
   AppRoute: AppRouteWithChildren,
   AuthRoute: AuthRoute,
   ContactRoute: ContactRoute,

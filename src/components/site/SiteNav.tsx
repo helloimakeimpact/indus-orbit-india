@@ -81,7 +81,7 @@ function UserMenu() {
           <UserIcon className="mr-2 h-4 w-4" /> Profile
         </DropdownMenuItem>
         {isAdmin && (
-          <DropdownMenuItem onClick={() => navigate({ to: "/app/admin/members" })}>
+          <DropdownMenuItem onClick={() => navigate({ to: "/admin" })}>
             <ShieldCheck className="mr-2 h-4 w-4" /> Admin
           </DropdownMenuItem>
         )}

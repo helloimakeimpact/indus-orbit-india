@@ -5,7 +5,13 @@ import { supabase } from "@/integrations/supabase/client";
 type AuthContextValue = {
   session: Session | null;
   user: User | null;
+  /** Backwards-compatible alias for the root platform administrator. */
   isAdmin: boolean;
+  isAdminTeam: boolean;
+  isSuperAdmin: boolean;
+  adminRoles: string[];
+  adminCapabilities: string[];
+  hasAdminCapability: (capability: string) => boolean;
   isChapterLead: boolean;
   isMissionLead: boolean;
   userSegment: string | null;
@@ -15,11 +21,22 @@ type AuthContextValue = {
 
 type AccessState = Pick<
   AuthContextValue,
-  "isAdmin" | "isChapterLead" | "isMissionLead" | "userSegment"
+  | "isAdmin"
+  | "isAdminTeam"
+  | "isSuperAdmin"
+  | "adminRoles"
+  | "adminCapabilities"
+  | "isChapterLead"
+  | "isMissionLead"
+  | "userSegment"
 >;
 
 const emptyAccessState: AccessState = {
   isAdmin: false,
+  isAdminTeam: false,
+  isSuperAdmin: false,
+  adminRoles: [],
+  adminCapabilities: [],
   isChapterLead: false,
   isMissionLead: false,
   userSegment: null,
@@ -28,23 +45,37 @@ const emptyAccessState: AccessState = {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 async function loadAccessState(userId: string): Promise<AccessState> {
-  const [roleRes, profileRes, leadRes] = await Promise.all([
-    supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .eq("role", "admin")
-      .maybeSingle(),
+  const [adminAccessRes, profileRes, leadRes] = await Promise.all([
+    supabase.rpc("get_my_admin_access"),
     supabase.from("profiles").select("orbit_segment").eq("user_id", userId).maybeSingle(),
     supabase.rpc("my_lead_summary"),
   ]);
 
-  if (roleRes.error || profileRes.error || leadRes.error) return emptyAccessState;
+  if (adminAccessRes.error || profileRes.error || leadRes.error) return emptyAccessState;
+  const adminAccess =
+    adminAccessRes.data &&
+    typeof adminAccessRes.data === "object" &&
+    !Array.isArray(adminAccessRes.data)
+      ? (adminAccessRes.data as Record<string, unknown>)
+      : {};
+  const isSuperAdmin = adminAccess.isSuperAdmin === true;
+  const adminRoles = Array.isArray(adminAccess.roles)
+    ? adminAccess.roles.filter((role): role is string => typeof role === "string")
+    : [];
+  const adminCapabilities = Array.isArray(adminAccess.capabilities)
+    ? adminAccess.capabilities.filter(
+        (capability): capability is string => typeof capability === "string",
+      )
+    : [];
   const leadSummary = leadRes.data ?? {};
   const summary = leadSummary as { chapter_lead_count?: number; mission_lead_count?: number };
 
   return {
-    isAdmin: !!roleRes.data,
+    isAdmin: isSuperAdmin,
+    isAdminTeam: adminAccess.isAdminTeam === true,
+    isSuperAdmin,
+    adminRoles,
+    adminCapabilities,
     isChapterLead: (summary.chapter_lead_count ?? 0) > 0,
     isMissionLead: (summary.mission_lead_count ?? 0) > 0,
     userSegment: profileRes.data?.orbit_segment ?? null,
@@ -55,6 +86,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdminTeam, setIsAdminTeam] = useState(false);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [adminRoles, setAdminRoles] = useState<string[]>([]);
+  const [adminCapabilities, setAdminCapabilities] = useState<string[]>([]);
   const [isChapterLead, setIsChapterLead] = useState(false);
   const [isMissionLead, setIsMissionLead] = useState(false);
   const [userSegment, setUserSegment] = useState<string | null>(null);
@@ -65,6 +100,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const applyAccessState = (access: AccessState) => {
       setIsAdmin(access.isAdmin);
+      setIsAdminTeam(access.isAdminTeam);
+      setIsSuperAdmin(access.isSuperAdmin);
+      setAdminRoles(access.adminRoles);
+      setAdminCapabilities(access.adminCapabilities);
       setIsChapterLead(access.isChapterLead);
       setIsMissionLead(access.isMissionLead);
       setUserSegment(access.userSegment);
@@ -139,6 +178,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         session,
         user,
         isAdmin,
+        isAdminTeam,
+        isSuperAdmin,
+        adminRoles,
+        adminCapabilities,
+        hasAdminCapability: (capability: string) =>
+          isSuperAdmin || adminCapabilities.includes("*") || adminCapabilities.includes(capability),
         isChapterLead,
         isMissionLead,
         userSegment,

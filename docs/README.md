@@ -10,7 +10,8 @@ Status: current as of 1 August 2026.
 4. `io-system/io-port-system/` — gateway, capacity, providers, pricing and OpenRouter comparison.
 5. `io-system/terminal-system/` — OpenCode-based I/O Terminal adoption.
 6. `io-system/conversation-system/` — human messaging and branded Discord-like collaboration.
-7. `io-system/platform-system/` — wider product domains.
+7. `io-system/admin-system/` — separate admin application, root/scoped authority and operations migration.
+8. `io-system/platform-system/` — wider product domains.
 
 ## Product-wide authority
 

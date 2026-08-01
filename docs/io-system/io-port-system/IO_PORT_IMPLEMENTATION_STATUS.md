@@ -69,6 +69,8 @@ The member must be able to understand which model, provider, serving region, dat
 - Provider, model, endpoint, versioned capability, and versioned pricing tables exist.
 - Endpoint connection details and conformance runs are kept in the private schema rather than exposed through the browser Data API.
 - The dynamic-model migration adds reviewed release dates and `economy`/`balanced`/`premium` automatic-route tiers.
+- A private provider runtime-control table and append-only control-event table are deployed. All five staged providers default disabled.
+- The separate `admin-indus-orbit` application has a capability-checked I/O readiness/control room. The browser receives lifecycle and conformance states but no credential value, prompt or generated content.
 
 ### 3.3 Deployed gateway foundation
 
@@ -171,7 +173,7 @@ Durable terminal work still needs `io_sessions`, session members, events, approv
 - member policy, provider/model, BYOK, budget, and fallback controls;
 - pre-run estimate and post-run route receipt;
 - usage, credits, invoice, export, and reconciliation views;
-- on-call dashboards, alerts, SLOs, incident playbooks, key rotation, and provider kill switches;
+- on-call dashboards, alerts, SLOs, incident playbooks and key rotation (the first provider kill switch is now implemented);
 - API/CLI contracts, versioning, rate limits, API key issuance, and SDK documentation.
 
 ## 6. The API keys already added

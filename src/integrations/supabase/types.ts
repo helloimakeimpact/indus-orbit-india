@@ -3044,9 +3044,66 @@ export type Database = {
       };
     };
     Functions: {
+      admin_io_operational_snapshot: {
+        Args: never;
+        Returns: {
+          activation_eligible: boolean;
+          capability_state: string;
+          capacity_mode: string;
+          connection_state: string;
+          currency_code: string;
+          disabled_reason: string;
+          endpoint_id: string;
+          endpoint_key: string;
+          endpoint_routing_state: string;
+          integration_style: string;
+          latest_conformance_state: string;
+          model_display_name: string;
+          price_state: string;
+          provider_display_name: string;
+          provider_id: string;
+          provider_key: string;
+          provider_lifecycle_state: string;
+          routing_enabled: boolean;
+          supports_chat: boolean;
+          updated_at: string;
+        }[];
+      };
+      admin_io_set_provider_routing: {
+        Args: { _enabled: boolean; _provider_id: string; _reason: string };
+        Returns: Json;
+      };
+      admin_list_team_members: {
+        Args: never;
+        Returns: {
+          capabilities: string[];
+          display_name: string;
+          headline: string;
+          is_super_admin: boolean;
+          roles: string[];
+          user_id: string;
+        }[];
+      };
       admin_resolve_vouch_request: {
         Args: { _approve: boolean; _reason?: string; _request_id: string };
         Returns: undefined;
+      };
+      admin_search_members: {
+        Args: { _limit?: number; _query: string };
+        Returns: {
+          display_name: string;
+          headline: string;
+          user_id: string;
+        }[];
+      };
+      admin_set_team_role: {
+        Args: {
+          _enabled: boolean;
+          _reason: string;
+          _role: string;
+          _target_user_id: string;
+        };
+        Returns: Json;
       };
       can_author_education: { Args: { _user_id: string }; Returns: boolean };
       create_my_io_workspace: {
@@ -3075,6 +3132,7 @@ export type Database = {
         Args: { target_user_id: string };
         Returns: string;
       };
+      get_my_admin_access: { Args: never; Returns: Json };
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"];

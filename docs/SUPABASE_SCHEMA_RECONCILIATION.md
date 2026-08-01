@@ -1,6 +1,6 @@
 # Supabase schema-reconciliation record
 
-Status: historical recovery staged locally; resettable non-production replay equivalence still pending, 31 July 2026.
+Status: historical recovery staged locally; forward migrations continue; resettable non-production replay equivalence still pending, 1 August 2026.
 
 ## What was verified
 
@@ -51,7 +51,7 @@ Recovered filenames:
 20260430064549_add_source_to_contact_submissions.sql
 ```
 
-The local directory now contains 45 migration files. The remaining concern is not missing named history: it is the timestamp mapping for baseline files and newer migrations whose local file names differ slightly from their recorded remote apply versions.
+The local directory now contains 51 migration files. The remaining concern is not missing named history: it is the timestamp mapping for baseline files and newer migrations whose local file names differ slightly from their recorded remote apply versions.
 
 ### Validation limitation
 
@@ -66,6 +66,15 @@ Supabase CLI `migration list --linked` could not complete because the CLI login 
 | `20260730170917_harden_direct_messages.sql`                 | `harden_direct_messages`                 | Connection-gated direct-message insertion, read-only receipt updates, 4,000-character limit. | RLS role simulation: connected send passes; unconnected send fails; read receipt passes; content update fails. |
 | `20260730171132_validate_direct_message_content_length.sql` | `validate_direct_message_content_length` | Validates the length constraint after confirming zero legacy violations.                     | Remote constraint is validated.                                                                                |
 | `20260730172452_create_io_workspace_rpc.sql`                | `create_io_workspace_rpc`                | Atomic, idempotent personal I/O workspace + owner membership + safe audit event RPC.         | Authenticated-role creation and recovery paths passed inside rolled-back transactions; counts unchanged.       |
+| `20260731113000_create_io_provider_registry.sql`            | `create_io_provider_registry`            | Public evidence/price catalogue plus private endpoint/conformance metadata.                  | Deployed with explicit RLS/grants; provider secrets remain external.                                           |
+| `20260731123500_add_io_provider_registry_fk_indexes.sql`    | `add_io_provider_registry_fk_indexes`    | Covers provider-registry foreign-key paths used by policy/operator queries.                  | Performance Advisor covering-index check.                                                                      |
+| `20260731150000_add_io_dynamic_model_selection.sql`         | `add_io_dynamic_model_selection`         | Reviewed model release dates and automatic route tiers.                                      | Local deterministic selection tests pass.                                                                      |
+| `20260801120115_io_route_receipts_and_registry_router.sql`  | `io_route_receipts_and_registry_router`  | Service-only ready resolver plus append-only route/attempt evidence.                         | Ready resolver returns zero; receipt/attempt counts remain zero before live traffic.                           |
+| `20260801121231_seed_io_direct_provider_registry.sql`       | `seed_io_direct_provider_registry`       | Stages five direct providers with unique secret references and reviewed inventory metadata.  | Five testing connections, five draft capability versions and no paid conformance call.                         |
+| `20260801122329_add_io_route_evidence_fk_indexes.sql`       | `add_io_route_evidence_fk_indexes`       | Covers route-evidence provider/model/endpoint/capacity foreign keys.                         | Advisor reports no remaining unindexed foreign key in the new evidence tables.                                 |
+| `20260801123802_create_admin_control_plane.sql`             | `create_admin_control_plane`             | Scoped admin-team authority, I/O operator snapshot and fail-closed provider runtime switch.  | Super-admin projection verified; five controls disabled; zero ready routes and zero scoped assignments.        |
+| `20260801124706_harden_super_admin_role_management.sql`     | `harden_super_admin_role_management`     | Removes authenticated browser DML from root platform roles.                                  | `authenticated`: SELECT true; INSERT/UPDATE/DELETE false on `public.user_roles`.                               |
+| `20260801130427_add_admin_control_plane_fk_indexes.sql`     | `add_admin_control_plane_fk_indexes`     | Covers assignment, audit-actor and provider-control foreign-key paths.                       | All nine foreign keys across the four affected private tables are index-backed; no missing path remains.       |
 
 These are additive hardening migrations. They do not modify or delete existing message rows.
 
