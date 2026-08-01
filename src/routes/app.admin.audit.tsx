@@ -7,7 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 
 export const Route = createFileRoute("/app/admin/audit")({
-  head: () => ({ meta: [{ title: "Audit log — Indus Orbit" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({
+    meta: [{ title: "Audit log — Indus Orbit" }, { name: "robots", content: "noindex" }],
+  }),
   component: AuditLog,
 });
 
@@ -31,7 +33,10 @@ function AuditLog() {
   const [filter, setFilter] = useState("");
 
   useEffect(() => {
-    if (!loading && !isAdmin) { toast.error("Admins only"); navigate({ to: "/app" }); }
+    if (!loading && !isAdmin) {
+      toast.error("Admins only");
+      navigate({ to: "/app" });
+    }
   }, [isAdmin, loading, navigate]);
 
   useEffect(() => {
@@ -47,9 +52,13 @@ function AuditLog() {
       setRows(list);
       const ids = Array.from(new Set(list.map((r) => r.actor_id)));
       if (ids.length) {
-        const { data: profs } = await supabase.from("profiles").select("user_id, display_name").in("user_id", ids);
+        const { data: profs } = await supabase
+          .from("profiles")
+          .select("user_id, display_name")
+          .in("user_id", ids);
         const map: Record<string, string> = {};
-        for (const p of (profs as { user_id: string; display_name: string | null }[] | null) ?? []) {
+        for (const p of (profs as { user_id: string; display_name: string | null }[] | null) ??
+          []) {
           map[p.user_id] = p.display_name ?? p.user_id.slice(0, 8);
         }
         setActors(map);
@@ -74,7 +83,9 @@ function AuditLog() {
   return (
     <div className="mx-auto w-full max-w-7xl">
       <h1 className="font-display text-3xl font-medium">Audit log</h1>
-      <p className="mt-2 text-sm text-muted-foreground">Every privileged action — last 500 entries.</p>
+      <p className="mt-2 text-sm text-muted-foreground">
+        Every privileged action — last 500 entries.
+      </p>
       <Input
         className="mt-6 max-w-md"
         placeholder="Filter by actor, action, or reason…"
@@ -101,10 +112,20 @@ function AuditLog() {
               <tbody>
                 {filtered.map((r) => (
                   <tr key={r.id} className="border-t border-border align-top">
-                    <td className="p-4 text-xs text-muted-foreground">{new Date(r.created_at).toLocaleString()}</td>
+                    <td className="p-4 text-xs text-muted-foreground">
+                      {new Date(r.created_at).toLocaleString()}
+                    </td>
                     <td className="p-4">{actors[r.actor_id] ?? r.actor_id.slice(0, 8)}</td>
-                    <td className="p-4"><Badge variant="secondary">{r.action}</Badge></td>
-                    <td className="p-4 text-xs">{r.target_type}<br /><span className="text-muted-foreground">{r.target_id?.slice(0, 8) ?? "—"}</span></td>
+                    <td className="p-4">
+                      <Badge variant="secondary">{r.action}</Badge>
+                    </td>
+                    <td className="p-4 text-xs">
+                      {r.target_type}
+                      <br />
+                      <span className="text-muted-foreground">
+                        {r.target_id?.slice(0, 8) ?? "—"}
+                      </span>
+                    </td>
                     <td className="p-4 text-sm">{r.reason ?? "—"}</td>
                   </tr>
                 ))}

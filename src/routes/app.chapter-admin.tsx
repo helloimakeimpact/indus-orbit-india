@@ -1,7 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Users, Settings, Trash2, MapPin, Search, Inbox, Check, X as XIcon } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import {
   getMyAdminChapters,
   removeChapterMember,
@@ -26,6 +25,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { formatChapterBaseLocation, formatEventLocation } from "@/lib/location";
+import { getErrorMessage } from "@/lib/errors";
 
 export const Route = createFileRoute("/app/chapter-admin")({
   head: () => ({
@@ -34,9 +34,15 @@ export const Route = createFileRoute("/app/chapter-admin")({
   component: ChapterAdminPage,
 });
 
+type AdminChapter = Awaited<ReturnType<typeof getMyAdminChapters>>[number];
+type LeadInbox = Awaited<ReturnType<typeof getLeadInbox>>;
+type InboxStory = LeadInbox["stories"][number];
+type InboxEvent = LeadInbox["events"][number];
+type ChapterMember = NonNullable<AdminChapter["chapter_members"]>[number];
+
 function ChapterAdminPage() {
-  const [chapters, setChapters] = useState<any[]>([]);
-  const [inbox, setInbox] = useState<{ stories: any[]; events: any[]; chapters: any[] }>({
+  const [chapters, setChapters] = useState<AdminChapter[]>([]);
+  const [inbox, setInbox] = useState<LeadInbox>({
     stories: [],
     events: [],
     chapters: [],
@@ -51,7 +57,7 @@ function ChapterAdminPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    load();
+    void Promise.resolve().then(load);
   }, []);
 
   async function load() {
@@ -59,9 +65,9 @@ function ChapterAdminPage() {
     try {
       const [data, ibx] = await Promise.all([getMyAdminChapters(), getLeadInbox()]);
       setChapters(data);
-      setInbox(ibx as never);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to load chapters");
+      setInbox(ibx);
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Failed to load chapters"));
     } finally {
       setBusy(false);
     }
@@ -72,8 +78,8 @@ function ChapterAdminPage() {
       await approveStory({ data: { storyId: id } });
       toast.success("Story approved");
       load();
-    } catch (e: any) {
-      toast.error(e.message);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
     }
   }
   async function onRejectStory(id: string) {
@@ -81,8 +87,8 @@ function ChapterAdminPage() {
       await rejectStory({ data: { storyId: id } });
       toast.success("Story rejected");
       load();
-    } catch (e: any) {
-      toast.error(e.message);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
     }
   }
   async function onApproveEvent(id: string) {
@@ -90,8 +96,8 @@ function ChapterAdminPage() {
       await approveEvent({ data: { eventId: id } });
       toast.success("Event approved");
       load();
-    } catch (e: any) {
-      toast.error(e.message);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
     }
   }
   async function onRejectEvent(id: string) {
@@ -99,8 +105,8 @@ function ChapterAdminPage() {
       await rejectEvent({ data: { eventId: id } });
       toast.success("Event rejected");
       load();
-    } catch (e: any) {
-      toast.error(e.message);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
     }
   }
 
@@ -113,12 +119,12 @@ function ChapterAdminPage() {
       toast.success(`${memberToRemove.name} removed from chapter.`);
       setMemberToRemove(null);
       load();
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
     }
   }
 
-  async function handleUpdate(e: React.FormEvent, chapter: any) {
+  async function handleUpdate(e: React.FormEvent, chapter: AdminChapter) {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
     const description = formData.get("description") as string;
@@ -129,8 +135,8 @@ function ChapterAdminPage() {
       await updateChapterDetails({ data: { chapterId: chapter.id, description, city, country } });
       toast.success("Chapter details updated");
       load();
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
     }
   }
 
@@ -176,7 +182,7 @@ function ChapterAdminPage() {
             <div className="mt-6">
               <h3 className="font-semibold mb-3">Stories</h3>
               <div className="space-y-3">
-                {inbox.stories.map((s: any) => (
+                {inbox.stories.map((s: InboxStory) => (
                   <div key={s.id} className="rounded-2xl border border-border bg-card p-4">
                     <div className="flex flex-wrap justify-between gap-3">
                       <div className="min-w-0 flex-1">
@@ -205,7 +211,7 @@ function ChapterAdminPage() {
             <div className="mt-6">
               <h3 className="font-semibold mb-3">Events</h3>
               <div className="space-y-3">
-                {inbox.events.map((ev: any) => (
+                {inbox.events.map((ev: InboxEvent) => (
                   <div key={ev.id} className="rounded-2xl border border-border bg-card p-4">
                     <div className="flex flex-wrap justify-between gap-3">
                       <div className="min-w-0 flex-1">
@@ -236,7 +242,7 @@ function ChapterAdminPage() {
       {chapters.map((chapter) => {
         const members = chapter.chapter_members || [];
         const filteredMembers = members.filter(
-          (m: any) =>
+          (m: ChapterMember) =>
             m.profiles?.display_name?.toLowerCase().includes(search.toLowerCase()) ||
             m.profiles?.headline?.toLowerCase().includes(search.toLowerCase()),
         );
@@ -331,7 +337,7 @@ function ChapterAdminPage() {
                     {filteredMembers.length === 0 ? (
                       <p className="py-8 text-center text-muted-foreground">No members found.</p>
                     ) : (
-                      filteredMembers.map((m: any) => (
+                      filteredMembers.map((m: ChapterMember) => (
                         <div
                           key={m.user_id}
                           className="flex items-center justify-between py-4 group"

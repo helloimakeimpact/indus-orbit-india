@@ -452,74 +452,74 @@ function HomePage() {
         </section>
       )}
 
-      {/* S.O.D.A COHORT PROGRAM (hidden) */}
-      {false && (
-      <section className="px-6 pb-24">
-        <div className="mx-auto grid max-w-7xl gap-12 md:grid-cols-2 md:items-center rounded-3xl overflow-hidden bg-[var(--indigo-night)]/5 border border-border shadow-2xl relative">
-          <div className="order-2 md:order-1 p-8 md:p-14 lg:p-16 relative z-10">
-            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--indigo-night)]">
-              The Communication Wing
-            </p>
-            <h3 className="mt-4 font-display text-4xl font-medium leading-tight md:text-5xl text-[var(--indigo-night)]">
-              S.O.D.A by Indus Orbit
-            </h3>
-            <p className="mt-6 text-xl font-light text-foreground/90 leading-relaxed text-balance">
-              S.O.D.A is the creative and communication engine of Indus Orbit. We document and
-              distribute high-signal stories from India’s builders.
-            </p>
-            <p className="mt-4 text-[1.05rem] text-foreground/70 leading-relaxed">
-              As part of its mission, S.O.D.A runs the{" "}
-              <strong className="font-semibold text-[var(--indigo-night)]">
-                S.O.D.A Cohort Program
-              </strong>{" "}
-              (Startup Opportunities, Development & Action)—a flagship initiative designed to
-              identify and accelerate India’s highest-potential young builders under 24. We don't
-              optimize for attention; we optimize for alignment.
-            </p>
-            <div className="mt-6 p-5 border-l-4 border-[var(--saffron)] bg-white/50 backdrop-blur rounded-r-2xl shadow-sm">
-              <p className="text-[15px] font-medium text-foreground italic">
-                "Not students chasing credentials. Builders chasing outcomes."
+      {/* S.O.D.A COHORT PROGRAM: intentionally feature-gated until its public release. */}
+      {import.meta.env.VITE_ENABLE_SODA_COHORT === "true" && (
+        <section className="px-6 pb-24">
+          <div className="mx-auto grid max-w-7xl gap-12 md:grid-cols-2 md:items-center rounded-3xl overflow-hidden bg-[var(--indigo-night)]/5 border border-border shadow-2xl relative">
+            <div className="order-2 md:order-1 p-8 md:p-14 lg:p-16 relative z-10">
+              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--indigo-night)]">
+                The Communication Wing
               </p>
-            </div>
-            <div className="mt-8 flex flex-wrap gap-4">
-              <Link
-                to="/soda"
-                className="inline-flex items-center gap-2 rounded-full bg-[var(--indigo-night)] px-7 py-3.5 text-sm font-semibold text-[var(--parchment)] hover:bg-[var(--saffron)] hover:text-[var(--indigo-night)] shadow-md transition"
-              >
-                Explore the S.O.D.A Program <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-          </div>
-          <div className="order-1 md:order-2 h-[400px] sm:h-[450px] md:h-full w-full bg-muted overflow-hidden relative group">
-            <img
-              src="/soda-2.jpg"
-              alt="S.O.D.A Cohort Program Builders"
-              className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-[var(--indigo-night)]/90 via-black/20 to-transparent mix-blend-multiply" />
-
-            {/* SPONSOR BANNER OVER IMAGE */}
-            <div className="absolute bottom-6 inset-x-6 rounded-2xl bg-white/10 border border-white/20 p-6 backdrop-blur-md shadow-2xl transition-transform duration-500 hover:-translate-y-1">
-              <div className="flex flex-col gap-1.5">
-                <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[var(--saffron)]">
-                  Sponsored Cohort
-                </span>
-                <p className="text-[15px] text-white/95 leading-relaxed mt-1">
-                  Powered by{" "}
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--saffron)] to-[#ffeaa7] font-display text-[1.6rem] font-bold tracking-wide drop-shadow-md">
-                    Jri.AI
-                  </span>
-                  <br />
-                  <span className="font-medium text-white">
-                    The AI+Human business automation platform.
-                  </span>{" "}
-                  From set up to scale.
+              <h3 className="mt-4 font-display text-4xl font-medium leading-tight md:text-5xl text-[var(--indigo-night)]">
+                S.O.D.A by Indus Orbit
+              </h3>
+              <p className="mt-6 text-xl font-light text-foreground/90 leading-relaxed text-balance">
+                S.O.D.A is the creative and communication engine of Indus Orbit. We document and
+                distribute high-signal stories from India’s builders.
+              </p>
+              <p className="mt-4 text-[1.05rem] text-foreground/70 leading-relaxed">
+                As part of its mission, S.O.D.A runs the{" "}
+                <strong className="font-semibold text-[var(--indigo-night)]">
+                  S.O.D.A Cohort Program
+                </strong>{" "}
+                (Startup Opportunities, Development & Action)—a flagship initiative designed to
+                identify and accelerate India’s highest-potential young builders under 24. We don't
+                optimize for attention; we optimize for alignment.
+              </p>
+              <div className="mt-6 p-5 border-l-4 border-[var(--saffron)] bg-white/50 backdrop-blur rounded-r-2xl shadow-sm">
+                <p className="text-[15px] font-medium text-foreground italic">
+                  "Not students chasing credentials. Builders chasing outcomes."
                 </p>
+              </div>
+              <div className="mt-8 flex flex-wrap gap-4">
+                <Link
+                  to="/soda"
+                  className="inline-flex items-center gap-2 rounded-full bg-[var(--indigo-night)] px-7 py-3.5 text-sm font-semibold text-[var(--parchment)] hover:bg-[var(--saffron)] hover:text-[var(--indigo-night)] shadow-md transition"
+                >
+                  Explore the S.O.D.A Program <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+            </div>
+            <div className="order-1 md:order-2 h-[400px] sm:h-[450px] md:h-full w-full bg-muted overflow-hidden relative group">
+              <img
+                src="/soda-2.jpg"
+                alt="S.O.D.A Cohort Program Builders"
+                className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[var(--indigo-night)]/90 via-black/20 to-transparent mix-blend-multiply" />
+
+              {/* SPONSOR BANNER OVER IMAGE */}
+              <div className="absolute bottom-6 inset-x-6 rounded-2xl bg-white/10 border border-white/20 p-6 backdrop-blur-md shadow-2xl transition-transform duration-500 hover:-translate-y-1">
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[var(--saffron)]">
+                    Sponsored Cohort
+                  </span>
+                  <p className="text-[15px] text-white/95 leading-relaxed mt-1">
+                    Powered by{" "}
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--saffron)] to-[#ffeaa7] font-display text-[1.6rem] font-bold tracking-wide drop-shadow-md">
+                      Jri.AI
+                    </span>
+                    <br />
+                    <span className="font-medium text-white">
+                      The AI+Human business automation platform.
+                    </span>{" "}
+                    From set up to scale.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
       )}
     </SiteShell>
   );

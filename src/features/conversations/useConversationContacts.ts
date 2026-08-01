@@ -22,7 +22,7 @@ export function useConversationContacts(enabled = true) {
 
   useEffect(() => {
     if (!enabled) return;
-    void refresh();
+    void Promise.resolve().then(refresh);
   }, [enabled, refresh]);
 
   return { contacts, loading, error, refresh };

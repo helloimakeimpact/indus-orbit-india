@@ -1,6 +1,6 @@
 # Supabase schema-reconciliation record
 
-Status: evidence-backed reconciliation in progress, 30 July 2026.
+Status: historical recovery staged locally; resettable non-production replay equivalence still pending, 31 July 2026.
 
 ## What was verified
 
@@ -12,6 +12,50 @@ This explains two facts discovered during the I/O and conversation work:
 - several local baseline migration timestamps differ by a few seconds from the versions recorded remotely, so a local migration replay cannot yet be considered equivalent to the demo project.
 
 The remote history was inspected read-only. No historical migration was re-applied, rewritten or deleted.
+
+## Historical recovery staged on 31 July 2026
+
+The 21 remote migrations that were absent from the repository have been recovered verbatim from the remote migration ledger into `supabase/migrations`. This is a source-control recovery only: none of the recovered SQL has been executed locally, in a resettable non-production environment, or against the demo project.
+
+| Remote range     | Recovered migrations |
+| ---------------- | -------------------: |
+| 26 April 2026    |                    3 |
+| 26–27 April 2026 |                   11 |
+| 27–28 April 2026 |                    4 |
+| 29–30 April 2026 |                    3 |
+| **Total**        |               **21** |
+
+Recovered filenames:
+
+```text
+20260426070606_synergy_s1_notifications.sql
+20260426070909_synergy_s3_missions.sql
+20260426071102_society_phase4.sql
+20260426123031_fix_asks_offers_kind_constraint.sql
+20260426133029_add_connection_requests_unique_constraint.sql
+20260426145729_add_notification_prefs.sql
+20260426145906_get_connection_email_rpc.sql
+20260426151017_add_booking_url_to_profiles.sql
+20260426151112_create_mission_updates_table.sql
+20260426172717_create_direct_messages_table.sql
+20260426172958_add_category_to_notifications.sql
+20260426173049_fix_notification_trigger_search_path.sql
+20260426185052_fix_mission_updates_fk.sql
+20260427063143_fix_vouch_and_audit_rls.sql
+20260427071927_platform_interdependency.sql
+20260427103400_fix_leads_rls_and_create_permissions.sql
+20260428072519_add_redeem_vouch_code_rpc.sql
+20260428072600_add_vouch_directly_rpc.sql
+20260429181105_create_contact_and_newsletter_tables.sql
+20260429182257_fix_admin_policies.sql
+20260430064549_add_source_to_contact_submissions.sql
+```
+
+The local directory now contains 45 migration files. The remaining concern is not missing named history: it is the timestamp mapping for baseline files and newer migrations whose local file names differ slightly from their recorded remote apply versions.
+
+### Validation limitation
+
+Supabase CLI `migration list --linked` could not complete because the CLI login role is unauthenticated (`401`). The connected Supabase project integration remains available and was used for the read-only migration-ledger recovery. Do not mistake this CLI authentication state for a database failure.
 
 ## Additive changes now deployed to the demo project
 
@@ -27,11 +71,10 @@ These are additive hardening migrations. They do not modify or delete existing m
 
 ## Safe recovery sequence for the remaining history
 
-1. Export each missing historical migration from `supabase_migrations.schema_migrations.statements` into a matching checked-in file, preserving its remote version and original statement text.
-2. Make a version mapping for the locally present baseline files whose timestamps differ from remote by a few seconds. Do not rename or rewrite deployed migration history in place.
-3. Create a disposable Supabase development branch, replay the reconciled local history there, and compare schema, grants, policies, functions, triggers, extensions and enum values with the demo project.
-4. Generate fresh `src/integrations/supabase/types.ts` from the reconciled branch/database and run application type checks.
-5. Only after the branch comparison is clean, make local history the source of truth for future migrations and add CI migration-replay checks.
+1. Make a version mapping for the locally present baseline files whose timestamps differ from remote by a few seconds. Do not rename or rewrite deployed migration history in place.
+2. Use a resettable local or non-production database, replay the recovered local history there, and compare schema, grants, policies, functions, triggers, extensions and enum values with the demo project.
+3. Generate fresh `src/integrations/supabase/types.ts` from the reconciled database and run application type checks.
+4. Only after the comparison is clean, make local history the source of truth for future migrations and add CI migration-replay checks.
 
 ## Guardrails
 
@@ -39,4 +82,4 @@ These are additive hardening migrations. They do not modify or delete existing m
 - The database records the actual apply time as its migration version. Keep the local filename → remote-name mapping above; do not rename either side to manufacture timestamp equality.
 - Do not use a schema dump as a substitute for policy/function review; RLS, grants, triggers and Security Definer functions must be compared deliberately.
 - Do not backfill or consolidate direct messages while conversation history is being reconciled. The current hardening migration is intentionally independent of that work.
-- Branch creation may have a platform cost and needs an explicit cost confirmation before it is created.
+- A paid hosted branch is not required for this work and must not be created without separate explicit approval.

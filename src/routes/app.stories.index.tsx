@@ -17,6 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { submitStory, getPublishedStories } from "@/server/society.functions";
+import { getErrorMessage } from "@/lib/errors";
 
 export const Route = createFileRoute("/app/stories/")({
   head: () => ({
@@ -25,9 +26,11 @@ export const Route = createFileRoute("/app/stories/")({
   component: StoriesPage,
 });
 
+type PublishedStory = Awaited<ReturnType<typeof getPublishedStories>>[number];
+
 function StoriesPage() {
   const { user } = useAuth();
-  const [allStories, setAllStories] = useState<any[]>([]);
+  const [allStories, setAllStories] = useState<PublishedStory[]>([]);
   const [busy, setBusy] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -36,15 +39,15 @@ function StoriesPage() {
     try {
       const data = await getPublishedStories();
       setAllStories(data);
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
     } finally {
       setBusy(false);
     }
   }
 
   useEffect(() => {
-    load();
+    void Promise.resolve().then(load);
   }, []);
 
   // Client-side filter
@@ -64,7 +67,7 @@ function StoriesPage() {
   const hasMore = visibleCount < filtered.length;
 
   useEffect(() => {
-    setVisibleCount(PAGE_SIZE);
+    void Promise.resolve().then(() => setVisibleCount(PAGE_SIZE));
   }, [searchQuery]);
 
   return (
@@ -211,8 +214,8 @@ function SubmitStoryDialog({
       toast.success("Story submitted for editorial review!");
       onSubmitted();
       onClose();
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
       setBusy(false);
     }
   }

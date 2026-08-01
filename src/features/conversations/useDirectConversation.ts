@@ -50,52 +50,58 @@ export function useDirectConversation(userId: string | undefined, otherUserId: s
   }, [otherUserId]);
 
   useEffect(() => {
-    if (!userId || !otherUserId || !topic) {
-      setMessages([]);
-      setError(null);
-      setLoading(false);
-      return;
-    }
-
     let active = true;
-    setMessages([]);
-    setLoading(true);
-    setError(null);
-    const channel = supabase
-      .channel(topic)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "direct_messages" },
-        (payload) => {
-          const incoming = payload.new as DirectMessage;
-          if (!incoming?.id || !isConversationMessage(incoming, userId, otherUserId)) return;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
 
-          if (active) setMessages((current) => mergeMessage(current, incoming));
-          if (incoming.sender_id === otherUserId && incoming.recipient_id === userId) {
-            void markConversationRead(otherUserId).catch(() => undefined);
-          }
-        },
-      )
-      .subscribe();
+    void Promise.resolve().then(() => {
+      if (!active) return;
 
-    void getConversation(otherUserId)
-      .then((loaded) => {
-        if (!active) return;
-        setMessages((current) => mergeMessages(current, loaded as DirectMessage[]));
-        void markConversationRead(otherUserId).catch(() => undefined);
-      })
-      .catch((cause) => {
-        if (!active) return;
+      if (!userId || !otherUserId || !topic) {
         setMessages([]);
-        setError(cause instanceof Error ? cause.message : "Could not load this conversation.");
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
+        setError(null);
+        setLoading(false);
+        return;
+      }
+
+      setMessages([]);
+      setLoading(true);
+      setError(null);
+      channel = supabase
+        .channel(topic)
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "direct_messages" },
+          (payload) => {
+            const incoming = payload.new as DirectMessage;
+            if (!incoming?.id || !isConversationMessage(incoming, userId, otherUserId)) return;
+
+            if (active) setMessages((current) => mergeMessage(current, incoming));
+            if (incoming.sender_id === otherUserId && incoming.recipient_id === userId) {
+              void markConversationRead(otherUserId).catch(() => undefined);
+            }
+          },
+        )
+        .subscribe();
+
+      void getConversation(otherUserId)
+        .then((loaded) => {
+          if (!active) return;
+          setMessages((current) => mergeMessages(current, loaded as DirectMessage[]));
+          void markConversationRead(otherUserId).catch(() => undefined);
+        })
+        .catch((cause) => {
+          if (!active) return;
+          setMessages([]);
+          setError(cause instanceof Error ? cause.message : "Could not load this conversation.");
+        })
+        .finally(() => {
+          if (active) setLoading(false);
+        });
+    });
 
     return () => {
       active = false;
-      void supabase.removeChannel(channel);
+      if (channel) void supabase.removeChannel(channel);
     };
   }, [otherUserId, topic, userId]);
 

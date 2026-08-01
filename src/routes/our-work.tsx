@@ -15,8 +15,7 @@ export const Route = createFileRoute("/our-work")({
       { property: "og:title", content: "Our Work — Indus Orbit" },
       {
         property: "og:description",
-        content:
-          "Tools and networks we are building to lift India together.",
+        content: "Tools and networks we are building to lift India together.",
       },
       { property: "og:image", content: workImg },
       { name: "twitter:card", content: "summary_large_image" },
@@ -169,9 +168,7 @@ function WorkPage() {
                   <span className="inline-flex w-fit rounded-full bg-foreground/5 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-foreground/60">
                     {f.tag}
                   </span>
-                  <h3 className="mt-4 font-display text-2xl font-medium leading-tight">
-                    {f.name}
-                  </h3>
+                  <h3 className="mt-4 font-display text-2xl font-medium leading-tight">{f.name}</h3>
                   <p className="mt-2 text-sm font-medium text-[var(--indigo-night)]/80">
                     {f.tagline}
                   </p>

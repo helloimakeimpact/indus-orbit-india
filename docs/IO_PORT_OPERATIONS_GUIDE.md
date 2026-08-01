@@ -1,5 +1,7 @@
 # I/O Port operating guide
 
+Operational truth, updated 1 August 2026: the deployed gateway remains a **single-provider proof**. Local source now contains the multi-provider routing foundation, but it is not activated until its migration replays, the Edge Function deploys, and reviewed connection/conformance records exist. Read `IO_PORT_IMPLEMENTATION_STATUS.md` before configuring credentials or activating traffic.
+
 ## What is live in the demo project
 
 I/O Port is one web workspace with two execution boundaries:
@@ -31,9 +33,9 @@ The capacity tables maintain the distinction between partner, rented/owned, dona
 - A signed-in member without an I/O workspace sees a single **Create workspace** action. The authenticated `create_my_io_workspace` RPC creates (or safely recovers) the caller's personal tenant boundary, immutable owner membership and a minimal audit event as one transaction. It accepts no browser-supplied owner, workspace, destination or credential values.
 - The capacity cards come from the member's real workspace grants and disclose source status and public terms.
 - Selecting **I/O Terminal** allows only `localhost`, `127.0.0.1`, or `::1` over HTTP. The password field is in-memory only and never stored in Supabase.
-- Selecting **Provider partnership** disables direct browser-provider access. The request goes through `io-gateway`, where membership, grant, source state, limits, and auditing are enforced.
+- Selecting **Provider partnership** disables direct browser-provider access. The web UI loads only a safe entitled model catalogue, offers latest-affordable, lowest-cost or explicit-model selection, and disables execution until an approved route is present.
 - The audit panel deliberately stores route metadata, model identifier, token counts, connector origin, and session ID—not the prompt, response, raw key, or OpenCode password.
-- Gateway version 3 separates HTTP handling, request validation, membership, capacity-policy checks, audit writing and the OpenAI-compatible adapter. Its public errors are structured; internal/provider details and credentials are not returned to the browser.
+- The updated local gateway source separates HTTP handling, request validation, membership, entitlement, registry route selection, redacted receipt writing and OpenAI-compatible/Gemini-native adapters. Its public errors are structured; internal/provider details and credentials are not returned to the browser. It is not deployed by this local code change.
 
 ## Start a local OpenCode terminal
 
@@ -47,9 +49,9 @@ For a password-protected server, set `OPENCODE_SERVER_PASSWORD` before starting 
 
 For a deployed Indus Orbit site, include its exact origin as an additional `--cors` value. Do not bind OpenCode to a public network interface just to use I/O Terminal.
 
-## Enable the first provider partnership
+## Deployed legacy single-provider proof
 
-The server gateway is deployed but deliberately has no provider credentials. Configure these as Supabase Edge Function secrets, never in the browser or source repository:
+The current server gateway reads exactly one provider configuration from Supabase Edge Function secrets:
 
 | Secret                    | Required value                                                |
 | ------------------------- | ------------------------------------------------------------- |
@@ -59,6 +61,21 @@ The server gateway is deployed but deliberately has no provider credentials. Con
 
 `IO_PARTNER_DEFAULT_MODEL` is deliberately retired. The gateway selects a model from the reviewed I/O registry at request time; a provider-key or model-ID in an Edge Function secret must not be treated as an enduring product decision.
 
+These three names cannot represent multiple simultaneous providers. Replacing `IO_PARTNER_BASE_URL`, `IO_PARTNER_API_KEY`, or `IO_PARTNER_PROVIDER_KEY` replaces the one proof connection. Do not keep overwriting them to add providers.
+
+Provider-specific keys that have already been added should be retained under unique names such as:
+
+```text
+IO_OPENAI_API_KEY
+IO_XAI_API_KEY
+IO_GEMINI_API_KEY
+IO_DEEPSEEK_API_KEY
+```
+
+The deployed gateway does **not** read those names yet. The updated local router stores only each secret name in a private approved connection record, resolves it server-side only after a service-role-only resolver approves the endpoint, and queries all eligible providers. The reference must match `IO_PROVIDER_[A-Z0-9_]+_API_KEY`; endpoint URLs and connection state belong in the private registry; secret values never belong in a table, browser, log, document, or repository.
+
+Adding secrets in GitHub does not configure the current runtime: this repository has no workflow that synchronizes GitHub secrets into Supabase. Use Supabase Edge Function secrets for runtime credentials unless a narrowly scoped deployment workflow is deliberately implemented later.
+
 Optional server-only selector controls have safe defaults:
 
 | Secret                                        | Default    | Meaning                                                                                          |
@@ -67,16 +84,18 @@ Optional server-only selector controls have safe defaults:
 | `IO_MODEL_SELECTION_FRESHNESS_DAYS`           | `180`      | How close to the newest reviewed release a candidate must be.                                    |
 | `IO_MODEL_SELECTION_AFFORDABILITY_MULTIPLIER` | `1.35`     | Maximum estimated-cost multiple above the cheapest fresh candidate.                              |
 
-For each request, I/O considers only models whose provider is active; model is listed, release-dated and not deprecated; endpoint is active/member-visible; latest capability certificate verifies chat; and a published price card is currently effective. It estimates the current request cost from the message length plus the 1,024-token output cap, removes candidates outside the selected freshness and affordability bands, then chooses the newest remaining model. The selected model and selector strategy are appended to the redacted route audit event. This is routing, not billing: paid use still requires the P2 reserve-and-settle ledger.
+For each local-router request, I/O considers only models whose provider is active; model is listed, release-dated and not deprecated; endpoint is active/member-visible; capacity source is actively entitled; latest capability certificate verifies chat; and a published price card is currently effective. It estimates the current request cost from the message length plus the 1,024-token output cap. `latest_affordable` uses the tier, freshness and affordability bands; `lowest_cost` selects the least costly eligible candidate; an explicit model must be in the reviewed catalogue. Mixed currencies fail closed until FX data is reviewed. Safe upstream/rate-limit failures may advance to the next deterministic candidate and the final route/attempts are recorded without prompt or response text. This is routing, not billing: paid use still requires the P2 reserve-and-settle ledger.
 
-The registry begins empty in the demo. Before any route is activated, record and review the provider, models, release dates, `economy`/`balanced`/`premium` tier, verified chat capability and a current published price card. Then change `partner-gateway` and the target workspace grant from `onboarding` / `pending` to `active` through an audited admin workflow. The gateway will refuse to route if any of those conditions are unmet.
+The registry is empty in the deployed demo. Before any route is activated, record and review the provider, models, release dates, `economy`/`balanced`/`premium` tier, verified chat capability and a current published price card. Then change the appropriate provider-specific source and workspace grant from `onboarding` / `pending` to `active` through an audited admin workflow. The gateway will refuse to route if any of those conditions are unmet.
+
+The existing `partner-gateway` source is only a generic demo record. Its `IN` region/residency metadata must not be used as evidence for a global provider. Unknown endpoint location stays unknown until a provider-specific endpoint carries reviewed evidence.
 
 ## Current demo records
 
 The demo project has one member-owned `Indus Orbit demo` workspace and three visibly labelled sources:
 
 - **Local OpenCode terminal** — active local-only route.
-- **Partner model gateway** — awaiting a server secret and commercial activation.
+- **Partner model gateway** — generic single-provider proof; not activated because the provider registry and approved connection records are empty, regardless of whether API keys exist in the secret store.
 - **Sponsored capacity commons** — awaiting sponsor terms and eligibility policy.
 
 The deployed gateway accepts the standard local Vite origins on ports `5173` and `5174`, alongside the Indus Orbit production origins. Other origins remain rejected.
@@ -85,6 +104,8 @@ The deployed gateway accepts the standard local Vite origins on ports `5173` and
 
 1. Add an operator-only capacity management screen; the current browser UI is intentionally member-facing.
 2. Add ledger and budget reservation tables before enabling paid traffic.
-3. Add provider-specific evaluation, residency, retention, and fallback policy before activating multiple routes.
-4. Add rate limiting, idempotency keys, and streaming/retry handling to `io-gateway` before broad access.
-5. Run an external security review of the pre-existing Supabase SECURITY DEFINER warnings. The deliberate authenticated `create_my_io_workspace` RPC also appears in the Security Advisor because it is a `SECURITY DEFINER` function callable by signed-in members; it is restricted to no arguments, `auth.uid()`, an empty search path, and its own creator/membership/audit writes. Keep that invariant and re-review it whenever the function changes.
+3. Replay and deploy the provider-specific private connections, restricted secret-reference resolver, route receipts and provider attempts from the new local migration/source.
+4. Add rate limiting, idempotency keys, health/circuit controls, streaming and cancellation handling to `io-gateway` before broad access.
+5. Add provider-specific conformance, evaluation, residency, retention, formal fallback policy and route-policy versioning before activating multiple routes.
+6. Add a reserve-and-settle ledger before any paid or sponsored traffic.
+7. Run an external security review of the pre-existing Supabase SECURITY DEFINER warnings. The deliberate authenticated `create_my_io_workspace` RPC also appears in the Security Advisor because it is a `SECURITY DEFINER` function callable by signed-in members; it is restricted to no arguments, `auth.uid()`, an empty search path, and its own creator/membership/audit writes. Keep that invariant and re-review it whenever the function changes.

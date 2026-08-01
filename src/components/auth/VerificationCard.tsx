@@ -56,7 +56,8 @@ export function VerificationCard({ onChanged }: { onChanged: () => void }) {
           <div className="flex-1">
             <p className="font-display text-lg font-semibold">Get verified</p>
             <p className="mt-1 text-sm text-foreground/70">
-              Two paths: redeem a vouch code from a verified member, or ask an admin to vouch for you.
+              Two paths: redeem a vouch code from a verified member, or ask an admin to vouch for
+              you.
             </p>
 
             <div className="mt-4 grid gap-3 md:grid-cols-2">
@@ -72,7 +73,9 @@ export function VerificationCard({ onChanged }: { onChanged: () => void }) {
                     onChange={(e) => setCode(e.target.value.toUpperCase())}
                     maxLength={20}
                   />
-                  <Button onClick={onRedeem} disabled={busy}>Redeem</Button>
+                  <Button onClick={onRedeem} disabled={busy}>
+                    Redeem
+                  </Button>
                 </div>
               </div>
 
@@ -82,7 +85,9 @@ export function VerificationCard({ onChanged }: { onChanged: () => void }) {
                   <p className="text-sm font-medium">Ask for a vouch</p>
                 </div>
                 <p className="text-xs text-muted-foreground">Admins will see your request.</p>
-                <Button variant="outline" onClick={() => setRequestOpen(true)}>Request</Button>
+                <Button variant="outline" onClick={() => setRequestOpen(true)}>
+                  Request
+                </Button>
               </div>
             </div>
           </div>
@@ -93,7 +98,9 @@ export function VerificationCard({ onChanged }: { onChanged: () => void }) {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Request a vouch</DialogTitle>
-            <DialogDescription>Tell admins who you are and why you'd like to be verified.</DialogDescription>
+            <DialogDescription>
+              Tell admins who you are and why you'd like to be verified.
+            </DialogDescription>
           </DialogHeader>
           <Textarea
             rows={5}
@@ -103,8 +110,12 @@ export function VerificationCard({ onChanged }: { onChanged: () => void }) {
             maxLength={500}
           />
           <DialogFooter>
-            <Button variant="outline" onClick={() => setRequestOpen(false)}>Cancel</Button>
-            <Button onClick={onRequest} disabled={busy}>Send request</Button>
+            <Button variant="outline" onClick={() => setRequestOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={onRequest} disabled={busy}>
+              Send request
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

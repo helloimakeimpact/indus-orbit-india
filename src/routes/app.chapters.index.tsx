@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { MapPin, Users, Crown, Search } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,6 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { formatChapterBaseLocation } from "@/lib/location";
 import { getChapters, joinChapter } from "@/server/society.functions";
+import { getErrorMessage } from "@/lib/errors";
+
+type ChapterSummary = Awaited<ReturnType<typeof getChapters>>[number];
 
 export const Route = createFileRoute("/app/chapters/")({
   head: () => ({
@@ -20,7 +23,7 @@ export const Route = createFileRoute("/app/chapters/")({
 function ChaptersPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [allChapters, setAllChapters] = useState<any[]>([]);
+  const [allChapters, setAllChapters] = useState<ChapterSummary[]>([]);
   const [busy, setBusy] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -28,15 +31,15 @@ function ChaptersPage() {
     try {
       const data = await getChapters();
       setAllChapters(data);
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error));
     } finally {
       setBusy(false);
     }
   }
 
   useEffect(() => {
-    load();
+    void Promise.resolve().then(load);
   }, []);
 
   // Client-side filter (chapters are usually smaller datasets)
@@ -58,7 +61,7 @@ function ChaptersPage() {
 
   // Reset visible count when search changes
   useEffect(() => {
-    setVisibleCount(PAGE_SIZE);
+    queueMicrotask(() => setVisibleCount(PAGE_SIZE));
   }, [searchQuery]);
 
   async function handleJoin(chapterId: string) {
@@ -67,8 +70,8 @@ function ChaptersPage() {
       await joinChapter({ data: { chapterId } });
       toast.success("Joined chapter!");
       load();
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error));
     }
   }
 
@@ -94,8 +97,10 @@ function ChaptersPage() {
             >
               Propose a Chapter
             </Button>
-            {allChapters.some((c: any) =>
-              c.chapter_members?.some((m: any) => m.user_id === user?.id && m.role === "lead"),
+            {allChapters.some((chapter) =>
+              chapter.chapter_members?.some(
+                (member) => member.user_id === user?.id && member.role === "lead",
+              ),
             ) && (
               <Button
                 size="sm"
@@ -153,9 +158,9 @@ function ChaptersPage() {
           </div>
         ) : (
           visible.map((c) => {
-            const hasJoined = c.chapter_members?.some((m: any) => m.user_id === user?.id);
+            const hasJoined = c.chapter_members?.some((member) => member.user_id === user?.id);
             const memberCount = c.chapter_members?.length || 0;
-            const leads = c.chapter_members?.filter((m: any) => m.role === "lead") || [];
+            const leads = c.chapter_members?.filter((member) => member.role === "lead") || [];
 
             return (
               <div
@@ -198,7 +203,7 @@ function ChaptersPage() {
                       <span className="text-muted-foreground flex items-center gap-1">
                         <Crown className="h-3 w-3" /> Leads:
                       </span>
-                      {leads.map((l: any) => (
+                      {leads.map((l) => (
                         <Badge key={l.user_id} variant="outline" className="font-normal">
                           {l.profiles?.display_name || "Member"}
                         </Badge>

@@ -27,7 +27,12 @@ import {
   listPublishedCourses,
   listResources,
 } from "@/server/education.functions";
+import { getErrorMessage } from "@/lib/errors";
 import { cn } from "@/lib/utils";
+
+type PublishedCourse = Awaited<ReturnType<typeof listPublishedCourses>>[number];
+type CourseDetail = Awaited<ReturnType<typeof getCourseBySlug>>;
+type PublishedResource = Awaited<ReturnType<typeof listResources>>[number];
 
 export const Route = createFileRoute("/app/education/")({
   component: EducationIndex,
@@ -134,9 +139,9 @@ const aiCompanyWatchlist = [
 ];
 
 function EducationIndex() {
-  const [courses, setCourses] = useState<any[]>([]);
-  const [courseDetails, setCourseDetails] = useState<Record<string, any>>({});
-  const [resources, setResources] = useState<any[]>([]);
+  const [courses, setCourses] = useState<PublishedCourse[]>([]);
+  const [courseDetails, setCourseDetails] = useState<Record<string, CourseDetail>>({});
+  const [resources, setResources] = useState<PublishedResource[]>([]);
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -151,22 +156,20 @@ function EducationIndex() {
       setResources(publishedResources);
 
       const details = await Promise.all(
-        publishedCourses.map((course: any) => getCourseBySlug(course.slug).catch(() => null)),
+        publishedCourses.map((course) => getCourseBySlug(course.slug).catch(() => null)),
       );
       setCourseDetails(
-        Object.fromEntries(
-          publishedCourses.map((course: any, index: number) => [course.slug, details[index]]),
-        ),
+        Object.fromEntries(publishedCourses.map((course, index) => [course.slug, details[index]])),
       );
-    } catch (e: any) {
-      toast.error(e.message);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
     } finally {
       setLoading(false);
     }
   }
 
   useEffect(() => {
-    load();
+    void Promise.resolve().then(load);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -174,15 +177,12 @@ function EducationIndex() {
     () =>
       courses.map((course, index) => {
         const detail = courseDetails[course.slug];
-        const lessons = (detail?.modules ?? []).flatMap((module: any) =>
-          (module.lessons ?? []).filter((lesson: any) => lesson.status === "published"),
+        const lessons = (detail?.modules ?? []).flatMap((module) =>
+          module.lessons.filter((lesson) => lesson.status === "published"),
         );
-        const completed = lessons.filter((lesson: any) => detail?.progress?.[lesson.id]).length;
-        const minutes = lessons.reduce(
-          (sum: number, lesson: any) => sum + (lesson.duration_mins ?? 0),
-          0,
-        );
-        const nextLesson = lessons.find((lesson: any) => !detail?.progress?.[lesson.id]);
+        const completed = lessons.filter((lesson) => detail?.progress[lesson.id]).length;
+        const minutes = lessons.reduce((sum, lesson) => sum + (lesson.duration_mins ?? 0), 0);
+        const nextLesson = lessons.find((lesson) => !detail?.progress[lesson.id]);
 
         return {
           course,
@@ -209,20 +209,31 @@ function EducationIndex() {
     };
   }, [courseSummaries]);
 
+  type CourseSummary = (typeof courseSummaries)[number];
+  type CourseSummaryWithNextLesson = CourseSummary & {
+    nextLesson: NonNullable<CourseSummary["nextLesson"]>;
+  };
+
   const activeCourse = courseSummaries.find((item) => item.nextLesson) ?? courseSummaries[0];
-  const nextItems = courseSummaries.filter((item) => item.nextLesson).slice(0, 4);
+  const nextItems = courseSummaries
+    .filter((item): item is CourseSummaryWithNextLesson => item.nextLesson !== undefined)
+    .slice(0, 4);
   const recentItems = [...courses]
     .sort(
       (a, b) => new Date(b.published_at ?? 0).getTime() - new Date(a.published_at ?? 0).getTime(),
     )
     .slice(0, 5);
 
-  async function openFile(path: string) {
+  async function openFile(path: string | null) {
+    if (!path) {
+      toast.error("This resource has no downloadable file.");
+      return;
+    }
     try {
       const url = await getSignedEducationUrl(path);
       window.open(url, "_blank", "noopener,noreferrer");
-    } catch (e: any) {
-      toast.error(e.message);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
     }
   }
 
@@ -430,13 +441,13 @@ function EducationIndex() {
                           </p>
                         )}
                       </div>
-                      {resource.kind === "link" ? (
+                      {resource.kind === "link" && resource.url ? (
                         <Button asChild variant="outline" size="sm" className="rounded-full">
                           <a href={resource.url} target="_blank" rel="noopener noreferrer">
                             <ExternalLink className="h-4 w-4" /> Open
                           </a>
                         </Button>
-                      ) : (
+                      ) : resource.file_path ? (
                         <Button
                           variant="outline"
                           size="sm"
@@ -445,6 +456,8 @@ function EducationIndex() {
                         >
                           <FileDown className="h-4 w-4" /> Download
                         </Button>
+                      ) : (
+                        <Badge variant="outline">Unavailable</Badge>
                       )}
                     </div>
                   ))}

@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SEGMENT_META, type Segment } from "@/components/auth/segments";
 import { formatInlineProfileLocation } from "@/lib/location";
+import { getErrorMessage } from "@/lib/errors";
 import {
   getChapterProposals,
   approveChapterProposal,
@@ -36,6 +37,7 @@ type Pending = {
   segment_details: Record<string, unknown> | null;
   created_at: string;
 };
+type ChapterProposal = Awaited<ReturnType<typeof getChapterProposals>>[number];
 
 function completeness(p: Pending) {
   const fields = [
@@ -54,7 +56,7 @@ function AdminQueue() {
   const { isAdmin, user, loading } = useAuth();
   const navigate = useNavigate();
   const [rows, setRows] = useState<Pending[]>([]);
-  const [proposals, setProposals] = useState<any[]>([]);
+  const [proposals, setProposals] = useState<ChapterProposal[]>([]);
   const [busy, setBusy] = useState(true);
   const [reason, setReason] = useState<Record<string, string>>({});
 
@@ -67,26 +69,32 @@ function AdminQueue() {
 
   async function load() {
     setBusy(true);
-    const [verifRes, propRes] = await Promise.all([
-      supabase
-        .from("profiles")
-        .select(
-          "id, user_id, display_name, headline, bio, city, country, orbit_segment, linkedin_url, website_url, segment_details, created_at",
-        )
-        .eq("is_verified", false)
-        .order("created_at", { ascending: false }),
-      getChapterProposals(),
-    ]);
+    try {
+      const [verifRes, propRes] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select(
+            "id, user_id, display_name, headline, bio, city, country, orbit_segment, linkedin_url, website_url, segment_details, created_at",
+          )
+          .eq("is_verified", false)
+          .order("created_at", { ascending: false }),
+        getChapterProposals(),
+      ]);
+      if (verifRes.error) throw new Error(verifRes.error.message);
 
-    const list = (verifRes.data as unknown as Pending[] | null) ?? [];
-    list.sort((a, b) => completeness(b) - completeness(a));
-    setRows(list);
-    setProposals(propRes);
-    setBusy(false);
+      const list = (verifRes.data as unknown as Pending[] | null) ?? [];
+      list.sort((a, b) => completeness(b) - completeness(a));
+      setRows(list);
+      setProposals(propRes);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    } finally {
+      setBusy(false);
+    }
   }
 
   useEffect(() => {
-    if (isAdmin) load();
+    if (isAdmin) void Promise.resolve().then(load);
   }, [isAdmin]);
 
   async function decide(p: Pending, decision: "approved" | "declined" | "needs_more_info") {
@@ -120,7 +128,11 @@ function AdminQueue() {
     load();
   }
 
-  async function handleApproveProposal(prop: any) {
+  async function handleApproveProposal(prop: ChapterProposal) {
+    if (!prop.city || !prop.country) {
+      toast.error("Chapter proposals need both city and country before approval.");
+      return;
+    }
     try {
       await approveChapterProposal({
         data: {
@@ -134,8 +146,8 @@ function AdminQueue() {
       });
       toast.success(`Chapter ${prop.proposed_name} created successfully!`);
       load();
-    } catch (e: any) {
-      toast.error(e.message);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
     }
   }
 
@@ -144,8 +156,8 @@ function AdminQueue() {
       await rejectChapterProposal(proposalId);
       toast.success("Proposal rejected");
       load();
-    } catch (e: any) {
-      toast.error(e.message);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
     }
   }
 

@@ -102,7 +102,15 @@ export function IoWorkspaceShell({ children }: IoWorkspaceShellProps) {
   const [inspectorOpen, setInspectorOpen] = useState(false);
 
   useEffect(() => {
-    setInspectorOpen(window.matchMedia("(min-width: 1280px)").matches);
+    const mediaQuery = window.matchMedia("(min-width: 1280px)");
+    const updateInspector = () => setInspectorOpen(mediaQuery.matches);
+    const animationFrame = window.requestAnimationFrame(updateInspector);
+
+    mediaQuery.addEventListener("change", updateInspector);
+    return () => {
+      window.cancelAnimationFrame(animationFrame);
+      mediaQuery.removeEventListener("change", updateInspector);
+    };
   }, []);
 
   return (

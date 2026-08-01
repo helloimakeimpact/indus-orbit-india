@@ -2,9 +2,23 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { requestMentorSession } from "@/server/mentor.functions";
+import { getErrorMessage } from "@/lib/errors";
 
 export function BookMentorDialog({
   open,
@@ -22,16 +36,19 @@ export function BookMentorDialog({
   const [busy, setBusy] = useState(false);
 
   async function submit() {
-    if (message.trim().length < 20) return toast.error("Please provide a bit more context (20+ chars).");
-    
+    if (message.trim().length < 20)
+      return toast.error("Please provide a bit more context (20+ chars).");
+
     setBusy(true);
     try {
-      await requestMentorSession({ data: { expertId, message: message.trim(), durationMins: parseInt(duration) } });
+      await requestMentorSession({
+        data: { expertId, message: message.trim(), durationMins: parseInt(duration) },
+      });
       toast.success("Mentorship session requested!");
       setMessage("");
       onOpenChange(false);
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error));
     } finally {
       setBusy(false);
     }
@@ -43,14 +60,17 @@ export function BookMentorDialog({
         <DialogHeader>
           <DialogTitle>Request a session with {expertName}</DialogTitle>
           <DialogDescription>
-            Experts pledge time each month. Be clear about what you're building and how they can help.
+            Experts pledge time each month. Be clear about what you're building and how they can
+            help.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <label className="text-sm font-medium">Duration</label>
-            <Select value={duration} onValueChange={(v: "30"|"60") => setDuration(v)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+            <Select value={duration} onValueChange={(v: "30" | "60") => setDuration(v)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="30">30 minutes</SelectItem>
                 <SelectItem value="60">60 minutes</SelectItem>
@@ -68,8 +88,12 @@ export function BookMentorDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={submit} disabled={busy}>{busy ? "Requesting…" : "Request Session"}</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button onClick={submit} disabled={busy}>
+            {busy ? "Requesting…" : "Request Session"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -14,6 +14,7 @@ import {
   HelpCircle,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -26,15 +27,25 @@ import {
   getEventAttendees,
   type RsvpStatus,
 } from "@/server/event.functions";
+import { getErrorMessage } from "@/lib/errors";
 
 export const Route = createFileRoute("/app/events/$id")({
   component: EventDetailPage,
 });
 
+type EventDetail = Database["public"]["Tables"]["events"]["Row"] & {
+  chapters: Pick<Database["public"]["Tables"]["chapters"]["Row"], "name"> | null;
+  profiles: Pick<
+    Database["public"]["Tables"]["profiles"]["Row"],
+    "display_name" | "headline"
+  > | null;
+};
+type EventAttendee = Awaited<ReturnType<typeof getEventAttendees>>[number];
+
 function EventDetailPage() {
   const { id } = Route.useParams();
   const { user, isAdmin } = useAuth();
-  const [event, setEvent] = useState<any>(null);
+  const [event, setEvent] = useState<EventDetail | null>(null);
   const [busy, setBusy] = useState(true);
   const [counts, setCounts] = useState<Record<RsvpStatus, number>>({
     going: 0,
@@ -43,7 +54,7 @@ function EventDetailPage() {
   });
   const [mine, setMine] = useState<RsvpStatus | null>(null);
   const [rsvpBusy, setRsvpBusy] = useState(false);
-  const [attendees, setAttendees] = useState<any[]>([]);
+  const [attendees, setAttendees] = useState<EventAttendee[]>([]);
   const [showAttendees, setShowAttendees] = useState(false);
 
   async function loadRsvp() {
@@ -51,8 +62,8 @@ function EventDetailPage() {
       const state = await getEventRsvpState(id);
       setCounts(state.counts);
       setMine(state.mine);
-    } catch (e: any) {
-      toast.error(e?.message || "Could not load RSVP state");
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Could not load RSVP state."));
     }
   }
 
@@ -71,8 +82,8 @@ function EventDetailPage() {
       }
       setBusy(false);
     }
-    load();
-    loadRsvp();
+    void Promise.resolve().then(load);
+    void Promise.resolve().then(loadRsvp);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
@@ -83,8 +94,8 @@ function EventDetailPage() {
     try {
       const list = await getEventAttendees(id);
       setAttendees(list);
-    } catch (e: any) {
-      toast.error(e.message);
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error));
     }
   }
 
@@ -107,8 +118,8 @@ function EventDetailPage() {
       }
       await loadRsvp();
       if (showAttendees) await loadAttendees();
-    } catch (e: any) {
-      toast.error(e.message);
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error));
     } finally {
       setRsvpBusy(false);
     }

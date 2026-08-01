@@ -28,6 +28,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
+import { getErrorMessage } from "@/lib/errors";
 import { formatChapterBaseLocation, formatEventLocation } from "@/lib/location";
 import { createMission } from "@/server/mission.functions";
 import {
@@ -44,13 +46,37 @@ export const Route = createFileRoute("/app/chapters/$chapterId")({
   component: ChapterWorkspace,
 });
 
+type Chapter = Database["public"]["Tables"]["chapters"]["Row"];
+type ChapterMember = Pick<
+  Database["public"]["Tables"]["chapter_members"]["Row"],
+  "user_id" | "role"
+> & {
+  profiles: Pick<
+    Database["public"]["Tables"]["profiles"]["Row"],
+    "display_name" | "avatar_url"
+  > | null;
+};
+type ChapterWorkspaceData = Chapter & { chapter_members: ChapterMember[] };
+type MissionSummary = Pick<
+  Database["public"]["Tables"]["missions"]["Row"],
+  "id" | "title" | "status" | "description"
+>;
+type StorySummary = Pick<
+  Database["public"]["Tables"]["stories"]["Row"],
+  "id" | "title" | "created_at"
+>;
+type EventSummary = Pick<
+  Database["public"]["Tables"]["events"]["Row"],
+  "id" | "title" | "start_time" | "location"
+>;
+
 function ChapterWorkspace() {
   const { chapterId } = Route.useParams();
   const { user } = useAuth();
-  const [chapter, setChapter] = useState<any>(null);
-  const [missions, setMissions] = useState<any[]>([]);
-  const [stories, setStories] = useState<any[]>([]);
-  const [events, setEvents] = useState<any[]>([]);
+  const [chapter, setChapter] = useState<ChapterWorkspaceData | null>(null);
+  const [missions, setMissions] = useState<MissionSummary[]>([]);
+  const [stories, setStories] = useState<StorySummary[]>([]);
+  const [events, setEvents] = useState<EventSummary[]>([]);
   const [busy, setBusy] = useState(true);
 
   // Dialog States
@@ -108,8 +134,8 @@ function ChapterWorkspace() {
       setMissions(missionsRes.data || []);
       setStories(storiesRes.data || []);
       setEvents(eventsRes.data || []);
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error));
       setChapter(null);
     } finally {
       setBusy(false);
@@ -117,51 +143,52 @@ function ChapterWorkspace() {
   }
 
   useEffect(() => {
-    load();
+    void Promise.resolve().then(load);
   }, [chapterId]);
 
   if (busy) return <p className="mt-8 text-muted-foreground px-4">Loading chapter…</p>;
   if (!chapter) return <p className="mt-8 text-muted-foreground px-4">Chapter not found.</p>;
 
-  const leads = chapter.chapter_members?.filter((m: any) => m.role === "lead") || [];
-  const members = chapter.chapter_members || []; // Include all members for the list
-  const isMember = chapter.chapter_members?.some((m: any) => m.user_id === user?.id);
-  const isLead = leads.some((m: any) => m.user_id === user?.id);
+  const activeChapter = chapter;
+  const leads = chapter.chapter_members.filter((member) => member.role === "lead");
+  const members = chapter.chapter_members;
+  const isMember = chapter.chapter_members.some((member) => member.user_id === user?.id);
+  const isLead = leads.some((member) => member.user_id === user?.id);
 
   async function handleJoin() {
     if (!user) return toast.error("Log in first");
     try {
-      await joinChapter({ data: { chapterId: chapter.id } });
+      await joinChapter({ data: { chapterId: activeChapter.id } });
       toast.success("Joined chapter!");
       load();
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error));
     }
   }
 
   async function handleCreateMission(e: React.FormEvent) {
     e.preventDefault();
     try {
-      await createMission({ data: { ...missionForm, chapterId: chapter.id } });
+      await createMission({ data: { ...missionForm, chapterId: activeChapter.id } });
       toast.success("Mission created!");
       setMissionOpen(false);
       setMissionForm({ title: "", theme: "", description: "" });
       load();
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error));
     }
   }
 
   async function handleCreateStory(e: React.FormEvent) {
     e.preventDefault();
     try {
-      await submitStory({ data: { ...storyForm, chapterId: chapter.id } });
+      await submitStory({ data: { ...storyForm, chapterId: activeChapter.id } });
       toast.success("Story published!");
       setStoryOpen(false);
       setStoryForm({ title: "", content: "" });
       load();
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error));
     }
   }
 
@@ -180,15 +207,15 @@ function ChapterWorkspace() {
           endTime: new Date(eventForm.endTime).toISOString(),
           locationType: "irl",
           location: eventForm.location || undefined,
-          chapterId: chapter.id,
+          chapterId: activeChapter.id,
         },
       });
       toast.success("Event created!");
       setEventOpen(false);
       setEventForm({ title: "", description: "", startTime: "", endTime: "", location: "" });
       load();
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error));
     }
   }
 
@@ -196,13 +223,13 @@ function ChapterWorkspace() {
     if (!memberToRemove) return;
     try {
       await removeChapterMember({
-        data: { chapterId: chapter.id, targetUserId: memberToRemove.id },
+        data: { chapterId: activeChapter.id, targetUserId: memberToRemove.id },
       });
       toast.success(`${memberToRemove.name} removed from chapter.`);
       setMemberToRemove(null);
       load();
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error));
     }
   }
 
@@ -256,7 +283,7 @@ function ChapterWorkspace() {
                   <div className="text-[10px] uppercase tracking-wider text-muted-foreground flex items-center gap-1 font-bold">
                     <Crown className="h-3 w-3 text-[var(--saffron)]" /> Leads
                   </div>
-                  {leads.map((l: any) => (
+                  {leads.map((l) => (
                     <div key={l.user_id} className="text-sm font-medium">
                       <Link
                         to="/profile/$id"
@@ -591,12 +618,12 @@ function ChapterWorkspace() {
           ) : (
             <div className="flex flex-col divide-y divide-border border border-border rounded-2xl bg-card overflow-hidden">
               {members
-                .filter((m: any) =>
+                .filter((m) =>
                   (m.profiles?.display_name || "Member")
                     .toLowerCase()
                     .includes(searchQuery.toLowerCase()),
                 )
-                .map((m: any) => (
+                .map((m) => (
                   <div
                     key={m.user_id}
                     className="p-4 transition hover:bg-muted/30 flex items-center justify-between group"

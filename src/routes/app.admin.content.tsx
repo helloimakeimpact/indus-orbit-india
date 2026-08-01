@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, type ComponentProps, type ReactNode } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,7 +18,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Trash2, Pause, Play, CheckCircle2, XCircle, Star } from "lucide-react";
+import { Trash2, Pause, Play, CheckCircle2, XCircle, Star, type LucideIcon } from "lucide-react";
 import { formatChapterBaseLocation } from "@/lib/location";
 
 export const Route = createFileRoute("/app/admin/content")({
@@ -27,16 +28,21 @@ export const Route = createFileRoute("/app/admin/content")({
   component: ContentAdmin,
 });
 
-type Row = Record<string, any>;
+type StoryWithAuthor = Database["public"]["Tables"]["stories"]["Row"] & { _author: string };
+type EventWithAuthor = Database["public"]["Tables"]["events"]["Row"] & { _author: string };
+type AskWithAuthor = Database["public"]["Tables"]["asks_offers"]["Row"] & { _author: string };
+type MissionRow = Database["public"]["Tables"]["missions"]["Row"];
+type ChapterRow = Database["public"]["Tables"]["chapters"]["Row"];
+type StoryUpdate = Database["public"]["Tables"]["stories"]["Update"];
 
 function ContentAdmin() {
   const { user, isAdmin, loading } = useAuth();
   const navigate = useNavigate();
-  const [stories, setStories] = useState<Row[]>([]);
-  const [events, setEvents] = useState<Row[]>([]);
-  const [asks, setAsks] = useState<Row[]>([]);
-  const [missions, setMissions] = useState<Row[]>([]);
-  const [chapters, setChapters] = useState<Row[]>([]);
+  const [stories, setStories] = useState<StoryWithAuthor[]>([]);
+  const [events, setEvents] = useState<EventWithAuthor[]>([]);
+  const [asks, setAsks] = useState<AskWithAuthor[]>([]);
+  const [missions, setMissions] = useState<MissionRow[]>([]);
+  const [chapters, setChapters] = useState<ChapterRow[]>([]);
   const [busy, setBusy] = useState(true);
 
   useEffect(() => {
@@ -66,25 +72,36 @@ function ContentAdmin() {
       supabase.from("chapters").select("*").order("created_at", { ascending: false }),
     ]);
     const allUserIds = new Set<string>();
-    (s.data || []).forEach((r: any) => r.author_id && allUserIds.add(r.author_id));
-    (e.data || []).forEach((r: any) => r.organizer_id && allUserIds.add(r.organizer_id));
-    (a.data || []).forEach((r: any) => r.author_id && allUserIds.add(r.author_id));
-    let nameMap = new Map<string, string>();
+    (s.data || []).forEach((record) => record.author_id && allUserIds.add(record.author_id));
+    (e.data || []).forEach((record) => record.organizer_id && allUserIds.add(record.organizer_id));
+    (a.data || []).forEach((record) => record.author_id && allUserIds.add(record.author_id));
+    const nameMap = new Map<string, string>();
     if (allUserIds.size > 0) {
       const { data: profs } = await supabase
         .from("profiles")
         .select("user_id, display_name")
         .in("user_id", Array.from(allUserIds));
-      (profs || []).forEach((p: any) => nameMap.set(p.user_id, p.display_name || "Member"));
+      (profs || []).forEach((profile) =>
+        nameMap.set(profile.user_id, profile.display_name || "Member"),
+      );
     }
     setStories(
-      (s.data || []).map((r: any) => ({ ...r, _author: nameMap.get(r.author_id) || "Member" })),
+      (s.data || []).map((record) => ({
+        ...record,
+        _author: nameMap.get(record.author_id) || "Member",
+      })),
     );
     setEvents(
-      (e.data || []).map((r: any) => ({ ...r, _author: nameMap.get(r.organizer_id) || "Member" })),
+      (e.data || []).map((record) => ({
+        ...record,
+        _author: nameMap.get(record.organizer_id) || "Member",
+      })),
     );
     setAsks(
-      (a.data || []).map((r: any) => ({ ...r, _author: nameMap.get(r.author_id) || "Member" })),
+      (a.data || []).map((record) => ({
+        ...record,
+        _author: nameMap.get(record.author_id) || "Member",
+      })),
     );
     setMissions(m.data || []);
     setChapters(c.data || []);
@@ -92,12 +109,12 @@ function ContentAdmin() {
   }, []);
 
   useEffect(() => {
-    if (isAdmin) load();
+    if (isAdmin) void Promise.resolve().then(load);
   }, [isAdmin, load]);
 
   // ---------- Story actions ----------
   async function setStoryStatus(id: string, status: string) {
-    const patch: any = { status };
+    const patch: StoryUpdate = { status };
     if (status === "approved" || status === "featured")
       patch.published_at = new Date().toISOString();
     if (status === "pending" || status === "rejected") patch.published_at = null;
@@ -188,7 +205,7 @@ function ContentAdmin() {
                   title={s.title}
                   meta={`by ${s._author} · ${new Date(s.created_at).toLocaleDateString()}`}
                   statusBadge={<StatusBadge status={s.status} />}
-                  body={s.content}
+                  body={s.content ?? undefined}
                 >
                   {s.status !== "approved" && (
                     <Btn icon={CheckCircle2} onClick={() => setStoryStatus(s.id, "approved")}>
@@ -238,7 +255,7 @@ function ContentAdmin() {
                   title={e.title}
                   meta={`by ${e._author} · ${new Date(e.start_time).toLocaleString()}`}
                   statusBadge={<StatusBadge status={e.status} />}
-                  body={e.description}
+                  body={e.description ?? undefined}
                 >
                   {e.status !== "approved" && (
                     <Btn icon={CheckCircle2} onClick={() => setEventStatus(e.id, "approved")}>
@@ -279,7 +296,7 @@ function ContentAdmin() {
                   title={a.title}
                   meta={`${a.kind} · by ${a._author} · ${new Date(a.created_at).toLocaleDateString()}`}
                   statusBadge={<StatusBadge status={a.status} />}
-                  body={a.body}
+                  body={a.body ?? undefined}
                 >
                   {a.status !== "active" && (
                     <Btn icon={Play} onClick={() => setAskStatus(a.id, "active")}>
@@ -320,7 +337,7 @@ function ContentAdmin() {
                   title={m.title}
                   meta={`${m.theme} · ${new Date(m.created_at).toLocaleDateString()}`}
                   statusBadge={<StatusBadge status={m.status} />}
-                  body={m.description}
+                  body={m.description ?? undefined}
                 >
                   {m.status !== "open" && (
                     <Btn icon={Play} onClick={() => setMissionStatus(m.id, "open")}>
@@ -362,7 +379,7 @@ function ContentAdmin() {
                   key={c.id}
                   title={c.name}
                   meta={`Base: ${formatChapterBaseLocation(c, "—")}`}
-                  body={c.description}
+                  body={c.description ?? undefined}
                 >
                   <DeleteBtn
                     label={c.name}
@@ -412,7 +429,14 @@ function Card({
   );
 }
 
-function Btn({ icon: Icon, children, ...props }: any) {
+function Btn({
+  icon: Icon,
+  children,
+  ...props
+}: Omit<ComponentProps<typeof Button>, "children" | "size"> & {
+  icon: LucideIcon;
+  children: ReactNode;
+}) {
   return (
     <Button size="sm" {...props}>
       <Icon className="h-4 w-4 mr-1" />

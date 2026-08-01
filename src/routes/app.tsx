@@ -17,37 +17,33 @@ function AppLayout() {
   useEffect(() => {
     if (loading) return;
     let active = true;
-    setChecked(false);
 
-    if (!user) {
-      navigate({ to: "/auth" });
-      return () => {
-        active = false;
-      };
-    }
+    const checkAccess = async () => {
+      setChecked(false);
+      if (!user) {
+        navigate({ to: "/auth" });
+        return;
+      }
 
-    const userId = user.id;
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("orbit_segment")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (!active) return;
+      if (error) {
+        toast.error(error.message);
+        setChecked(true);
+        return;
+      }
+      if (!data?.orbit_segment) {
+        navigate({ to: "/onboarding" });
+        return;
+      }
+      setChecked(true);
+    };
 
-    // Onboarding gate: must have orbit_segment set
-    supabase
-      .from("profiles")
-      .select("orbit_segment")
-      .eq("user_id", userId)
-      .maybeSingle()
-      .then(({ data, error }) => {
-        if (!active) return;
-        if (error) {
-          toast.error(error.message);
-          setChecked(true);
-          return;
-        }
-        const segment = (data as { orbit_segment: string | null } | null)?.orbit_segment;
-        if (!segment) {
-          navigate({ to: "/onboarding" });
-        } else {
-          setChecked(true);
-        }
-      });
+    void Promise.resolve().then(checkAccess);
 
     return () => {
       active = false;

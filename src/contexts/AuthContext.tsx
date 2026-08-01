@@ -27,6 +27,30 @@ const emptyAccessState: AccessState = {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
+async function loadAccessState(userId: string): Promise<AccessState> {
+  const [roleRes, profileRes, leadRes] = await Promise.all([
+    supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("role", "admin")
+      .maybeSingle(),
+    supabase.from("profiles").select("orbit_segment").eq("user_id", userId).maybeSingle(),
+    supabase.rpc("my_lead_summary"),
+  ]);
+
+  if (roleRes.error || profileRes.error || leadRes.error) return emptyAccessState;
+  const leadSummary = leadRes.data ?? {};
+  const summary = leadSummary as { chapter_lead_count?: number; mission_lead_count?: number };
+
+  return {
+    isAdmin: !!roleRes.data,
+    isChapterLead: (summary.chapter_lead_count ?? 0) > 0,
+    isMissionLead: (summary.mission_lead_count ?? 0) > 0,
+    userSegment: profileRes.data?.orbit_segment ?? null,
+  };
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
@@ -104,30 +128,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       sub.subscription.unsubscribe();
     };
   }, []);
-
-  async function loadAccessState(userId: string): Promise<AccessState> {
-    const [roleRes, profileRes, leadRes] = await Promise.all([
-      supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId)
-        .eq("role", "admin")
-        .maybeSingle(),
-      supabase.from("profiles").select("orbit_segment").eq("user_id", userId).maybeSingle(),
-      supabase.rpc("my_lead_summary"),
-    ]);
-
-    if (roleRes.error || profileRes.error || leadRes.error) return emptyAccessState;
-    const leadSummary = leadRes.data ?? {};
-    const summary = leadSummary as { chapter_lead_count?: number; mission_lead_count?: number };
-
-    return {
-      isAdmin: !!roleRes.data,
-      isChapterLead: (summary.chapter_lead_count ?? 0) > 0,
-      isMissionLead: (summary.mission_lead_count ?? 0) > 0,
-      userSegment: profileRes.data?.orbit_segment ?? null,
-    };
-  }
 
   async function signOut() {
     await supabase.auth.signOut();

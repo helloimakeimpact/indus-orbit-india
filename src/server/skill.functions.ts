@@ -1,6 +1,9 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { Database, Json } from "@/integrations/supabase/types";
 
-const sb = supabase as any;
+type SkillRow = Database["public"]["Tables"]["skills"]["Row"];
+type SkillInsert = Database["public"]["Tables"]["skills"]["Insert"];
+type SkillUpdate = Database["public"]["Tables"]["skills"]["Update"];
 
 export type Skill = {
   id: string;
@@ -32,42 +35,95 @@ export type Skill = {
   updated_at: string;
 };
 
+type SkillInput = Partial<Skill> & { id?: string };
+
+function asArray<T>(value: Json): T[] {
+  return Array.isArray(value) ? (value as T[]) : [];
+}
+
+function toSkillStatus(status: string): Skill["status"] {
+  if (status === "draft" || status === "published") return status;
+  throw new Error(`Unsupported skill status: ${status}`);
+}
+
+function toSkill(row: SkillRow): Skill {
+  return {
+    ...row,
+    status: toSkillStatus(row.status),
+    prerequisites: asArray<Skill["prerequisites"][number]>(row.prerequisites),
+    steps: asArray<Skill["steps"][number]>(row.steps),
+    templates: asArray<Skill["templates"][number]>(row.templates),
+  };
+}
+
+function getSkillPayload(input: SkillInput): SkillUpdate {
+  const { id: _id, created_at: _createdAt, updated_at: _updatedAt, ...payload } = input;
+
+  return payload;
+}
+
 export async function listPublishedSkills() {
-  const { data, error } = await sb
+  const { data, error } = await supabase
     .from("skills")
     .select("*")
     .eq("status", "published")
     .order("featured_on", { ascending: false, nullsFirst: false })
     .order("published_at", { ascending: false });
   if (error) throw new Error(error.message);
-  return (data ?? []) as Skill[];
+  return (data ?? []).map(toSkill);
 }
 
 export async function listAllSkillsForAdmin() {
-  const { data, error } = await sb.from("skills").select("*").order("updated_at", { ascending: false });
+  const { data, error } = await supabase
+    .from("skills")
+    .select("*")
+    .order("updated_at", { ascending: false });
   if (error) throw new Error(error.message);
-  return (data ?? []) as Skill[];
+  return (data ?? []).map(toSkill);
 }
 
 export async function getSkillBySlug(slug: string) {
-  const { data, error } = await sb.from("skills").select("*").eq("slug", slug).maybeSingle();
+  const { data, error } = await supabase.from("skills").select("*").eq("slug", slug).maybeSingle();
   if (error) throw new Error(error.message);
-  return data as Skill | null;
+  return data ? toSkill(data) : null;
 }
 
-export async function upsertSkill(input: Partial<Skill> & { id?: string }) {
+export async function upsertSkill(input: SkillInput) {
   const { data: userData } = await supabase.auth.getUser();
-  const payload: any = { ...input };
-  if (payload.status === "published" && !payload.published_at) payload.published_at = new Date().toISOString();
-  if (!payload.id) payload.created_by = userData.user?.id;
-  delete payload.created_at;
-  delete payload.updated_at;
-  const { data, error } = await sb.from("skills").upsert(payload, { onConflict: "id" }).select().single();
+  if (!userData.user) throw new Error("Unauthorized");
+
+  const payload = getSkillPayload(input);
+  if (payload.status === "published" && !payload.published_at) {
+    payload.published_at = new Date().toISOString();
+  }
+
+  if (input.id) {
+    const { data, error } = await supabase
+      .from("skills")
+      .update(payload)
+      .eq("id", input.id)
+      .select()
+      .single();
+    if (error) throw new Error(error.message);
+    return toSkill(data);
+  }
+
+  const slug = input.slug?.trim();
+  const title = input.title?.trim();
+  if (!slug || !title) throw new Error("Title and slug are required.");
+
+  const insertPayload: SkillInsert = {
+    ...payload,
+    slug,
+    title,
+    created_by: userData.user.id,
+  };
+  const { data, error } = await supabase.from("skills").insert(insertPayload).select().single();
   if (error) throw new Error(error.message);
-  return data as Skill;
+  return toSkill(data);
 }
 
 export async function deleteSkill(id: string) {
-  const { error } = await sb.from("skills").delete().eq("id", id);
+  const { error } = await supabase.from("skills").delete().eq("id", id);
   if (error) throw new Error(error.message);
 }

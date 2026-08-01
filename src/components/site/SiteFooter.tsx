@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import footerBand from "@/assets/footer-band.jpg";
 import logo from "@/assets/indus-orbit-logo.png";
+import { getHumanCheck, nextHumanCheckIndex } from "@/lib/human-check";
 
 const platformLinks = [
   { to: "/skills", label: "Skills" },
@@ -22,9 +23,9 @@ const companyLinks = [
 
 export function SiteFooter() {
   const [email, setEmail] = useState("");
-  const [num1, setNum1] = useState(Math.floor(Math.random() * 10) + 1);
-  const [num2, setNum2] = useState(Math.floor(Math.random() * 10) + 1);
+  const [humanCheckIndex, setHumanCheckIndex] = useState(0);
   const [answer, setAnswer] = useState("");
+  const { left: num1, right: num2 } = getHumanCheck(humanCheckIndex);
 
   return (
     <footer className="relative mt-24">
@@ -41,9 +42,8 @@ export function SiteFooter() {
               <span className="font-display text-2xl font-semibold">Indus Orbit</span>
             </div>
             <p className="mt-4 max-w-md text-sm text-[var(--parchment)]/75">
-              A general intelligence company for India — building tools and
-              networks that connect youth, experts, founders, investors and the
-              diaspora into one orbit.
+              A general intelligence company for India — building tools and networks that connect
+              youth, experts, founders, investors and the diaspora into one orbit.
             </p>
             <div className="mt-6 mb-2 flex flex-wrap gap-3">
               <Link
@@ -66,7 +66,9 @@ export function SiteFooter() {
                   toast.error("Incorrect math answer");
                   return;
                 }
-                const { error } = await supabase.from("newsletter_subscriptions").insert([{ email }]);
+                const { error } = await supabase
+                  .from("newsletter_subscriptions")
+                  .insert([{ email }]);
                 if (error) {
                   if (error.code === "23505") toast.error("You are already subscribed!");
                   else toast.error("Failed to subscribe.");
@@ -74,8 +76,7 @@ export function SiteFooter() {
                   toast.success("Subscribed successfully!");
                   setEmail("");
                   setAnswer("");
-                  setNum1(Math.floor(Math.random() * 10) + 1);
-                  setNum2(Math.floor(Math.random() * 10) + 1);
+                  setHumanCheckIndex(nextHumanCheckIndex);
                 }
               }}
               className="mt-6 flex flex-col gap-2 max-w-md"
@@ -97,7 +98,9 @@ export function SiteFooter() {
                 </button>
               </div>
               <div className="flex items-center gap-2 px-2 text-sm text-[var(--parchment)]/80">
-                <span>Verify you're human: {num1} + {num2} = </span>
+                <span>
+                  Verify you're human: {num1} + {num2} ={" "}
+                </span>
                 <input
                   type="number"
                   value={answer}
@@ -116,7 +119,10 @@ export function SiteFooter() {
             <ul className="mt-4 space-y-2 text-sm">
               {platformLinks.map((link) => (
                 <li key={link.to}>
-                  <Link to={link.to} className="text-[var(--parchment)]/80 transition hover:text-[var(--saffron)]">
+                  <Link
+                    to={link.to}
+                    className="text-[var(--parchment)]/80 transition hover:text-[var(--saffron)]"
+                  >
                     {link.label}
                   </Link>
                 </li>
@@ -131,7 +137,10 @@ export function SiteFooter() {
             <ul className="mt-4 space-y-2 text-sm">
               {companyLinks.map((link) => (
                 <li key={link.to}>
-                  <Link to={link.to} className="text-[var(--parchment)]/80 transition hover:text-[var(--saffron)]">
+                  <Link
+                    to={link.to}
+                    className="text-[var(--parchment)]/80 transition hover:text-[var(--saffron)]"
+                  >
                     {link.label}
                   </Link>
                 </li>
@@ -149,9 +158,15 @@ export function SiteFooter() {
               <li>Mumbai (soon)</li>
             </ul>
             <div className="mt-6 flex gap-3 text-xs uppercase tracking-wider text-[var(--parchment)]/60">
-              <a href="#" className="hover:text-[var(--saffron)]">Twitter</a>
-              <a href="#" className="hover:text-[var(--saffron)]">LinkedIn</a>
-              <a href="#" className="hover:text-[var(--saffron)]">Email</a>
+              <a href="#" className="hover:text-[var(--saffron)]">
+                Twitter
+              </a>
+              <a href="#" className="hover:text-[var(--saffron)]">
+                LinkedIn
+              </a>
+              <a href="#" className="hover:text-[var(--saffron)]">
+                Email
+              </a>
             </div>
           </div>
         </div>

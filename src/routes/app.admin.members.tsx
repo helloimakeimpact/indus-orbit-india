@@ -87,7 +87,7 @@ function AdminMembers() {
   }
 
   useEffect(() => {
-    if (isAdmin) load();
+    if (isAdmin) void Promise.resolve().then(load);
   }, [isAdmin]);
 
   const filtered = useMemo(() => {

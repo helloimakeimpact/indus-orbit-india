@@ -8,7 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { redeemCode } from "@/server/vouch.functions";
 
 export const Route = createFileRoute("/redeem/$code")({
-  head: () => ({ meta: [{ title: "Redeem vouch — Indus Orbit" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({
+    meta: [{ title: "Redeem vouch — Indus Orbit" }, { name: "robots", content: "noindex" }],
+  }),
   component: RedeemPage,
 });
 
@@ -28,14 +30,20 @@ function RedeemPage() {
   const [issuerName, setIssuerName] = useState<string>("");
   const [busy, setBusy] = useState(true);
   const [done, setDone] = useState(false);
+  const [now] = useState(() => Date.now());
 
   useEffect(() => {
     (async () => {
-      const { data } = await (supabase.rpc as any)("lookup_vouch_code", { _code: code });
-      const arr = data as Array<{ id: string; status: string; expires_at: string; issuer_id: string }> | null;
-      const found = arr && arr.length > 0 ? arr[0] : null;
+      const { data } = await supabase.rpc("lookup_vouch_code", { _code: code });
+      const found = data?.[0] ?? null;
       if (found) {
-        setRow({ id: found.id, code: code.toUpperCase(), issuer_id: found.issuer_id, expires_at: found.expires_at, status: found.status });
+        setRow({
+          id: found.id,
+          code: code.toUpperCase(),
+          issuer_id: found.issuer_id,
+          expires_at: found.expires_at,
+          status: found.status,
+        });
         const { data: prof } = await supabase
           .from("profiles")
           .select("display_name")
@@ -64,7 +72,9 @@ function RedeemPage() {
   return (
     <div className="mx-auto max-w-lg p-6 md:p-10">
       <div className="rounded-3xl border border-border bg-card p-8 text-center">
-        <p className="text-xs uppercase tracking-[0.25em] text-[var(--saffron)]">Vouch invitation</p>
+        <p className="text-xs uppercase tracking-[0.25em] text-[var(--saffron)]">
+          Vouch invitation
+        </p>
         <h1 className="mt-3 font-display text-2xl">{code.toUpperCase()}</h1>
 
         {!row ? (
@@ -73,12 +83,14 @@ function RedeemPage() {
           <p className="mt-6 text-sm text-muted-foreground">
             This code is <Badge variant="secondary">{row.status}</Badge> and can no longer be used.
           </p>
-        ) : new Date(row.expires_at).getTime() < Date.now() ? (
+        ) : new Date(row.expires_at).getTime() < now ? (
           <p className="mt-6 text-sm text-muted-foreground">This code has expired.</p>
         ) : done ? (
           <>
             <p className="mt-6">You're verified. Welcome to the orbit.</p>
-            <Button className="mt-4" onClick={() => navigate({ to: "/app" })}>Go to your dashboard</Button>
+            <Button className="mt-4" onClick={() => navigate({ to: "/app" })}>
+              Go to your dashboard
+            </Button>
           </>
         ) : !user ? (
           <>
@@ -90,9 +102,12 @@ function RedeemPage() {
         ) : (
           <>
             <p className="mt-4 text-sm">
-              <strong>{issuerName}</strong> has vouched for you. Accept to become a verified member instantly.
+              <strong>{issuerName}</strong> has vouched for you. Accept to become a verified member
+              instantly.
             </p>
-            <Button className="mt-4" onClick={onRedeem}>Accept &amp; verify me</Button>
+            <Button className="mt-4" onClick={onRedeem}>
+              Accept &amp; verify me
+            </Button>
           </>
         )}
       </div>

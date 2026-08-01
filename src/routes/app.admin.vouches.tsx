@@ -10,21 +10,52 @@ import { Badge } from "@/components/ui/badge";
 import { SEGMENT_LIST, SEGMENT_META, type Segment } from "@/components/auth/segments";
 
 export const Route = createFileRoute("/app/admin/vouches")({
-  head: () => ({ meta: [{ title: "Vouch governance — Indus Orbit" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({
+    meta: [{ title: "Vouch governance — Indus Orbit" }, { name: "robots", content: "noindex" }],
+  }),
   component: AdminVouchesPage,
 });
 
 type Settings = { default_quota: number; code_ttl_days: number; window_days: number };
-type RoleOverride = { id: string; role: "admin" | "member"; segment: Segment | null; quota: number };
+type RoleOverride = {
+  id: string;
+  role: "admin" | "member";
+  segment: Segment | null;
+  quota: number;
+};
 type UserOverride = { user_id: string; quota: number; reason: string | null };
-type Code = { id: string; code: string; issuer_id: string; status: string; expires_at: string; created_at: string };
-type Event = { id: string; issuer_id: string; recipient_id: string | null; channel: string; created_at: string };
-type VouchRequest = { id: string; requester_id: string; target_verifier_id: string | null; message: string; status: string; created_at: string };
+type Code = {
+  id: string;
+  code: string;
+  issuer_id: string;
+  status: string;
+  expires_at: string;
+  created_at: string;
+};
+type Event = {
+  id: string;
+  issuer_id: string;
+  recipient_id: string | null;
+  channel: string;
+  created_at: string;
+};
+type VouchRequest = {
+  id: string;
+  requester_id: string;
+  target_verifier_id: string | null;
+  message: string;
+  status: string;
+  created_at: string;
+};
 
 function AdminVouchesPage() {
   const { isAdmin, user, loading } = useAuth();
   const navigate = useNavigate();
-  const [settings, setSettings] = useState<Settings>({ default_quota: 5, code_ttl_days: 14, window_days: 28 });
+  const [settings, setSettings] = useState<Settings>({
+    default_quota: 5,
+    code_ttl_days: 14,
+    window_days: 28,
+  });
   const [roleOverrides, setRoleOverrides] = useState<RoleOverride[]>([]);
   const [userOverrides, setUserOverrides] = useState<UserOverride[]>([]);
   const [codes, setCodes] = useState<Code[]>([]);
@@ -39,13 +70,18 @@ function AdminVouchesPage() {
 
   // Form state — user overrides
   const [userSearch, setUserSearch] = useState("");
-  const [userResults, setUserResults] = useState<Array<{ user_id: string; display_name: string | null }>>([]);
+  const [userResults, setUserResults] = useState<
+    Array<{ user_id: string; display_name: string | null }>
+  >([]);
   const [pickedUser, setPickedUser] = useState<{ user_id: string; name: string } | null>(null);
   const [newUserQuota, setNewUserQuota] = useState<number>(10);
   const [newUserReason, setNewUserReason] = useState("");
 
   useEffect(() => {
-    if (!loading && !isAdmin) { toast.error("Admins only"); navigate({ to: "/app" }); }
+    if (!loading && !isAdmin) {
+      toast.error("Admins only");
+      navigate({ to: "/app" });
+    }
   }, [isAdmin, loading, navigate]);
 
   async function load() {
@@ -56,7 +92,12 @@ function AdminVouchesPage() {
       supabase.from("vouch_user_overrides").select("*"),
       supabase.from("vouch_codes").select("*").order("created_at", { ascending: false }).limit(50),
       supabase.from("vouch_events").select("*").order("created_at", { ascending: false }).limit(50),
-      supabase.from("vouch_requests").select("*").eq("status", "open").order("created_at", { ascending: false }).limit(50),
+      supabase
+        .from("vouch_requests")
+        .select("*")
+        .eq("status", "open")
+        .order("created_at", { ascending: false })
+        .limit(50),
     ]);
     if (s.data) setSettings(s.data as never);
     setRoleOverrides((ro.data as never) ?? []);
@@ -67,9 +108,15 @@ function AdminVouchesPage() {
 
     const ids = new Set<string>();
     ((c.data as Code[] | null) ?? []).forEach((x) => ids.add(x.issuer_id));
-    ((e.data as Event[] | null) ?? []).forEach((x) => { ids.add(x.issuer_id); if (x.recipient_id) ids.add(x.recipient_id); });
+    ((e.data as Event[] | null) ?? []).forEach((x) => {
+      ids.add(x.issuer_id);
+      if (x.recipient_id) ids.add(x.recipient_id);
+    });
     ((uo.data as UserOverride[] | null) ?? []).forEach((x) => ids.add(x.user_id));
-    ((rq.data as VouchRequest[] | null) ?? []).forEach((x) => { ids.add(x.requester_id); if (x.target_verifier_id) ids.add(x.target_verifier_id); });
+    ((rq.data as VouchRequest[] | null) ?? []).forEach((x) => {
+      ids.add(x.requester_id);
+      if (x.target_verifier_id) ids.add(x.target_verifier_id);
+    });
     if (ids.size) {
       const { data: profs } = await supabase
         .from("profiles")
@@ -84,12 +131,21 @@ function AdminVouchesPage() {
     setBusy(false);
   }
 
-  useEffect(() => { if (isAdmin) load(); }, [isAdmin]);
+  useEffect(() => {
+    if (isAdmin) void Promise.resolve().then(load);
+  }, [isAdmin]);
 
   // user search for overrides
   useEffect(() => {
     let active = true;
-    if (userSearch.trim().length < 2) { setUserResults([]); return; }
+    if (userSearch.trim().length < 2) {
+      void Promise.resolve().then(() => {
+        if (active) setUserResults([]);
+      });
+      return () => {
+        active = false;
+      };
+    }
     (async () => {
       const { data } = await supabase
         .from("profiles")
@@ -98,7 +154,9 @@ function AdminVouchesPage() {
         .limit(8);
       if (active) setUserResults((data as never) ?? []);
     })();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [userSearch]);
 
   async function saveSettings() {
@@ -127,9 +185,16 @@ function AdminVouchesPage() {
     if (!user) return;
     const seg = newRoleSegment === "any" ? null : newRoleSegment;
     const segKey = seg ?? "__any__";
-    const payload = { role: "member", segment: seg, quota: newRoleQuota, updated_by: user.id, segment_key: segKey };
-    const { error } = await (supabase.from("vouch_role_overrides") as any)
-      .upsert(payload, { onConflict: "role,segment_key" });
+    const payload = {
+      role: "member" as const,
+      segment: seg,
+      quota: newRoleQuota,
+      updated_by: user.id,
+      segment_key: segKey,
+    };
+    const { error } = await supabase.from("vouch_role_overrides").upsert(payload, {
+      onConflict: "role,segment_key",
+    });
     if (error) return toast.error(error.message);
     await supabase.from("audit_log").insert({
       actor_id: user.id,
@@ -145,21 +210,24 @@ function AdminVouchesPage() {
     if (!user) return;
     const { error } = await supabase.from("vouch_role_overrides").delete().eq("id", id);
     if (error) return toast.error(error.message);
-    await supabase.from("audit_log").insert({ actor_id: user.id, action: "vouch.role_override_deleted", target_type: "vouch_role_override", target_id: id });
+    await supabase.from("audit_log").insert({
+      actor_id: user.id,
+      action: "vouch.role_override_deleted",
+      target_type: "vouch_role_override",
+      target_id: id,
+    });
     load();
   }
 
   async function addUserOverride() {
     if (!user || !pickedUser) return;
-    const { error } = await supabase
-      .from("vouch_user_overrides")
-      .upsert({
-        user_id: pickedUser.user_id,
-        quota: newUserQuota,
-        reason: newUserReason.trim() || null,
-        updated_by: user.id,
-        updated_at: new Date().toISOString(),
-      });
+    const { error } = await supabase.from("vouch_user_overrides").upsert({
+      user_id: pickedUser.user_id,
+      quota: newUserQuota,
+      reason: newUserReason.trim() || null,
+      updated_by: user.id,
+      updated_at: new Date().toISOString(),
+    });
     if (error) return toast.error(error.message);
     await supabase.from("audit_log").insert({
       actor_id: user.id,
@@ -170,7 +238,9 @@ function AdminVouchesPage() {
       metadata: { quota: newUserQuota } as never,
     });
     toast.success("User override saved");
-    setPickedUser(null); setUserSearch(""); setNewUserReason("");
+    setPickedUser(null);
+    setUserSearch("");
+    setNewUserReason("");
     load();
   }
 
@@ -178,7 +248,12 @@ function AdminVouchesPage() {
     if (!user) return;
     const { error } = await supabase.from("vouch_user_overrides").delete().eq("user_id", uid);
     if (error) return toast.error(error.message);
-    await supabase.from("audit_log").insert({ actor_id: user.id, action: "vouch.user_override_deleted", target_type: "profile", target_id: uid });
+    await supabase.from("audit_log").insert({
+      actor_id: user.id,
+      action: "vouch.user_override_deleted",
+      target_type: "profile",
+      target_id: uid,
+    });
     load();
   }
 
@@ -186,12 +261,21 @@ function AdminVouchesPage() {
     if (!user) return;
     const { error } = await supabase.from("vouch_codes").update({ status: "revoked" }).eq("id", id);
     if (error) return toast.error(error.message);
-    await supabase.from("audit_log").insert({ actor_id: user.id, action: "vouch.code_revoked", target_type: "vouch_code", target_id: id });
+    await supabase.from("audit_log").insert({
+      actor_id: user.id,
+      action: "vouch.code_revoked",
+      target_type: "vouch_code",
+      target_id: id,
+    });
     load();
   }
 
   async function resolveRequest(id: string, approve: boolean) {
-    const { error } = await (supabase.rpc as any)("admin_resolve_vouch_request", { _request_id: id, _approve: approve, _reason: null });
+    const { error } = await supabase.rpc("admin_resolve_vouch_request", {
+      _request_id: id,
+      _approve: approve,
+      _reason: undefined,
+    });
     if (error) return toast.error(error.message);
     toast.success(approve ? "Approved & verified" : "Rejected");
     load();
@@ -216,25 +300,41 @@ function AdminVouchesPage() {
         <h2 className="font-display text-lg font-semibold">Global defaults</h2>
         <div className="mt-4 grid gap-4 md:grid-cols-3">
           <Field label="Default quota">
-            <Input type="number" min={0} value={settings.default_quota}
-              onChange={(e) => setSettings({ ...settings, default_quota: Number(e.target.value) })} />
+            <Input
+              type="number"
+              min={0}
+              value={settings.default_quota}
+              onChange={(e) => setSettings({ ...settings, default_quota: Number(e.target.value) })}
+            />
           </Field>
           <Field label="Code TTL (days)">
-            <Input type="number" min={1} value={settings.code_ttl_days}
-              onChange={(e) => setSettings({ ...settings, code_ttl_days: Number(e.target.value) })} />
+            <Input
+              type="number"
+              min={1}
+              value={settings.code_ttl_days}
+              onChange={(e) => setSettings({ ...settings, code_ttl_days: Number(e.target.value) })}
+            />
           </Field>
           <Field label="Window (days)">
-            <Input type="number" min={1} value={settings.window_days}
-              onChange={(e) => setSettings({ ...settings, window_days: Number(e.target.value) })} />
+            <Input
+              type="number"
+              min={1}
+              value={settings.window_days}
+              onChange={(e) => setSettings({ ...settings, window_days: Number(e.target.value) })}
+            />
           </Field>
         </div>
-        <Button className="mt-4" onClick={saveSettings}>Save defaults</Button>
+        <Button className="mt-4" onClick={saveSettings}>
+          Save defaults
+        </Button>
       </section>
 
       {/* Role / segment overrides */}
       <section className="mt-6 rounded-3xl border border-border bg-card p-6">
         <h2 className="font-display text-lg font-semibold">Per-segment overrides</h2>
-        <p className="mt-1 text-xs text-muted-foreground">Sets quota for all members in a segment. Overrides global default.</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Sets quota for all members in a segment. Overrides global default.
+        </p>
 
         <div className="mt-4 flex flex-wrap items-end gap-3">
           <Field label="Segment">
@@ -244,12 +344,21 @@ function AdminVouchesPage() {
               onChange={(e) => setNewRoleSegment(e.target.value as never)}
             >
               <option value="any">All segments</option>
-              {SEGMENT_LIST.map((s) => (<option key={s} value={s}>{SEGMENT_META[s].label}</option>))}
+              {SEGMENT_LIST.map((s) => (
+                <option key={s} value={s}>
+                  {SEGMENT_META[s].label}
+                </option>
+              ))}
             </select>
           </Field>
           <Field label="Quota">
-            <Input type="number" className="w-24" min={0} value={newRoleQuota}
-              onChange={(e) => setNewRoleQuota(Number(e.target.value))} />
+            <Input
+              type="number"
+              className="w-24"
+              min={0}
+              value={newRoleQuota}
+              onChange={(e) => setNewRoleQuota(Number(e.target.value))}
+            />
           </Field>
           <Button onClick={addRoleOverride}>Save override</Button>
         </div>
@@ -257,54 +366,81 @@ function AdminVouchesPage() {
         <div className="mt-4 space-y-2">
           {segmentOverrides.length === 0 ? (
             <p className="text-sm text-muted-foreground">None.</p>
-          ) : segmentOverrides.map((r) => (
-            <div key={r.id} className="flex items-center justify-between rounded-xl border border-border p-3">
-              <div className="flex items-center gap-3">
-                <Badge variant="secondary">{r.segment ? SEGMENT_META[r.segment].label : "All segments"}</Badge>
-                <span className="text-sm">{r.quota} per window</span>
+          ) : (
+            segmentOverrides.map((r) => (
+              <div
+                key={r.id}
+                className="flex items-center justify-between rounded-xl border border-border p-3"
+              >
+                <div className="flex items-center gap-3">
+                  <Badge variant="secondary">
+                    {r.segment ? SEGMENT_META[r.segment].label : "All segments"}
+                  </Badge>
+                  <span className="text-sm">{r.quota} per window</span>
+                </div>
+                <Button size="sm" variant="ghost" onClick={() => deleteRoleOverride(r.id)}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
               </div>
-              <Button size="sm" variant="ghost" onClick={() => deleteRoleOverride(r.id)}>
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </section>
 
       {/* User overrides */}
       <section className="mt-6 rounded-3xl border border-border bg-card p-6">
         <h2 className="font-display text-lg font-semibold">Per-user overrides</h2>
-        <p className="mt-1 text-xs text-muted-foreground">Highest priority — beats segment and global.</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Highest priority — beats segment and global.
+        </p>
 
         <div className="mt-4">
-          <Input placeholder="Search member by name…" value={userSearch} onChange={(e) => setUserSearch(e.target.value)} />
+          <Input
+            placeholder="Search member by name…"
+            value={userSearch}
+            onChange={(e) => setUserSearch(e.target.value)}
+          />
           {userSearch.trim().length >= 2 && !pickedUser && (
             <div className="mt-2 space-y-1">
               {userResults.map((u) => (
                 <button
                   key={u.user_id}
-                  onClick={() => { setPickedUser({ user_id: u.user_id, name: u.display_name ?? "Member" }); setUserResults([]); }}
+                  onClick={() => {
+                    setPickedUser({ user_id: u.user_id, name: u.display_name ?? "Member" });
+                    setUserResults([]);
+                  }}
                   className="w-full rounded-lg border border-border p-2 text-left text-sm hover:bg-foreground/5"
                 >
                   {u.display_name ?? "Member"}
                 </button>
               ))}
-              {userResults.length === 0 && <p className="text-xs text-muted-foreground">No matches.</p>}
+              {userResults.length === 0 && (
+                <p className="text-xs text-muted-foreground">No matches.</p>
+              )}
             </div>
           )}
           {pickedUser && (
             <div className="mt-3 space-y-3 rounded-xl border border-border p-3">
-              <p className="text-sm">For <strong>{pickedUser.name}</strong></p>
+              <p className="text-sm">
+                For <strong>{pickedUser.name}</strong>
+              </p>
               <div className="flex flex-wrap items-end gap-3">
                 <Field label="Quota">
-                  <Input type="number" className="w-24" min={0} value={newUserQuota}
-                    onChange={(e) => setNewUserQuota(Number(e.target.value))} />
+                  <Input
+                    type="number"
+                    className="w-24"
+                    min={0}
+                    value={newUserQuota}
+                    onChange={(e) => setNewUserQuota(Number(e.target.value))}
+                  />
                 </Field>
                 <Field label="Reason (optional)">
                   <Input value={newUserReason} onChange={(e) => setNewUserReason(e.target.value)} />
                 </Field>
                 <Button onClick={addUserOverride}>Save</Button>
-                <Button variant="ghost" onClick={() => setPickedUser(null)}>Cancel</Button>
+                <Button variant="ghost" onClick={() => setPickedUser(null)}>
+                  Cancel
+                </Button>
               </div>
             </div>
           )}
@@ -313,19 +449,24 @@ function AdminVouchesPage() {
         <div className="mt-4 space-y-2">
           {userOverrides.length === 0 ? (
             <p className="text-sm text-muted-foreground">None.</p>
-          ) : userOverrides.map((o) => (
-            <div key={o.user_id} className="flex items-center justify-between rounded-xl border border-border p-3">
-              <div>
-                <p className="font-medium">{names[o.user_id] ?? o.user_id.slice(0, 8)}</p>
-                <p className="text-xs text-muted-foreground">
-                  {o.quota} / window {o.reason ? `· ${o.reason}` : ""}
-                </p>
+          ) : (
+            userOverrides.map((o) => (
+              <div
+                key={o.user_id}
+                className="flex items-center justify-between rounded-xl border border-border p-3"
+              >
+                <div>
+                  <p className="font-medium">{names[o.user_id] ?? o.user_id.slice(0, 8)}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {o.quota} / window {o.reason ? `· ${o.reason}` : ""}
+                  </p>
+                </div>
+                <Button size="sm" variant="ghost" onClick={() => deleteUserOverride(o.user_id)}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
               </div>
-              <Button size="sm" variant="ghost" onClick={() => deleteUserOverride(o.user_id)}>
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </section>
 
@@ -337,17 +478,29 @@ function AdminVouchesPage() {
         ) : (
           <div className="mt-3 space-y-2">
             {requests.map((r) => (
-              <div key={r.id} className="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-border p-3 text-sm">
+              <div
+                key={r.id}
+                className="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-border p-3 text-sm"
+              >
                 <div className="min-w-0 flex-1">
-                  <p className="font-medium">{names[r.requester_id] ?? r.requester_id.slice(0, 8)}</p>
+                  <p className="font-medium">
+                    {names[r.requester_id] ?? r.requester_id.slice(0, 8)}
+                  </p>
                   <p className="text-xs text-muted-foreground">
-                    {r.target_verifier_id ? `→ ${names[r.target_verifier_id] ?? "specific member"}` : "open to admins"} · {new Date(r.created_at).toLocaleString()}
+                    {r.target_verifier_id
+                      ? `→ ${names[r.target_verifier_id] ?? "specific member"}`
+                      : "open to admins"}{" "}
+                    · {new Date(r.created_at).toLocaleString()}
                   </p>
                   <p className="mt-2 whitespace-pre-wrap text-sm">{r.message}</p>
                 </div>
                 <div className="flex gap-2">
-                  <Button size="sm" onClick={() => resolveRequest(r.id, true)}>Approve & verify</Button>
-                  <Button size="sm" variant="outline" onClick={() => resolveRequest(r.id, false)}>Reject</Button>
+                  <Button size="sm" onClick={() => resolveRequest(r.id, true)}>
+                    Approve & verify
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => resolveRequest(r.id, false)}>
+                    Reject
+                  </Button>
                 </div>
               </div>
             ))}
@@ -358,20 +511,31 @@ function AdminVouchesPage() {
       {/* Active codes */}
       <section className="mt-6 rounded-3xl border border-border bg-card p-6">
         <h2 className="font-display text-lg font-semibold">Recent codes</h2>
-        {busy ? <p className="mt-2 text-sm text-muted-foreground">Loading…</p> : codes.length === 0 ? (
+        {busy ? (
+          <p className="mt-2 text-sm text-muted-foreground">Loading…</p>
+        ) : codes.length === 0 ? (
           <p className="mt-2 text-sm text-muted-foreground">None.</p>
         ) : (
           <div className="mt-3 space-y-2">
             {codes.map((c) => (
-              <div key={c.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border p-3 text-sm">
+              <div
+                key={c.id}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border p-3 text-sm"
+              >
                 <div className="flex items-center gap-3">
                   <code className="rounded bg-muted px-2 py-1 font-mono text-xs">{c.code}</code>
-                  <span className="text-muted-foreground">by {names[c.issuer_id] ?? c.issuer_id.slice(0, 8)}</span>
+                  <span className="text-muted-foreground">
+                    by {names[c.issuer_id] ?? c.issuer_id.slice(0, 8)}
+                  </span>
                   <Badge variant="secondary">{c.status}</Badge>
-                  <span className="text-xs text-muted-foreground">expires {new Date(c.expires_at).toLocaleDateString()}</span>
+                  <span className="text-xs text-muted-foreground">
+                    expires {new Date(c.expires_at).toLocaleDateString()}
+                  </span>
                 </div>
                 {c.status === "active" && (
-                  <Button size="sm" variant="outline" onClick={() => revokeCode(c.id)}>Revoke</Button>
+                  <Button size="sm" variant="outline" onClick={() => revokeCode(c.id)}>
+                    Revoke
+                  </Button>
                 )}
               </div>
             ))}
@@ -388,11 +552,19 @@ function AdminVouchesPage() {
           <div className="mt-3 space-y-2 text-sm">
             {events.map((e) => (
               <div key={e.id} className="rounded-xl border border-border p-3">
-                <span className="text-xs uppercase tracking-wider text-muted-foreground">{e.channel}</span>
+                <span className="text-xs uppercase tracking-wider text-muted-foreground">
+                  {e.channel}
+                </span>
                 <span className="ml-3">{names[e.issuer_id] ?? "Member"}</span>
                 <span className="mx-2 text-muted-foreground">→</span>
-                <span>{e.recipient_id ? (names[e.recipient_id] ?? e.recipient_id.slice(0, 8)) : "(unredeemed)"}</span>
-                <span className="ml-3 text-xs text-muted-foreground">{new Date(e.created_at).toLocaleString()}</span>
+                <span>
+                  {e.recipient_id
+                    ? (names[e.recipient_id] ?? e.recipient_id.slice(0, 8))
+                    : "(unredeemed)"}
+                </span>
+                <span className="ml-3 text-xs text-muted-foreground">
+                  {new Date(e.created_at).toLocaleString()}
+                </span>
               </div>
             ))}
           </div>

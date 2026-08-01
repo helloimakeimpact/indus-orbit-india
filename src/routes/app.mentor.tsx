@@ -17,6 +17,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
+import { getErrorMessage } from "@/lib/errors";
+
+type MentorSessionResult = Awaited<ReturnType<typeof getMyMentorSessions>>;
+type MentorSession =
+  | MentorSessionResult["asExpert"][number]
+  | MentorSessionResult["asBooker"][number];
+type MentorSessionStatus = "declined" | "completed" | "cancelled";
 
 export const Route = createFileRoute("/app/mentor")({
   head: () => ({
@@ -27,36 +34,32 @@ export const Route = createFileRoute("/app/mentor")({
 
 function MentorPage() {
   const { user } = useAuth();
-  const [data, setData] = useState<{
-    asExpert: any[];
-    asBooker: any[];
-    monthlyHoursDelivered: number;
-  } | null>(null);
+  const [data, setData] = useState<MentorSessionResult | null>(null);
   const [busy, setBusy] = useState(true);
-  const [acceptingSession, setAcceptingSession] = useState<any | null>(null);
+  const [acceptingSession, setAcceptingSession] = useState<MentorSession | null>(null);
 
   async function load() {
     try {
       const res = await getMyMentorSessions();
       setData(res);
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
     } finally {
       setBusy(false);
     }
   }
 
   useEffect(() => {
-    if (user) load();
+    if (user) void Promise.resolve().then(load);
   }, [user]);
 
-  async function updateStatus(sessionId: string, status: "declined" | "completed" | "cancelled") {
+  async function updateStatus(sessionId: string, status: MentorSessionStatus) {
     try {
       await updateMentorSession({ data: { sessionId, status } });
       toast.success(`Session marked as ${status}`);
       load();
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
     }
   }
 
@@ -131,12 +134,12 @@ function SessionCard({
   onAccept,
   onUpdate,
 }: {
-  session: any;
+  session: MentorSession;
   isExpert: boolean;
   onAccept?: () => void;
-  onUpdate: (id: string, s: any) => void;
+  onUpdate: (id: string, status: MentorSessionStatus) => void;
 }) {
-  const profile = isExpert ? session.profiles : session.profiles; // Since both return the joined profile as profiles
+  const profile = session.profiles;
 
   return (
     <div className="rounded-2xl border border-border bg-card p-5">
@@ -214,7 +217,7 @@ function AcceptSessionDialog({
   onClose,
   onAccepted,
 }: {
-  session: any;
+  session: MentorSession;
   onClose: () => void;
   onAccepted: () => void;
 }) {
@@ -253,8 +256,8 @@ function AcceptSessionDialog({
       toast.success("Session accepted");
       onAccepted();
       onClose();
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
       setBusy(false);
     }
   }

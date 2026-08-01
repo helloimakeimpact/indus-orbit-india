@@ -26,7 +26,10 @@ function SodaDetail() {
   if (notFound || !idea) {
     return (
       <div className="p-12">
-        <Link to="/app/soda" className="inline-flex items-center gap-2 text-sm text-foreground/70 hover:text-foreground">
+        <Link
+          to="/app/soda"
+          className="inline-flex items-center gap-2 text-sm text-foreground/70 hover:text-foreground"
+        >
           <ArrowLeft className="h-4 w-4" /> Back to S.O.D.A
         </Link>
         <p className="mt-6 text-foreground/70">Idea not found.</p>
@@ -37,7 +40,10 @@ function SodaDetail() {
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-5xl px-6 py-10">
-        <Link to="/app/soda" className="inline-flex items-center gap-2 text-sm text-foreground/70 hover:text-foreground">
+        <Link
+          to="/app/soda"
+          className="inline-flex items-center gap-2 text-sm text-foreground/70 hover:text-foreground"
+        >
           <ArrowLeft className="h-4 w-4" /> Back to S.O.D.A list
         </Link>
 
@@ -48,7 +54,10 @@ function SodaDetail() {
               {idea.sector}
             </span>
             {(idea.badges ?? []).map((b) => (
-              <span key={b} className="rounded-full bg-foreground/5 px-2.5 py-1 text-[11px] font-medium text-foreground/70">
+              <span
+                key={b}
+                className="rounded-full bg-foreground/5 px-2.5 py-1 text-[11px] font-medium text-foreground/70"
+              >
                 {b}
               </span>
             ))}
@@ -63,7 +72,12 @@ function SodaDetail() {
 
         {/* Scores grid */}
         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <ScoreCard label="Opportunity" v={idea.score_opportunity} sub="Exceptional" tone="emerald" />
+          <ScoreCard
+            label="Opportunity"
+            v={idea.score_opportunity}
+            sub="Exceptional"
+            tone="emerald"
+          />
           <ScoreCard label="Problem" v={idea.score_problem} sub="Severity" tone="rose" />
           <ScoreCard label="Feasibility" v={idea.score_feasibility} sub="Buildable" tone="sky" />
           <ScoreCard label="Why Now" v={idea.score_why_now} sub="Perfect timing" tone="saffron" />
@@ -112,7 +126,9 @@ function SodaDetail() {
                         </p>
                         <p className="font-display text-lg">
                           {o.name}{" "}
-                          {o.price && <span className="text-sm text-foreground/60">({o.price})</span>}
+                          {o.price && (
+                            <span className="text-sm text-foreground/60">({o.price})</span>
+                          )}
                         </p>
                         {o.description && (
                           <p className="mt-1 text-sm text-foreground/75">{o.description}</p>
@@ -198,7 +214,9 @@ function SodaDetail() {
                   {idea.community_signals.map((c, i) => (
                     <li key={i} className="flex gap-2">
                       <Sparkles className="h-3.5 w-3.5 flex-none text-[var(--saffron)] mt-0.5" />
-                      <span><strong>{c.source}:</strong> {c.detail}</span>
+                      <span>
+                        <strong>{c.source}:</strong> {c.detail}
+                      </span>
                     </li>
                   ))}
                 </ul>
@@ -229,7 +247,17 @@ function SodaDetail() {
   );
 }
 
-function ScoreCard({ label, v, sub, tone }: { label: string; v: number; sub: string; tone: "emerald" | "rose" | "sky" | "saffron" }) {
+function ScoreCard({
+  label,
+  v,
+  sub,
+  tone,
+}: {
+  label: string;
+  v: number;
+  sub: string;
+  tone: "emerald" | "rose" | "sky" | "saffron";
+}) {
   const bg = {
     emerald: "from-emerald-50 to-emerald-100/50",
     rose: "from-rose-50 to-rose-100/50",

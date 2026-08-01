@@ -15,26 +15,34 @@ export function useUnreadMessageCount(userId: string | undefined) {
   }, []);
 
   useEffect(() => {
-    if (!userId) {
-      setUnreadCount(0);
-      return;
-    }
+    let active = true;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
 
-    void refresh();
-    const channel = supabase
-      .channel(`user:${userId}:direct-message-unread`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "direct_messages" },
-        (payload) => {
-          const message = payload.new as DirectMessage;
-          if (message?.recipient_id === userId) void refresh();
-        },
-      )
-      .subscribe();
+    void Promise.resolve().then(() => {
+      if (!active) return;
+
+      if (!userId) {
+        setUnreadCount(0);
+        return;
+      }
+
+      void Promise.resolve().then(refresh);
+      channel = supabase
+        .channel(`user:${userId}:direct-message-unread`)
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "direct_messages" },
+          (payload) => {
+            const message = payload.new as DirectMessage;
+            if (message?.recipient_id === userId) void refresh();
+          },
+        )
+        .subscribe();
+    });
 
     return () => {
-      void supabase.removeChannel(channel);
+      active = false;
+      if (channel) void supabase.removeChannel(channel);
     };
   }, [refresh, userId]);
 

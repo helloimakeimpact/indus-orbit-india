@@ -22,6 +22,9 @@ import {
   submitQuiz,
   unmarkLessonComplete,
 } from "@/server/education.functions";
+import { getErrorMessage } from "@/lib/errors";
+
+type LessonData = Awaited<ReturnType<typeof getLessonBySlug>>;
 
 export const Route = createFileRoute("/app/education/$courseSlug/$lessonSlug")({
   component: LessonPage,
@@ -66,7 +69,7 @@ function videoLabel(url: string): { title: string; description: string; action: 
 
 function LessonPage() {
   const { courseSlug, lessonSlug } = useParams({ from: "/app/education/$courseSlug/$lessonSlug" });
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<LessonData>(null);
   const [loading, setLoading] = useState(true);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
@@ -77,15 +80,15 @@ function LessonPage() {
       const d = await getLessonBySlug(courseSlug, lessonSlug);
       setData(d);
       setAnswers({});
-    } catch (e: any) {
-      toast.error(e.message);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
     } finally {
       setLoading(false);
     }
   }
 
   useEffect(() => {
-    load();
+    void Promise.resolve().then(load);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [courseSlug, lessonSlug]);
 
@@ -105,8 +108,8 @@ function LessonPage() {
         toast.success("Lesson complete");
       }
       await load();
-    } catch (e: any) {
-      toast.error(e.message);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
     } finally {
       setBusy(false);
     }
@@ -128,8 +131,8 @@ function LessonPage() {
         toast.error(`Scored ${res.score}% - needs ${data.quiz.passing_score}%`);
       }
       await load();
-    } catch (e: any) {
-      toast.error(e.message);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
     } finally {
       setBusy(false);
     }
@@ -139,15 +142,16 @@ function LessonPage() {
     try {
       const url = await getSignedEducationUrl(path);
       window.open(url, "_blank", "noopener,noreferrer");
-    } catch (e: any) {
-      toast.error(e.message);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
     }
   }
 
   if (loading) return <div className="p-6 text-sm text-muted-foreground">Loading lesson...</div>;
   if (!data) return <div className="p-6">Lesson not found.</div>;
 
-  const hasQuiz = !!data.quiz && data.questions.length > 0;
+  const quiz = data.quiz;
+  const hasQuiz = Boolean(quiz && data.questions.length > 0);
 
   return (
     <div className="mx-auto max-w-7xl space-y-4 p-3 sm:p-4 md:p-5">
@@ -249,15 +253,13 @@ function LessonPage() {
             )}
           </section>
 
-          {hasQuiz && (
+          {quiz && data.questions.length > 0 && (
             <section className="app-glass rounded-2xl p-4 md:p-5">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <h2 className="text-lg font-semibold text-[var(--indigo-night)]">
-                    {data.quiz.title}
-                  </h2>
+                  <h2 className="text-lg font-semibold text-[var(--indigo-night)]">{quiz.title}</h2>
                   <p className="text-sm text-muted-foreground">
-                    Pass with {data.quiz.passing_score}% or higher.
+                    Pass with {quiz.passing_score}% or higher.
                   </p>
                 </div>
                 {data.lastAttempt && (
@@ -274,7 +276,7 @@ function LessonPage() {
               </div>
 
               <div className="mt-5 space-y-5">
-                {data.questions.map((question: any, index: number) => (
+                {data.questions.map((question, index) => (
                   <div
                     key={question.id}
                     className="rounded-2xl border border-border bg-card/70 p-4"
@@ -289,7 +291,7 @@ function LessonPage() {
                       }
                       className="mt-3 space-y-2"
                     >
-                      {question.options.map((option: any) => (
+                      {question.options.map((option) => (
                         <div key={option.id} className="flex items-center gap-2">
                           <RadioGroupItem id={option.id} value={option.id} />
                           <Label htmlFor={option.id} className="text-sm font-normal">
@@ -333,7 +335,7 @@ function LessonPage() {
                 Attachments
               </p>
               <div className="mt-3 space-y-2">
-                {data.attachments.map((attachment: any) => (
+                {data.attachments.map((attachment) => (
                   <Button
                     key={attachment.id}
                     variant="outline"

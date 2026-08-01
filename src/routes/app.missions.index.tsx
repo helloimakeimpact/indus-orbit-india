@@ -28,6 +28,7 @@ import {
   updateMissionStatus,
 } from "@/server/mission.functions";
 import { SEGMENT_META } from "@/components/auth/segments";
+import { getErrorMessage } from "@/lib/errors";
 
 export const Route = createFileRoute("/app/missions/")({
   head: () => ({
@@ -38,14 +39,15 @@ export const Route = createFileRoute("/app/missions/")({
 
 const STATUS_TABS = ["all", "open", "completed", "archived"] as const;
 type StatusTab = (typeof STATUS_TABS)[number];
+type MissionSummary = Awaited<ReturnType<typeof getMissions>>[number];
 
 function MissionsPage() {
   const { user, isAdmin, userSegment } = useAuth();
   const navigate = useNavigate();
-  const [allMissions, setAllMissions] = useState<any[]>([]);
+  const [allMissions, setAllMissions] = useState<MissionSummary[]>([]);
   const [busy, setBusy] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
-  const [joinOpen, setJoinOpen] = useState<any | null>(null);
+  const [joinOpen, setJoinOpen] = useState<MissionSummary | null>(null);
   const [statusFilter, setStatusFilter] = useState<StatusTab>("all");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -53,15 +55,15 @@ function MissionsPage() {
     try {
       const data = await getMissions();
       setAllMissions(data);
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error));
     } finally {
       setBusy(false);
     }
   }
 
   useEffect(() => {
-    load();
+    void Promise.resolve().then(load);
   }, []);
 
   // Client-side filter
@@ -80,7 +82,7 @@ function MissionsPage() {
   const hasMore = visibleCount < filtered.length;
 
   useEffect(() => {
-    setVisibleCount(PAGE_SIZE);
+    queueMicrotask(() => setVisibleCount(PAGE_SIZE));
   }, [statusFilter, searchQuery]);
 
   async function handleStatusChange(missionId: string, status: "open" | "completed" | "archived") {
@@ -88,8 +90,8 @@ function MissionsPage() {
       await updateMissionStatus({ data: { missionId, status } });
       toast.success(`Mission marked as ${status}`);
       load();
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error));
     }
   }
 
@@ -183,10 +185,10 @@ function MissionsPage() {
           </div>
         ) : (
           visible.map((m) => {
-            const hasJoined = m.mission_members?.some((mm: any) => mm.user_id === user?.id);
+            const hasJoined = m.mission_members?.some((member) => member.user_id === user?.id);
             const segmentCounts =
-              m.mission_members?.reduce((acc: any, mm: any) => {
-                const segment = mm.profiles?.orbit_segment || "other";
+              m.mission_members?.reduce<Record<string, number>>((acc, member) => {
+                const segment = member.profiles?.orbit_segment || "other";
                 acc[segment] = (acc[segment] || 0) + 1;
                 return acc;
               }, {}) || {};
@@ -286,21 +288,21 @@ function MissionsPage() {
                       <Users className="mr-1.5 h-3.5 w-3.5" /> Recent Participants
                     </h4>
                     <div className="flex flex-wrap gap-2">
-                      {m.mission_members.slice(0, 5).map((mm: any) => (
+                      {m.mission_members.slice(0, 5).map((member) => (
                         <Badge
-                          key={mm.user_id}
+                          key={member.user_id}
                           variant="secondary"
                           className="font-normal flex gap-1.5 items-center"
                         >
                           <span
                             className="h-2 w-2 rounded-full"
                             style={{
-                              backgroundColor: mm.role === "founder" ? "#22c55e" : "#3b82f6",
+                              backgroundColor: member.role === "founder" ? "#22c55e" : "#3b82f6",
                             }}
                           />
-                          {mm.profiles?.display_name || "Member"}
-                          {mm.commitment_type && (
-                            <span className="opacity-50">({mm.commitment_type})</span>
+                          {member.profiles?.display_name || "Member"}
+                          {member.commitment_type && (
+                            <span className="opacity-50">({member.commitment_type})</span>
                           )}
                         </Badge>
                       ))}
@@ -390,8 +392,8 @@ function CreateMissionDialog({
       toast.success("Mission created");
       onCreated();
       onClose();
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error));
       setBusy(false);
     }
   }
@@ -450,7 +452,7 @@ function JoinMissionDialog({
   onClose,
   onJoined,
 }: {
-  mission: any;
+  mission: MissionSummary;
   userSegment: string | null;
   onClose: () => void;
   onJoined: () => void;
@@ -477,8 +479,8 @@ function JoinMissionDialog({
       toast.success("Successfully joined mission!");
       onJoined();
       onClose();
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error));
       setBusy(false);
     }
   }

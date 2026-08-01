@@ -1,38 +1,47 @@
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { GatewayError } from "./errors.ts";
-import type { PartnerEntitlement } from "./types.ts";
+import type { ActiveCapacityEntitlement } from "./types.ts";
 
-export async function requireActivePartnerEntitlement(
+type CapacitySourceRow = {
+  id: string;
+  source_key: string;
+  display_name: string;
+  status: string;
+};
+
+type GrantRow = {
+  capacity_source_id: string;
+  io_capacity_sources: CapacitySourceRow | CapacitySourceRow[] | null;
+};
+
+export async function getActiveCapacityEntitlements(
   admin: SupabaseClient,
   workspaceId: string,
-): Promise<PartnerEntitlement> {
-  const { data: capacitySource, error: sourceError } = await admin
-    .from("io_capacity_sources")
-    .select("id, source_key, display_name, status")
-    .eq("source_key", "partner-gateway")
-    .maybeSingle();
-
-  if (sourceError) throw sourceError;
-  if (!capacitySource || capacitySource.status !== "active") {
-    throw new GatewayError(
-      "not_configured",
-      503,
-      "No active partner capacity source is configured.",
-    );
-  }
-
-  const { data: grant, error: grantError } = await admin
+): Promise<ActiveCapacityEntitlement[]> {
+  const { data, error } = await admin
     .from("io_workspace_capacity_grants")
-    .select("id")
+    .select("capacity_source_id, io_capacity_sources(id, source_key, display_name, status)")
     .eq("workspace_id", workspaceId)
-    .eq("capacity_source_id", capacitySource.id)
     .eq("status", "active")
-    .maybeSingle();
+    .order("priority", { ascending: true });
 
-  if (grantError) throw grantError;
-  if (!grant) {
-    throw new GatewayError("forbidden", 403, "This workspace has no active partner entitlement.");
+  if (error) throw error;
+
+  const entitlements = ((data ?? []) as GrantRow[]).flatMap((grant) => {
+    const source = grant.io_capacity_sources;
+    if (!source || Array.isArray(source) || source.status !== "active") return [];
+    return [
+      {
+        sourceId: source.id,
+        sourceKey: source.source_key,
+        displayName: source.display_name,
+      },
+    ];
+  });
+
+  if (!entitlements.length) {
+    throw new GatewayError("forbidden", 403, "This workspace has no active capacity entitlement.");
   }
 
-  return { sourceKey: capacitySource.source_key, displayName: capacitySource.display_name };
+  return entitlements;
 }

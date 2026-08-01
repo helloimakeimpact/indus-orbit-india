@@ -1,6 +1,6 @@
 # I/O Port implementation plan
 
-Status: implementation baseline, updated 30 July 2026. A demo control-plane migration and an authenticated `io-gateway` proof are deployed; this document remains the plan for the production-grade system, not a claim that every planned surface is live.
+Status: implementation baseline, reviewed 31 July 2026. A demo control-plane migration and an authenticated single-provider `io-gateway` proof are deployed; this document remains the plan for the production-grade system, not a claim that every planned surface is live. Verified operational status is maintained in `docs/IO_PORT_IMPLEMENTATION_STATUS.md`.
 
 Companion evidence: `docs/IO_PORT_SOURCE_BRIEF.md` and the workspace-level `IO_PORT_TECHNICAL_AND_PRICING_PLAN.md`. Implementation detail: `docs/IO_PORT_CODE_LEVEL_ROADMAP.md`. Shared conversation and shell work: `docs/CONVERSATION_SYSTEM_IMPLEMENTATION_PLAN.md`. Migration-history evidence: `docs/SUPABASE_SCHEMA_RECONCILIATION.md`.
 

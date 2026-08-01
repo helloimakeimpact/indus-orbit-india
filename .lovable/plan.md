@@ -2,7 +2,7 @@
 
 **Skills** — a community library of reusable founder playbooks: tight, repeatable procedures the Orbit can apply on demand. Think: "How to register a Section 8 company", "How to run a 5-day kirana-store sales pilot", "How to negotiate a manufacturing PO in Tamil Nadu". Each Skill bundles a how-to body, prerequisites, a checklist, time/cost estimates, and pointers to templates or tools.
 
-**Loop** — based on the *Forward Future* essay "Build the Loop, Not the Agent". The thesis: don't ship a finished AI agent, ship the iteration loop that rebuilds it as models improve. The library captures **loop blueprints**: a problem, an eval set, the smallest end-to-end pipeline that solves it, and the cadence/trigger that re-runs the loop when a new model lands. Each entry is essentially "here's the loop, here's the eval, here's how you re-run it on the next frontier model".
+**Loop** — based on the _Forward Future_ essay "Build the Loop, Not the Agent". The thesis: don't ship a finished AI agent, ship the iteration loop that rebuilds it as models improve. The library captures **loop blueprints**: a problem, an eval set, the smallest end-to-end pipeline that solves it, and the cadence/trigger that re-runs the loop when a new model lands. Each entry is essentially "here's the loop, here's the eval, here's how you re-run it on the next frontier model".
 
 Both fit the same Indus Orbit pattern as S.O.D.A: a living, India-flavoured database, refreshed continuously, with depth gated behind sign-in.
 
@@ -22,6 +22,7 @@ PUBLIC                              AUTH                            ADMIN
 ```
 
 Each library gets:
+
 1. **Public route** showing top-5-by-score and 5-newest (deduped), an "Item of the Day" rotation, and a sign-in CTA — same shape as `/soda` today.
 2. **Auth route** at `/app/<lib>` with full grid, search, sector filter, sort.
 3. **Detail route** at `/app/<lib>/$slug` with the full body.
@@ -36,6 +37,7 @@ Each library gets:
 Two new tables, identical pattern to `soda_ideas`:
 
 **`public.skills`**
+
 - Identity: slug, title, summary, hero_image_url, status (draft|published), featured_on
 - Taxonomy: category (`legal`, `finance`, `gtm`, `ops`, `product`, `hiring`, `compliance`, `vernacular`, `ai`), tags[], badges[]
 - Body: when_to_use, prerequisites (jsonb array), steps (jsonb array of `{title, body}`), time_estimate, cost_estimate, common_pitfalls, india_context_notes
@@ -44,6 +46,7 @@ Two new tables, identical pattern to `soda_ideas`:
 - Ownership: created_by, updated_at, published_at
 
 **`public.loops`**
+
 - Identity: slug, title, summary, hero_image_url, status, featured_on
 - Taxonomy: domain (`agents`, `evals`, `data-pipelines`, `voice`, `vision`, `multimodal`, `rag`), tags[], badges[]
 - Body: problem_statement, why_iterate (the "model-keeps-shifting" thesis), minimum_loop (jsonb: `{input, pipeline, output, eval}`), eval_set_description, current_baseline_model, trigger_to_rerun (e.g. "new frontier model > X benchmark"), upgrade_history (jsonb timeline)
@@ -52,6 +55,7 @@ Two new tables, identical pattern to `soda_ideas`:
 - Ownership: created_by, updated_at, published_at
 
 Both tables follow the same RLS pattern S.O.D.A now uses:
+
 - `anon` may `SELECT` rows where `status = 'published'`
 - `authenticated` may `SELECT` published rows
 - Only admins may `INSERT / UPDATE / DELETE`
@@ -90,6 +94,7 @@ A shared `LibraryCard`, `LibraryDetail` and `LibraryAdminTable` component could 
 I'll seed each with ~8 India-context entries:
 
 **Skills (sample)**
+
 1. Register a startup in India in 7 days (MCA, GST, PAN, current account)
 2. Run a 5-day kirana-store pilot in Pune
 3. Hire your first 3 engineers from tier-2 campuses
@@ -100,6 +105,7 @@ I'll seed each with ~8 India-context entries:
 8. Get on ONDC as a seller
 
 **Loop (sample)**
+
 1. Vernacular voice-agent quality loop (Hindi → Tamil → Telugu)
 2. RAG-eval loop for Indian legal documents
 3. Pricing-experiment loop for tier-2 D2C
@@ -126,7 +132,7 @@ Estimated scope: roughly the same as S.O.D.A took, twice.
 
 1. **Naming**: keep `/loop` or use `/loops` (plural, matches DB table)?
 2. **Skills authoring**: admin-only, or do we let verified members propose Skills that admins approve (mirrors the Stories pattern)?
-3. **Loop entries**: should each Loop link to a S.O.D.A idea it serves (e.g. "this loop powers the *Vernacular voice agents* idea")? Adds a nice cross-library graph.
+3. **Loop entries**: should each Loop link to a S.O.D.A idea it serves (e.g. "this loop powers the _Vernacular voice agents_ idea")? Adds a nice cross-library graph.
 4. **Visibility split**: same as S.O.D.A (top 5 score + 5 newest public), or tighter (top 3 only)?
 
 Once you confirm these, I'll start with the Skills migration.

@@ -31,10 +31,7 @@ import { Pencil, Trash2, Plus, Eye, EyeOff } from "lucide-react";
 
 export const Route = createFileRoute("/app/admin/spotlights")({
   head: () => ({
-    meta: [
-      { title: "Spotlights admin — Indus Orbit" },
-      { name: "robots", content: "noindex" },
-    ],
+    meta: [{ title: "Spotlights admin — Indus Orbit" }, { name: "robots", content: "noindex" }],
   }),
   component: AdminSpotlights,
 });
@@ -79,7 +76,9 @@ function AdminSpotlights() {
     setBusy(true);
     const { data, error } = await supabase
       .from("spotlights")
-      .select("*, profiles!spotlights_user_id_fkey(id, user_id, display_name, headline, avatar_url)")
+      .select(
+        "*, profiles!spotlights_user_id_fkey(id, user_id, display_name, headline, avatar_url)",
+      )
       .order("display_order", { ascending: false })
       .order("created_at", { ascending: false });
     if (error) toast.error(error.message);
@@ -88,7 +87,7 @@ function AdminSpotlights() {
   }
 
   useEffect(() => {
-    if (isAdmin) load();
+    if (isAdmin) void Promise.resolve().then(load);
   }, [isAdmin]);
 
   async function toggleActive(s: Spotlight) {
@@ -117,7 +116,8 @@ function AdminSpotlights() {
         <div>
           <h1 className="font-display text-3xl font-medium">Spotlights</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Feature members on the homepage. Active spotlights appear in display order (highest first).
+            Feature members on the homepage. Active spotlights appear in display order (highest
+            first).
           </p>
         </div>
         <Button onClick={() => setCreating(true)}>
@@ -251,11 +251,15 @@ function SpotlightDialog({
 
   useEffect(() => {
     const q = search.trim();
-    if (!q || existing) {
-      setResults([]);
-      return;
-    }
     let cancelled = false;
+    if (!q || existing) {
+      void Promise.resolve().then(() => {
+        if (!cancelled) setResults([]);
+      });
+      return () => {
+        cancelled = true;
+      };
+    }
     (async () => {
       const { data } = await supabase
         .from("profiles")
@@ -384,11 +388,7 @@ function SpotlightDialog({
 
           <div className="space-y-2">
             <Label>Link (optional)</Label>
-            <Input
-              placeholder="https://…"
-              value={link}
-              onChange={(e) => setLink(e.target.value)}
-            />
+            <Input placeholder="https://…" value={link} onChange={(e) => setLink(e.target.value)} />
           </div>
 
           <div className="grid grid-cols-2 gap-4">

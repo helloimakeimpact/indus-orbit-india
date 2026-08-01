@@ -1,13 +1,13 @@
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { GatewayError } from "./errors.ts";
-import type {
-  GatewayMessage,
-  PartnerConfig,
-  PartnerModelSelection,
-  PartnerResult,
-} from "./types.ts";
+import { selectProviderRoute, type RouteInput } from "./routing.ts";
+import type { GatewayMessage, PartnerResult, ProviderConnection } from "./types.ts";
 
 const supportedTiers = new Set(["economy", "balanced", "premium"]);
+const secretReferencePattern = /^IO_PROVIDER_[A-Z0-9_]+_API_KEY$/;
+const defaultOutputTokenAllowance = 1_024;
+
+type RegistryRow = Record<string, unknown>;
 
 function readPositiveInteger(name: string, fallback: number, maximum: number) {
   const value = Deno.env.get(name);
@@ -38,283 +38,296 @@ function readSelectionTier() {
   if (!supportedTiers.has(tier)) {
     throw new GatewayError("internal_error", 500, "The IO_MODEL_SELECTION_TIER value is invalid.");
   }
-  return tier as PartnerConfig["selection"]["tier"];
+  return tier as ProviderConnection["autoRouteTier"];
 }
 
-export function readPartnerConfig(): PartnerConfig | null {
-  const baseUrl = Deno.env.get("IO_PARTNER_BASE_URL");
-  const apiKey = Deno.env.get("IO_PARTNER_API_KEY");
-  const providerKey = Deno.env.get("IO_PARTNER_PROVIDER_KEY");
-  if (!baseUrl || !apiKey || !providerKey) return null;
-
-  let url: URL;
-  try {
-    url = new URL(baseUrl);
-  } catch {
-    throw new GatewayError("internal_error", 500, "The partner route is misconfigured.");
-  }
-
-  if (url.protocol !== "https:" || url.username || url.password) {
-    throw new GatewayError("internal_error", 500, "The partner route is misconfigured.");
-  }
-
-  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(providerKey)) {
-    throw new GatewayError("internal_error", 500, "The partner route is misconfigured.");
-  }
-
-  return {
-    baseUrl: url.toString().replace(/\/$/, ""),
-    apiKey,
-    providerKey,
-    selection: {
-      tier: readSelectionTier(),
-      freshnessDays: readPositiveInteger("IO_MODEL_SELECTION_FRESHNESS_DAYS", 180, 3_650),
-      affordabilityMultiplier: readAffordabilityMultiplier(),
-    },
-  };
+function asRecord(value: unknown): RegistryRow | null {
+  return value !== null && typeof value === "object" && !Array.isArray(value)
+    ? (value as RegistryRow)
+    : null;
 }
 
-type RegistryModel = {
-  id: string;
-  provider_model_id: string;
-  released_at: string | null;
-  deprecation_at: string | null;
-};
+function readString(row: RegistryRow, key: string): string | null {
+  const value = row[key];
+  return typeof value === "string" && value.trim() ? value : null;
+}
 
-type RegistryEndpoint = { id: string; model_id: string };
-
-type RegistryCapability = { endpoint_id: string; version: number; supports_chat: boolean };
-
-type RegistryPrice = {
-  endpoint_id: string;
-  effective_from: string;
-  unit_quantity: number;
-  input_price_nanos: number | null;
-  output_price_nanos: number | null;
-};
-
-type SelectionCandidate = {
-  model: RegistryModel;
-  estimatedCostNanos: number;
-};
-
-function numberOrNull(value: unknown) {
+function readNumber(row: RegistryRow, key: string): number | null {
+  const value = row[key];
   const parsed = typeof value === "number" ? value : Number(value);
-  return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+  return Number.isSafeInteger(parsed) && parsed >= 0 ? parsed : null;
 }
 
-function estimatedChatCostNanos(price: RegistryPrice, inputTokens: number) {
-  const unitQuantity = numberOrNull(price.unit_quantity);
-  const inputPrice = numberOrNull(price.input_price_nanos);
-  const outputPrice = numberOrNull(price.output_price_nanos);
-  if (!unitQuantity || inputPrice === null || outputPrice === null) return null;
-
-  // The gateway currently caps output at 1,024 tokens. This is only a routing
-  // estimate, not a member charge or final usage receipt.
-  return (inputTokens * inputPrice) / unitQuantity + (1_024 * outputPrice) / unitQuantity;
+function readNullableString(row: RegistryRow, key: string): string | null {
+  const value = row[key];
+  return typeof value === "string" && value.trim() ? value : null;
 }
 
-function releasedAtMillis(model: RegistryModel) {
-  if (!model.released_at) return null;
-  const timestamp = Date.parse(`${model.released_at}T00:00:00.000Z`);
-  return Number.isFinite(timestamp) ? timestamp : null;
-}
+function readConnection(row: RegistryRow): ProviderConnection | null {
+  const integrationStyle = readString(row, "integration_style");
+  const autoRouteTier = readString(row, "auto_route_tier");
+  const endpointBaseUrl = readString(row, "endpoint_base_url");
+  const secretReference = readString(row, "secret_reference");
+  const capacitySourceId = readString(row, "capacity_source_id");
+  const modelReleaseDate = readString(row, "model_release_date");
+  const unitQuantity = readNumber(row, "unit_quantity");
+  const inputPriceNanos = readNumber(row, "input_price_nanos");
+  const outputPriceNanos = readNumber(row, "output_price_nanos");
+  const capabilityVersion = readNumber(row, "capability_version");
+  const priceVersion = readNumber(row, "price_version");
+  const maxContextTokens =
+    row.max_context_tokens === null ? null : readNumber(row, "max_context_tokens");
 
-function isDeprecated(model: RegistryModel, now: number) {
-  if (!model.deprecation_at) return false;
-  const timestamp = Date.parse(model.deprecation_at);
-  return Number.isFinite(timestamp) && timestamp <= now;
-}
-
-export async function resolveLatestAffordableModel(
-  admin: SupabaseClient,
-  config: PartnerConfig,
-  messages: GatewayMessage[],
-): Promise<PartnerModelSelection> {
-  const now = Date.now();
-  const nowIso = new Date(now).toISOString();
-  const { data: provider, error: providerError } = await admin
-    .from("io_providers")
-    .select("id")
-    .eq("provider_key", config.providerKey)
-    .eq("lifecycle_state", "active")
-    .eq("catalogue_visibility", "listed")
-    .maybeSingle();
-
-  if (providerError) throw providerError;
-  if (!provider) {
-    throw new GatewayError(
-      "not_configured",
-      503,
-      "The configured provider is not active in the I/O registry.",
-    );
+  if (
+    (integrationStyle !== "openai_compatible" && integrationStyle !== "native_adapter") ||
+    (autoRouteTier !== "economy" && autoRouteTier !== "balanced" && autoRouteTier !== "premium") ||
+    !endpointBaseUrl ||
+    !secretReference ||
+    !secretReferencePattern.test(secretReference) ||
+    !capacitySourceId ||
+    !modelReleaseDate ||
+    !unitQuantity ||
+    inputPriceNanos === null ||
+    outputPriceNanos === null ||
+    capabilityVersion === null ||
+    priceVersion === null ||
+    maxContextTokens === undefined
+  ) {
+    return null;
   }
 
-  const { data: modelRows, error: modelError } = await admin
-    .from("io_models")
-    .select("id, provider_model_id, released_at, deprecation_at")
-    .eq("provider_id", provider.id)
-    .eq("listing_state", "listed")
-    .eq("auto_route_tier", config.selection.tier);
-  if (modelError) throw modelError;
+  const requiredStrings = [
+    "endpoint_id",
+    "provider_id",
+    "provider_key",
+    "provider_display_name",
+    "model_id",
+    "provider_model_id",
+    "model_display_name",
+    "endpoint_key",
+    "capacity_mode",
+    "retention_class",
+    "currency_code",
+  ].map((key) => readString(row, key));
+  if (requiredStrings.some((value) => value === null)) return null;
 
-  const models = ((modelRows ?? []) as RegistryModel[]).filter(
-    (model) => releasedAtMillis(model) !== null && !isDeprecated(model, now),
-  );
-  if (!models.length) {
-    throw new GatewayError(
-      "not_configured",
-      503,
-      "No current reviewed models are available for this I/O routing tier.",
-    );
+  try {
+    const url = new URL(endpointBaseUrl);
+    if (url.protocol !== "https:" || url.username || url.password) return null;
+  } catch {
+    return null;
   }
 
-  const { data: endpointRows, error: endpointError } = await admin
-    .from("io_model_endpoints")
-    .select("id, model_id")
-    .eq("provider_id", provider.id)
-    .eq("routing_state", "active")
-    .eq("member_visible", true)
-    .in(
-      "model_id",
-      models.map((model) => model.id),
-    );
-  if (endpointError) throw endpointError;
-
-  const endpoints = (endpointRows ?? []) as RegistryEndpoint[];
-  if (!endpoints.length) {
-    throw new GatewayError("not_configured", 503, "No active model endpoint is available.");
-  }
-
-  const endpointIds = endpoints.map((endpoint) => endpoint.id);
-  const { data: capabilityRows, error: capabilityError } = await admin
-    .from("io_endpoint_capability_versions")
-    .select("endpoint_id, version, supports_chat")
-    .eq("verification_state", "verified")
-    .in("endpoint_id", endpointIds)
-    .order("version", { ascending: false });
-  if (capabilityError) throw capabilityError;
-
-  const latestCapabilities = new Map<string, RegistryCapability>();
-  for (const capability of (capabilityRows ?? []) as RegistryCapability[]) {
-    if (!latestCapabilities.has(capability.endpoint_id)) {
-      latestCapabilities.set(capability.endpoint_id, capability);
-    }
-  }
-
-  const { data: priceRows, error: priceError } = await admin
-    .from("io_endpoint_pricing_versions")
-    .select("endpoint_id, effective_from, unit_quantity, input_price_nanos, output_price_nanos")
-    .eq("publication_state", "published")
-    .eq("member_visible", true)
-    .lte("effective_from", nowIso)
-    .or(`effective_until.is.null,effective_until.gt.${nowIso}`)
-    .in("endpoint_id", endpointIds)
-    .order("effective_from", { ascending: false });
-  if (priceError) throw priceError;
-
-  const currentPrices = new Map<string, RegistryPrice>();
-  for (const price of (priceRows ?? []) as RegistryPrice[]) {
-    if (!currentPrices.has(price.endpoint_id)) currentPrices.set(price.endpoint_id, price);
-  }
-
-  const modelsById = new Map(models.map((model) => [model.id, model]));
-  const estimatedInputTokens = Math.max(
-    1,
-    Math.ceil(messages.reduce((total, message) => total + message.content.length, 0) / 4),
-  );
-  const candidates: SelectionCandidate[] = [];
-
-  for (const endpoint of endpoints) {
-    const capability = latestCapabilities.get(endpoint.id);
-    const price = currentPrices.get(endpoint.id);
-    const model = modelsById.get(endpoint.model_id);
-    if (!capability?.supports_chat || !price || !model) continue;
-
-    const estimatedCostNanos = estimatedChatCostNanos(price, estimatedInputTokens);
-    if (estimatedCostNanos === null) continue;
-    candidates.push({ model, estimatedCostNanos });
-  }
-
-  if (!candidates.length) {
-    throw new GatewayError(
-      "not_configured",
-      503,
-      "No verified and currently priced chat model is available for automatic routing.",
-    );
-  }
-
-  const newestRelease = Math.max(
-    ...candidates.map((candidate) => releasedAtMillis(candidate.model)!),
-  );
-  const freshnessCutoff = newestRelease - config.selection.freshnessDays * 86_400_000;
-  const currentCandidates = candidates.filter(
-    (candidate) => releasedAtMillis(candidate.model)! >= freshnessCutoff,
-  );
-  const mostAffordable = Math.min(
-    ...currentCandidates.map((candidate) => candidate.estimatedCostNanos),
-  );
-  const affordableCandidates = currentCandidates.filter(
-    (candidate) =>
-      candidate.estimatedCostNanos <= mostAffordable * config.selection.affordabilityMultiplier,
-  );
-
-  affordableCandidates.sort((left, right) => {
-    const releaseDifference = releasedAtMillis(right.model)! - releasedAtMillis(left.model)!;
-    if (releaseDifference !== 0) return releaseDifference;
-    const costDifference = left.estimatedCostNanos - right.estimatedCostNanos;
-    if (costDifference !== 0) return costDifference;
-    return left.model.provider_model_id.localeCompare(right.model.provider_model_id);
-  });
-
-  const selected = affordableCandidates[0];
   return {
-    model: selected.model.provider_model_id,
-    strategy: "latest_affordable",
-    tier: config.selection.tier,
-    releasedAt: selected.model.released_at!,
-    candidateCount: candidates.length,
+    endpointId: requiredStrings[0]!,
+    providerId: requiredStrings[1]!,
+    providerKey: requiredStrings[2]!,
+    providerDisplayName: requiredStrings[3]!,
+    integrationStyle,
+    modelId: requiredStrings[4]!,
+    providerModelId: requiredStrings[5]!,
+    modelDisplayName: requiredStrings[6]!,
+    modelReleaseDate,
+    modelDeprecationAt: readNullableString(row, "model_deprecation_at"),
+    autoRouteTier,
+    maxContextTokens,
+    capacitySourceId,
+    endpointKey: requiredStrings[7]!,
+    capacityMode: requiredStrings[8]!,
+    regionCode: readNullableString(row, "region_code"),
+    residencyCountryCode: readNullableString(row, "residency_country_code"),
+    retentionClass: requiredStrings[9]!,
+    baseUrl: endpointBaseUrl.replace(/\/$/, ""),
+    secretReference,
+    capabilityVersion,
+    priceVersion,
+    currencyCode: requiredStrings[10]!,
+    unitQuantity,
+    inputPriceNanos,
+    outputPriceNanos,
   };
 }
 
-export async function sendOpenAiCompatibleChat(
-  config: PartnerConfig,
-  model: string,
+function resolveSecret(reference: string) {
+  if (!secretReferencePattern.test(reference)) {
+    throw new GatewayError("internal_error", 500, "The provider secret reference is invalid.");
+  }
+  const secret = Deno.env.get(reference);
+  if (!secret) {
+    throw new GatewayError(
+      "not_configured",
+      503,
+      "An approved provider connection is not configured.",
+    );
+  }
+  return secret;
+}
+
+export async function loadReadyProviderConnections(
+  admin: SupabaseClient,
+): Promise<ProviderConnection[]> {
+  const { data, error } = await admin.rpc("io_get_ready_endpoint_connections");
+  if (error) throw error;
+
+  return (Array.isArray(data) ? data : [])
+    .map((value) => asRecord(value))
+    .flatMap((row) => (row ? [readConnection(row)] : []))
+    .flatMap((connection) => (connection ? [connection] : []));
+}
+
+export async function resolveProviderRoute(
+  admin: SupabaseClient,
   messages: GatewayMessage[],
-): Promise<PartnerResult> {
-  let upstream: Response;
-  try {
-    upstream = await fetch(`${config.baseUrl}/chat/completions`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${config.apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ model, messages, max_tokens: 1_024, stream: false }),
-      signal: AbortSignal.timeout(45_000),
-    });
-  } catch {
-    throw new GatewayError("upstream_failure", 502, "The provider could not be reached.");
-  }
+  input: RouteInput,
+): Promise<ReturnType<typeof selectProviderRoute>> {
+  const registryConnections = await loadReadyProviderConnections(admin);
+  return selectProviderRoute(registryConnections, messages, input, {
+    tier: readSelectionTier(),
+    freshnessDays: readPositiveInteger("IO_MODEL_SELECTION_FRESHNESS_DAYS", 180, 3_650),
+    affordabilityMultiplier: readAffordabilityMultiplier(),
+    outputTokenAllowance: defaultOutputTokenAllowance,
+  });
+}
 
-  const body = await upstream.json().catch(() => null);
-  if (!upstream.ok) {
-    throw new GatewayError("upstream_failure", 502, "The provider did not accept this request.");
-  }
+function readContentPart(value: unknown): string | null {
+  const part = asRecord(value);
+  return part ? readString(part, "text") : null;
+}
 
-  const content = body?.choices?.[0]?.message?.content;
-  if (typeof content !== "string" || !content.trim()) {
+function readUsageValue(row: RegistryRow | null, key: string) {
+  if (!row) return undefined;
+  const value = readNumber(row, key);
+  return value === null ? undefined : value;
+}
+
+function readOpenAiResult(body: unknown): PartnerResult {
+  const root = asRecord(body);
+  const choices = root?.choices;
+  const firstChoice = Array.isArray(choices) ? asRecord(choices[0]) : null;
+  const message = firstChoice ? asRecord(firstChoice.message) : null;
+  const content = message ? readString(message, "content") : null;
+  if (!content) {
     throw new GatewayError(
       "upstream_failure",
       502,
       "The provider returned no usable assistant response.",
     );
   }
-
-  const usage = body?.usage;
+  const usage = root ? asRecord(root.usage) : null;
   return {
     content,
     usage: {
-      inputTokens: typeof usage?.prompt_tokens === "number" ? usage.prompt_tokens : undefined,
-      outputTokens:
-        typeof usage?.completion_tokens === "number" ? usage.completion_tokens : undefined,
+      inputTokens: readUsageValue(usage, "prompt_tokens"),
+      outputTokens: readUsageValue(usage, "completion_tokens"),
     },
   };
+}
+
+function readGeminiResult(body: unknown): PartnerResult {
+  const root = asRecord(body);
+  const candidates = root?.candidates;
+  const firstCandidate = Array.isArray(candidates) ? asRecord(candidates[0]) : null;
+  const content = firstCandidate ? asRecord(firstCandidate.content) : null;
+  const parts = content?.parts;
+  const text = Array.isArray(parts)
+    ? parts
+        .map(readContentPart)
+        .filter((part): part is string => Boolean(part))
+        .join("\n")
+    : "";
+  if (!text.trim()) {
+    throw new GatewayError(
+      "upstream_failure",
+      502,
+      "The provider returned no usable assistant response.",
+    );
+  }
+  const usage = root ? asRecord(root.usageMetadata) : null;
+  return {
+    content: text,
+    usage: {
+      inputTokens: readUsageValue(usage, "promptTokenCount"),
+      outputTokens: readUsageValue(usage, "candidatesTokenCount"),
+    },
+  };
+}
+
+function providerRequestId(response: Response) {
+  const id = response.headers.get("x-request-id") ?? response.headers.get("request-id");
+  return id && id.length <= 256 ? id : undefined;
+}
+
+function toGeminiRequest(messages: GatewayMessage[]) {
+  const systemText = messages
+    .filter((message) => message.role === "system")
+    .map((message) => message.content)
+    .join("\n\n");
+  const contents = messages
+    .filter((message) => message.role !== "system")
+    .map((message) => ({
+      role: message.role === "assistant" ? "model" : "user",
+      parts: [{ text: message.content }],
+    }));
+  if (!contents.length) {
+    throw new GatewayError(
+      "bad_request",
+      400,
+      "A provider request needs at least one user message.",
+    );
+  }
+  return {
+    ...(systemText ? { systemInstruction: { parts: [{ text: systemText }] } } : {}),
+    contents,
+    generationConfig: { maxOutputTokens: defaultOutputTokenAllowance },
+  };
+}
+
+export async function sendProviderChat(
+  connection: ProviderConnection,
+  messages: GatewayMessage[],
+): Promise<PartnerResult> {
+  const apiKey = resolveSecret(connection.secretReference);
+  const isGemini =
+    connection.integrationStyle === "native_adapter" && connection.providerKey === "gemini";
+  const url = isGemini
+    ? `${connection.baseUrl}/models/${encodeURIComponent(connection.providerModelId)}:generateContent`
+    : `${connection.baseUrl}/chat/completions`;
+  const headers = isGemini
+    ? { "x-goog-api-key": apiKey, "Content-Type": "application/json" }
+    : { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" };
+  const body = isGemini
+    ? toGeminiRequest(messages)
+    : {
+        model: connection.providerModelId,
+        messages,
+        max_tokens: defaultOutputTokenAllowance,
+        stream: false,
+      };
+
+  let upstream: Response;
+  try {
+    upstream = await fetch(url, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(45_000),
+    });
+  } catch {
+    throw new GatewayError("upstream_failure", 502, "The provider could not be reached.");
+  }
+
+  const parsedBody: unknown = await upstream.json().catch(() => null);
+  if (!upstream.ok) {
+    throw new GatewayError(
+      upstream.status === 429 ? "rate_limited" : "upstream_failure",
+      upstream.status === 429 ? 429 : 502,
+      upstream.status === 429
+        ? "The selected provider is currently rate limited."
+        : "The provider did not accept this request.",
+      upstream.status,
+    );
+  }
+
+  const result = isGemini ? readGeminiResult(parsedBody) : readOpenAiResult(parsedBody);
+  return { ...result, providerRequestId: providerRequestId(upstream) };
 }

@@ -1,0 +1,135 @@
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
+import { GatewayError } from "./errors.ts";
+import { selectProviderRoute } from "./routing.ts";
+import type { ProviderConnection } from "./types.ts";
+
+const settings = {
+  tier: "balanced" as const,
+  freshnessDays: 365,
+  affordabilityMultiplier: 1.35,
+  outputTokenAllowance: 100,
+};
+const now = Date.parse("2026-08-01T00:00:00.000Z");
+
+function connection(overrides: Partial<ProviderConnection>): ProviderConnection {
+  return {
+    endpointId: "endpoint-default",
+    providerId: "provider-default",
+    providerKey: "provider-default",
+    providerDisplayName: "Provider default",
+    integrationStyle: "openai_compatible",
+    modelId: "model-default",
+    providerModelId: "model-default",
+    modelDisplayName: "Model default",
+    modelReleaseDate: "2026-06-01",
+    modelDeprecationAt: null,
+    autoRouteTier: "balanced",
+    maxContextTokens: 100_000,
+    capacitySourceId: "source-a",
+    endpointKey: "endpoint-default",
+    capacityMode: "partner",
+    regionCode: "IN",
+    residencyCountryCode: "IN",
+    retentionClass: "no-training",
+    baseUrl: "https://provider.example/v1",
+    secretReference: "IO_PROVIDER_TEST_API_KEY",
+    capabilityVersion: 1,
+    priceVersion: 1,
+    currencyCode: "USD",
+    unitQuantity: 1,
+    inputPriceNanos: 1,
+    outputPriceNanos: 10,
+    ...overrides,
+  };
+}
+
+const olderCheaper = connection({
+  endpointId: "endpoint-old",
+  providerId: "provider-old",
+  providerKey: "provider-old",
+  modelId: "model-old",
+  providerModelId: "model-old",
+  modelReleaseDate: "2026-04-01",
+});
+const newerAffordable = connection({
+  endpointId: "endpoint-new",
+  providerId: "provider-new",
+  providerKey: "provider-new",
+  modelId: "model-new",
+  providerModelId: "model-new",
+  modelReleaseDate: "2026-07-01",
+  inputPriceNanos: 2,
+});
+const messages = [{ role: "user" as const, content: "Plan the I/O Port rollout." }];
+
+describe("selectProviderRoute", () => {
+  it("chooses the newest reviewed model that remains within the affordability band", () => {
+    const selection = selectProviderRoute(
+      [olderCheaper, newerAffordable],
+      messages,
+      { entitledCapacitySourceIds: new Set(["source-a"]) },
+      settings,
+      now,
+    );
+
+    assert.equal(selection.strategy, "latest_affordable");
+    assert.equal(selection.connection.modelId, "model-new");
+    assert.equal(selection.candidateCount, 2);
+  });
+
+  it("chooses the least costly entitled model when lowest-cost is requested", () => {
+    const selection = selectProviderRoute(
+      [olderCheaper, newerAffordable],
+      messages,
+      { strategy: "lowest_cost", entitledCapacitySourceIds: new Set(["source-a"]) },
+      settings,
+      now,
+    );
+
+    assert.equal(selection.connection.modelId, "model-old");
+  });
+
+  it("does not substitute another model for an explicit approved selection", () => {
+    const selection = selectProviderRoute(
+      [olderCheaper, newerAffordable],
+      messages,
+      {
+        strategy: "explicit_model",
+        requestedModelId: "model-old",
+        entitledCapacitySourceIds: new Set(["source-a"]),
+      },
+      settings,
+      now,
+    );
+
+    assert.equal(selection.connection.modelId, "model-old");
+    assert.equal(selection.candidateCount, 1);
+  });
+
+  it("fails closed instead of comparing currencies without approved FX data", () => {
+    const inrCandidate = connection({
+      endpointId: "endpoint-inr",
+      providerId: "provider-inr",
+      providerKey: "provider-inr",
+      modelId: "model-inr",
+      providerModelId: "model-inr",
+      currencyCode: "INR",
+    });
+
+    assert.throws(
+      () =>
+        selectProviderRoute(
+          [olderCheaper, inrCandidate],
+          messages,
+          { entitledCapacitySourceIds: new Set(["source-a"]) },
+          settings,
+          now,
+        ),
+      (error: unknown) =>
+        error instanceof GatewayError &&
+        error.code === "not_configured" &&
+        /reviewed FX data/.test(error.message),
+    );
+  });
+});

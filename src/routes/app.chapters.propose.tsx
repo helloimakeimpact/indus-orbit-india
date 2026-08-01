@@ -51,8 +51,8 @@ function ProposeChapterPage() {
       if (error) throw error;
       toast.success("Chapter proposal submitted successfully! Our team will review it shortly.");
       navigate({ to: "/app/chapters" });
-    } catch (err: any) {
-      toast.error(err.message || "Failed to submit proposal");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to submit proposal");
     } finally {
       setBusy(false);
     }

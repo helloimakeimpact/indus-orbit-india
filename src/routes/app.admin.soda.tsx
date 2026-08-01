@@ -7,8 +7,20 @@ import {
   deleteSodaIdea,
   type SodaIdea,
 } from "@/server/soda.functions";
-import { Plus, Pencil, Trash2, Save, X, Sparkles, Search, Download, Eye, EyeOff } from "lucide-react";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Save,
+  X,
+  Sparkles,
+  Search,
+  Download,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/errors";
 
 export const Route = createFileRoute("/app/admin/soda")({
   component: AdminSoda,
@@ -50,8 +62,19 @@ function emptyDraft(): Partial<SodaIdea> {
 }
 
 function slugify(s: string) {
-  return s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80);
+  return s
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 80);
 }
+
+function isSodaStatus(value: string): value is SodaIdea["status"] {
+  return value === "draft" || value === "published";
+}
+
+type SodaJsonField = "offer" | "business_fit" | "community_signals" | "top_keywords";
 
 function AdminSoda() {
   const { isAdmin } = useAuth();
@@ -67,15 +90,15 @@ function AdminSoda() {
     try {
       const data = await listAllSodaIdeasForAdmin();
       setRows(data);
-    } catch (e: any) {
-      toast.error(e.message);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
     } finally {
       setLoading(false);
     }
   }
 
   useEffect(() => {
-    refresh();
+    void Promise.resolve().then(refresh);
   }, []);
 
   if (!isAdmin) {
@@ -98,8 +121,8 @@ function AdminSoda() {
       toast.success("Saved");
       setEditing(null);
       refresh();
-    } catch (e: any) {
-      toast.error(e.message);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
     } finally {
       setSaving(false);
     }
@@ -111,8 +134,8 @@ function AdminSoda() {
       await deleteSodaIdea(id);
       toast.success("Deleted");
       refresh();
-    } catch (e: any) {
-      toast.error(e.message);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
     }
   }
 
@@ -124,18 +147,29 @@ function AdminSoda() {
       });
       toast.success(r.status === "published" ? "Unpublished" : "Published");
       refresh();
-    } catch (e: any) {
-      toast.error(e.message);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
     }
   }
 
   function exportCsv() {
-    const cols = ["slug", "title", "sector", "status", "score_opportunity", "score_problem", "score_feasibility", "score_why_now", "featured_on", "published_at"] as const;
-    const esc = (v: any) => {
+    const cols = [
+      "slug",
+      "title",
+      "sector",
+      "status",
+      "score_opportunity",
+      "score_problem",
+      "score_feasibility",
+      "score_why_now",
+      "featured_on",
+      "published_at",
+    ] as const satisfies readonly (keyof SodaIdea)[];
+    const esc = (v: unknown) => {
       const s = v === null || v === undefined ? "" : String(v);
       return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
     };
-    const lines = [cols.join(",")].concat(rows.map((r) => cols.map((c) => esc((r as any)[c])).join(",")));
+    const lines = [cols.join(",")].concat(rows.map((r) => cols.map((c) => esc(r[c])).join(",")));
     const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -149,7 +183,9 @@ function AdminSoda() {
     if (statusFilter !== "all" && r.status !== statusFilter) return false;
     if (!query.trim()) return true;
     const q = query.toLowerCase();
-    return [r.title, r.slug, r.sector, r.tagline, ...(r.tags ?? [])].some((v) => (v ?? "").toString().toLowerCase().includes(q));
+    return [r.title, r.slug, r.sector, r.tagline, ...(r.tags ?? [])].some((v) =>
+      (v ?? "").toString().toLowerCase().includes(q),
+    );
   });
 
   return (
@@ -162,7 +198,8 @@ function AdminSoda() {
             </p>
             <h1 className="mt-2 font-display text-3xl font-medium md:text-4xl">S.O.D.A ideas</h1>
             <p className="mt-1 text-sm text-foreground/65">
-              Create, edit, publish and delete entries in the S.O.D.A list (Startup Opportunities, Development &amp; Action).
+              Create, edit, publish and delete entries in the S.O.D.A list (Startup Opportunities,
+              Development &amp; Action).
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -195,12 +232,19 @@ function AdminSoda() {
           </div>
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as any)}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (value === "all" || isSodaStatus(value)) setStatusFilter(value);
+            }}
             className="rounded-full border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--saffron)]/40"
           >
             <option value="all">All ({rows.length})</option>
-            <option value="published">Published ({rows.filter((r) => r.status === "published").length})</option>
-            <option value="draft">Drafts ({rows.filter((r) => r.status === "draft").length})</option>
+            <option value="published">
+              Published ({rows.filter((r) => r.status === "published").length})
+            </option>
+            <option value="draft">
+              Drafts ({rows.filter((r) => r.status === "draft").length})
+            </option>
           </select>
         </div>
 
@@ -225,7 +269,13 @@ function AdminSoda() {
               ) : visibleRows.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-4 py-12 text-center text-foreground/60">
-                    {rows.length === 0 ? <>No ideas yet. Click <strong>New idea</strong> to add your first.</> : "No ideas match your filters."}
+                    {rows.length === 0 ? (
+                      <>
+                        No ideas yet. Click <strong>New idea</strong> to add your first.
+                      </>
+                    ) : (
+                      "No ideas match your filters."
+                    )}
                   </td>
                 </tr>
               ) : (
@@ -249,7 +299,8 @@ function AdminSoda() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-xs text-foreground/70">
-                      O{r.score_opportunity} · P{r.score_problem} · F{r.score_feasibility} · W{r.score_why_now}
+                      O{r.score_opportunity} · P{r.score_problem} · F{r.score_feasibility} · W
+                      {r.score_why_now}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex justify-end gap-2">
@@ -259,7 +310,11 @@ function AdminSoda() {
                           title={r.status === "published" ? "Unpublish" : "Publish"}
                           className="rounded-lg p-2 text-foreground/70 hover:bg-foreground/5"
                         >
-                          {r.status === "published" ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          {r.status === "published" ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
                         </button>
                         <button
                           type="button"
@@ -311,13 +366,14 @@ function Editor({
   onSave: () => void;
   onClose: () => void;
 }) {
-  function set<K extends keyof SodaIdea>(k: K, v: any) {
+  function set<K extends keyof SodaIdea>(k: K, v: SodaIdea[K]) {
     onChange({ ...value, [k]: v });
   }
 
-  function setJson(k: keyof SodaIdea, raw: string, fallback: any) {
+  function setJson<K extends SodaJsonField>(k: K, raw: string, fallback: SodaIdea[K]) {
     try {
-      onChange({ ...value, [k]: raw.trim() ? JSON.parse(raw) : fallback });
+      const parsed = raw.trim() ? (JSON.parse(raw) as SodaIdea[K]) : fallback;
+      onChange({ ...value, [k]: parsed });
     } catch {
       // keep raw editing; we'll only commit on blur — simpler to ignore
     }
@@ -329,9 +385,7 @@ function Editor({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-[var(--saffron)]" />
-            <h2 className="font-display text-xl">
-              {value.id ? "Edit idea" : "New idea"}
-            </h2>
+            <h2 className="font-display text-xl">{value.id ? "Edit idea" : "New idea"}</h2>
           </div>
           <button onClick={onClose} className="rounded-lg p-2 hover:bg-foreground/5">
             <X className="h-4 w-4" />
@@ -359,16 +413,27 @@ function Editor({
             />
           </Row>
           <Row label="Tagline">
-            <input value={value.tagline ?? ""} onChange={(e) => set("tagline", e.target.value)} className={inputClass} />
+            <input
+              value={value.tagline ?? ""}
+              onChange={(e) => set("tagline", e.target.value)}
+              className={inputClass}
+            />
           </Row>
           <div className="grid gap-4 sm:grid-cols-3">
             <Row label="Sector">
-              <input value={value.sector ?? ""} onChange={(e) => set("sector", e.target.value)} className={inputClass} />
+              <input
+                value={value.sector ?? ""}
+                onChange={(e) => set("sector", e.target.value)}
+                className={inputClass}
+              />
             </Row>
             <Row label="Status">
               <select
                 value={value.status ?? "draft"}
-                onChange={(e) => set("status", e.target.value as any)}
+                onChange={(e) => {
+                  const status = e.target.value;
+                  if (isSodaStatus(status)) set("status", status);
+                }}
                 className={inputClass}
               >
                 <option value="draft">Draft</option>
@@ -386,79 +451,174 @@ function Editor({
           </div>
 
           <Row label="Summary">
-            <textarea rows={3} value={value.summary ?? ""} onChange={(e) => set("summary", e.target.value)} className={inputClass} />
+            <textarea
+              rows={3}
+              value={value.summary ?? ""}
+              onChange={(e) => set("summary", e.target.value)}
+              className={inputClass}
+            />
           </Row>
           <Row label="Why now">
-            <textarea rows={3} value={value.why_now ?? ""} onChange={(e) => set("why_now", e.target.value)} className={inputClass} />
+            <textarea
+              rows={3}
+              value={value.why_now ?? ""}
+              onChange={(e) => set("why_now", e.target.value)}
+              className={inputClass}
+            />
           </Row>
           <Row label="Market gap">
-            <textarea rows={3} value={value.market_gap ?? ""} onChange={(e) => set("market_gap", e.target.value)} className={inputClass} />
+            <textarea
+              rows={3}
+              value={value.market_gap ?? ""}
+              onChange={(e) => set("market_gap", e.target.value)}
+              className={inputClass}
+            />
           </Row>
           <Row label="Execution plan">
-            <textarea rows={3} value={value.execution_plan ?? ""} onChange={(e) => set("execution_plan", e.target.value)} className={inputClass} />
+            <textarea
+              rows={3}
+              value={value.execution_plan ?? ""}
+              onChange={(e) => set("execution_plan", e.target.value)}
+              className={inputClass}
+            />
           </Row>
 
           <div className="grid gap-4 sm:grid-cols-4">
             <Row label="Opp">
-              <input type="number" min={0} max={10} value={value.score_opportunity ?? 0}
-                onChange={(e) => set("score_opportunity", Number(e.target.value))} className={inputClass} />
+              <input
+                type="number"
+                min={0}
+                max={10}
+                value={value.score_opportunity ?? 0}
+                onChange={(e) => set("score_opportunity", Number(e.target.value))}
+                className={inputClass}
+              />
             </Row>
             <Row label="Problem">
-              <input type="number" min={0} max={10} value={value.score_problem ?? 0}
-                onChange={(e) => set("score_problem", Number(e.target.value))} className={inputClass} />
+              <input
+                type="number"
+                min={0}
+                max={10}
+                value={value.score_problem ?? 0}
+                onChange={(e) => set("score_problem", Number(e.target.value))}
+                className={inputClass}
+              />
             </Row>
             <Row label="Feasibility">
-              <input type="number" min={0} max={10} value={value.score_feasibility ?? 0}
-                onChange={(e) => set("score_feasibility", Number(e.target.value))} className={inputClass} />
+              <input
+                type="number"
+                min={0}
+                max={10}
+                value={value.score_feasibility ?? 0}
+                onChange={(e) => set("score_feasibility", Number(e.target.value))}
+                className={inputClass}
+              />
             </Row>
             <Row label="Why-Now">
-              <input type="number" min={0} max={10} value={value.score_why_now ?? 0}
-                onChange={(e) => set("score_why_now", Number(e.target.value))} className={inputClass} />
+              <input
+                type="number"
+                min={0}
+                max={10}
+                value={value.score_why_now ?? 0}
+                onChange={(e) => set("score_why_now", Number(e.target.value))}
+                className={inputClass}
+              />
             </Row>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-3">
             <Row label="Keyword">
-              <input value={value.keyword ?? ""} onChange={(e) => set("keyword", e.target.value)} className={inputClass} />
+              <input
+                value={value.keyword ?? ""}
+                onChange={(e) => set("keyword", e.target.value)}
+                className={inputClass}
+              />
             </Row>
             <Row label="Volume">
-              <input type="number" value={value.volume ?? 0} onChange={(e) => set("volume", Number(e.target.value))} className={inputClass} />
+              <input
+                type="number"
+                value={value.volume ?? 0}
+                onChange={(e) => set("volume", Number(e.target.value))}
+                className={inputClass}
+              />
             </Row>
             <Row label="Growth %">
-              <input type="number" value={value.growth_pct ?? 0} onChange={(e) => set("growth_pct", Number(e.target.value))} className={inputClass} />
+              <input
+                type="number"
+                value={value.growth_pct ?? 0}
+                onChange={(e) => set("growth_pct", Number(e.target.value))}
+                className={inputClass}
+              />
             </Row>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <Row label="Type">
-              <input value={value.type_label ?? ""} onChange={(e) => set("type_label", e.target.value)} className={inputClass} />
+              <input
+                value={value.type_label ?? ""}
+                onChange={(e) => set("type_label", e.target.value)}
+                className={inputClass}
+              />
             </Row>
             <Row label="Market">
-              <input value={value.market_label ?? ""} onChange={(e) => set("market_label", e.target.value)} className={inputClass} />
+              <input
+                value={value.market_label ?? ""}
+                onChange={(e) => set("market_label", e.target.value)}
+                className={inputClass}
+              />
             </Row>
             <Row label="Target">
-              <input value={value.target_label ?? ""} onChange={(e) => set("target_label", e.target.value)} className={inputClass} />
+              <input
+                value={value.target_label ?? ""}
+                onChange={(e) => set("target_label", e.target.value)}
+                className={inputClass}
+              />
             </Row>
             <Row label="Main competitor">
-              <input value={value.main_competitor ?? ""} onChange={(e) => set("main_competitor", e.target.value)} className={inputClass} />
+              <input
+                value={value.main_competitor ?? ""}
+                onChange={(e) => set("main_competitor", e.target.value)}
+                className={inputClass}
+              />
             </Row>
           </div>
 
           <Row label="Trend analysis">
-            <textarea rows={2} value={value.trend_analysis ?? ""} onChange={(e) => set("trend_analysis", e.target.value)} className={inputClass} />
+            <textarea
+              rows={2}
+              value={value.trend_analysis ?? ""}
+              onChange={(e) => set("trend_analysis", e.target.value)}
+              className={inputClass}
+            />
           </Row>
 
           <Row label="Tags (comma separated)">
             <input
               value={(value.tags ?? []).join(", ")}
-              onChange={(e) => set("tags", e.target.value.split(",").map((s) => s.trim()).filter(Boolean))}
+              onChange={(e) =>
+                set(
+                  "tags",
+                  e.target.value
+                    .split(",")
+                    .map((s) => s.trim())
+                    .filter(Boolean),
+                )
+              }
               className={inputClass}
             />
           </Row>
           <Row label="Badges (comma separated)">
             <input
               value={(value.badges ?? []).join(", ")}
-              onChange={(e) => set("badges", e.target.value.split(",").map((s) => s.trim()).filter(Boolean))}
+              onChange={(e) =>
+                set(
+                  "badges",
+                  e.target.value
+                    .split(",")
+                    .map((s) => s.trim())
+                    .filter(Boolean),
+                )
+              }
               className={inputClass}
             />
           </Row>
@@ -471,7 +631,7 @@ function Editor({
               className={inputClass + " font-mono text-xs"}
             />
           </Row>
-          <Row label='Business fit (JSON object)'>
+          <Row label="Business fit (JSON object)">
             <textarea
               rows={3}
               defaultValue={JSON.stringify(value.business_fit ?? {}, null, 2)}
@@ -497,12 +657,19 @@ function Editor({
           </Row>
 
           <Row label="Hero image URL">
-            <input value={value.hero_image_url ?? ""} onChange={(e) => set("hero_image_url", e.target.value)} className={inputClass} />
+            <input
+              value={value.hero_image_url ?? ""}
+              onChange={(e) => set("hero_image_url", e.target.value)}
+              className={inputClass}
+            />
           </Row>
         </div>
 
         <div className="mt-6 flex justify-end gap-3">
-          <button onClick={onClose} className="rounded-full px-4 py-2 text-sm font-medium hover:bg-foreground/5">
+          <button
+            onClick={onClose}
+            className="rounded-full px-4 py-2 text-sm font-medium hover:bg-foreground/5"
+          >
             Cancel
           </button>
           <button

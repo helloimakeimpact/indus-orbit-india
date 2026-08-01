@@ -825,364 +825,364 @@ export type Database = {
       };
       io_endpoint_capability_versions: {
         Row: {
-          endpoint_id: string
-          evidence_url: string | null
-          id: string
-          recorded_at: string
-          supports_audio: boolean
-          supports_batch: boolean
-          supports_cancellation: boolean
-          supports_chat: boolean
-          supports_embeddings: boolean
-          supports_model_listing: boolean
-          supports_streaming: boolean
-          supports_structured_output: boolean
-          supports_tools: boolean
-          supports_usage_receipt: boolean
-          supports_vision: boolean
-          tested_at: string | null
-          verification_state: string
-          verified_by: string | null
-          version: number
-        }
+          endpoint_id: string;
+          evidence_url: string | null;
+          id: string;
+          recorded_at: string;
+          supports_audio: boolean;
+          supports_batch: boolean;
+          supports_cancellation: boolean;
+          supports_chat: boolean;
+          supports_embeddings: boolean;
+          supports_model_listing: boolean;
+          supports_streaming: boolean;
+          supports_structured_output: boolean;
+          supports_tools: boolean;
+          supports_usage_receipt: boolean;
+          supports_vision: boolean;
+          tested_at: string | null;
+          verification_state: string;
+          verified_by: string | null;
+          version: number;
+        };
         Insert: {
-          endpoint_id: string
-          evidence_url?: string | null
-          id?: string
-          recorded_at?: string
-          supports_audio?: boolean
-          supports_batch?: boolean
-          supports_cancellation?: boolean
-          supports_chat?: boolean
-          supports_embeddings?: boolean
-          supports_model_listing?: boolean
-          supports_streaming?: boolean
-          supports_structured_output?: boolean
-          supports_tools?: boolean
-          supports_usage_receipt?: boolean
-          supports_vision?: boolean
-          tested_at?: string | null
-          verification_state?: string
-          verified_by?: string | null
-          version: number
-        }
+          endpoint_id: string;
+          evidence_url?: string | null;
+          id?: string;
+          recorded_at?: string;
+          supports_audio?: boolean;
+          supports_batch?: boolean;
+          supports_cancellation?: boolean;
+          supports_chat?: boolean;
+          supports_embeddings?: boolean;
+          supports_model_listing?: boolean;
+          supports_streaming?: boolean;
+          supports_structured_output?: boolean;
+          supports_tools?: boolean;
+          supports_usage_receipt?: boolean;
+          supports_vision?: boolean;
+          tested_at?: string | null;
+          verification_state?: string;
+          verified_by?: string | null;
+          version: number;
+        };
         Update: {
-          endpoint_id?: string
-          evidence_url?: string | null
-          id?: string
-          recorded_at?: string
-          supports_audio?: boolean
-          supports_batch?: boolean
-          supports_cancellation?: boolean
-          supports_chat?: boolean
-          supports_embeddings?: boolean
-          supports_model_listing?: boolean
-          supports_streaming?: boolean
-          supports_structured_output?: boolean
-          supports_tools?: boolean
-          supports_usage_receipt?: boolean
-          supports_vision?: boolean
-          tested_at?: string | null
-          verification_state?: string
-          verified_by?: string | null
-          version?: number
-        }
+          endpoint_id?: string;
+          evidence_url?: string | null;
+          id?: string;
+          recorded_at?: string;
+          supports_audio?: boolean;
+          supports_batch?: boolean;
+          supports_cancellation?: boolean;
+          supports_chat?: boolean;
+          supports_embeddings?: boolean;
+          supports_model_listing?: boolean;
+          supports_streaming?: boolean;
+          supports_structured_output?: boolean;
+          supports_tools?: boolean;
+          supports_usage_receipt?: boolean;
+          supports_vision?: boolean;
+          tested_at?: string | null;
+          verification_state?: string;
+          verified_by?: string | null;
+          version?: number;
+        };
         Relationships: [
           {
-            foreignKeyName: "io_endpoint_capability_versions_endpoint_id_fkey"
-            columns: ["endpoint_id"]
-            isOneToOne: false
-            referencedRelation: "io_model_endpoints"
-            referencedColumns: ["id"]
+            foreignKeyName: "io_endpoint_capability_versions_endpoint_id_fkey";
+            columns: ["endpoint_id"];
+            isOneToOne: false;
+            referencedRelation: "io_model_endpoints";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       io_endpoint_pricing_versions: {
         Row: {
-          billing_meter: string
-          cached_input_price_nanos: number | null
-          currency_code: string
-          effective_from: string
-          effective_until: string | null
-          endpoint_id: string
-          evidence_note: string | null
-          evidence_url: string | null
-          id: string
-          input_price_nanos: number | null
-          member_visible: boolean
-          output_price_nanos: number | null
-          publication_state: string
-          recorded_at: string
-          recorded_by: string | null
-          unit_price_nanos: number | null
-          unit_quantity: number
-          version: number
-        }
+          billing_meter: string;
+          cached_input_price_nanos: number | null;
+          currency_code: string;
+          effective_from: string;
+          effective_until: string | null;
+          endpoint_id: string;
+          evidence_note: string | null;
+          evidence_url: string | null;
+          id: string;
+          input_price_nanos: number | null;
+          member_visible: boolean;
+          output_price_nanos: number | null;
+          publication_state: string;
+          recorded_at: string;
+          recorded_by: string | null;
+          unit_price_nanos: number | null;
+          unit_quantity: number;
+          version: number;
+        };
         Insert: {
-          billing_meter: string
-          cached_input_price_nanos?: number | null
-          currency_code: string
-          effective_from: string
-          effective_until?: string | null
-          endpoint_id: string
-          evidence_note?: string | null
-          evidence_url?: string | null
-          id?: string
-          input_price_nanos?: number | null
-          member_visible?: boolean
-          output_price_nanos?: number | null
-          publication_state?: string
-          recorded_at?: string
-          recorded_by?: string | null
-          unit_price_nanos?: number | null
-          unit_quantity: number
-          version: number
-        }
+          billing_meter: string;
+          cached_input_price_nanos?: number | null;
+          currency_code: string;
+          effective_from: string;
+          effective_until?: string | null;
+          endpoint_id: string;
+          evidence_note?: string | null;
+          evidence_url?: string | null;
+          id?: string;
+          input_price_nanos?: number | null;
+          member_visible?: boolean;
+          output_price_nanos?: number | null;
+          publication_state?: string;
+          recorded_at?: string;
+          recorded_by?: string | null;
+          unit_price_nanos?: number | null;
+          unit_quantity: number;
+          version: number;
+        };
         Update: {
-          billing_meter?: string
-          cached_input_price_nanos?: number | null
-          currency_code?: string
-          effective_from?: string
-          effective_until?: string | null
-          endpoint_id?: string
-          evidence_note?: string | null
-          evidence_url?: string | null
-          id?: string
-          input_price_nanos?: number | null
-          member_visible?: boolean
-          output_price_nanos?: number | null
-          publication_state?: string
-          recorded_at?: string
-          recorded_by?: string | null
-          unit_price_nanos?: number | null
-          unit_quantity?: number
-          version?: number
-        }
+          billing_meter?: string;
+          cached_input_price_nanos?: number | null;
+          currency_code?: string;
+          effective_from?: string;
+          effective_until?: string | null;
+          endpoint_id?: string;
+          evidence_note?: string | null;
+          evidence_url?: string | null;
+          id?: string;
+          input_price_nanos?: number | null;
+          member_visible?: boolean;
+          output_price_nanos?: number | null;
+          publication_state?: string;
+          recorded_at?: string;
+          recorded_by?: string | null;
+          unit_price_nanos?: number | null;
+          unit_quantity?: number;
+          version?: number;
+        };
         Relationships: [
           {
-            foreignKeyName: "io_endpoint_pricing_versions_endpoint_id_fkey"
-            columns: ["endpoint_id"]
-            isOneToOne: false
-            referencedRelation: "io_model_endpoints"
-            referencedColumns: ["id"]
+            foreignKeyName: "io_endpoint_pricing_versions_endpoint_id_fkey";
+            columns: ["endpoint_id"];
+            isOneToOne: false;
+            referencedRelation: "io_model_endpoints";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       io_model_endpoints: {
         Row: {
-          capacity_mode: string
-          capacity_source_id: string | null
-          created_at: string
-          created_by: string
-          endpoint_key: string
-          id: string
-          max_concurrency: number | null
-          member_visible: boolean
-          model_id: string
-          provider_id: string
-          region_code: string | null
-          residency_country_code: string | null
-          residency_evidence_url: string | null
-          retention_class: string
-          routing_state: string
-          updated_at: string
-        }
+          capacity_mode: string;
+          capacity_source_id: string | null;
+          created_at: string;
+          created_by: string;
+          endpoint_key: string;
+          id: string;
+          max_concurrency: number | null;
+          member_visible: boolean;
+          model_id: string;
+          provider_id: string;
+          region_code: string | null;
+          residency_country_code: string | null;
+          residency_evidence_url: string | null;
+          retention_class: string;
+          routing_state: string;
+          updated_at: string;
+        };
         Insert: {
-          capacity_mode: string
-          capacity_source_id?: string | null
-          created_at?: string
-          created_by?: string
-          endpoint_key: string
-          id?: string
-          max_concurrency?: number | null
-          member_visible?: boolean
-          model_id: string
-          provider_id: string
-          region_code?: string | null
-          residency_country_code?: string | null
-          residency_evidence_url?: string | null
-          retention_class?: string
-          routing_state?: string
-          updated_at?: string
-        }
+          capacity_mode: string;
+          capacity_source_id?: string | null;
+          created_at?: string;
+          created_by?: string;
+          endpoint_key: string;
+          id?: string;
+          max_concurrency?: number | null;
+          member_visible?: boolean;
+          model_id: string;
+          provider_id: string;
+          region_code?: string | null;
+          residency_country_code?: string | null;
+          residency_evidence_url?: string | null;
+          retention_class?: string;
+          routing_state?: string;
+          updated_at?: string;
+        };
         Update: {
-          capacity_mode?: string
-          capacity_source_id?: string | null
-          created_at?: string
-          created_by?: string
-          endpoint_key?: string
-          id?: string
-          max_concurrency?: number | null
-          member_visible?: boolean
-          model_id?: string
-          provider_id?: string
-          region_code?: string | null
-          residency_country_code?: string | null
-          residency_evidence_url?: string | null
-          retention_class?: string
-          routing_state?: string
-          updated_at?: string
-        }
+          capacity_mode?: string;
+          capacity_source_id?: string | null;
+          created_at?: string;
+          created_by?: string;
+          endpoint_key?: string;
+          id?: string;
+          max_concurrency?: number | null;
+          member_visible?: boolean;
+          model_id?: string;
+          provider_id?: string;
+          region_code?: string | null;
+          residency_country_code?: string | null;
+          residency_evidence_url?: string | null;
+          retention_class?: string;
+          routing_state?: string;
+          updated_at?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "io_model_endpoints_capacity_source_id_fkey"
-            columns: ["capacity_source_id"]
-            isOneToOne: false
-            referencedRelation: "io_capacity_sources"
-            referencedColumns: ["id"]
+            foreignKeyName: "io_model_endpoints_capacity_source_id_fkey";
+            columns: ["capacity_source_id"];
+            isOneToOne: false;
+            referencedRelation: "io_capacity_sources";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "io_model_endpoints_model_provider_fkey"
-            columns: ["model_id", "provider_id"]
-            isOneToOne: false
-            referencedRelation: "io_models"
-            referencedColumns: ["id", "provider_id"]
+            foreignKeyName: "io_model_endpoints_model_provider_fkey";
+            columns: ["model_id", "provider_id"];
+            isOneToOne: false;
+            referencedRelation: "io_models";
+            referencedColumns: ["id", "provider_id"];
           },
-        ]
-      }
+        ];
+      };
       io_models: {
         Row: {
-          auto_route_tier: string
-          commercial_hosting_rights: string
-          commercial_redistribution_rights: string
-          created_at: string
-          created_by: string
-          deprecation_at: string | null
-          display_name: string
-          id: string
-          licence_evidence_url: string | null
-          licence_name: string | null
-          listing_state: string
-          max_context_tokens: number | null
-          modalities: string[]
-          model_creator: string | null
-          model_family: string | null
-          origin_country_code: string | null
-          provider_id: string
-          provider_model_id: string
-          released_at: string | null
-          revision: string | null
-          updated_at: string
-        }
+          auto_route_tier: string;
+          commercial_hosting_rights: string;
+          commercial_redistribution_rights: string;
+          created_at: string;
+          created_by: string;
+          deprecation_at: string | null;
+          display_name: string;
+          id: string;
+          licence_evidence_url: string | null;
+          licence_name: string | null;
+          listing_state: string;
+          max_context_tokens: number | null;
+          modalities: string[];
+          model_creator: string | null;
+          model_family: string | null;
+          origin_country_code: string | null;
+          provider_id: string;
+          provider_model_id: string;
+          released_at: string | null;
+          revision: string | null;
+          updated_at: string;
+        };
         Insert: {
-          auto_route_tier?: string
-          commercial_hosting_rights?: string
-          commercial_redistribution_rights?: string
-          created_at?: string
-          created_by?: string
-          deprecation_at?: string | null
-          display_name: string
-          id?: string
-          licence_evidence_url?: string | null
-          licence_name?: string | null
-          listing_state?: string
-          max_context_tokens?: number | null
-          modalities?: string[]
-          model_creator?: string | null
-          model_family?: string | null
-          origin_country_code?: string | null
-          provider_id: string
-          provider_model_id: string
-          released_at?: string | null
-          revision?: string | null
-          updated_at?: string
-        }
+          auto_route_tier?: string;
+          commercial_hosting_rights?: string;
+          commercial_redistribution_rights?: string;
+          created_at?: string;
+          created_by?: string;
+          deprecation_at?: string | null;
+          display_name: string;
+          id?: string;
+          licence_evidence_url?: string | null;
+          licence_name?: string | null;
+          listing_state?: string;
+          max_context_tokens?: number | null;
+          modalities?: string[];
+          model_creator?: string | null;
+          model_family?: string | null;
+          origin_country_code?: string | null;
+          provider_id: string;
+          provider_model_id: string;
+          released_at?: string | null;
+          revision?: string | null;
+          updated_at?: string;
+        };
         Update: {
-          auto_route_tier?: string
-          commercial_hosting_rights?: string
-          commercial_redistribution_rights?: string
-          created_at?: string
-          created_by?: string
-          deprecation_at?: string | null
-          display_name?: string
-          id?: string
-          licence_evidence_url?: string | null
-          licence_name?: string | null
-          listing_state?: string
-          max_context_tokens?: number | null
-          modalities?: string[]
-          model_creator?: string | null
-          model_family?: string | null
-          origin_country_code?: string | null
-          provider_id?: string
-          provider_model_id?: string
-          released_at?: string | null
-          revision?: string | null
-          updated_at?: string
-        }
+          auto_route_tier?: string;
+          commercial_hosting_rights?: string;
+          commercial_redistribution_rights?: string;
+          created_at?: string;
+          created_by?: string;
+          deprecation_at?: string | null;
+          display_name?: string;
+          id?: string;
+          licence_evidence_url?: string | null;
+          licence_name?: string | null;
+          listing_state?: string;
+          max_context_tokens?: number | null;
+          modalities?: string[];
+          model_creator?: string | null;
+          model_family?: string | null;
+          origin_country_code?: string | null;
+          provider_id?: string;
+          provider_model_id?: string;
+          released_at?: string | null;
+          revision?: string | null;
+          updated_at?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "io_models_provider_id_fkey"
-            columns: ["provider_id"]
-            isOneToOne: false
-            referencedRelation: "io_providers"
-            referencedColumns: ["id"]
+            foreignKeyName: "io_models_provider_id_fkey";
+            columns: ["provider_id"];
+            isOneToOne: false;
+            referencedRelation: "io_providers";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       io_providers: {
         Row: {
-          catalogue_visibility: string
-          created_at: string
-          created_by: string
-          data_retention_class: string
-          default_region_code: string | null
-          default_residency_country: string | null
-          display_name: string
-          id: string
-          integration_style: string
-          lifecycle_state: string
-          operator_name: string | null
-          provider_key: string
-          provider_kind: string
-          public_summary: string | null
-          terms_evidence_url: string | null
-          terms_version: string | null
-          training_use_class: string
-          updated_at: string
-        }
+          catalogue_visibility: string;
+          created_at: string;
+          created_by: string;
+          data_retention_class: string;
+          default_region_code: string | null;
+          default_residency_country: string | null;
+          display_name: string;
+          id: string;
+          integration_style: string;
+          lifecycle_state: string;
+          operator_name: string | null;
+          provider_key: string;
+          provider_kind: string;
+          public_summary: string | null;
+          terms_evidence_url: string | null;
+          terms_version: string | null;
+          training_use_class: string;
+          updated_at: string;
+        };
         Insert: {
-          catalogue_visibility?: string
-          created_at?: string
-          created_by?: string
-          data_retention_class?: string
-          default_region_code?: string | null
-          default_residency_country?: string | null
-          display_name: string
-          id?: string
-          integration_style: string
-          lifecycle_state?: string
-          operator_name?: string | null
-          provider_key: string
-          provider_kind: string
-          public_summary?: string | null
-          terms_evidence_url?: string | null
-          terms_version?: string | null
-          training_use_class?: string
-          updated_at?: string
-        }
+          catalogue_visibility?: string;
+          created_at?: string;
+          created_by?: string;
+          data_retention_class?: string;
+          default_region_code?: string | null;
+          default_residency_country?: string | null;
+          display_name: string;
+          id?: string;
+          integration_style: string;
+          lifecycle_state?: string;
+          operator_name?: string | null;
+          provider_key: string;
+          provider_kind: string;
+          public_summary?: string | null;
+          terms_evidence_url?: string | null;
+          terms_version?: string | null;
+          training_use_class?: string;
+          updated_at?: string;
+        };
         Update: {
-          catalogue_visibility?: string
-          created_at?: string
-          created_by?: string
-          data_retention_class?: string
-          default_region_code?: string | null
-          default_residency_country?: string | null
-          display_name?: string
-          id?: string
-          integration_style?: string
-          lifecycle_state?: string
-          operator_name?: string | null
-          provider_key?: string
-          provider_kind?: string
-          public_summary?: string | null
-          terms_evidence_url?: string | null
-          terms_version?: string | null
-          training_use_class?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
+          catalogue_visibility?: string;
+          created_at?: string;
+          created_by?: string;
+          data_retention_class?: string;
+          default_region_code?: string | null;
+          default_residency_country?: string | null;
+          display_name?: string;
+          id?: string;
+          integration_style?: string;
+          lifecycle_state?: string;
+          operator_name?: string | null;
+          provider_key?: string;
+          provider_kind?: string;
+          public_summary?: string | null;
+          terms_evidence_url?: string | null;
+          terms_version?: string | null;
+          training_use_class?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       io_route_policies: {
         Row: {
           activated_at: string | null;

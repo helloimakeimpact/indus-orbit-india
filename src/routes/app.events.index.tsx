@@ -28,6 +28,10 @@ import {
   getEventLocationFieldCopy,
 } from "@/lib/location";
 import { submitEvent, getApprovedEvents, getChapters } from "@/server/society.functions";
+import { getErrorMessage } from "@/lib/errors";
+
+type EventSummary = Awaited<ReturnType<typeof getApprovedEvents>>[number];
+type ChapterSummary = Awaited<ReturnType<typeof getChapters>>[number];
 
 export const Route = createFileRoute("/app/events/")({
   head: () => ({
@@ -38,7 +42,7 @@ export const Route = createFileRoute("/app/events/")({
 
 function EventsPage() {
   const { user } = useAuth();
-  const [allEvents, setAllEvents] = useState<any[]>([]);
+  const [allEvents, setAllEvents] = useState<EventSummary[]>([]);
   const [busy, setBusy] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
   const [timeFilter, setTimeFilter] = useState<"upcoming" | "past">("upcoming");
@@ -48,15 +52,15 @@ function EventsPage() {
     try {
       const data = await getApprovedEvents();
       setAllEvents(data);
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error));
     } finally {
       setBusy(false);
     }
   }
 
   useEffect(() => {
-    load();
+    void Promise.resolve().then(load);
   }, []);
 
   // Client-side filter
@@ -82,7 +86,7 @@ function EventsPage() {
   const hasMore = visibleCount < filtered.length;
 
   useEffect(() => {
-    setVisibleCount(PAGE_SIZE);
+    queueMicrotask(() => setVisibleCount(PAGE_SIZE));
   }, [timeFilter, locationFilter]);
 
   return (
@@ -270,12 +274,14 @@ function SubmitEventDialog({
     link: "",
     chapterId: "",
   });
-  const [chapters, setChapters] = useState<any[]>([]);
+  const [chapters, setChapters] = useState<ChapterSummary[]>([]);
   const [busy, setBusy] = useState(false);
   const locationCopy = getEventLocationFieldCopy(form.locationType);
 
   useEffect(() => {
-    getChapters().then(setChapters);
+    void getChapters()
+      .then(setChapters)
+      .catch((error: unknown) => toast.error(getErrorMessage(error)));
   }, []);
 
   async function submit() {
@@ -301,8 +307,8 @@ function SubmitEventDialog({
       toast.success("Event submitted for approval!");
       onSubmitted();
       onClose();
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error));
       setBusy(false);
     }
   }

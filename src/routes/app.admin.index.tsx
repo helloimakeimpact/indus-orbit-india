@@ -239,8 +239,8 @@ function CreateChapterDialog({ onClose }: { onClose: () => void }) {
       await createChapter({ data: form });
       toast.success("Chapter created successfully");
       onClose();
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not create chapter");
       setBusy(false);
     }
   }

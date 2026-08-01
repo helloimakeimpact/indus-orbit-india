@@ -73,7 +73,7 @@ function AdminRoles() {
   }
 
   useEffect(() => {
-    if (isAdmin) load();
+    if (isAdmin) void Promise.resolve().then(load);
   }, [isAdmin]);
 
   const currentSet = activeRole === "admin" ? adminIds : editorIds;

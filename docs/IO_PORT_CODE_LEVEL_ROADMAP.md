@@ -1,10 +1,11 @@
 # I/O Port code-level roadmap
 
-Status: active implementation roadmap, 30 July 2026. It distinguishes the deployed demo proof from work required before a private or paid beta.
+Status: active implementation roadmap, updated 1 August 2026. It distinguishes local source work from the deployed demo proof and from work required before a private or paid beta. The current operational verdict is in `IO_PORT_IMPLEMENTATION_STATUS.md`.
 
 Related documents:
 
 - `IO_PORT_IMPLEMENTATION_PLAN.md` — product, design and commercial direction.
+- `IO_PORT_IMPLEMENTATION_STATUS.md` — verified done/partial/not-started assessment and the corrected multi-provider credential/architecture plan.
 - `IO_PORT_OPERATIONS_GUIDE.md` — what is actually deployed in the demo project and how to activate it safely.
 - `IO_PORT_PROVIDER_INVENTORY.md` — the 20-provider research inventory and the ordered implementation gates for converting it into routable capacity.
 - `CONVERSATION_SYSTEM_IMPLEMENTATION_PLAN.md` — the shared Indus Orbit conversation and Discord-like shell plan.
@@ -18,14 +19,14 @@ The existing people-messaging system is also now hardened in the demo project: o
 
 The first shared-message client extraction is now in the web app as well: `src/features/conversations/` provides shared contacts, direct-conversation and event-driven unread hooks for both the full Messages route and compact quick chat. A common cache/store, cursor pagination and private Broadcast remain deliberate follow-on work in the companion plan.
 
-| Concern                  | Current code                                                          | Truthful status                                                                                                           |
-| ------------------------ | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| Web control room         | `src/features/io/IoOverview.tsx`                                      | Member-facing demo UI; direct local/OpenCode and partner-path selection work.                                             |
-| Local terminal connector | `src/features/io/opencode.ts`                                         | Loopback-only health → session → prompt proof. It is not yet a resumable terminal timeline.                               |
-| Provider gateway         | `supabase/functions/io-gateway/index.ts`                              | One secure, server-secret-backed OpenAI-compatible partner route. It is not a multi-provider router yet.                  |
-| Browser data access      | `src/features/io/io.client.ts`                                        | Browser-facing I/O data access, explicitly separated from privileged Edge/RPC work.                                       |
-| Control-plane schema     | `supabase/migrations/20260730155210_create_io_port_control_plane.sql` | Workspaces, memberships, sources, grants, policy records, key metadata and safe audit events.                             |
-| I/O nested shell         | `src/features/io/IoWorkspaceShell.tsx`                                | Layout proof only. Static workspace, health, counts and activity are explicitly labelled preview, not live operator data. |
+| Concern                  | Current code                                                          | Truthful status                                                                                                             |
+| ------------------------ | --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Web control room         | `src/features/io/IoOverview.tsx`                                      | Member-facing UI with local/OpenCode, safe provider catalogue, route strategy/model selection and completed receipt facts.  |
+| Local terminal connector | `src/features/io/opencode.ts`                                         | Loopback-only health → session → prompt proof. It is not yet a resumable terminal timeline.                                 |
+| Provider gateway         | `supabase/functions/io-gateway/index.ts`                              | Local source contains registry-driven multi-provider selection, safe fallback and receipts; migration replay/deploy remain. |
+| Browser data access      | `src/features/io/io.client.ts`                                        | Browser-facing I/O data access, explicitly separated from privileged Edge/RPC work.                                         |
+| Control-plane schema     | `supabase/migrations/20260730155210_create_io_port_control_plane.sql` | Workspaces, memberships, sources, grants, policy records, key metadata and safe audit events.                               |
+| I/O nested shell         | `src/features/io/IoWorkspaceShell.tsx`                                | Layout proof only. Static workspace, health, counts and activity are explicitly labelled preview, not live operator data.   |
 
 ## 2. Non-negotiable boundaries
 
@@ -48,29 +49,30 @@ P0 contracts + trustworthy state
   → P6 privacy, test and beta gates
 ```
 
-No provider key is required for P0–P5. A real provider is needed only for the final provider-conformance and activated-route tests.
+No provider key is required for schema, policy, receipt, ledger, UI, and simulated-adapter work. A non-production provider key is required for provider conformance and end-to-end route tests; keys now in the secret store are not themselves activation evidence.
 
 ## 4. P0 — contracts and trustworthy state
 
 ### 4.1 Refactor the gateway before adding providers
 
-**Implemented and deployed in `io-gateway` version 3:** policy-independent code now lives outside the HTTP entry point:
+**Partially implemented and deployed:** gateway concerns now live outside the HTTP entry point, but the modules are not yet the final production contracts:
 
 ```text
 supabase/functions/_shared/io/
-  auth.ts                 membership and role checks
-  validation.ts           Zod request and provider-response schemas
+  auth.ts                 authentication and workspace-membership checks
+  validation.ts           manual request shape and limit guards
   audit.ts                redacted, append-only audit writer
-  policy.ts               pure candidate eligibility and decision types
-  provider-adapter.ts     OpenAI-compatible adapter interface
+  policy.ts               generic partner-gateway entitlement check
+  provider-adapter.ts     registry resolver, candidate selection, secret-reference validation and OpenAI/Gemini adapters
+  receipt.ts              append-only route-receipt and provider-attempt writer
   errors.ts               stable public error taxonomy
-  types.ts                request, receipt and trace contracts
+  types.ts                current request, selection and result types
 supabase/functions/io-gateway/index.ts  thin HTTP/CORS/action handler
 ```
 
-The deployed boundary validates request shape, workspace UUIDs, modes, message limits, local loopback origin/session data and typed public errors before dispatch. It performs membership and entitlement checks separately, audits every requested/completed provider route and attempts a safe failure audit without retaining prompt/response text. It also checks audit-write errors rather than silently continuing.
+The local boundary validates request shape, workspace UUIDs, modes, route strategy/model IDs, message limits, local loopback origin/session data and typed public errors before dispatch. It performs membership and entitlement checks separately, audits every requested/completed provider route and writes a safe failure audit without retaining prompt/response text. It validates normalized OpenAI-compatible and Gemini response shapes before returning them. This remains source-only until the migration replays and the Edge Function is redeployed.
 
-Still required before any broad provider rollout: client idempotency keys, a registry-driven endpoint allowlist, capped retries, cancellation semantics, detailed timeout classification, streaming/SSE and provider-conformance tests. The current adapter remains intentionally non-streaming and supports only the one approved server-secret partner route.
+Still required before any broad provider rollout: client idempotency keys, formal route-policy versions, health/circuit controls, cancellation semantics, detailed timeout classification, streaming/SSE, SQL/RLS tests and provider-conformance tests. The current adapter is intentionally non-streaming and supports only the reviewed OpenAI-compatible and Gemini-native chat surfaces.
 
 ### 4.2 Make workspace creation atomic
 
@@ -110,7 +112,9 @@ io_provider_attempts
 
 **Implemented in the demo project:** `supabase/migrations/20260731113000_create_io_provider_registry.sql` establishes the provider, model, endpoint, versioned capability and versioned price-card records. It keeps endpoint URLs, secret-manager references and conformance-run details in the non-exposed `private` schema; public tables contain only member-appropriate catalogue/evidence data and use RLS plus explicit Data API grants. `20260731123500_add_io_provider_registry_fk_indexes.sql` completes the foreign-key indexes identified by the post-deployment Performance Advisor. `20260731150000_add_io_dynamic_model_selection.sql` adds the reviewed release date and automatic-routing tier needed to select a model dynamically rather than bake a model ID into an Edge Function secret. The generated browser client types now include the public registry tables. No provider, model, endpoint, URL or credential has been seeded into this demo registry.
 
-**Implemented in the gateway source, pending registry onboarding:** `io-gateway` accepts one server-secret provider connection but resolves its model dynamically from the registry. The default selector is `latest_affordable`: within one reviewed tier, it requires active/listed/non-deprecated models, an active member-visible endpoint, latest verified chat capability and a current published price card. It limits candidates to a configurable freshness window, keeps only those within a configurable cost multiple of the least expensive fresh candidate, then selects the newest surviving release. It records the selected model and strategy in the redacted audit event. It deliberately fails closed when the demo registry has no eligible model; it does not fall back to `IO_PARTNER_DEFAULT_MODEL`.
+**Implemented locally, awaiting replay/deploy:** `20260801003835_io_route_receipts_and_registry_router.sql` adds a service-role-only resolver for ready private connection rows plus append-only `io_route_receipts` and `io_provider_attempts`. The gateway considers active/listed/non-deprecated, entitled candidates with verified chat capability and a current member-visible price card; automatic routes are limited to a configured tier, freshness window and affordability multiple. It supports `latest_affordable`, `lowest_cost` and a reviewed explicit model. Cross-currency automatic comparison fails closed pending reviewed FX data. Candidate selection is deterministic, response handling supports OpenAI-compatible and Gemini-native chat, safe upstream/rate-limit failures can fall back in order, and a receipt ID reaches the web UI. Secret lookup accepts only operator-approved references matching `IO_PROVIDER_[A-Z0-9_]+_API_KEY`.
+
+This replaces the local source's legacy `IO_PARTNER_*` contract; it does not replace anything in the deployed demo until the migration is reconciled and applied, the Edge Function is deployed, and reviewed records/secrets/conformance evidence exist.
 
 Provider, model and endpoint records must capture the research gates before they can be activated: `terms_version`, `contracted_region`, `residency_evidence`, retention/training class, resale rights, model revision/licence, commercial-hosting rights, `capacity_mode`, `metering_basis`, health/queue signal, feature support and a versioned price card. See `IO_PORT_PROVIDER_LANDSCAPE.md` for evidence, licence constraints and the proposed commercial model.
 

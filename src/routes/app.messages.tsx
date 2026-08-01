@@ -48,7 +48,7 @@ function MessagesPage() {
   useEffect(() => {
     if (queryUserId && connections.length > 0) {
       const contact = connections.find((c) => c.user_id === queryUserId);
-      if (contact) setActiveContact(contact);
+      if (contact) void Promise.resolve().then(() => setActiveContact(contact));
     }
   }, [queryUserId, connections]);
 

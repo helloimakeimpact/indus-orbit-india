@@ -134,7 +134,7 @@ export const removeMissionMember = async ({
   if (!userData.user) throw new Error("Unauthorized");
 
   // Use SECURITY DEFINER function to bypass self-referencing RLS
-  const { error } = await supabase.rpc("lead_remove_mission_member" as any, {
+  const { error } = await supabase.rpc("lead_remove_mission_member", {
     _mission_id: data.missionId,
     _target_user_id: data.targetUserId,
   });
@@ -233,7 +233,7 @@ export const getMission = async (missionId: string) => {
 
   // Sort updates: pinned first, then descending by date
   if (mission.mission_updates) {
-    mission.mission_updates.sort((a: any, b: any) => {
+    mission.mission_updates.sort((a, b) => {
       if (a.is_pinned && !b.is_pinned) return -1;
       if (!a.is_pinned && b.is_pinned) return 1;
       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
@@ -242,7 +242,7 @@ export const getMission = async (missionId: string) => {
 
   // Sort members: leads first
   if (mission.mission_members) {
-    mission.mission_members.sort((a: any, b: any) => {
+    mission.mission_members.sort((a, b) => {
       if (a.role === "lead" && b.role !== "lead") return -1;
       if (a.role !== "lead" && b.role === "lead") return 1;
       return 0;

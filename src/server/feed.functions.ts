@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 
 export type FeedItem = {
   id: string;
@@ -9,7 +10,7 @@ export type FeedItem = {
   authorName?: string | null;
   authorAvatar?: string | null;
   link?: string;
-  metadata?: any;
+  metadata?: Record<string, Json | undefined>;
 };
 
 export async function getPersonalizedFeed(): Promise<FeedItem[]> {
@@ -27,7 +28,7 @@ export async function getPersonalizedFeed(): Promise<FeedItem[]> {
   if (userMissionsError) throw new Error(userMissionsError.message);
 
   if (userMissions && userMissions.length > 0) {
-    const missionIds = userMissions.map((m: any) => m.mission_id);
+    const missionIds = userMissions.map((membership) => membership.mission_id);
     const { data: updates, error: updatesError } = await supabase
       .from("mission_updates")
       .select(
@@ -39,18 +40,19 @@ export async function getPersonalizedFeed(): Promise<FeedItem[]> {
     if (updatesError) throw new Error(updatesError.message);
 
     if (updates) {
-      updates.forEach((u: any) => {
+      updates.forEach((update) => {
         const missionTitle =
-          userMissions.find((m) => m.mission_id === u.mission_id)?.missions?.title || "Mission";
+          userMissions.find((membership) => membership.mission_id === update.mission_id)?.missions
+            ?.title || "Mission";
         feed.push({
-          id: u.id,
+          id: update.id,
           type: "mission_update",
           title: `Update in ${missionTitle}`,
-          content: u.content || "",
-          createdAt: u.created_at,
-          authorName: u.profiles?.display_name,
-          authorAvatar: u.profiles?.avatar_url,
-          link: `/app/missions/${u.mission_id}`,
+          content: update.content || "",
+          createdAt: update.created_at,
+          authorName: update.profiles?.display_name,
+          authorAvatar: update.profiles?.avatar_url,
+          link: `/app/missions/${update.mission_id}`,
         });
       });
     }
@@ -60,7 +62,7 @@ export async function getPersonalizedFeed(): Promise<FeedItem[]> {
   const { data: stories, error: storiesError } = await supabase
     .from("stories")
     .select(
-      "id, title, content, published_at, profiles!stories_author_id_fkey(display_name, avatar_url)",
+      "id, title, content, published_at, created_at, profiles!stories_author_id_fkey(display_name, avatar_url)",
     )
     .in("status", ["approved", "featured"])
     .order("published_at", { ascending: false })
@@ -68,18 +70,18 @@ export async function getPersonalizedFeed(): Promise<FeedItem[]> {
   if (storiesError) throw new Error(storiesError.message);
 
   if (stories) {
-    stories.forEach((s: any) => {
+    stories.forEach((story) => {
       // Create a short excerpt
-      const excerpt = s.content ? s.content.substring(0, 150) + "..." : "";
+      const excerpt = story.content ? `${story.content.substring(0, 150)}...` : "";
       feed.push({
-        id: s.id,
+        id: story.id,
         type: "story",
-        title: s.title,
+        title: story.title,
         content: excerpt,
-        createdAt: s.published_at,
-        authorName: s.profiles?.display_name,
-        authorAvatar: s.profiles?.avatar_url,
-        link: `/app/stories/${s.id}`,
+        createdAt: story.published_at ?? story.created_at,
+        authorName: story.profiles?.display_name,
+        authorAvatar: story.profiles?.avatar_url,
+        link: `/app/stories/${story.id}`,
       });
     });
   }
@@ -97,18 +99,18 @@ export async function getPersonalizedFeed(): Promise<FeedItem[]> {
   if (eventsError) throw new Error(eventsError.message);
 
   if (events) {
-    events.forEach((e: any) => {
-      const excerpt = e.description ? e.description.substring(0, 150) + "..." : "";
+    events.forEach((event) => {
+      const excerpt = event.description ? `${event.description.substring(0, 150)}...` : "";
       feed.push({
-        id: e.id,
+        id: event.id,
         type: "event",
-        title: e.title,
+        title: event.title,
         content: excerpt,
-        createdAt: e.start_time, // sort by when it happens or when it was created? usually feed is by created_at. We will use start_time for sorting here.
-        authorName: e.profiles?.display_name || "Organizer",
-        authorAvatar: e.profiles?.avatar_url,
-        link: `/app/events/${e.id}`,
-        metadata: { location_type: e.location_type },
+        createdAt: event.start_time,
+        authorName: event.profiles?.display_name || "Organizer",
+        authorAvatar: event.profiles?.avatar_url,
+        link: `/app/events/${event.id}`,
+        metadata: { location_type: event.location_type },
       });
     });
   }

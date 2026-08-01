@@ -1,5 +1,6 @@
-export type GatewayAction = "partner_chat" | "record_local_opencode" | "status";
+export type GatewayAction = "partner_chat" | "catalog" | "record_local_opencode" | "status";
 export type GatewayMode = "observe" | "plan" | "build" | "run";
+export type RouteStrategy = "latest_affordable" | "lowest_cost" | "explicit_model";
 
 export type GatewayMessage = {
   role: "system" | "user" | "assistant";
@@ -11,6 +12,8 @@ export type GatewayRequest = {
   workspaceId: string;
   mode?: GatewayMode;
   messages?: GatewayMessage[];
+  routeStrategy?: RouteStrategy;
+  requestedModelId?: string;
   connectorOrigin?: string;
   sessionId?: string;
 };
@@ -19,23 +22,52 @@ export type GatewayActor = {
   id: string;
 };
 
-export type PartnerConfig = {
-  baseUrl: string;
-  apiKey: string;
+export type ProviderConnection = {
+  endpointId: string;
+  providerId: string;
   providerKey: string;
-  selection: {
-    tier: "economy" | "balanced" | "premium";
-    freshnessDays: number;
-    affordabilityMultiplier: number;
-  };
+  providerDisplayName: string;
+  integrationStyle: "openai_compatible" | "native_adapter";
+  modelId: string;
+  providerModelId: string;
+  modelDisplayName: string;
+  modelReleaseDate: string;
+  modelDeprecationAt: string | null;
+  autoRouteTier: "economy" | "balanced" | "premium";
+  maxContextTokens: number | null;
+  capacitySourceId: string;
+  endpointKey: string;
+  capacityMode: string;
+  regionCode: string | null;
+  residencyCountryCode: string | null;
+  retentionClass: string;
+  baseUrl: string;
+  secretReference: string;
+  capabilityVersion: number;
+  priceVersion: number;
+  currencyCode: string;
+  unitQuantity: number;
+  inputPriceNanos: number;
+  outputPriceNanos: number;
 };
 
-export type PartnerModelSelection = {
-  model: string;
-  strategy: "latest_affordable";
+export type RouteSelection = {
+  connection: ProviderConnection;
+  strategy: RouteStrategy;
   tier: "economy" | "balanced" | "premium";
-  releasedAt: string;
+  estimatedCostNanos: number;
   candidateCount: number;
+  candidateSummary: Array<{
+    providerKey: string;
+    modelId: string;
+    endpointKey: string;
+    estimatedCostNanos: number;
+    currencyCode: string;
+  }>;
+  routeCandidates: Array<{
+    connection: ProviderConnection;
+    estimatedCostNanos: number;
+  }>;
 };
 
 export type PartnerResult = {
@@ -44,9 +76,11 @@ export type PartnerResult = {
     inputTokens?: number;
     outputTokens?: number;
   };
+  providerRequestId?: string;
 };
 
-export type PartnerEntitlement = {
+export type ActiveCapacityEntitlement = {
+  sourceId: string;
   sourceKey: string;
   displayName: string;
 };

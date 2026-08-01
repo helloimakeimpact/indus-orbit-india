@@ -36,13 +36,14 @@ type Profile = {
   website_url: string | null;
   is_verified: boolean;
 };
+type Spotlight = Awaited<ReturnType<typeof getSpotlights>>[number];
 
 const FILTERS = ["all", ...SEGMENT_LIST] as const;
 type Filter = (typeof FILTERS)[number];
 
 function MembersPage() {
   const [members, setMembers] = useState<Profile[]>([]);
-  const [spotlights, setSpotlights] = useState<any[]>([]);
+  const [spotlights, setSpotlights] = useState<Spotlight[]>([]);
   const [filter, setFilter] = useState<Filter>("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -56,30 +57,33 @@ function MembersPage() {
   }, []);
 
   useEffect(() => {
-    setLoading(true);
-    let q = supabase
-      .from("profiles")
-      .select(
-        "id, display_name, headline, city, country, orbit_segment, linkedin_url, website_url, is_verified",
-      )
-      .eq("is_public", true);
-    if (filter !== "all") {
-      q = q.eq("orbit_segment", filter as never);
-    }
-    q.order("is_verified", { ascending: false })
-      .order("created_at", { ascending: false })
-      .then(({ data, error: membersError }) => {
-        if (membersError) {
-          setError(membersError.message);
-          setMembers([]);
-          toast.error(membersError.message);
+    void Promise.resolve().then(() => {
+      setLoading(true);
+      let q = supabase
+        .from("profiles")
+        .select(
+          "id, display_name, headline, city, country, orbit_segment, linkedin_url, website_url, is_verified",
+        )
+        .eq("is_public", true);
+      if (filter !== "all") {
+        q = q.eq("orbit_segment", filter as never);
+      }
+      return q
+        .order("is_verified", { ascending: false })
+        .order("created_at", { ascending: false })
+        .then(({ data, error: membersError }) => {
+          if (membersError) {
+            setError(membersError.message);
+            setMembers([]);
+            toast.error(membersError.message);
+            setLoading(false);
+            return;
+          }
+          setError(null);
+          setMembers((data as unknown as Profile[] | null) ?? []);
           setLoading(false);
-          return;
-        }
-        setError(null);
-        setMembers((data as unknown as Profile[] | null) ?? []);
-        setLoading(false);
-      });
+        });
+    });
   }, [filter]);
 
   return (

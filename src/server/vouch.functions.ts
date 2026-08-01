@@ -3,11 +3,11 @@ import { sendNotification } from "@/server/notification.functions";
 
 function generateCode(): string {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let s = "";
-  for (let i = 0; i < 10; i++) {
-    s += alphabet[Math.floor(Math.random() * alphabet.length)];
-  }
-  return s;
+  const values = new Uint8Array(10);
+  globalThis.crypto.getRandomValues(values);
+
+  // The alphabet has 32 characters, so every five random bits maps evenly.
+  return Array.from(values, (value) => alphabet[value & 31]).join("");
 }
 
 async function getRemainingForUser(userId: string): Promise<number> {

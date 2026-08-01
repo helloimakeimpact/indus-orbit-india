@@ -29,11 +29,12 @@ type ProfileBits = {
   city: string | null;
   country: string | null;
 };
+type Spotlight = Awaited<ReturnType<typeof getSpotlights>>[number];
 
 function AppHome() {
   const { user } = useAuth();
   const [profile, setProfile] = useState<ProfileBits | null>(null);
-  const [spotlights, setSpotlights] = useState<any[]>([]);
+  const [spotlights, setSpotlights] = useState<Spotlight[]>([]);
   const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
   const [loadingFeed, setLoadingFeed] = useState(true);
   const [feedError, setFeedError] = useState<string | null>(null);

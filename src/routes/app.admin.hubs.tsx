@@ -101,7 +101,7 @@ function ChapterLeadsManager() {
   }
 
   useEffect(() => {
-    load();
+    void Promise.resolve().then(load);
   }, []);
 
   async function searchUsers(q: string) {
@@ -250,7 +250,7 @@ function MissionLeadsManager() {
   }
 
   useEffect(() => {
-    load();
+    void Promise.resolve().then(load);
   }, []);
 
   async function searchUsers(q: string) {

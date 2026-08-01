@@ -54,7 +54,7 @@ function VouchPage() {
   }
 
   useEffect(() => {
-    if (user) load();
+    if (user) void Promise.resolve().then(load);
   }, [user]); // eslint-disable-line
 
   async function onIssue() {
@@ -244,9 +244,14 @@ function DirectVouchDialog({
   useEffect(() => {
     let active = true;
     if (q.trim().length < 2) {
-      setResults([]);
-      setSearchError(null);
-      return;
+      void Promise.resolve().then(() => {
+        if (!active) return;
+        setResults([]);
+        setSearchError(null);
+      });
+      return () => {
+        active = false;
+      };
     }
     (async () => {
       const { data, error } = await supabase

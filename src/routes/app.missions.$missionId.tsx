@@ -38,15 +38,18 @@ import {
   updateMissionStatus,
 } from "@/server/mission.functions";
 import { formatEventLocation, formatLocationTypeLabel } from "@/lib/location";
+import { getErrorMessage } from "@/lib/errors";
 
 export const Route = createFileRoute("/app/missions/$missionId")({
   component: MissionDetailPage,
 });
 
+type MissionDetail = NonNullable<Awaited<ReturnType<typeof getMission>>>;
+
 function MissionDetailPage() {
   const { missionId } = Route.useParams();
   const { user } = useAuth();
-  const [mission, setMission] = useState<any>(null);
+  const [mission, setMission] = useState<MissionDetail | null>(null);
   const [busy, setBusy] = useState(true);
   const [updateText, setUpdateText] = useState("");
   const [posting, setPosting] = useState(false);
@@ -56,15 +59,15 @@ function MissionDetailPage() {
     try {
       const data = await getMission(missionId);
       setMission(data);
-    } catch (err: any) {
-      toast.error("Failed to load mission");
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Failed to load mission."));
     } finally {
       setBusy(false);
     }
   }
 
   useEffect(() => {
-    load();
+    void Promise.resolve().then(load);
   }, [missionId]);
 
   async function handlePostUpdate() {
@@ -75,8 +78,8 @@ function MissionDetailPage() {
       setUpdateText("");
       toast.success("Update posted");
       load();
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error));
     } finally {
       setPosting(false);
     }
@@ -85,7 +88,7 @@ function MissionDetailPage() {
   if (busy) return <p className="mt-8 text-muted-foreground px-4">Loading mission workspace…</p>;
   if (!mission) return <p className="mt-8 text-muted-foreground px-4">Mission not found.</p>;
 
-  const userMemberRecord = mission.mission_members?.find((mm: any) => mm.user_id === user?.id);
+  const userMemberRecord = mission.mission_members?.find((member) => member.user_id === user?.id);
   const hasJoined = !!userMemberRecord;
   const isLead = userMemberRecord?.role === "lead";
 
@@ -94,8 +97,8 @@ function MissionDetailPage() {
       await pinMissionUpdate(updateId, !currentPinStatus);
       toast.success(currentPinStatus ? "Update unpinned" : "Update pinned to top");
       load();
-    } catch (err: any) {
-      toast.error(err.message || "Failed to pin update");
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Failed to pin update."));
     }
   }
 
@@ -106,8 +109,8 @@ function MissionDetailPage() {
       toast.success("Member removed");
       setMemberToRemove(null);
       load();
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error));
     }
   }
 
@@ -116,8 +119,8 @@ function MissionDetailPage() {
       await updateMissionStatus({ data: { missionId, status } });
       toast.success("Status updated");
       load();
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error));
     }
   }
 
@@ -246,7 +249,7 @@ function MissionDetailPage() {
                         No updates posted yet. Be the first!
                       </p>
                     ) : (
-                      mission.mission_updates?.map((u: any) => (
+                      mission.mission_updates?.map((u) => (
                         <div
                           key={u.id}
                           className={`rounded-2xl border bg-card p-5 transition ${u.is_pinned ? "border-[var(--saffron)] shadow-sm" : "border-border"}`}
@@ -254,7 +257,7 @@ function MissionDetailPage() {
                           <div className="flex justify-between items-start mb-3">
                             <div className="flex items-center gap-3">
                               <Avatar className="h-10 w-10 border border-border/50">
-                                <AvatarImage src={u.profiles?.avatar_url} />
+                                <AvatarImage src={u.profiles?.avatar_url ?? undefined} />
                                 <AvatarFallback>
                                   {u.profiles?.display_name?.substring(0, 2) || "U"}
                                 </AvatarFallback>
@@ -292,7 +295,7 @@ function MissionDetailPage() {
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuItem
-                                    onClick={() => handleTogglePin(u.id, u.is_pinned)}
+                                    onClick={() => handleTogglePin(u.id, u.is_pinned ?? false)}
                                   >
                                     <Pin className="mr-2 h-4 w-4" />{" "}
                                     {u.is_pinned ? "Unpin Update" : "Pin to Top"}
@@ -330,7 +333,7 @@ function MissionDetailPage() {
                     No events scheduled for this mission yet.
                   </div>
                 ) : (
-                  mission.events?.map((evt: any) => (
+                  mission.events?.map((evt) => (
                     <div
                       key={evt.id}
                       className="rounded-2xl border border-border bg-card p-5 flex items-center gap-4"
@@ -363,7 +366,7 @@ function MissionDetailPage() {
                     No stories published under this mission yet.
                   </div>
                 ) : (
-                  mission.stories?.map((story: any) => (
+                  mission.stories?.map((story) => (
                     <div
                       key={story.id}
                       className="rounded-2xl border border-border bg-card p-5 flex items-center gap-4"
@@ -399,10 +402,10 @@ function MissionDetailPage() {
             </p>
 
             <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
-              {mission.mission_members?.map((m: any) => (
+              {mission.mission_members?.map((m) => (
                 <div key={m.user_id} className="flex items-center gap-3">
                   <Avatar className="h-10 w-10">
-                    <AvatarImage src={m.profiles?.avatar_url} />
+                    <AvatarImage src={m.profiles?.avatar_url ?? undefined} />
                     <AvatarFallback>
                       {m.profiles?.display_name?.substring(0, 2) || "U"}
                     </AvatarFallback>

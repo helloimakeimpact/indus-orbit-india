@@ -55,7 +55,9 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
       <AppSidebar />
       <div className="flex min-h-screen min-w-0 flex-1 flex-col">
         <header className="app-topbar sticky top-0 z-30 flex h-14 items-center justify-between px-3 pl-14 md:h-12 md:pl-3">
-          <h1 className="truncate text-sm font-semibold text-foreground">{title ?? "Indus Orbit"}</h1>
+          <h1 className="truncate text-sm font-semibold text-foreground">
+            {title ?? "Indus Orbit"}
+          </h1>
           <div className="flex items-center gap-1">
             <ChatDropdown />
             <NotificationSheet />

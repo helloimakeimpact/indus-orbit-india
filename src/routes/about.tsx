@@ -77,20 +77,19 @@ function AboutPage() {
           </div>
           <div className="space-y-5 text-foreground/75">
             <p>
-              The next decade of intelligence will not be won only by faster
-              models or larger datasets. It will be won by the people, places
-              and partnerships that decide how those tools get used.
+              The next decade of intelligence will not be won only by faster models or larger
+              datasets. It will be won by the people, places and partnerships that decide how those
+              tools get used.
             </p>
             <p>
-              India is unusual. Our markets are dense, our diaspora is global,
-              our young population is enormous, and our trust still travels
-              through relationships. A general intelligence company for India
-              has to honour all of that.
+              India is unusual. Our markets are dense, our diaspora is global, our young population
+              is enormous, and our trust still travels through relationships. A general intelligence
+              company for India has to honour all of that.
             </p>
             <p>
-              Indus Orbit exists to build the tools, networks and rituals that
-              fit how India actually works — and to make sure the upside lifts
-              everyone in the orbit, not just the centre.
+              Indus Orbit exists to build the tools, networks and rituals that fit how India
+              actually works — and to make sure the upside lifts everyone in the orbit, not just the
+              centre.
             </p>
           </div>
         </div>
@@ -143,9 +142,8 @@ function AboutPage() {
             ))}
           </div>
           <p className="mt-10 max-w-3xl font-display text-2xl font-light leading-snug text-[var(--parchment)]/90 md:text-3xl">
-            We're not trying to build an Indian version of Silicon Valley. We're
-            trying to build the version of intelligence that could only have
-            come from here.
+            We're not trying to build an Indian version of Silicon Valley. We're trying to build the
+            version of intelligence that could only have come from here.
           </p>
         </div>
       </section>
@@ -154,18 +152,15 @@ function AboutPage() {
         <div className="mx-auto w-full max-w-7xl">
           <h2 className="font-display text-3xl font-medium md:text-4xl">The team</h2>
           <p className="mt-3 max-w-2xl text-foreground/70">
-            A small group of founders, researchers and builders splitting time
-            between Delhi and Bengaluru. We're hiring across product, research
-            and partnerships.
+            A small group of founders, researchers and builders splitting time between Delhi and
+            Bengaluru. We're hiring across product, research and partnerships.
           </p>
           <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {["Founder", "Research", "Product", "Partnerships"].map((role) => (
               <div key={role} className="rounded-3xl border border-border bg-card p-6">
                 <div className="aspect-square w-full rounded-2xl bg-gradient-to-br from-[var(--indigo-night)] to-[var(--saffron)]/60" />
                 <p className="mt-4 font-display text-lg">{role}</p>
-                <p className="text-xs uppercase tracking-wider text-foreground/50">
-                  Indus Orbit
-                </p>
+                <p className="text-xs uppercase tracking-wider text-foreground/50">Indus Orbit</p>
               </div>
             ))}
           </div>

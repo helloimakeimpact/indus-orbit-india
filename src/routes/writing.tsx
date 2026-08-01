@@ -26,9 +26,11 @@ export const Route = createFileRoute("/writing")({
   component: WritingPage,
 });
 
+type PublishedStory = Awaited<ReturnType<typeof getPublishedStories>>[number];
+
 function WritingPage() {
   const [active, setActive] = useState<Tag>("All");
-  const [memberStories, setMemberStories] = useState<any[]>([]);
+  const [memberStories, setMemberStories] = useState<PublishedStory[]>([]);
   const [storyError, setStoryError] = useState<string | null>(null);
   const tags: Tag[] = [
     "All",
@@ -60,7 +62,11 @@ function WritingPage() {
     author: s.profiles?.display_name || "Member",
     tag: "Community",
     date: s.published_at
-      ? new Date(s.published_at).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" })
+      ? new Date(s.published_at).toLocaleDateString("en-US", {
+          month: "short",
+          day: "2-digit",
+          year: "numeric",
+        })
       : "",
     readMin: Math.max(3, Math.round((s.content?.length ?? 600) / 900)),
     gradient: "from-[var(--saffron)]/40 via-[var(--indigo-night)]/50 to-[var(--monsoon)]/80",
@@ -85,8 +91,8 @@ function WritingPage() {
             <span className="text-[var(--saffron)]"> company for India.</span>
           </h1>
           <p className="mt-6 max-w-2xl text-lg text-foreground/70">
-            Announcements, research and essays on intelligence, India, and the
-            networks we're building between the two. New pieces most weeks.
+            Announcements, research and essays on intelligence, India, and the networks we're
+            building between the two. New pieces most weeks.
           </p>
 
           {/* Newsletter card */}
@@ -192,9 +198,7 @@ function WritingPage() {
       <section className="px-6 pb-24">
         <div className="mx-auto w-full max-w-7xl">
           <div className="mb-8 flex items-end justify-between">
-            <h2 className="font-display text-2xl font-medium md:text-3xl">
-              More from the orbit
-            </h2>
+            <h2 className="font-display text-2xl font-medium md:text-3xl">More from the orbit</h2>
             <p className="text-xs uppercase tracking-wider text-foreground/50">
               {rest.length} {rest.length === 1 ? "piece" : "pieces"}
             </p>
@@ -207,7 +211,12 @@ function WritingPage() {
                 params={{ slug: p.slug }}
                 className="group flex flex-col overflow-hidden rounded-3xl border border-border bg-card transition hover:-translate-y-1 hover:shadow-xl"
               >
-                <div className={cn("relative aspect-[16/10] w-full overflow-hidden bg-gradient-to-br", p.gradient)}>
+                <div
+                  className={cn(
+                    "relative aspect-[16/10] w-full overflow-hidden bg-gradient-to-br",
+                    p.gradient,
+                  )}
+                >
                   <img
                     src={tagImage[p.tag]}
                     alt=""
@@ -234,9 +243,7 @@ function WritingPage() {
                       </>
                     ) : null}
                   </div>
-                  <h3 className="mt-3 font-display text-xl font-medium leading-tight">
-                    {p.title}
-                  </h3>
+                  <h3 className="mt-3 font-display text-xl font-medium leading-tight">{p.title}</h3>
                   <p className="mt-3 text-sm text-foreground/70">{p.excerpt}</p>
                   <div className="mt-6 flex items-center justify-between">
                     <p className="text-xs uppercase tracking-wider text-foreground/50">

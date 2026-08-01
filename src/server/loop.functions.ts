@@ -1,6 +1,9 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { Database, Json } from "@/integrations/supabase/types";
 
-const sb = supabase as any;
+type LoopRow = Database["public"]["Tables"]["loops"]["Row"];
+type LoopInsert = Database["public"]["Tables"]["loops"]["Insert"];
+type LoopUpdate = Database["public"]["Tables"]["loops"]["Update"];
 
 export type LoopEntry = {
   id: string;
@@ -33,42 +36,100 @@ export type LoopEntry = {
   updated_at: string;
 };
 
+type LoopInput = Partial<LoopEntry> & { id?: string };
+
+function asArray<T>(value: Json): T[] {
+  return Array.isArray(value) ? (value as T[]) : [];
+}
+
+function asObject<T extends object>(value: Json): T {
+  return value !== null && typeof value === "object" && !Array.isArray(value)
+    ? (value as T)
+    : ({} as T);
+}
+
+function toLoopStatus(status: string): LoopEntry["status"] {
+  if (status === "draft" || status === "published") return status;
+  throw new Error(`Unsupported loop status: ${status}`);
+}
+
+function toLoopEntry(row: LoopRow): LoopEntry {
+  return {
+    ...row,
+    status: toLoopStatus(row.status),
+    minimum_loop: asObject<LoopEntry["minimum_loop"]>(row.minimum_loop),
+    upgrade_history: asArray<LoopEntry["upgrade_history"][number]>(row.upgrade_history),
+  };
+}
+
+function getLoopPayload(input: LoopInput): LoopUpdate {
+  const { id: _id, created_at: _createdAt, updated_at: _updatedAt, ...payload } = input;
+
+  return payload;
+}
+
 export async function listPublishedLoops() {
-  const { data, error } = await sb
+  const { data, error } = await supabase
     .from("loops")
     .select("*")
     .eq("status", "published")
     .order("featured_on", { ascending: false, nullsFirst: false })
     .order("published_at", { ascending: false });
   if (error) throw new Error(error.message);
-  return (data ?? []) as LoopEntry[];
+  return (data ?? []).map(toLoopEntry);
 }
 
 export async function listAllLoopsForAdmin() {
-  const { data, error } = await sb.from("loops").select("*").order("updated_at", { ascending: false });
+  const { data, error } = await supabase
+    .from("loops")
+    .select("*")
+    .order("updated_at", { ascending: false });
   if (error) throw new Error(error.message);
-  return (data ?? []) as LoopEntry[];
+  return (data ?? []).map(toLoopEntry);
 }
 
 export async function getLoopBySlug(slug: string) {
-  const { data, error } = await sb.from("loops").select("*").eq("slug", slug).maybeSingle();
+  const { data, error } = await supabase.from("loops").select("*").eq("slug", slug).maybeSingle();
   if (error) throw new Error(error.message);
-  return data as LoopEntry | null;
+  return data ? toLoopEntry(data) : null;
 }
 
-export async function upsertLoop(input: Partial<LoopEntry> & { id?: string }) {
+export async function upsertLoop(input: LoopInput) {
   const { data: userData } = await supabase.auth.getUser();
-  const payload: any = { ...input };
-  if (payload.status === "published" && !payload.published_at) payload.published_at = new Date().toISOString();
-  if (!payload.id) payload.created_by = userData.user?.id;
-  delete payload.created_at;
-  delete payload.updated_at;
-  const { data, error } = await sb.from("loops").upsert(payload, { onConflict: "id" }).select().single();
+  if (!userData.user) throw new Error("Unauthorized");
+
+  const payload = getLoopPayload(input);
+  if (payload.status === "published" && !payload.published_at) {
+    payload.published_at = new Date().toISOString();
+  }
+
+  if (input.id) {
+    const { data, error } = await supabase
+      .from("loops")
+      .update(payload)
+      .eq("id", input.id)
+      .select()
+      .single();
+    if (error) throw new Error(error.message);
+    return toLoopEntry(data);
+  }
+
+  const slug = input.slug?.trim();
+  const title = input.title?.trim();
+  if (!slug || !title) throw new Error("Title and slug are required.");
+
+  const insertPayload: LoopInsert = {
+    ...payload,
+    slug,
+    title,
+    created_by: userData.user.id,
+  };
+  const { data, error } = await supabase.from("loops").insert(insertPayload).select().single();
   if (error) throw new Error(error.message);
-  return data as LoopEntry;
+  return toLoopEntry(data);
 }
 
 export async function deleteLoop(id: string) {
-  const { error } = await sb.from("loops").delete().eq("id", id);
+  const { error } = await supabase.from("loops").delete().eq("id", id);
   if (error) throw new Error(error.message);
 }

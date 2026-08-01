@@ -6,9 +6,11 @@ export class GatewayError extends Error {
       | "forbidden"
       | "not_configured"
       | "upstream_failure"
+      | "rate_limited"
       | "internal_error",
     readonly status: number,
     message: string,
+    readonly upstreamStatus?: number,
   ) {
     super(message);
   }

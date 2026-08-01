@@ -43,7 +43,11 @@ export function OnboardingWizard({ userId }: { userId: string }) {
   const [vouchCode, setVouchCode] = useState("");
 
   const tz = useMemo(() => {
-    try { return Intl.DateTimeFormat().resolvedOptions().timeZone; } catch { return ""; }
+    try {
+      return Intl.DateTimeFormat().resolvedOptions().timeZone;
+    } catch {
+      return "";
+    }
   }, []);
 
   const totalSteps = 4;
@@ -56,14 +60,20 @@ export function OnboardingWizard({ userId }: { userId: string }) {
     }
     if (step === 2) {
       const r = locationSchema.safeParse(location);
-      if (!r.success) { toast.error(r.error.issues[0].message); return; }
+      if (!r.success) {
+        toast.error(r.error.issues[0].message);
+        return;
+      }
     }
     setStep((s) => Math.min(totalSteps, s + 1));
   }
 
   async function finish() {
     const r = storySchema.safeParse(story);
-    if (!r.success) { toast.error(r.error.issues[0].message); return; }
+    if (!r.success) {
+      toast.error(r.error.issues[0].message);
+      return;
+    }
     if (!segment) return;
     setBusy(true);
     const { error } = await supabase
@@ -84,13 +94,18 @@ export function OnboardingWizard({ userId }: { userId: string }) {
       } as never)
       .eq("user_id", userId);
     setBusy(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
 
     // If a vouch code was provided, attempt to redeem it silently
     if (vouchCode.trim().length >= 6) {
       try {
         await redeemCode(vouchCode.trim());
-        toast.success("Welcome to the Orbit! Your vouch code was redeemed and you are now verified.");
+        toast.success(
+          "Welcome to the Orbit! Your vouch code was redeemed and you are now verified.",
+        );
       } catch (e) {
         toast.error(`Profile saved, but vouch code failed: ${(e as Error).message}`);
       }
@@ -114,13 +129,18 @@ export function OnboardingWizard({ userId }: { userId: string }) {
           {step === 4 && "Your story"}
         </p>
       </div>
-      <Progress value={progress} className="mb-6 h-1.5 bg-foreground/10 [&>div]:bg-[var(--saffron)]" />
+      <Progress
+        value={progress}
+        className="mb-6 h-1.5 bg-foreground/10 [&>div]:bg-[var(--saffron)]"
+      />
 
       {step === 1 && (
         <div className="space-y-4">
           <div>
             <h2 className="font-display text-2xl font-medium">Which part of the Orbit are you?</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Pick the one closest to you. You can change it later.</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Pick the one closest to you. You can change it later.
+            </p>
           </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {SEGMENT_LIST.map((s) => {
@@ -154,28 +174,48 @@ export function OnboardingWizard({ userId }: { userId: string }) {
         <div className="space-y-4">
           <div>
             <h2 className="font-display text-2xl font-medium">Where in the world are you?</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Helps us connect you locally and across borders.</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Helps us connect you locally and across borders.
+            </p>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="City">
-              <Input value={location.city} onChange={(e) => setLocation({ ...location, city: e.target.value })} />
+              <Input
+                value={location.city}
+                onChange={(e) => setLocation({ ...location, city: e.target.value })}
+              />
             </Field>
             <Field label="Country">
-              <Input value={location.country} onChange={(e) => setLocation({ ...location, country: e.target.value })} />
+              <Input
+                value={location.country}
+                onChange={(e) => setLocation({ ...location, country: e.target.value })}
+              />
             </Field>
           </div>
           <Field label="Region (optional)">
-            <Input placeholder="e.g. South Asia, North America" value={location.region} onChange={(e) => setLocation({ ...location, region: e.target.value })} />
+            <Input
+              placeholder="e.g. South Asia, North America"
+              value={location.region}
+              onChange={(e) => setLocation({ ...location, region: e.target.value })}
+            />
           </Field>
-          {tz && <p className="text-xs text-muted-foreground">We'll save your timezone as <span className="font-medium">{tz}</span>.</p>}
+          {tz && (
+            <p className="text-xs text-muted-foreground">
+              We'll save your timezone as <span className="font-medium">{tz}</span>.
+            </p>
+          )}
         </div>
       )}
 
       {step === 3 && segment && (
         <div className="space-y-4">
           <div>
-            <h2 className="font-display text-2xl font-medium">A few questions for {SEGMENT_META[segment].label}</h2>
-            <p className="mt-1 text-sm text-muted-foreground">All optional — share what feels right.</p>
+            <h2 className="font-display text-2xl font-medium">
+              A few questions for {SEGMENT_META[segment].label}
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              All optional — share what feels right.
+            </p>
           </div>
           <SegmentDetailsForm segment={segment} value={details} onChange={setDetails} />
         </div>
@@ -185,53 +225,85 @@ export function OnboardingWizard({ userId }: { userId: string }) {
         <div className="space-y-4">
           <div>
             <h2 className="font-display text-2xl font-medium">Tell the Orbit your story</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Optional — fill in what you want others to see.</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Optional — fill in what you want others to see.
+            </p>
           </div>
           <Field label="Headline">
-            <Input placeholder="Founder · NeoBank for India" value={story.headline} onChange={(e) => setStory({ ...story, headline: e.target.value })} />
+            <Input
+              placeholder="Founder · NeoBank for India"
+              value={story.headline}
+              onChange={(e) => setStory({ ...story, headline: e.target.value })}
+            />
           </Field>
           <Field label="Short bio">
-            <Textarea rows={4} value={story.bio} onChange={(e) => setStory({ ...story, bio: e.target.value })} />
+            <Textarea
+              rows={4}
+              value={story.bio}
+              onChange={(e) => setStory({ ...story, bio: e.target.value })}
+            />
           </Field>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="LinkedIn URL">
-              <Input value={story.linkedin_url} onChange={(e) => setStory({ ...story, linkedin_url: e.target.value })} />
+              <Input
+                value={story.linkedin_url}
+                onChange={(e) => setStory({ ...story, linkedin_url: e.target.value })}
+              />
             </Field>
             <Field label="Website URL">
-              <Input value={story.website_url} onChange={(e) => setStory({ ...story, website_url: e.target.value })} />
+              <Input
+                value={story.website_url}
+                onChange={(e) => setStory({ ...story, website_url: e.target.value })}
+              />
             </Field>
           </div>
-          
+
           <div className="pt-4 border-t border-border">
             <Field label="Have a Vouch Code? (Optional)">
-              <Input 
-                placeholder="e.g. A1B2C3D4" 
-                value={vouchCode} 
-                onChange={(e) => setVouchCode(e.target.value.toUpperCase())} 
+              <Input
+                placeholder="e.g. A1B2C3D4"
+                value={vouchCode}
+                onChange={(e) => setVouchCode(e.target.value.toUpperCase())}
                 className="uppercase"
               />
               <p className="text-xs text-muted-foreground">
-                If you were invited by a verified member, enter your vouch code here to instantly verify your profile.
+                If you were invited by a verified member, enter your vouch code here to instantly
+                verify your profile.
               </p>
             </Field>
           </div>
 
           <p className="text-xs text-muted-foreground mt-4">
-            An Indus Orbit admin will review your profile. Verified stakeholders get a saffron badge.
+            An Indus Orbit admin will review your profile. Verified stakeholders get a saffron
+            badge.
           </p>
         </div>
       )}
 
       <div className="mt-7 flex items-center justify-between">
-        <Button type="button" variant="outline" disabled={step === 1 || busy} onClick={() => setStep((s) => Math.max(1, s - 1))}>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={step === 1 || busy}
+          onClick={() => setStep((s) => Math.max(1, s - 1))}
+        >
           <ArrowLeft className="mr-1 h-4 w-4" /> Back
         </Button>
         {step < totalSteps ? (
-          <Button type="button" onClick={next} className="bg-[var(--indigo-night)] text-[var(--parchment)] hover:bg-[var(--indigo-night)]/90">
+          <Button
+            type="button"
+            onClick={next}
+            className="bg-[var(--indigo-night)] text-[var(--parchment)] hover:bg-[var(--indigo-night)]/90"
+          >
             Continue <ArrowRight className="ml-1 h-4 w-4" />
           </Button>
         ) : (
-          <Button type="button" onClick={finish} disabled={busy} className="bg-[var(--saffron)] text-[var(--indigo-night)] hover:bg-[var(--indigo-night)] hover:text-[var(--parchment)]">
+          <Button
+            type="button"
+            onClick={finish}
+            disabled={busy}
+            className="bg-[var(--saffron)] text-[var(--indigo-night)] hover:bg-[var(--indigo-night)] hover:text-[var(--parchment)]"
+          >
             {busy ? "Finishing…" : "Enter the Orbit"}
           </Button>
         )}

@@ -1,8 +1,24 @@
 import { GatewayError } from "./errors.ts";
-import type { GatewayAction, GatewayMessage, GatewayMode, GatewayRequest } from "./types.ts";
+import type {
+  GatewayAction,
+  GatewayMessage,
+  GatewayMode,
+  GatewayRequest,
+  RouteStrategy,
+} from "./types.ts";
 
-const actions = new Set<GatewayAction>(["partner_chat", "record_local_opencode", "status"]);
+const actions = new Set<GatewayAction>([
+  "partner_chat",
+  "catalog",
+  "record_local_opencode",
+  "status",
+]);
 const modes = new Set<GatewayMode>(["observe", "plan", "build", "run"]);
+const routeStrategies = new Set<RouteStrategy>([
+  "latest_affordable",
+  "lowest_cost",
+  "explicit_model",
+]);
 const messageRoles = new Set<GatewayMessage["role"]>(["system", "user", "assistant"]);
 const workspaceIdPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -27,6 +43,26 @@ function readMode(value: unknown): GatewayMode | undefined {
     throw new GatewayError("bad_request", 400, "Mode must be observe, plan, build, or run.");
   }
   return value as GatewayMode;
+}
+
+function readRouteStrategy(value: unknown): RouteStrategy | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value !== "string" || !routeStrategies.has(value as RouteStrategy)) {
+    throw new GatewayError(
+      "bad_request",
+      400,
+      "Route strategy must be latest_affordable, lowest_cost, or explicit_model.",
+    );
+  }
+  return value as RouteStrategy;
+}
+
+function readRequestedModelId(value: unknown) {
+  if (value === undefined) return undefined;
+  if (typeof value !== "string" || !workspaceIdPattern.test(value)) {
+    throw new GatewayError("bad_request", 400, "Requested model ID must be a UUID.");
+  }
+  return value;
 }
 
 export function requireMessages(value: unknown): GatewayMessage[] {
@@ -109,9 +145,27 @@ export function parseGatewayRequest(value: unknown): GatewayRequest {
     action,
     workspaceId: requireWorkspaceId(body.workspace_id),
     mode: readMode(body.mode),
+    routeStrategy: readRouteStrategy(body.route_strategy),
+    requestedModelId: readRequestedModelId(body.requested_model_id),
   };
 
-  if (action === "partner_chat") request.messages = requireMessages(body.messages);
+  if (action === "partner_chat") {
+    request.messages = requireMessages(body.messages);
+    if (request.routeStrategy === "explicit_model" && !request.requestedModelId) {
+      throw new GatewayError(
+        "bad_request",
+        400,
+        "An explicit model route requires a requested model ID.",
+      );
+    }
+    if (request.requestedModelId && request.routeStrategy !== "explicit_model") {
+      throw new GatewayError(
+        "bad_request",
+        400,
+        "A requested model ID requires the explicit_model route strategy.",
+      );
+    }
+  }
   if (action === "record_local_opencode") {
     request.connectorOrigin = requireLocalOpenCodeOrigin(body.connector_origin);
     request.sessionId = requireSessionId(body.session_id);

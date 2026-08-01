@@ -9,156 +9,86 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as WritingRouteImport } from './routes/writing'
-import { Route as WhatIsIndusOrbitRouteImport } from './routes/what-is-indus-orbit'
-import { Route as SodaRouteImport } from './routes/soda'
-import { Route as SkillsRouteImport } from './routes/skills'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as OurWorkRouteImport } from './routes/our-work'
-import { Route as OnboardingRouteImport } from './routes/onboarding'
-import { Route as ModelsRouteImport } from './routes/models'
-import { Route as MembersRouteImport } from './routes/members'
-import { Route as LoopsRouteImport } from './routes/loops'
-import { Route as LoopRouteImport } from './routes/loop'
-import { Route as IoPortRouteImport } from './routes/io-port'
-import { Route as ContactRouteImport } from './routes/contact'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AppRouteImport } from './routes/app'
-import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AboutRouteImport } from './routes/about'
+import { Route as AppRouteImport } from './routes/app'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ContactRouteImport } from './routes/contact'
+import { Route as IoPortRouteImport } from './routes/io-port'
+import { Route as LoopRouteImport } from './routes/loop'
+import { Route as LoopsRouteImport } from './routes/loops'
+import { Route as MembersRouteImport } from './routes/members'
+import { Route as ModelsRouteImport } from './routes/models'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as OurWorkRouteImport } from './routes/our-work'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as SkillsRouteImport } from './routes/skills'
+import { Route as SodaRouteImport } from './routes/soda'
+import { Route as WhatIsIndusOrbitRouteImport } from './routes/what-is-indus-orbit'
+import { Route as WritingRouteImport } from './routes/writing'
 import { Route as AppIndexRouteImport } from './routes/app.index'
-import { Route as WritingSlugRouteImport } from './routes/writing.$slug'
-import { Route as RedeemCodeRouteImport } from './routes/redeem.$code'
-import { Route as ProfileIdRouteImport } from './routes/profile.$id'
-import { Route as AppVouchRouteImport } from './routes/app.vouch'
-import { Route as AppStoriesRouteImport } from './routes/app.stories'
-import { Route as AppSodaRouteImport } from './routes/app.soda'
-import { Route as AppSkillsRouteImport } from './routes/app.skills'
-import { Route as AppSettingsRouteImport } from './routes/app.settings'
-import { Route as AppProfileRouteImport } from './routes/app.profile'
-import { Route as AppNotificationsRouteImport } from './routes/app.notifications'
-import { Route as AppMissionsRouteImport } from './routes/app.missions'
-import { Route as AppMissionAdminRouteImport } from './routes/app.mission-admin'
-import { Route as AppMessagesRouteImport } from './routes/app.messages'
-import { Route as AppMentorRouteImport } from './routes/app.mentor'
-import { Route as AppLoopsRouteImport } from './routes/app.loops'
-import { Route as AppLoopRouteImport } from './routes/app.loop'
-import { Route as AppIoRouteImport } from './routes/app.io'
-import { Route as AppInvestorFeedRouteImport } from './routes/app.investor-feed'
-import { Route as AppEventsRouteImport } from './routes/app.events'
-import { Route as AppEducationRouteImport } from './routes/app.education'
-import { Route as AppDirectoryRouteImport } from './routes/app.directory'
-import { Route as AppChapterAdminRouteImport } from './routes/app.chapter-admin'
 import { Route as AppBoardRouteImport } from './routes/app.board'
-import { Route as AppStoriesIndexRouteImport } from './routes/app.stories.index'
-import { Route as AppSodaIndexRouteImport } from './routes/app.soda.index'
-import { Route as AppSkillsIndexRouteImport } from './routes/app.skills.index'
-import { Route as AppMissionsIndexRouteImport } from './routes/app.missions.index'
-import { Route as AppLoopIndexRouteImport } from './routes/app.loop.index'
-import { Route as AppIoIndexRouteImport } from './routes/app.io.index'
-import { Route as AppEventsIndexRouteImport } from './routes/app.events.index'
-import { Route as AppEducationIndexRouteImport } from './routes/app.education.index'
-import { Route as AppChaptersIndexRouteImport } from './routes/app.chapters.index'
+import { Route as AppChapterAdminRouteImport } from './routes/app.chapter-admin'
+import { Route as AppDirectoryRouteImport } from './routes/app.directory'
+import { Route as AppEducationRouteImport } from './routes/app.education'
+import { Route as AppEventsRouteImport } from './routes/app.events'
+import { Route as AppInvestorFeedRouteImport } from './routes/app.investor-feed'
+import { Route as AppIoRouteImport } from './routes/app.io'
+import { Route as AppLoopRouteImport } from './routes/app.loop'
+import { Route as AppLoopsRouteImport } from './routes/app.loops'
+import { Route as AppMentorRouteImport } from './routes/app.mentor'
+import { Route as AppMessagesRouteImport } from './routes/app.messages'
+import { Route as AppMissionAdminRouteImport } from './routes/app.mission-admin'
+import { Route as AppMissionsRouteImport } from './routes/app.missions'
+import { Route as AppNotificationsRouteImport } from './routes/app.notifications'
+import { Route as AppProfileRouteImport } from './routes/app.profile'
+import { Route as AppSettingsRouteImport } from './routes/app.settings'
+import { Route as AppSkillsRouteImport } from './routes/app.skills'
+import { Route as AppSodaRouteImport } from './routes/app.soda'
+import { Route as AppStoriesRouteImport } from './routes/app.stories'
+import { Route as AppVouchRouteImport } from './routes/app.vouch'
+import { Route as ProfileIdRouteImport } from './routes/profile.$id'
+import { Route as RedeemCodeRouteImport } from './routes/redeem.$code'
+import { Route as WritingSlugRouteImport } from './routes/writing.$slug'
 import { Route as AppAdminIndexRouteImport } from './routes/app.admin.index'
-import { Route as AppStoriesIdRouteImport } from './routes/app.stories.$id'
-import { Route as AppSodaSlugRouteImport } from './routes/app.soda.$slug'
-import { Route as AppSkillsSlugRouteImport } from './routes/app.skills.$slug'
-import { Route as AppMissionsMissionIdRouteImport } from './routes/app.missions.$missionId'
-import { Route as AppLoopSlugRouteImport } from './routes/app.loop.$slug'
-import { Route as AppEventsIdRouteImport } from './routes/app.events.$id'
-import { Route as AppEducationCourseSlugRouteImport } from './routes/app.education.$courseSlug'
-import { Route as AppChaptersProposeRouteImport } from './routes/app.chapters.propose'
-import { Route as AppChaptersChapterIdRouteImport } from './routes/app.chapters.$chapterId'
-import { Route as AppAdminVouchesRouteImport } from './routes/app.admin.vouches'
-import { Route as AppAdminSubmissionsRouteImport } from './routes/app.admin.submissions'
-import { Route as AppAdminSpotlightsRouteImport } from './routes/app.admin.spotlights'
-import { Route as AppAdminSodaRouteImport } from './routes/app.admin.soda'
-import { Route as AppAdminSkillsRouteImport } from './routes/app.admin.skills'
-import { Route as AppAdminRolesRouteImport } from './routes/app.admin.roles'
-import { Route as AppAdminReportsRouteImport } from './routes/app.admin.reports'
-import { Route as AppAdminQueueRouteImport } from './routes/app.admin.queue'
-import { Route as AppAdminMembersRouteImport } from './routes/app.admin.members'
-import { Route as AppAdminLoopRouteImport } from './routes/app.admin.loop'
-import { Route as AppAdminHubsRouteImport } from './routes/app.admin.hubs'
-import { Route as AppAdminEducationRouteImport } from './routes/app.admin.education'
-import { Route as AppAdminContentRouteImport } from './routes/app.admin.content'
 import { Route as AppAdminAuditRouteImport } from './routes/app.admin.audit'
+import { Route as AppAdminContentRouteImport } from './routes/app.admin.content'
+import { Route as AppAdminEducationRouteImport } from './routes/app.admin.education'
+import { Route as AppAdminHubsRouteImport } from './routes/app.admin.hubs'
+import { Route as AppAdminLoopRouteImport } from './routes/app.admin.loop'
+import { Route as AppAdminMembersRouteImport } from './routes/app.admin.members'
+import { Route as AppAdminQueueRouteImport } from './routes/app.admin.queue'
+import { Route as AppAdminReportsRouteImport } from './routes/app.admin.reports'
+import { Route as AppAdminRolesRouteImport } from './routes/app.admin.roles'
+import { Route as AppAdminSkillsRouteImport } from './routes/app.admin.skills'
+import { Route as AppAdminSodaRouteImport } from './routes/app.admin.soda'
+import { Route as AppAdminSpotlightsRouteImport } from './routes/app.admin.spotlights'
+import { Route as AppAdminSubmissionsRouteImport } from './routes/app.admin.submissions'
+import { Route as AppAdminVouchesRouteImport } from './routes/app.admin.vouches'
+import { Route as AppChaptersIndexRouteImport } from './routes/app.chapters.index'
+import { Route as AppChaptersChapterIdRouteImport } from './routes/app.chapters.$chapterId'
+import { Route as AppChaptersProposeRouteImport } from './routes/app.chapters.propose'
+import { Route as AppEducationIndexRouteImport } from './routes/app.education.index'
+import { Route as AppEducationCourseSlugRouteImport } from './routes/app.education.$courseSlug'
+import { Route as AppEventsIndexRouteImport } from './routes/app.events.index'
+import { Route as AppEventsIdRouteImport } from './routes/app.events.$id'
+import { Route as AppIoIndexRouteImport } from './routes/app.io.index'
+import { Route as AppLoopIndexRouteImport } from './routes/app.loop.index'
+import { Route as AppLoopSlugRouteImport } from './routes/app.loop.$slug'
+import { Route as AppMissionsIndexRouteImport } from './routes/app.missions.index'
+import { Route as AppMissionsMissionIdRouteImport } from './routes/app.missions.$missionId'
+import { Route as AppSkillsIndexRouteImport } from './routes/app.skills.index'
+import { Route as AppSkillsSlugRouteImport } from './routes/app.skills.$slug'
+import { Route as AppSodaIndexRouteImport } from './routes/app.soda.index'
+import { Route as AppSodaSlugRouteImport } from './routes/app.soda.$slug'
+import { Route as AppStoriesIndexRouteImport } from './routes/app.stories.index'
+import { Route as AppStoriesIdRouteImport } from './routes/app.stories.$id'
 import { Route as AppEducationCourseSlugIndexRouteImport } from './routes/app.education.$courseSlug.index'
 import { Route as AppEducationCourseSlugLessonSlugRouteImport } from './routes/app.education.$courseSlug.$lessonSlug'
 
-const WritingRoute = WritingRouteImport.update({
-  id: '/writing',
-  path: '/writing',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const WhatIsIndusOrbitRoute = WhatIsIndusOrbitRouteImport.update({
-  id: '/what-is-indus-orbit',
-  path: '/what-is-indus-orbit',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SodaRoute = SodaRouteImport.update({
-  id: '/soda',
-  path: '/soda',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SkillsRoute = SkillsRouteImport.update({
-  id: '/skills',
-  path: '/skills',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OurWorkRoute = OurWorkRouteImport.update({
-  id: '/our-work',
-  path: '/our-work',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OnboardingRoute = OnboardingRouteImport.update({
-  id: '/onboarding',
-  path: '/onboarding',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ModelsRoute = ModelsRouteImport.update({
-  id: '/models',
-  path: '/models',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MembersRoute = MembersRouteImport.update({
-  id: '/members',
-  path: '/members',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoopsRoute = LoopsRouteImport.update({
-  id: '/loops',
-  path: '/loops',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoopRoute = LoopRouteImport.update({
-  id: '/loop',
-  path: '/loop',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const IoPortRoute = IoPortRouteImport.update({
-  id: '/io-port',
-  path: '/io-port',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ContactRoute = ContactRouteImport.update({
-  id: '/contact',
-  path: '/contact',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppRoute = AppRouteImport.update({
-  id: '/app',
-  path: '/app',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutRoute = AboutRouteImport.update({
@@ -166,9 +96,79 @@ const AboutRoute = AboutRouteImport.update({
   path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AppRoute = AppRouteImport.update({
+  id: '/app',
+  path: '/app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IoPortRoute = IoPortRouteImport.update({
+  id: '/io-port',
+  path: '/io-port',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoopRoute = LoopRouteImport.update({
+  id: '/loop',
+  path: '/loop',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoopsRoute = LoopsRouteImport.update({
+  id: '/loops',
+  path: '/loops',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MembersRoute = MembersRouteImport.update({
+  id: '/members',
+  path: '/members',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ModelsRoute = ModelsRouteImport.update({
+  id: '/models',
+  path: '/models',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OurWorkRoute = OurWorkRouteImport.update({
+  id: '/our-work',
+  path: '/our-work',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SkillsRoute = SkillsRouteImport.update({
+  id: '/skills',
+  path: '/skills',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SodaRoute = SodaRouteImport.update({
+  id: '/soda',
+  path: '/soda',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WhatIsIndusOrbitRoute = WhatIsIndusOrbitRouteImport.update({
+  id: '/what-is-indus-orbit',
+  path: '/what-is-indus-orbit',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WritingRoute = WritingRouteImport.update({
+  id: '/writing',
+  path: '/writing',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppIndexRoute = AppIndexRouteImport.update({
@@ -176,109 +176,9 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppRoute,
 } as any)
-const WritingSlugRoute = WritingSlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
-  getParentRoute: () => WritingRoute,
-} as any)
-const RedeemCodeRoute = RedeemCodeRouteImport.update({
-  id: '/redeem/$code',
-  path: '/redeem/$code',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProfileIdRoute = ProfileIdRouteImport.update({
-  id: '/profile/$id',
-  path: '/profile/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppVouchRoute = AppVouchRouteImport.update({
-  id: '/vouch',
-  path: '/vouch',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppStoriesRoute = AppStoriesRouteImport.update({
-  id: '/stories',
-  path: '/stories',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppSodaRoute = AppSodaRouteImport.update({
-  id: '/soda',
-  path: '/soda',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppSkillsRoute = AppSkillsRouteImport.update({
-  id: '/skills',
-  path: '/skills',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppSettingsRoute = AppSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppProfileRoute = AppProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppNotificationsRoute = AppNotificationsRouteImport.update({
-  id: '/notifications',
-  path: '/notifications',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppMissionsRoute = AppMissionsRouteImport.update({
-  id: '/missions',
-  path: '/missions',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppMissionAdminRoute = AppMissionAdminRouteImport.update({
-  id: '/mission-admin',
-  path: '/mission-admin',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppMessagesRoute = AppMessagesRouteImport.update({
-  id: '/messages',
-  path: '/messages',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppMentorRoute = AppMentorRouteImport.update({
-  id: '/mentor',
-  path: '/mentor',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppLoopsRoute = AppLoopsRouteImport.update({
-  id: '/loops',
-  path: '/loops',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppLoopRoute = AppLoopRouteImport.update({
-  id: '/loop',
-  path: '/loop',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppIoRoute = AppIoRouteImport.update({
-  id: '/io',
-  path: '/io',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppInvestorFeedRoute = AppInvestorFeedRouteImport.update({
-  id: '/investor-feed',
-  path: '/investor-feed',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppEventsRoute = AppEventsRouteImport.update({
-  id: '/events',
-  path: '/events',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppEducationRoute = AppEducationRouteImport.update({
-  id: '/education',
-  path: '/education',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppDirectoryRoute = AppDirectoryRouteImport.update({
-  id: '/directory',
-  path: '/directory',
+const AppBoardRoute = AppBoardRouteImport.update({
+  id: '/board',
+  path: '/board',
   getParentRoute: () => AppRoute,
 } as any)
 const AppChapterAdminRoute = AppChapterAdminRouteImport.update({
@@ -286,164 +186,119 @@ const AppChapterAdminRoute = AppChapterAdminRouteImport.update({
   path: '/chapter-admin',
   getParentRoute: () => AppRoute,
 } as any)
-const AppBoardRoute = AppBoardRouteImport.update({
-  id: '/board',
-  path: '/board',
+const AppDirectoryRoute = AppDirectoryRouteImport.update({
+  id: '/directory',
+  path: '/directory',
   getParentRoute: () => AppRoute,
 } as any)
-const AppStoriesIndexRoute = AppStoriesIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AppStoriesRoute,
-} as any)
-const AppSodaIndexRoute = AppSodaIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AppSodaRoute,
-} as any)
-const AppSkillsIndexRoute = AppSkillsIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AppSkillsRoute,
-} as any)
-const AppMissionsIndexRoute = AppMissionsIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AppMissionsRoute,
-} as any)
-const AppLoopIndexRoute = AppLoopIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AppLoopRoute,
-} as any)
-const AppIoIndexRoute = AppIoIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AppIoRoute,
-} as any)
-const AppEventsIndexRoute = AppEventsIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AppEventsRoute,
-} as any)
-const AppEducationIndexRoute = AppEducationIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AppEducationRoute,
-} as any)
-const AppChaptersIndexRoute = AppChaptersIndexRouteImport.update({
-  id: '/chapters/',
-  path: '/chapters/',
+const AppEducationRoute = AppEducationRouteImport.update({
+  id: '/education',
+  path: '/education',
   getParentRoute: () => AppRoute,
+} as any)
+const AppEventsRoute = AppEventsRouteImport.update({
+  id: '/events',
+  path: '/events',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppInvestorFeedRoute = AppInvestorFeedRouteImport.update({
+  id: '/investor-feed',
+  path: '/investor-feed',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppIoRoute = AppIoRouteImport.update({
+  id: '/io',
+  path: '/io',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppLoopRoute = AppLoopRouteImport.update({
+  id: '/loop',
+  path: '/loop',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppLoopsRoute = AppLoopsRouteImport.update({
+  id: '/loops',
+  path: '/loops',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMentorRoute = AppMentorRouteImport.update({
+  id: '/mentor',
+  path: '/mentor',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMessagesRoute = AppMessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMissionAdminRoute = AppMissionAdminRouteImport.update({
+  id: '/mission-admin',
+  path: '/mission-admin',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMissionsRoute = AppMissionsRouteImport.update({
+  id: '/missions',
+  path: '/missions',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppNotificationsRoute = AppNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppProfileRoute = AppProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSettingsRoute = AppSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSkillsRoute = AppSkillsRouteImport.update({
+  id: '/skills',
+  path: '/skills',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSodaRoute = AppSodaRouteImport.update({
+  id: '/soda',
+  path: '/soda',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppStoriesRoute = AppStoriesRouteImport.update({
+  id: '/stories',
+  path: '/stories',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppVouchRoute = AppVouchRouteImport.update({
+  id: '/vouch',
+  path: '/vouch',
+  getParentRoute: () => AppRoute,
+} as any)
+const ProfileIdRoute = ProfileIdRouteImport.update({
+  id: '/profile/$id',
+  path: '/profile/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RedeemCodeRoute = RedeemCodeRouteImport.update({
+  id: '/redeem/$code',
+  path: '/redeem/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WritingSlugRoute = WritingSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => WritingRoute,
 } as any)
 const AppAdminIndexRoute = AppAdminIndexRouteImport.update({
   id: '/admin/',
   path: '/admin/',
   getParentRoute: () => AppRoute,
 } as any)
-const AppStoriesIdRoute = AppStoriesIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => AppStoriesRoute,
-} as any)
-const AppSodaSlugRoute = AppSodaSlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
-  getParentRoute: () => AppSodaRoute,
-} as any)
-const AppSkillsSlugRoute = AppSkillsSlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
-  getParentRoute: () => AppSkillsRoute,
-} as any)
-const AppMissionsMissionIdRoute = AppMissionsMissionIdRouteImport.update({
-  id: '/$missionId',
-  path: '/$missionId',
-  getParentRoute: () => AppMissionsRoute,
-} as any)
-const AppLoopSlugRoute = AppLoopSlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
-  getParentRoute: () => AppLoopRoute,
-} as any)
-const AppEventsIdRoute = AppEventsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => AppEventsRoute,
-} as any)
-const AppEducationCourseSlugRoute = AppEducationCourseSlugRouteImport.update({
-  id: '/$courseSlug',
-  path: '/$courseSlug',
-  getParentRoute: () => AppEducationRoute,
-} as any)
-const AppChaptersProposeRoute = AppChaptersProposeRouteImport.update({
-  id: '/chapters/propose',
-  path: '/chapters/propose',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppChaptersChapterIdRoute = AppChaptersChapterIdRouteImport.update({
-  id: '/chapters/$chapterId',
-  path: '/chapters/$chapterId',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppAdminVouchesRoute = AppAdminVouchesRouteImport.update({
-  id: '/admin/vouches',
-  path: '/admin/vouches',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppAdminSubmissionsRoute = AppAdminSubmissionsRouteImport.update({
-  id: '/admin/submissions',
-  path: '/admin/submissions',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppAdminSpotlightsRoute = AppAdminSpotlightsRouteImport.update({
-  id: '/admin/spotlights',
-  path: '/admin/spotlights',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppAdminSodaRoute = AppAdminSodaRouteImport.update({
-  id: '/admin/soda',
-  path: '/admin/soda',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppAdminSkillsRoute = AppAdminSkillsRouteImport.update({
-  id: '/admin/skills',
-  path: '/admin/skills',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppAdminRolesRoute = AppAdminRolesRouteImport.update({
-  id: '/admin/roles',
-  path: '/admin/roles',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppAdminReportsRoute = AppAdminReportsRouteImport.update({
-  id: '/admin/reports',
-  path: '/admin/reports',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppAdminQueueRoute = AppAdminQueueRouteImport.update({
-  id: '/admin/queue',
-  path: '/admin/queue',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppAdminMembersRoute = AppAdminMembersRouteImport.update({
-  id: '/admin/members',
-  path: '/admin/members',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppAdminLoopRoute = AppAdminLoopRouteImport.update({
-  id: '/admin/loop',
-  path: '/admin/loop',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppAdminHubsRoute = AppAdminHubsRouteImport.update({
-  id: '/admin/hubs',
-  path: '/admin/hubs',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppAdminEducationRoute = AppAdminEducationRouteImport.update({
-  id: '/admin/education',
-  path: '/admin/education',
+const AppAdminAuditRoute = AppAdminAuditRouteImport.update({
+  id: '/admin/audit',
+  path: '/admin/audit',
   getParentRoute: () => AppRoute,
 } as any)
 const AppAdminContentRoute = AppAdminContentRouteImport.update({
@@ -451,10 +306,155 @@ const AppAdminContentRoute = AppAdminContentRouteImport.update({
   path: '/admin/content',
   getParentRoute: () => AppRoute,
 } as any)
-const AppAdminAuditRoute = AppAdminAuditRouteImport.update({
-  id: '/admin/audit',
-  path: '/admin/audit',
+const AppAdminEducationRoute = AppAdminEducationRouteImport.update({
+  id: '/admin/education',
+  path: '/admin/education',
   getParentRoute: () => AppRoute,
+} as any)
+const AppAdminHubsRoute = AppAdminHubsRouteImport.update({
+  id: '/admin/hubs',
+  path: '/admin/hubs',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdminLoopRoute = AppAdminLoopRouteImport.update({
+  id: '/admin/loop',
+  path: '/admin/loop',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdminMembersRoute = AppAdminMembersRouteImport.update({
+  id: '/admin/members',
+  path: '/admin/members',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdminQueueRoute = AppAdminQueueRouteImport.update({
+  id: '/admin/queue',
+  path: '/admin/queue',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdminReportsRoute = AppAdminReportsRouteImport.update({
+  id: '/admin/reports',
+  path: '/admin/reports',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdminRolesRoute = AppAdminRolesRouteImport.update({
+  id: '/admin/roles',
+  path: '/admin/roles',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdminSkillsRoute = AppAdminSkillsRouteImport.update({
+  id: '/admin/skills',
+  path: '/admin/skills',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdminSodaRoute = AppAdminSodaRouteImport.update({
+  id: '/admin/soda',
+  path: '/admin/soda',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdminSpotlightsRoute = AppAdminSpotlightsRouteImport.update({
+  id: '/admin/spotlights',
+  path: '/admin/spotlights',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdminSubmissionsRoute = AppAdminSubmissionsRouteImport.update({
+  id: '/admin/submissions',
+  path: '/admin/submissions',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdminVouchesRoute = AppAdminVouchesRouteImport.update({
+  id: '/admin/vouches',
+  path: '/admin/vouches',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppChaptersIndexRoute = AppChaptersIndexRouteImport.update({
+  id: '/chapters/',
+  path: '/chapters/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppChaptersChapterIdRoute = AppChaptersChapterIdRouteImport.update({
+  id: '/chapters/$chapterId',
+  path: '/chapters/$chapterId',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppChaptersProposeRoute = AppChaptersProposeRouteImport.update({
+  id: '/chapters/propose',
+  path: '/chapters/propose',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppEducationIndexRoute = AppEducationIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppEducationRoute,
+} as any)
+const AppEducationCourseSlugRoute = AppEducationCourseSlugRouteImport.update({
+  id: '/$courseSlug',
+  path: '/$courseSlug',
+  getParentRoute: () => AppEducationRoute,
+} as any)
+const AppEventsIndexRoute = AppEventsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppEventsRoute,
+} as any)
+const AppEventsIdRoute = AppEventsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AppEventsRoute,
+} as any)
+const AppIoIndexRoute = AppIoIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppIoRoute,
+} as any)
+const AppLoopIndexRoute = AppLoopIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppLoopRoute,
+} as any)
+const AppLoopSlugRoute = AppLoopSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => AppLoopRoute,
+} as any)
+const AppMissionsIndexRoute = AppMissionsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppMissionsRoute,
+} as any)
+const AppMissionsMissionIdRoute = AppMissionsMissionIdRouteImport.update({
+  id: '/$missionId',
+  path: '/$missionId',
+  getParentRoute: () => AppMissionsRoute,
+} as any)
+const AppSkillsIndexRoute = AppSkillsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppSkillsRoute,
+} as any)
+const AppSkillsSlugRoute = AppSkillsSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => AppSkillsRoute,
+} as any)
+const AppSodaIndexRoute = AppSodaIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppSodaRoute,
+} as any)
+const AppSodaSlugRoute = AppSodaSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => AppSodaRoute,
+} as any)
+const AppStoriesIndexRoute = AppStoriesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppStoriesRoute,
+} as any)
+const AppStoriesIdRoute = AppStoriesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AppStoriesRoute,
 } as any)
 const AppEducationCourseSlugIndexRoute =
   AppEducationCourseSlugIndexRouteImport.update({
@@ -945,109 +945,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/writing': {
-      id: '/writing'
-      path: '/writing'
-      fullPath: '/writing'
-      preLoaderRoute: typeof WritingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/what-is-indus-orbit': {
-      id: '/what-is-indus-orbit'
-      path: '/what-is-indus-orbit'
-      fullPath: '/what-is-indus-orbit'
-      preLoaderRoute: typeof WhatIsIndusOrbitRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/soda': {
-      id: '/soda'
-      path: '/soda'
-      fullPath: '/soda'
-      preLoaderRoute: typeof SodaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/skills': {
-      id: '/skills'
-      path: '/skills'
-      fullPath: '/skills'
-      preLoaderRoute: typeof SkillsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/our-work': {
-      id: '/our-work'
-      path: '/our-work'
-      fullPath: '/our-work'
-      preLoaderRoute: typeof OurWorkRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/onboarding': {
-      id: '/onboarding'
-      path: '/onboarding'
-      fullPath: '/onboarding'
-      preLoaderRoute: typeof OnboardingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/models': {
-      id: '/models'
-      path: '/models'
-      fullPath: '/models'
-      preLoaderRoute: typeof ModelsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/members': {
-      id: '/members'
-      path: '/members'
-      fullPath: '/members'
-      preLoaderRoute: typeof MembersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/loops': {
-      id: '/loops'
-      path: '/loops'
-      fullPath: '/loops'
-      preLoaderRoute: typeof LoopsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/loop': {
-      id: '/loop'
-      path: '/loop'
-      fullPath: '/loop'
-      preLoaderRoute: typeof LoopRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/io-port': {
-      id: '/io-port'
-      path: '/io-port'
-      fullPath: '/io-port'
-      preLoaderRoute: typeof IoPortRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/contact': {
-      id: '/contact'
-      path: '/contact'
-      fullPath: '/contact'
-      preLoaderRoute: typeof ContactRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/app': {
-      id: '/app'
-      path: '/app'
-      fullPath: '/app'
-      preLoaderRoute: typeof AppRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/about': {
@@ -1057,11 +959,109 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/app': {
+      id: '/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/io-port': {
+      id: '/io-port'
+      path: '/io-port'
+      fullPath: '/io-port'
+      preLoaderRoute: typeof IoPortRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/loop': {
+      id: '/loop'
+      path: '/loop'
+      fullPath: '/loop'
+      preLoaderRoute: typeof LoopRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/loops': {
+      id: '/loops'
+      path: '/loops'
+      fullPath: '/loops'
+      preLoaderRoute: typeof LoopsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/members': {
+      id: '/members'
+      path: '/members'
+      fullPath: '/members'
+      preLoaderRoute: typeof MembersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/models': {
+      id: '/models'
+      path: '/models'
+      fullPath: '/models'
+      preLoaderRoute: typeof ModelsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/our-work': {
+      id: '/our-work'
+      path: '/our-work'
+      fullPath: '/our-work'
+      preLoaderRoute: typeof OurWorkRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/skills': {
+      id: '/skills'
+      path: '/skills'
+      fullPath: '/skills'
+      preLoaderRoute: typeof SkillsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/soda': {
+      id: '/soda'
+      path: '/soda'
+      fullPath: '/soda'
+      preLoaderRoute: typeof SodaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/what-is-indus-orbit': {
+      id: '/what-is-indus-orbit'
+      path: '/what-is-indus-orbit'
+      fullPath: '/what-is-indus-orbit'
+      preLoaderRoute: typeof WhatIsIndusOrbitRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/writing': {
+      id: '/writing'
+      path: '/writing'
+      fullPath: '/writing'
+      preLoaderRoute: typeof WritingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app/': {
@@ -1071,151 +1071,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
-    '/writing/$slug': {
-      id: '/writing/$slug'
-      path: '/$slug'
-      fullPath: '/writing/$slug'
-      preLoaderRoute: typeof WritingSlugRouteImport
-      parentRoute: typeof WritingRoute
-    }
-    '/redeem/$code': {
-      id: '/redeem/$code'
-      path: '/redeem/$code'
-      fullPath: '/redeem/$code'
-      preLoaderRoute: typeof RedeemCodeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/profile/$id': {
-      id: '/profile/$id'
-      path: '/profile/$id'
-      fullPath: '/profile/$id'
-      preLoaderRoute: typeof ProfileIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/app/vouch': {
-      id: '/app/vouch'
-      path: '/vouch'
-      fullPath: '/app/vouch'
-      preLoaderRoute: typeof AppVouchRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/stories': {
-      id: '/app/stories'
-      path: '/stories'
-      fullPath: '/app/stories'
-      preLoaderRoute: typeof AppStoriesRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/soda': {
-      id: '/app/soda'
-      path: '/soda'
-      fullPath: '/app/soda'
-      preLoaderRoute: typeof AppSodaRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/skills': {
-      id: '/app/skills'
-      path: '/skills'
-      fullPath: '/app/skills'
-      preLoaderRoute: typeof AppSkillsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/settings': {
-      id: '/app/settings'
-      path: '/settings'
-      fullPath: '/app/settings'
-      preLoaderRoute: typeof AppSettingsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/profile': {
-      id: '/app/profile'
-      path: '/profile'
-      fullPath: '/app/profile'
-      preLoaderRoute: typeof AppProfileRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/notifications': {
-      id: '/app/notifications'
-      path: '/notifications'
-      fullPath: '/app/notifications'
-      preLoaderRoute: typeof AppNotificationsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/missions': {
-      id: '/app/missions'
-      path: '/missions'
-      fullPath: '/app/missions'
-      preLoaderRoute: typeof AppMissionsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/mission-admin': {
-      id: '/app/mission-admin'
-      path: '/mission-admin'
-      fullPath: '/app/mission-admin'
-      preLoaderRoute: typeof AppMissionAdminRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/messages': {
-      id: '/app/messages'
-      path: '/messages'
-      fullPath: '/app/messages'
-      preLoaderRoute: typeof AppMessagesRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/mentor': {
-      id: '/app/mentor'
-      path: '/mentor'
-      fullPath: '/app/mentor'
-      preLoaderRoute: typeof AppMentorRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/loops': {
-      id: '/app/loops'
-      path: '/loops'
-      fullPath: '/app/loops'
-      preLoaderRoute: typeof AppLoopsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/loop': {
-      id: '/app/loop'
-      path: '/loop'
-      fullPath: '/app/loop'
-      preLoaderRoute: typeof AppLoopRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/io': {
-      id: '/app/io'
-      path: '/io'
-      fullPath: '/app/io'
-      preLoaderRoute: typeof AppIoRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/investor-feed': {
-      id: '/app/investor-feed'
-      path: '/investor-feed'
-      fullPath: '/app/investor-feed'
-      preLoaderRoute: typeof AppInvestorFeedRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/events': {
-      id: '/app/events'
-      path: '/events'
-      fullPath: '/app/events'
-      preLoaderRoute: typeof AppEventsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/education': {
-      id: '/app/education'
-      path: '/education'
-      fullPath: '/app/education'
-      preLoaderRoute: typeof AppEducationRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/directory': {
-      id: '/app/directory'
-      path: '/directory'
-      fullPath: '/app/directory'
-      preLoaderRoute: typeof AppDirectoryRouteImport
+    '/app/board': {
+      id: '/app/board'
+      path: '/board'
+      fullPath: '/app/board'
+      preLoaderRoute: typeof AppBoardRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/chapter-admin': {
@@ -1225,75 +1085,152 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppChapterAdminRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/board': {
-      id: '/app/board'
-      path: '/board'
-      fullPath: '/app/board'
-      preLoaderRoute: typeof AppBoardRouteImport
+    '/app/directory': {
+      id: '/app/directory'
+      path: '/directory'
+      fullPath: '/app/directory'
+      preLoaderRoute: typeof AppDirectoryRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/stories/': {
-      id: '/app/stories/'
-      path: '/'
-      fullPath: '/app/stories/'
-      preLoaderRoute: typeof AppStoriesIndexRouteImport
-      parentRoute: typeof AppStoriesRoute
-    }
-    '/app/soda/': {
-      id: '/app/soda/'
-      path: '/'
-      fullPath: '/app/soda/'
-      preLoaderRoute: typeof AppSodaIndexRouteImport
-      parentRoute: typeof AppSodaRoute
-    }
-    '/app/skills/': {
-      id: '/app/skills/'
-      path: '/'
-      fullPath: '/app/skills/'
-      preLoaderRoute: typeof AppSkillsIndexRouteImport
-      parentRoute: typeof AppSkillsRoute
-    }
-    '/app/missions/': {
-      id: '/app/missions/'
-      path: '/'
-      fullPath: '/app/missions/'
-      preLoaderRoute: typeof AppMissionsIndexRouteImport
-      parentRoute: typeof AppMissionsRoute
-    }
-    '/app/loop/': {
-      id: '/app/loop/'
-      path: '/'
-      fullPath: '/app/loop/'
-      preLoaderRoute: typeof AppLoopIndexRouteImport
-      parentRoute: typeof AppLoopRoute
-    }
-    '/app/io/': {
-      id: '/app/io/'
-      path: '/'
-      fullPath: '/app/io/'
-      preLoaderRoute: typeof AppIoIndexRouteImport
-      parentRoute: typeof AppIoRoute
-    }
-    '/app/events/': {
-      id: '/app/events/'
-      path: '/'
-      fullPath: '/app/events/'
-      preLoaderRoute: typeof AppEventsIndexRouteImport
-      parentRoute: typeof AppEventsRoute
-    }
-    '/app/education/': {
-      id: '/app/education/'
-      path: '/'
-      fullPath: '/app/education/'
-      preLoaderRoute: typeof AppEducationIndexRouteImport
-      parentRoute: typeof AppEducationRoute
-    }
-    '/app/chapters/': {
-      id: '/app/chapters/'
-      path: '/chapters'
-      fullPath: '/app/chapters/'
-      preLoaderRoute: typeof AppChaptersIndexRouteImport
+    '/app/education': {
+      id: '/app/education'
+      path: '/education'
+      fullPath: '/app/education'
+      preLoaderRoute: typeof AppEducationRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/app/events': {
+      id: '/app/events'
+      path: '/events'
+      fullPath: '/app/events'
+      preLoaderRoute: typeof AppEventsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/investor-feed': {
+      id: '/app/investor-feed'
+      path: '/investor-feed'
+      fullPath: '/app/investor-feed'
+      preLoaderRoute: typeof AppInvestorFeedRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/io': {
+      id: '/app/io'
+      path: '/io'
+      fullPath: '/app/io'
+      preLoaderRoute: typeof AppIoRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/loop': {
+      id: '/app/loop'
+      path: '/loop'
+      fullPath: '/app/loop'
+      preLoaderRoute: typeof AppLoopRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/loops': {
+      id: '/app/loops'
+      path: '/loops'
+      fullPath: '/app/loops'
+      preLoaderRoute: typeof AppLoopsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/mentor': {
+      id: '/app/mentor'
+      path: '/mentor'
+      fullPath: '/app/mentor'
+      preLoaderRoute: typeof AppMentorRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/messages': {
+      id: '/app/messages'
+      path: '/messages'
+      fullPath: '/app/messages'
+      preLoaderRoute: typeof AppMessagesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/mission-admin': {
+      id: '/app/mission-admin'
+      path: '/mission-admin'
+      fullPath: '/app/mission-admin'
+      preLoaderRoute: typeof AppMissionAdminRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/missions': {
+      id: '/app/missions'
+      path: '/missions'
+      fullPath: '/app/missions'
+      preLoaderRoute: typeof AppMissionsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/notifications': {
+      id: '/app/notifications'
+      path: '/notifications'
+      fullPath: '/app/notifications'
+      preLoaderRoute: typeof AppNotificationsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/profile': {
+      id: '/app/profile'
+      path: '/profile'
+      fullPath: '/app/profile'
+      preLoaderRoute: typeof AppProfileRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/settings': {
+      id: '/app/settings'
+      path: '/settings'
+      fullPath: '/app/settings'
+      preLoaderRoute: typeof AppSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/skills': {
+      id: '/app/skills'
+      path: '/skills'
+      fullPath: '/app/skills'
+      preLoaderRoute: typeof AppSkillsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/soda': {
+      id: '/app/soda'
+      path: '/soda'
+      fullPath: '/app/soda'
+      preLoaderRoute: typeof AppSodaRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/stories': {
+      id: '/app/stories'
+      path: '/stories'
+      fullPath: '/app/stories'
+      preLoaderRoute: typeof AppStoriesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/vouch': {
+      id: '/app/vouch'
+      path: '/vouch'
+      fullPath: '/app/vouch'
+      preLoaderRoute: typeof AppVouchRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/profile/$id': {
+      id: '/profile/$id'
+      path: '/profile/$id'
+      fullPath: '/profile/$id'
+      preLoaderRoute: typeof ProfileIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/redeem/$code': {
+      id: '/redeem/$code'
+      path: '/redeem/$code'
+      fullPath: '/redeem/$code'
+      preLoaderRoute: typeof RedeemCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/writing/$slug': {
+      id: '/writing/$slug'
+      path: '/$slug'
+      fullPath: '/writing/$slug'
+      preLoaderRoute: typeof WritingSlugRouteImport
+      parentRoute: typeof WritingRoute
     }
     '/app/admin/': {
       id: '/app/admin/'
@@ -1302,151 +1239,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminIndexRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/stories/$id': {
-      id: '/app/stories/$id'
-      path: '/$id'
-      fullPath: '/app/stories/$id'
-      preLoaderRoute: typeof AppStoriesIdRouteImport
-      parentRoute: typeof AppStoriesRoute
-    }
-    '/app/soda/$slug': {
-      id: '/app/soda/$slug'
-      path: '/$slug'
-      fullPath: '/app/soda/$slug'
-      preLoaderRoute: typeof AppSodaSlugRouteImport
-      parentRoute: typeof AppSodaRoute
-    }
-    '/app/skills/$slug': {
-      id: '/app/skills/$slug'
-      path: '/$slug'
-      fullPath: '/app/skills/$slug'
-      preLoaderRoute: typeof AppSkillsSlugRouteImport
-      parentRoute: typeof AppSkillsRoute
-    }
-    '/app/missions/$missionId': {
-      id: '/app/missions/$missionId'
-      path: '/$missionId'
-      fullPath: '/app/missions/$missionId'
-      preLoaderRoute: typeof AppMissionsMissionIdRouteImport
-      parentRoute: typeof AppMissionsRoute
-    }
-    '/app/loop/$slug': {
-      id: '/app/loop/$slug'
-      path: '/$slug'
-      fullPath: '/app/loop/$slug'
-      preLoaderRoute: typeof AppLoopSlugRouteImport
-      parentRoute: typeof AppLoopRoute
-    }
-    '/app/events/$id': {
-      id: '/app/events/$id'
-      path: '/$id'
-      fullPath: '/app/events/$id'
-      preLoaderRoute: typeof AppEventsIdRouteImport
-      parentRoute: typeof AppEventsRoute
-    }
-    '/app/education/$courseSlug': {
-      id: '/app/education/$courseSlug'
-      path: '/$courseSlug'
-      fullPath: '/app/education/$courseSlug'
-      preLoaderRoute: typeof AppEducationCourseSlugRouteImport
-      parentRoute: typeof AppEducationRoute
-    }
-    '/app/chapters/propose': {
-      id: '/app/chapters/propose'
-      path: '/chapters/propose'
-      fullPath: '/app/chapters/propose'
-      preLoaderRoute: typeof AppChaptersProposeRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/chapters/$chapterId': {
-      id: '/app/chapters/$chapterId'
-      path: '/chapters/$chapterId'
-      fullPath: '/app/chapters/$chapterId'
-      preLoaderRoute: typeof AppChaptersChapterIdRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/admin/vouches': {
-      id: '/app/admin/vouches'
-      path: '/admin/vouches'
-      fullPath: '/app/admin/vouches'
-      preLoaderRoute: typeof AppAdminVouchesRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/admin/submissions': {
-      id: '/app/admin/submissions'
-      path: '/admin/submissions'
-      fullPath: '/app/admin/submissions'
-      preLoaderRoute: typeof AppAdminSubmissionsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/admin/spotlights': {
-      id: '/app/admin/spotlights'
-      path: '/admin/spotlights'
-      fullPath: '/app/admin/spotlights'
-      preLoaderRoute: typeof AppAdminSpotlightsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/admin/soda': {
-      id: '/app/admin/soda'
-      path: '/admin/soda'
-      fullPath: '/app/admin/soda'
-      preLoaderRoute: typeof AppAdminSodaRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/admin/skills': {
-      id: '/app/admin/skills'
-      path: '/admin/skills'
-      fullPath: '/app/admin/skills'
-      preLoaderRoute: typeof AppAdminSkillsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/admin/roles': {
-      id: '/app/admin/roles'
-      path: '/admin/roles'
-      fullPath: '/app/admin/roles'
-      preLoaderRoute: typeof AppAdminRolesRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/admin/reports': {
-      id: '/app/admin/reports'
-      path: '/admin/reports'
-      fullPath: '/app/admin/reports'
-      preLoaderRoute: typeof AppAdminReportsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/admin/queue': {
-      id: '/app/admin/queue'
-      path: '/admin/queue'
-      fullPath: '/app/admin/queue'
-      preLoaderRoute: typeof AppAdminQueueRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/admin/members': {
-      id: '/app/admin/members'
-      path: '/admin/members'
-      fullPath: '/app/admin/members'
-      preLoaderRoute: typeof AppAdminMembersRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/admin/loop': {
-      id: '/app/admin/loop'
-      path: '/admin/loop'
-      fullPath: '/app/admin/loop'
-      preLoaderRoute: typeof AppAdminLoopRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/admin/hubs': {
-      id: '/app/admin/hubs'
-      path: '/admin/hubs'
-      fullPath: '/app/admin/hubs'
-      preLoaderRoute: typeof AppAdminHubsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/admin/education': {
-      id: '/app/admin/education'
-      path: '/admin/education'
-      fullPath: '/app/admin/education'
-      preLoaderRoute: typeof AppAdminEducationRouteImport
+    '/app/admin/audit': {
+      id: '/app/admin/audit'
+      path: '/admin/audit'
+      fullPath: '/app/admin/audit'
+      preLoaderRoute: typeof AppAdminAuditRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/admin/content': {
@@ -1456,12 +1253,215 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminContentRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/admin/audit': {
-      id: '/app/admin/audit'
-      path: '/admin/audit'
-      fullPath: '/app/admin/audit'
-      preLoaderRoute: typeof AppAdminAuditRouteImport
+    '/app/admin/education': {
+      id: '/app/admin/education'
+      path: '/admin/education'
+      fullPath: '/app/admin/education'
+      preLoaderRoute: typeof AppAdminEducationRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/app/admin/hubs': {
+      id: '/app/admin/hubs'
+      path: '/admin/hubs'
+      fullPath: '/app/admin/hubs'
+      preLoaderRoute: typeof AppAdminHubsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/admin/loop': {
+      id: '/app/admin/loop'
+      path: '/admin/loop'
+      fullPath: '/app/admin/loop'
+      preLoaderRoute: typeof AppAdminLoopRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/admin/members': {
+      id: '/app/admin/members'
+      path: '/admin/members'
+      fullPath: '/app/admin/members'
+      preLoaderRoute: typeof AppAdminMembersRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/admin/queue': {
+      id: '/app/admin/queue'
+      path: '/admin/queue'
+      fullPath: '/app/admin/queue'
+      preLoaderRoute: typeof AppAdminQueueRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/admin/reports': {
+      id: '/app/admin/reports'
+      path: '/admin/reports'
+      fullPath: '/app/admin/reports'
+      preLoaderRoute: typeof AppAdminReportsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/admin/roles': {
+      id: '/app/admin/roles'
+      path: '/admin/roles'
+      fullPath: '/app/admin/roles'
+      preLoaderRoute: typeof AppAdminRolesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/admin/skills': {
+      id: '/app/admin/skills'
+      path: '/admin/skills'
+      fullPath: '/app/admin/skills'
+      preLoaderRoute: typeof AppAdminSkillsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/admin/soda': {
+      id: '/app/admin/soda'
+      path: '/admin/soda'
+      fullPath: '/app/admin/soda'
+      preLoaderRoute: typeof AppAdminSodaRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/admin/spotlights': {
+      id: '/app/admin/spotlights'
+      path: '/admin/spotlights'
+      fullPath: '/app/admin/spotlights'
+      preLoaderRoute: typeof AppAdminSpotlightsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/admin/submissions': {
+      id: '/app/admin/submissions'
+      path: '/admin/submissions'
+      fullPath: '/app/admin/submissions'
+      preLoaderRoute: typeof AppAdminSubmissionsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/admin/vouches': {
+      id: '/app/admin/vouches'
+      path: '/admin/vouches'
+      fullPath: '/app/admin/vouches'
+      preLoaderRoute: typeof AppAdminVouchesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/chapters/': {
+      id: '/app/chapters/'
+      path: '/chapters'
+      fullPath: '/app/chapters/'
+      preLoaderRoute: typeof AppChaptersIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/chapters/$chapterId': {
+      id: '/app/chapters/$chapterId'
+      path: '/chapters/$chapterId'
+      fullPath: '/app/chapters/$chapterId'
+      preLoaderRoute: typeof AppChaptersChapterIdRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/chapters/propose': {
+      id: '/app/chapters/propose'
+      path: '/chapters/propose'
+      fullPath: '/app/chapters/propose'
+      preLoaderRoute: typeof AppChaptersProposeRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/education/': {
+      id: '/app/education/'
+      path: '/'
+      fullPath: '/app/education/'
+      preLoaderRoute: typeof AppEducationIndexRouteImport
+      parentRoute: typeof AppEducationRoute
+    }
+    '/app/education/$courseSlug': {
+      id: '/app/education/$courseSlug'
+      path: '/$courseSlug'
+      fullPath: '/app/education/$courseSlug'
+      preLoaderRoute: typeof AppEducationCourseSlugRouteImport
+      parentRoute: typeof AppEducationRoute
+    }
+    '/app/events/': {
+      id: '/app/events/'
+      path: '/'
+      fullPath: '/app/events/'
+      preLoaderRoute: typeof AppEventsIndexRouteImport
+      parentRoute: typeof AppEventsRoute
+    }
+    '/app/events/$id': {
+      id: '/app/events/$id'
+      path: '/$id'
+      fullPath: '/app/events/$id'
+      preLoaderRoute: typeof AppEventsIdRouteImport
+      parentRoute: typeof AppEventsRoute
+    }
+    '/app/io/': {
+      id: '/app/io/'
+      path: '/'
+      fullPath: '/app/io/'
+      preLoaderRoute: typeof AppIoIndexRouteImport
+      parentRoute: typeof AppIoRoute
+    }
+    '/app/loop/': {
+      id: '/app/loop/'
+      path: '/'
+      fullPath: '/app/loop/'
+      preLoaderRoute: typeof AppLoopIndexRouteImport
+      parentRoute: typeof AppLoopRoute
+    }
+    '/app/loop/$slug': {
+      id: '/app/loop/$slug'
+      path: '/$slug'
+      fullPath: '/app/loop/$slug'
+      preLoaderRoute: typeof AppLoopSlugRouteImport
+      parentRoute: typeof AppLoopRoute
+    }
+    '/app/missions/': {
+      id: '/app/missions/'
+      path: '/'
+      fullPath: '/app/missions/'
+      preLoaderRoute: typeof AppMissionsIndexRouteImport
+      parentRoute: typeof AppMissionsRoute
+    }
+    '/app/missions/$missionId': {
+      id: '/app/missions/$missionId'
+      path: '/$missionId'
+      fullPath: '/app/missions/$missionId'
+      preLoaderRoute: typeof AppMissionsMissionIdRouteImport
+      parentRoute: typeof AppMissionsRoute
+    }
+    '/app/skills/': {
+      id: '/app/skills/'
+      path: '/'
+      fullPath: '/app/skills/'
+      preLoaderRoute: typeof AppSkillsIndexRouteImport
+      parentRoute: typeof AppSkillsRoute
+    }
+    '/app/skills/$slug': {
+      id: '/app/skills/$slug'
+      path: '/$slug'
+      fullPath: '/app/skills/$slug'
+      preLoaderRoute: typeof AppSkillsSlugRouteImport
+      parentRoute: typeof AppSkillsRoute
+    }
+    '/app/soda/': {
+      id: '/app/soda/'
+      path: '/'
+      fullPath: '/app/soda/'
+      preLoaderRoute: typeof AppSodaIndexRouteImport
+      parentRoute: typeof AppSodaRoute
+    }
+    '/app/soda/$slug': {
+      id: '/app/soda/$slug'
+      path: '/$slug'
+      fullPath: '/app/soda/$slug'
+      preLoaderRoute: typeof AppSodaSlugRouteImport
+      parentRoute: typeof AppSodaRoute
+    }
+    '/app/stories/': {
+      id: '/app/stories/'
+      path: '/'
+      fullPath: '/app/stories/'
+      preLoaderRoute: typeof AppStoriesIndexRouteImport
+      parentRoute: typeof AppStoriesRoute
+    }
+    '/app/stories/$id': {
+      id: '/app/stories/$id'
+      path: '/$id'
+      fullPath: '/app/stories/$id'
+      preLoaderRoute: typeof AppStoriesIdRouteImport
+      parentRoute: typeof AppStoriesRoute
     }
     '/app/education/$courseSlug/': {
       id: '/app/education/$courseSlug/'

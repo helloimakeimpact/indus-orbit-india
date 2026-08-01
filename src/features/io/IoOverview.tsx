@@ -35,11 +35,14 @@ import {
   createMyIoWorkspace,
   getIoAuditEvents,
   getIoCapacitySources,
+  getIoRouteCatalog,
   getMyIoWorkspaces,
   recordLocalOpenCodeSession,
   runPartnerRoute,
   type IoAuditEvent,
   type IoCapacitySource,
+  type IoRouteCatalog,
+  type IoRouteStrategy,
   type IoWorkspace,
   type PartnerRunResult,
 } from "@/features/io/io.client";
@@ -62,11 +65,16 @@ export function IoOverview() {
   const workspaceLoadSequence = useRef(0);
   const [sources, setSources] = useState<IoCapacitySource[]>([]);
   const [events, setEvents] = useState<IoAuditEvent[]>([]);
+  const [routeCatalog, setRouteCatalog] = useState<IoRouteCatalog | null>(null);
+  const [routeCatalogError, setRouteCatalogError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [catalogLoading, setCatalogLoading] = useState(false);
   const [creating, setCreating] = useState(false);
   const [running, setRunning] = useState(false);
   const [mode, setMode] = useState<SessionMode>("plan");
   const [path, setPath] = useState<ExecutionPath>("terminal");
+  const [routeStrategy, setRouteStrategy] = useState<IoRouteStrategy>("latest_affordable");
+  const [requestedModelId, setRequestedModelId] = useState("");
   const [prompt, setPrompt] = useState("");
   const [openCodeUrl, setOpenCodeUrl] = useState("http://127.0.0.1:4096");
   const [openCodePassword, setOpenCodePassword] = useState("");
@@ -91,26 +99,57 @@ export function IoOverview() {
       if (!nextWorkspace) {
         setSources([]);
         setEvents([]);
+        setRouteCatalog(null);
+        setRouteCatalogError(null);
+        setRequestedModelId("");
         return;
       }
-      const [nextSources, nextEvents] = await Promise.all([
+      setCatalogLoading(true);
+      const [sourcesResult, eventsResult, catalogResult] = await Promise.allSettled([
         getIoCapacitySources(nextWorkspace.id),
         getIoAuditEvents(nextWorkspace.id),
+        getIoRouteCatalog(nextWorkspace.id),
       ]);
       if (loadSequence !== workspaceLoadSequence.current) return;
-      setSources(nextSources);
-      setEvents(nextEvents);
+      if (sourcesResult.status === "rejected") throw sourcesResult.reason;
+      if (eventsResult.status === "rejected") throw eventsResult.reason;
+      setSources(sourcesResult.value);
+      setEvents(eventsResult.value);
+      if (catalogResult.status === "fulfilled") {
+        setRouteCatalog(catalogResult.value);
+        setRouteCatalogError(null);
+        setRequestedModelId((currentModelId) =>
+          catalogResult.value.models.some((model) => model.modelId === currentModelId)
+            ? currentModelId
+            : (catalogResult.value.models[0]?.modelId ?? ""),
+        );
+      } else {
+        setRouteCatalog(null);
+        setRouteCatalogError(
+          catalogResult.reason instanceof Error
+            ? catalogResult.reason.message
+            : "The provider catalogue is not available.",
+        );
+        setRequestedModelId("");
+      }
     } catch (error) {
       if (loadSequence === workspaceLoadSequence.current) {
         toast.error(error instanceof Error ? error.message : "Could not load I/O Port.");
       }
     } finally {
-      if (loadSequence === workspaceLoadSequence.current) setLoading(false);
+      if (loadSequence === workspaceLoadSequence.current) {
+        setLoading(false);
+        setCatalogLoading(false);
+      }
     }
   }, []);
 
   useEffect(() => {
-    void loadWorkspace();
+    void Promise.resolve().then(() => loadWorkspace());
+
+    return () => {
+      workspaceLoadSequence.current += 1;
+    };
   }, [loadWorkspace]);
 
   function selectWorkspace(workspaceId: string) {
@@ -147,6 +186,8 @@ export function IoOverview() {
           workspaceId: workspace.id,
           prompt: prompt.trim(),
           mode,
+          routeStrategy,
+          requestedModelId: routeStrategy === "explicit_model" ? requestedModelId : undefined,
         });
         setPartnerResult(result);
         toast.success(`Routed through ${result.provider}.`);
@@ -173,6 +214,11 @@ export function IoOverview() {
   }
 
   const readySources = sources.filter((source) => source.status === "active");
+  const hasRoutableModels = Boolean(routeCatalog?.models.length);
+  const canRunPartner =
+    hasRoutableModels &&
+    !catalogLoading &&
+    (routeStrategy !== "explicit_model" || Boolean(requestedModelId));
 
   return (
     <div className="min-w-0 space-y-4 p-3 sm:p-4 lg:p-5">
@@ -334,10 +380,75 @@ export function IoOverview() {
                 />
               </div>
             ) : (
-              <p className="rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-[11px] leading-4 text-sky-950">
-                Partner calls are routed only through the I/O gateway. Browser code never receives a
-                provider credential. A configured partner source and entitlement are required.
-              </p>
+              <div className="space-y-2 rounded-xl border border-sky-200 bg-sky-50 p-3 text-sky-950">
+                <p className="text-[11px] leading-4">
+                  Partner calls are routed only through the I/O gateway. Browser code never receives
+                  a provider credential. A configured partner source and entitlement are required.
+                </p>
+                <div className="flex flex-wrap gap-1.5" aria-label="Partner routing strategy">
+                  {(
+                    [
+                      ["latest_affordable", "Latest + affordable"],
+                      ["lowest_cost", "Lowest cost"],
+                      ["explicit_model", "Choose a model"],
+                    ] as const
+                  ).map(([strategy, label]) => (
+                    <button
+                      key={strategy}
+                      type="button"
+                      className="app-chip text-[10px]"
+                      data-active={routeStrategy === strategy}
+                      aria-pressed={routeStrategy === strategy}
+                      disabled={
+                        routeCatalog ? !routeCatalog.routeStrategies.includes(strategy) : false
+                      }
+                      onClick={() => setRouteStrategy(strategy)}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                {routeStrategy === "explicit_model" ? (
+                  <label className="block text-[10px] font-semibold">
+                    Model approved for this workspace
+                    <select
+                      value={requestedModelId}
+                      disabled={!hasRoutableModels || catalogLoading}
+                      onChange={(event) => setRequestedModelId(event.target.value)}
+                      className="mt-1.5 h-9 w-full rounded-lg border border-sky-200 bg-background px-2 text-xs font-medium text-foreground outline-none focus-visible:ring-2 focus-visible:ring-[var(--saffron)]"
+                    >
+                      {!hasRoutableModels ? (
+                        <option value="">No eligible provider models</option>
+                      ) : null}
+                      {routeCatalog?.models.map((model) => (
+                        <option key={model.modelId} value={model.modelId}>
+                          {model.providerDisplayName} · {model.modelDisplayName} ({model.tier})
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ) : null}
+                {catalogLoading ? (
+                  <p className="text-[10px] text-sky-900/70">Checking approved routes…</p>
+                ) : !hasRoutableModels ? (
+                  <p className="text-[10px] leading-4 text-sky-900/75">
+                    No approved route is available for this workspace yet. It will appear after a
+                    verified endpoint, price card, active capacity grant and server secret are in
+                    place.
+                  </p>
+                ) : (
+                  <p className="text-[10px] text-sky-900/75">
+                    {routeCatalog?.models.length} reviewed model
+                    {routeCatalog?.models.length === 1 ? "" : "s"} available. Selection evidence is
+                    recorded without prompts or response text.
+                  </p>
+                )}
+                {routeCatalogError ? (
+                  <p className="text-[10px] leading-4 text-amber-900">
+                    Catalogue status: {routeCatalogError}
+                  </p>
+                ) : null}
+              </div>
             )}
 
             <div className="relative">
@@ -360,7 +471,12 @@ export function IoOverview() {
                 <Button
                   type="button"
                   size="sm"
-                  disabled={!workspace || !prompt.trim() || running}
+                  disabled={
+                    !workspace ||
+                    !prompt.trim() ||
+                    running ||
+                    (path === "partner" && !canRunPartner)
+                  }
                   onClick={runSession}
                 >
                   {running ? <LoaderCircle className="animate-spin" /> : <Send />}
@@ -637,7 +753,38 @@ function RunResult({
       <p className="mt-2 max-h-44 overflow-y-auto whitespace-pre-wrap text-xs leading-5 text-emerald-950/85">
         {partner?.content ?? terminal?.content}
       </p>
+      {partner ? (
+        <div className="mt-3 grid gap-2 border-t border-emerald-200/80 pt-2.5 text-[10px] text-emerald-950/80 sm:grid-cols-2 lg:grid-cols-4">
+          <RouteFact label="Receipt" value={partner.receiptId} />
+          <RouteFact
+            label="Selection"
+            value={
+              partner.modelSelection === "latest_affordable"
+                ? "Latest + affordable"
+                : partner.modelSelection === "lowest_cost"
+                  ? "Lowest cost"
+                  : "Chosen model"
+            }
+          />
+          <RouteFact
+            label="Capacity"
+            value={`${partner.route.capacityMode}${partner.route.regionCode ? ` · ${partner.route.regionCode}` : ""}`}
+          />
+          <RouteFact label="Fallbacks" value={String(partner.route.fallbackCount)} />
+        </div>
+      ) : null}
     </section>
+  );
+}
+
+function RouteFact({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0">
+      <p className="font-semibold uppercase tracking-[0.1em] text-emerald-900/65">{label}</p>
+      <p className="mt-0.5 truncate font-medium text-emerald-950" title={value}>
+        {value}
+      </p>
+    </div>
   );
 }
 

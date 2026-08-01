@@ -228,7 +228,7 @@ export const removeChapterMember = async ({
   if (!userData.user) throw new Error("Unauthorized");
 
   // Use SECURITY DEFINER function to bypass self-referencing RLS
-  const { error } = await supabase.rpc("lead_remove_chapter_member" as any, {
+  const { error } = await supabase.rpc("lead_remove_chapter_member", {
     _chapter_id: data.chapterId,
     _target_user_id: data.targetUserId,
   });
@@ -441,30 +441,30 @@ export const getLeadInbox = async () => {
 };
 
 export const approveStory = async ({ data }: { data: { storyId: string } }) => {
-  const { error } = await (supabase.rpc as any)("lead_approve_story", { _story_id: data.storyId });
+  const { error } = await supabase.rpc("lead_approve_story", { _story_id: data.storyId });
   if (error) throw new Error(error.message);
   return { ok: true };
 };
 
 export const rejectStory = async ({ data }: { data: { storyId: string; reason?: string } }) => {
-  const { error } = await (supabase.rpc as any)("lead_reject_story", {
+  const { error } = await supabase.rpc("lead_reject_story", {
     _story_id: data.storyId,
-    _reason: data.reason ?? null,
+    _reason: data.reason,
   });
   if (error) throw new Error(error.message);
   return { ok: true };
 };
 
 export const approveEvent = async ({ data }: { data: { eventId: string } }) => {
-  const { error } = await (supabase.rpc as any)("lead_approve_event", { _event_id: data.eventId });
+  const { error } = await supabase.rpc("lead_approve_event", { _event_id: data.eventId });
   if (error) throw new Error(error.message);
   return { ok: true };
 };
 
 export const rejectEvent = async ({ data }: { data: { eventId: string; reason?: string } }) => {
-  const { error } = await (supabase.rpc as any)("lead_reject_event", {
+  const { error } = await supabase.rpc("lead_reject_event", {
     _event_id: data.eventId,
-    _reason: data.reason ?? null,
+    _reason: data.reason,
   });
   if (error) throw new Error(error.message);
   return { ok: true };

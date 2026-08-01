@@ -3,16 +3,24 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { Bell, BellDot, CheckCircle2 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { getNotifications, getUnreadNotificationCount, markNotificationsRead } from "@/server/notification.functions";
+import {
+  getNotifications,
+  getUnreadNotificationCount,
+  markNotificationsRead,
+} from "@/server/notification.functions";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/errors";
 
 const SETTINGS_KEY = "indus-orbit:settings";
+type NotificationItem = Awaited<ReturnType<typeof getNotifications>>[number];
 
 function readQuietNotifications() {
   if (typeof window === "undefined") return false;
   try {
-    return Boolean(JSON.parse(window.localStorage.getItem(SETTINGS_KEY) ?? "{}").quietNotifications);
+    return Boolean(
+      JSON.parse(window.localStorage.getItem(SETTINGS_KEY) ?? "{}").quietNotifications,
+    );
   } catch {
     return false;
   }
@@ -23,7 +31,7 @@ export function NotificationSheet() {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [busy, setBusy] = useState(false);
   const [quietNotifications, setQuietNotifications] = useState(readQuietNotifications);
 
@@ -55,21 +63,39 @@ export function NotificationSheet() {
 
   // Load full notifications when opened
   useEffect(() => {
-    if (open) {
+    if (!open) return;
+
+    let active = true;
+    let markReadTimeout: ReturnType<typeof setTimeout> | undefined;
+    const loadNotifications = async () => {
       setBusy(true);
-      getNotifications().then((data) => {
+      try {
+        const data = await getNotifications();
+        if (!active) return;
         setNotifications(data);
-        setBusy(false);
-        // Mark as read after a delay
-        if (data.some(n => !n.is_read)) {
-          setTimeout(() => {
-            markNotificationsRead();
+
+        // Mark as read after a delay, allowing members time to notice new items.
+        if (data.some((notification) => !notification.is_read)) {
+          markReadTimeout = setTimeout(() => {
+            void markNotificationsRead();
             setUnreadCount(0);
-            setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+            setNotifications((previous) =>
+              previous.map((notification) => ({ ...notification, is_read: true })),
+            );
           }, 2000);
         }
-      });
-    }
+      } catch (error: unknown) {
+        if (active) console.error(getErrorMessage(error, "Unable to load notifications."));
+      } finally {
+        if (active) setBusy(false);
+      }
+    };
+
+    void Promise.resolve().then(loadNotifications);
+    return () => {
+      active = false;
+      if (markReadTimeout) clearTimeout(markReadTimeout);
+    };
   }, [open]);
 
   return (
@@ -95,7 +121,7 @@ export function NotificationSheet() {
           )}
         </Button>
       </SheetTrigger>
-      
+
       <SheetContent className="flex flex-col w-full sm:max-w-md p-0">
         <SheetHeader className="p-6 border-b border-border text-left">
           <SheetTitle className="font-display flex items-center gap-2">
@@ -116,35 +142,45 @@ export function NotificationSheet() {
             notifications.map((n) => {
               const isUnread = !n.is_read;
               return (
-                <Link 
-                  key={n.id} 
+                <Link
+                  key={n.id}
                   to={n.link || "/app"}
                   onClick={() => setOpen(false)}
                   className={cn(
                     "block p-4 rounded-xl border transition group",
                     isUnread && !quietNotifications
                       ? "bg-muted/30 border-[var(--saffron)]/50 hover:bg-muted/50"
-                      : "bg-card border-border hover:border-foreground/20"
+                      : "bg-card border-border hover:border-foreground/20",
                   )}
                 >
                   <div className="flex items-start gap-4">
                     <div className="mt-0.5 flex-shrink-0">
                       {isUnread ? (
-                        <span className={cn("flex h-2 w-2 mt-1.5 rounded-full", quietNotifications ? "bg-muted-foreground/35" : "bg-[var(--saffron)]")} />
+                        <span
+                          className={cn(
+                            "flex h-2 w-2 mt-1.5 rounded-full",
+                            quietNotifications ? "bg-muted-foreground/35" : "bg-[var(--saffron)]",
+                          )}
+                        />
                       ) : (
                         <span className="flex h-2 w-2 mt-1.5 rounded-full bg-border" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className={cn(
-                        "text-sm font-medium",
-                        isUnread ? "text-foreground" : "text-muted-foreground"
-                      )}>
+                      <p
+                        className={cn(
+                          "text-sm font-medium",
+                          isUnread ? "text-foreground" : "text-muted-foreground",
+                        )}
+                      >
                         {n.message}
                       </p>
                       <p className="mt-1 text-xs text-muted-foreground opacity-75">
                         {new Date(n.created_at).toLocaleString(undefined, {
-                          month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
+                          month: "short",
+                          day: "numeric",
+                          hour: "numeric",
+                          minute: "2-digit",
                         })}
                       </p>
                     </div>
@@ -159,7 +195,10 @@ export function NotificationSheet() {
           <Button
             variant="outline"
             className="w-full"
-            onClick={() => { setOpen(false); navigate({ to: '/app/notifications' }); }}
+            onClick={() => {
+              setOpen(false);
+              navigate({ to: "/app/notifications" });
+            }}
           >
             View Notification History
           </Button>

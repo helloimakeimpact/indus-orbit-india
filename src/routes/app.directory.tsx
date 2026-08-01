@@ -103,7 +103,7 @@ function DirectoryPage() {
   const [bookMentor, setBookMentor] = useState<Profile | null>(null);
   const [endorseCounts, setEndorseCounts] = useState<Record<string, number>>({});
   const [showVerificationPrompt, setShowVerificationPrompt] = useState(false);
-  const debounceRef = useRef<any>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<"directory" | "incoming" | "outgoing">("directory");
@@ -114,14 +114,16 @@ function DirectoryPage() {
   const [requestError, setRequestError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (search.segment) setFilter(search.segment);
+    if (search.segment) void Promise.resolve().then(() => setFilter(search.segment));
   }, [search.segment]);
 
   // Debounce search input
   useEffect(() => {
-    clearTimeout(debounceRef.current);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => setDebouncedSearch(searchQuery), 350);
-    return () => clearTimeout(debounceRef.current);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
   }, [searchQuery]);
 
   const fetchMembers = useCallback(
@@ -203,7 +205,7 @@ function DirectoryPage() {
   );
 
   useEffect(() => {
-    if (viewMode === "directory") fetchMembers(false);
+    if (viewMode === "directory") void Promise.resolve().then(() => fetchMembers(false));
   }, [filter, debouncedSearch, viewMode]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadRequests = useCallback(async () => {
@@ -268,7 +270,7 @@ function DirectoryPage() {
   }, [user, viewMode]);
 
   useEffect(() => {
-    if (viewMode !== "directory") loadRequests();
+    if (viewMode !== "directory") void Promise.resolve().then(loadRequests);
   }, [viewMode, loadRequests]);
 
   async function respond(r: Req, status: "accepted" | "declined" | "withdrawn") {
@@ -298,19 +300,19 @@ function DirectoryPage() {
   };
 
   useEffect(() => {
-    if (!user) {
-      setMeVerified(false);
-      return;
-    }
-    supabase
-      .from("profiles")
-      .select("is_verified")
-      .eq("user_id", user.id)
-      .maybeSingle()
-      .then(({ data, error }) => {
-        if (error) toast.error(error.message);
-        setMeVerified(Boolean(data?.is_verified));
-      });
+    void Promise.resolve().then(async () => {
+      if (!user) {
+        setMeVerified(false);
+        return;
+      }
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("is_verified")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (error) toast.error(error.message);
+      setMeVerified(Boolean(data?.is_verified));
+    });
   }, [user]);
 
   return (

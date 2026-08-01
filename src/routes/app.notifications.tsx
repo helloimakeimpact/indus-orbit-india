@@ -12,8 +12,10 @@ export const Route = createFileRoute("/app/notifications")({
   component: NotificationsPage,
 });
 
+type Notification = Awaited<ReturnType<typeof getNotifications>>[number];
+
 function NotificationsPage() {
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

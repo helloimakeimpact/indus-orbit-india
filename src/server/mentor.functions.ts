@@ -1,5 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { sendNotification } from "@/server/notification.functions";
+
+type MentorSessionUpdate = Database["public"]["Tables"]["mentor_sessions"]["Update"];
 
 const escapeHtml = (value: string) =>
   value
@@ -99,7 +102,10 @@ export const updateMentorSession = async ({
     throw new Error("Choose a valid session time.");
   }
 
-  const updatePayload: any = { status: data.status, updated_at: new Date().toISOString() };
+  const updatePayload: MentorSessionUpdate = {
+    status: data.status,
+    updated_at: new Date().toISOString(),
+  };
   if (data.meetingUrl !== undefined) updatePayload.meeting_url = data.meetingUrl.trim() || null;
   if (data.scheduledFor !== undefined) updatePayload.scheduled_for = data.scheduledFor;
 

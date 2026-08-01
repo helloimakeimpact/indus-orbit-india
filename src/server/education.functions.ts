@@ -1,6 +1,33 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 
-const sb = supabase as any;
+type CourseRow = Database["public"]["Tables"]["courses"]["Row"];
+type CourseUpdate = Database["public"]["Tables"]["courses"]["Update"];
+type CourseModuleRow = Database["public"]["Tables"]["course_modules"]["Row"];
+type CourseModuleUpdate = Database["public"]["Tables"]["course_modules"]["Update"];
+type LessonRow = Database["public"]["Tables"]["lessons"]["Row"];
+type LessonUpdate = Database["public"]["Tables"]["lessons"]["Update"];
+type QuizAttemptRow = Database["public"]["Tables"]["quiz_attempts"]["Row"];
+type QuizQuestionRow = Database["public"]["Tables"]["quiz_questions"]["Row"];
+type QuizOptionRow = Database["public"]["Tables"]["quiz_options"]["Row"];
+type ResourceUpdate = Database["public"]["Tables"]["resources"]["Update"];
+type CourseLessonSummary = Pick<
+  LessonRow,
+  | "id"
+  | "module_id"
+  | "slug"
+  | "title"
+  | "content"
+  | "duration_mins"
+  | "sort_order"
+  | "status"
+  | "video_url"
+>;
+type QuizQuestionSummary = Pick<QuizQuestionRow, "id" | "prompt" | "sort_order">;
+type QuizOptionSummary = Pick<QuizOptionRow, "id" | "question_id" | "label" | "sort_order">;
+type QuizQuestionWithOptions = QuizQuestionSummary & { options: QuizOptionSummary[] };
+
+const sb = supabase;
 const BUCKET = "education";
 
 // ---------- Reads ----------
@@ -13,7 +40,7 @@ export async function listPublishedCourses() {
     .order("sort_order", { ascending: true })
     .order("published_at", { ascending: false });
   if (error) throw new Error(error.message);
-  return (data ?? []) as any[];
+  return data ?? [];
 }
 
 export async function listAllCoursesForAdmin() {
@@ -23,7 +50,7 @@ export async function listAllCoursesForAdmin() {
     .order("sort_order", { ascending: true })
     .order("created_at", { ascending: false });
   if (error) throw new Error(error.message);
-  return (data ?? []) as any[];
+  return data ?? [];
 }
 
 export async function getCourseBySlug(slug: string) {
@@ -41,12 +68,12 @@ export async function getCourseBySlug(slug: string) {
     .eq("course_id", course.id)
     .order("sort_order", { ascending: true });
 
-  const moduleIds = (modules ?? []).map((m: any) => m.id);
-  let lessons: any[] = [];
+  const moduleIds = (modules ?? []).map((module) => module.id);
+  let lessons: CourseLessonSummary[] = [];
   if (moduleIds.length) {
     const { data: ls } = await sb
       .from("lessons")
-      .select("id, module_id, slug, title, duration_mins, sort_order, status, video_url")
+      .select("id, module_id, slug, title, content, duration_mins, sort_order, status, video_url")
       .in("module_id", moduleIds)
       .order("sort_order", { ascending: true });
     lessons = ls ?? [];
@@ -64,14 +91,14 @@ export async function getCourseBySlug(slug: string) {
         "lesson_id",
         lessons.map((l) => l.id),
       );
-    progress = Object.fromEntries((prog ?? []).map((p: any) => [p.lesson_id, true]));
+    progress = Object.fromEntries((prog ?? []).map((entry) => [entry.lesson_id, true]));
   }
 
   return {
     course,
-    modules: (modules ?? []).map((m: any) => ({
-      ...m,
-      lessons: lessons.filter((l) => l.module_id === m.id),
+    modules: (modules ?? []).map((module) => ({
+      ...module,
+      lessons: lessons.filter((lesson) => lesson.module_id === module.id),
     })),
     progress,
   };
@@ -89,7 +116,7 @@ export async function getLessonBySlug(courseSlug: string, lessonSlug: string) {
     .from("course_modules")
     .select("id, title, sort_order")
     .eq("course_id", course.id);
-  const moduleIds = (modules ?? []).map((m: any) => m.id);
+  const moduleIds = (modules ?? []).map((module) => module.id);
   if (!moduleIds.length) return null;
 
   const { data: lesson } = await sb
@@ -105,33 +132,33 @@ export async function getLessonBySlug(courseSlug: string, lessonSlug: string) {
     sb.from("quizzes").select("*").eq("lesson_id", lesson.id).maybeSingle(),
   ]);
 
-  let questions: any[] = [];
+  let questions: QuizQuestionWithOptions[] = [];
   if (quiz) {
     const { data: qs } = await sb
       .from("quiz_questions")
       .select("id, prompt, sort_order")
       .eq("quiz_id", quiz.id)
       .order("sort_order", { ascending: true });
-    questions = qs ?? [];
-    if (questions.length) {
+    const questionRows = qs ?? [];
+    if (questionRows.length) {
       const { data: opts } = await sb
         .from("quiz_options")
         .select("id, question_id, label, sort_order")
         .in(
           "question_id",
-          questions.map((q) => q.id),
+          questionRows.map((question) => question.id),
         )
         .order("sort_order", { ascending: true });
-      questions = questions.map((q: any) => ({
-        ...q,
-        options: (opts ?? []).filter((o: any) => o.question_id === q.id),
+      questions = questionRows.map((question) => ({
+        ...question,
+        options: (opts ?? []).filter((option) => option.question_id === question.id),
       }));
     }
   }
 
   const { data: userData } = await supabase.auth.getUser();
   let completed = false;
-  let lastAttempt: any = null;
+  let lastAttempt: QuizAttemptRow | null = null;
   if (userData.user) {
     const { data: prog } = await sb
       .from("lesson_progress")
@@ -197,7 +224,7 @@ export async function submitQuiz(quizId: string, answers: Record<string, string>
   if (!quiz) throw new Error("Quiz not found");
 
   const { data: questions } = await sb.from("quiz_questions").select("id").eq("quiz_id", quizId);
-  const qIds = (questions ?? []).map((q: any) => q.id);
+  const qIds = (questions ?? []).map((question) => question.id);
   const { data: options } = await sb
     .from("quiz_options")
     .select("id, question_id, is_correct")
@@ -235,7 +262,7 @@ export async function listResources(opts: { query?: string; category?: string } 
   if (opts.query) q = q.ilike("title", `%${opts.query}%`);
   const { data, error } = await q;
   if (error) throw new Error(error.message);
-  return (data ?? []) as any[];
+  return data ?? [];
 }
 
 export async function listAllResourcesForAdmin() {
@@ -244,7 +271,7 @@ export async function listAllResourcesForAdmin() {
     .select("*")
     .order("created_at", { ascending: false });
   if (error) throw new Error(error.message);
-  return (data ?? []) as any[];
+  return data ?? [];
 }
 
 // ---------- Storage helpers ----------
@@ -252,7 +279,7 @@ export async function listAllResourcesForAdmin() {
 export async function uploadEducationFile(file: File, prefix: string) {
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) throw new Error("Sign in required");
-  const path = `${prefix}/${userData.user.id}/${Date.now()}-${file.name.replace(/[^\w.\-]+/g, "_")}`;
+  const path = `${prefix}/${userData.user.id}/${Date.now()}-${file.name.replace(/[^\w.-]+/g, "_")}`;
   const { error } = await supabase.storage.from(BUCKET).upload(path, file, {
     cacheControl: "3600",
     upsert: false,
@@ -287,7 +314,7 @@ export async function createCourse(input: {
   return data;
 }
 
-export async function updateCourse(id: string, patch: Record<string, any>) {
+export async function updateCourse(id: string, patch: CourseUpdate) {
   const { error } = await sb.from("courses").update(patch).eq("id", id);
   if (error) throw new Error(error.message);
 }
@@ -308,7 +335,7 @@ export async function createModule(input: {
   return data;
 }
 
-export async function updateModule(id: string, patch: Record<string, any>) {
+export async function updateModule(id: string, patch: CourseModuleUpdate) {
   const { error } = await sb.from("course_modules").update(patch).eq("id", id);
   if (error) throw new Error(error.message);
 }
@@ -332,7 +359,7 @@ export async function createLesson(input: {
   return data;
 }
 
-export async function updateLesson(id: string, patch: Record<string, any>) {
+export async function updateLesson(id: string, patch: LessonUpdate) {
   const { error } = await sb.from("lessons").update(patch).eq("id", id);
   if (error) throw new Error(error.message);
 }
@@ -385,7 +412,7 @@ export async function createResource(input: {
   return data;
 }
 
-export async function updateResource(id: string, patch: Record<string, any>) {
+export async function updateResource(id: string, patch: ResourceUpdate) {
   const { error } = await sb.from("resources").update(patch).eq("id", id);
   if (error) throw new Error(error.message);
 }
@@ -409,8 +436,8 @@ export async function getQuizForEditing(lessonId: string) {
     .select("*")
     .eq("quiz_id", quiz.id)
     .order("sort_order", { ascending: true });
-  const qIds = (qs ?? []).map((q: any) => q.id);
-  let opts: any[] = [];
+  const qIds = (qs ?? []).map((question) => question.id);
+  let opts: QuizOptionRow[] = [];
   if (qIds.length) {
     const { data: os } = await sb
       .from("quiz_options")
@@ -421,9 +448,9 @@ export async function getQuizForEditing(lessonId: string) {
   }
   return {
     quiz,
-    questions: (qs ?? []).map((q: any) => ({
-      ...q,
-      options: opts.filter((o) => o.question_id === q.id),
+    questions: (qs ?? []).map((question) => ({
+      ...question,
+      options: opts.filter((option) => option.question_id === question.id),
     })),
   };
 }

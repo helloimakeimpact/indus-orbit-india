@@ -64,7 +64,8 @@ export function SuspendDialog({
         <DialogHeader>
           <DialogTitle>Suspend {userName}?</DialogTitle>
           <DialogDescription>
-            They will be hidden from the directory and blocked from sending requests, posting, or endorsing.
+            They will be hidden from the directory and blocked from sending requests, posting, or
+            endorsing.
           </DialogDescription>
         </DialogHeader>
         <Textarea
@@ -74,8 +75,12 @@ export function SuspendDialog({
           rows={3}
         />
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={submit} disabled={busy}>{busy ? "Working…" : "Suspend"}</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button onClick={submit} disabled={busy}>
+            {busy ? "Working…" : "Suspend"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

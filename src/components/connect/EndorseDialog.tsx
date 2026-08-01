@@ -44,7 +44,8 @@ export function EndorseDialog({
     });
     setBusy(false);
     if (error) {
-      if (error.code === "23505") return toast.error("You've already endorsed this member for that segment");
+      if (error.code === "23505")
+        return toast.error("You've already endorsed this member for that segment");
       return toast.error(error.message);
     }
     toast.success("Endorsement added");
@@ -86,8 +87,12 @@ export function EndorseDialog({
           rows={3}
         />
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={submit} disabled={busy}>{busy ? "Saving…" : "Endorse"}</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button onClick={submit} disabled={busy}>
+            {busy ? "Saving…" : "Endorse"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

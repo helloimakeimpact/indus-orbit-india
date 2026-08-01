@@ -33,7 +33,11 @@ export const Route = createRootRoute({
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Indus Orbit — A general intelligence company for India" },
-      { name: "description", content: "Indus Orbit builds AI tools and human networks that connect India's youth, experts, founders and the diaspora into one orbit." },
+      {
+        name: "description",
+        content:
+          "Indus Orbit builds AI tools and human networks that connect India's youth, experts, founders and the diaspora into one orbit.",
+      },
       { name: "author", content: "Indus Orbit" },
       { property: "og:type", content: "website" },
     ],

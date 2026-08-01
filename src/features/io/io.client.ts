@@ -33,13 +33,233 @@ export type IoAuditEvent = {
 
 export type PartnerRunResult = {
   requestId: string;
+  receiptId: string;
   provider: string;
   model: string;
-  modelSelection?: "latest_affordable";
+  modelSelection: IoRouteStrategy;
   content: string;
   usage: { inputTokens?: number; outputTokens?: number } | null;
   capacitySource: string;
+  route: IoRouteDisclosure;
 };
+
+export type IoRouteStrategy = "latest_affordable" | "lowest_cost" | "explicit_model";
+
+export type IoRoutableModel = {
+  modelId: string;
+  providerKey: string;
+  providerDisplayName: string;
+  providerModelId: string;
+  modelDisplayName: string;
+  tier: "economy" | "balanced" | "premium";
+  capacityMode: string;
+  regionCode: string | null;
+  residencyCountryCode: string | null;
+  retentionClass: string;
+  currencyCode: string;
+  capabilityVersion: number;
+  priceVersion: number;
+};
+
+export type IoRouteCatalog = {
+  routeStrategies: IoRouteStrategy[];
+  models: IoRoutableModel[];
+};
+
+export type IoRouteDisclosure = {
+  providerKey: string;
+  modelId: string;
+  endpointKey: string;
+  capacityMode: string;
+  regionCode: string | null;
+  residencyCountryCode: string | null;
+  retentionClass: string;
+  estimatedCostNanos: number;
+  currencyCode: string;
+  fallbackCount: number;
+};
+
+type UnknownRecord = Record<string, unknown>;
+
+const routeStrategies: ReadonlySet<IoRouteStrategy> = new Set([
+  "latest_affordable",
+  "lowest_cost",
+  "explicit_model",
+]);
+
+function asRecord(value: unknown): UnknownRecord | null {
+  return value !== null && typeof value === "object" && !Array.isArray(value)
+    ? (value as UnknownRecord)
+    : null;
+}
+
+function readString(value: UnknownRecord, key: string): string | null {
+  const candidate = value[key];
+  return typeof candidate === "string" && candidate.trim() ? candidate : null;
+}
+
+function readNullableString(value: UnknownRecord, key: string): string | null {
+  return value[key] === null ? null : readString(value, key);
+}
+
+function readNonNegativeInteger(value: UnknownRecord, key: string): number | null {
+  const candidate = value[key];
+  return typeof candidate === "number" && Number.isSafeInteger(candidate) && candidate >= 0
+    ? candidate
+    : null;
+}
+
+function responseError(value: unknown, fallback: string) {
+  const response = asRecord(value);
+  return response ? (readString(response, "error") ?? fallback) : fallback;
+}
+
+function parseRouteStrategy(value: unknown): IoRouteStrategy | null {
+  return typeof value === "string" && routeStrategies.has(value as IoRouteStrategy)
+    ? (value as IoRouteStrategy)
+    : null;
+}
+
+function parseRoutableModel(value: unknown): IoRoutableModel | null {
+  const model = asRecord(value);
+  if (!model) return null;
+
+  const tier = readString(model, "tier");
+  if (tier !== "economy" && tier !== "balanced" && tier !== "premium") return null;
+
+  const required = [
+    "modelId",
+    "providerKey",
+    "providerDisplayName",
+    "providerModelId",
+    "modelDisplayName",
+    "capacityMode",
+    "retentionClass",
+    "currencyCode",
+  ].map((key) => readString(model, key));
+  const capabilityVersion = readNonNegativeInteger(model, "capabilityVersion");
+  const priceVersion = readNonNegativeInteger(model, "priceVersion");
+  if (required.some((item) => !item) || capabilityVersion === null || priceVersion === null)
+    return null;
+
+  const regionCode = readNullableString(model, "regionCode");
+  const residencyCountryCode = readNullableString(model, "residencyCountryCode");
+  if (regionCode === null && model.regionCode !== null) return null;
+  if (residencyCountryCode === null && model.residencyCountryCode !== null) return null;
+
+  return {
+    modelId: required[0]!,
+    providerKey: required[1]!,
+    providerDisplayName: required[2]!,
+    providerModelId: required[3]!,
+    modelDisplayName: required[4]!,
+    tier,
+    capacityMode: required[5]!,
+    regionCode,
+    residencyCountryCode,
+    retentionClass: required[6]!,
+    currencyCode: required[7]!,
+    capabilityVersion,
+    priceVersion,
+  };
+}
+
+function parseRouteDisclosure(value: unknown): IoRouteDisclosure | null {
+  const route = asRecord(value);
+  if (!route) return null;
+  const required = [
+    "providerKey",
+    "modelId",
+    "endpointKey",
+    "capacityMode",
+    "retentionClass",
+    "currencyCode",
+  ].map((key) => readString(route, key));
+  const estimatedCostNanos = readNonNegativeInteger(route, "estimatedCostNanos");
+  const fallbackCount = readNonNegativeInteger(route, "fallbackCount");
+  const regionCode = readNullableString(route, "regionCode");
+  const residencyCountryCode = readNullableString(route, "residencyCountryCode");
+  if (
+    required.some((item) => !item) ||
+    estimatedCostNanos === null ||
+    fallbackCount === null ||
+    (regionCode === null && route.regionCode !== null) ||
+    (residencyCountryCode === null && route.residencyCountryCode !== null)
+  ) {
+    return null;
+  }
+  return {
+    providerKey: required[0]!,
+    modelId: required[1]!,
+    endpointKey: required[2]!,
+    capacityMode: required[3]!,
+    regionCode,
+    residencyCountryCode,
+    retentionClass: required[4]!,
+    currencyCode: required[5]!,
+    estimatedCostNanos,
+    fallbackCount,
+  };
+}
+
+function parsePartnerRunResult(value: unknown): PartnerRunResult {
+  const response = asRecord(value);
+  if (!response || response.ok !== true) {
+    throw new Error(responseError(value, "The partner route could not run."));
+  }
+
+  const required = ["requestId", "receiptId", "provider", "model", "content", "capacitySource"].map(
+    (key) => readString(response, key),
+  );
+  const modelSelection = parseRouteStrategy(response.modelSelection);
+  const route = parseRouteDisclosure(response.route);
+  if (required.some((item) => !item) || !modelSelection || !route) {
+    throw new Error("The I/O gateway returned an incomplete route receipt.");
+  }
+
+  const usageRecord = response.usage === null ? null : asRecord(response.usage);
+  const inputTokens = usageRecord
+    ? (readNonNegativeInteger(usageRecord, "inputTokens") ?? undefined)
+    : undefined;
+  const outputTokens = usageRecord
+    ? (readNonNegativeInteger(usageRecord, "outputTokens") ?? undefined)
+    : undefined;
+  if (response.usage !== null && !usageRecord) {
+    throw new Error("The I/O gateway returned an invalid usage receipt.");
+  }
+
+  return {
+    requestId: required[0]!,
+    receiptId: required[1]!,
+    provider: required[2]!,
+    model: required[3]!,
+    modelSelection,
+    content: required[4]!,
+    usage: usageRecord ? { inputTokens, outputTokens } : null,
+    capacitySource: required[5]!,
+    route,
+  };
+}
+
+function parseRouteCatalog(value: unknown): IoRouteCatalog {
+  const response = asRecord(value);
+  if (!response || response.ok !== true) {
+    throw new Error(responseError(value, "The provider catalogue could not load."));
+  }
+  const rawStrategies = Array.isArray(response.routeStrategies) ? response.routeStrategies : [];
+  const parsedStrategies = rawStrategies
+    .map(parseRouteStrategy)
+    .filter((strategy): strategy is IoRouteStrategy => strategy !== null);
+  const rawModels = Array.isArray(response.models) ? response.models : [];
+  const models = rawModels
+    .map(parseRoutableModel)
+    .filter((model): model is IoRoutableModel => model !== null);
+
+  return {
+    routeStrategies: [...new Set(parsedStrategies)],
+    models: [...new Map(models.map((model) => [model.modelId, model])).values()],
+  };
+}
 
 export async function getMyIoWorkspaces(): Promise<IoWorkspace[]> {
   const { data, error } = await supabase
@@ -135,6 +355,8 @@ export async function runPartnerRoute(input: {
   workspaceId: string;
   prompt: string;
   mode: "observe" | "plan" | "build" | "run";
+  routeStrategy: IoRouteStrategy;
+  requestedModelId?: string;
 }): Promise<PartnerRunResult> {
   const { data, error } = await supabase.functions.invoke("io-gateway", {
     body: {
@@ -142,12 +364,24 @@ export async function runPartnerRoute(input: {
       workspace_id: input.workspaceId,
       mode: input.mode,
       messages: [{ role: "user", content: input.prompt }],
+      route_strategy: input.routeStrategy,
+      ...(input.routeStrategy === "explicit_model"
+        ? { requested_model_id: input.requestedModelId }
+        : {}),
     },
   });
 
   if (error) throw new Error(error.message);
-  if (!data?.ok) throw new Error(data?.error ?? "The partner route could not run.");
-  return data as PartnerRunResult;
+  return parsePartnerRunResult(data);
+}
+
+export async function getIoRouteCatalog(workspaceId: string): Promise<IoRouteCatalog> {
+  const { data, error } = await supabase.functions.invoke("io-gateway", {
+    body: { action: "catalog", workspace_id: workspaceId },
+  });
+
+  if (error) throw new Error(error.message);
+  return parseRouteCatalog(data);
 }
 
 export async function recordLocalOpenCodeSession(input: {

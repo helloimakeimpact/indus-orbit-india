@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SiteShell } from "@/components/site/SiteShell";
 import contactImg from "@/assets/contact-rooftop.jpg";
 import { cn } from "@/lib/utils";
+import { getHumanCheck, nextHumanCheckIndex } from "@/lib/human-check";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
@@ -33,9 +34,9 @@ type Role = "Youth" | "Expert" | "Investor" | "Partner";
 function ContactPage() {
   const [role, setRole] = useState<Role>("Youth");
   const [submitting, setSubmitting] = useState(false);
-  const [num1, setNum1] = useState(Math.floor(Math.random() * 10) + 1);
-  const [num2, setNum2] = useState(Math.floor(Math.random() * 10) + 1);
+  const [humanCheckIndex, setHumanCheckIndex] = useState(0);
   const [answer, setAnswer] = useState("");
+  const { left: num1, right: num2 } = getHumanCheck(humanCheckIndex);
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -71,8 +72,7 @@ function ContactPage() {
     } else {
       (e.target as HTMLFormElement).reset();
       setAnswer("");
-      setNum1(Math.floor(Math.random() * 10) + 1);
-      setNum2(Math.floor(Math.random() * 10) + 1);
+      setHumanCheckIndex(nextHumanCheckIndex);
       toast.success("Thanks — we'll be in touch soon.", {
         description: "Your message has reached the orbit.",
       });

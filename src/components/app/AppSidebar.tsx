@@ -143,9 +143,12 @@ function readSidebarPrefs() {
 
 function saveSidebarExpanded(expanded: boolean) {
   if (typeof window === "undefined") return;
-  let stored = {};
+  let stored: Record<string, unknown>;
   try {
-    stored = JSON.parse(window.localStorage.getItem(SETTINGS_KEY) ?? "{}");
+    stored = JSON.parse(window.localStorage.getItem(SETTINGS_KEY) ?? "{}") as Record<
+      string,
+      unknown
+    >;
   } catch {
     stored = {};
   }

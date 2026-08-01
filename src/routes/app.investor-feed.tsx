@@ -24,7 +24,11 @@ type FounderSignal = {
   country: string | null;
   linkedin_url: string | null;
   website_url: string | null;
-  segment_details: any;
+  segment_details: {
+    company?: string;
+    stage?: string;
+    sector?: string;
+  } | null;
 };
 
 function InvestorFeedPage() {

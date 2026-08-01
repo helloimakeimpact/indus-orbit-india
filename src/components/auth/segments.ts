@@ -20,10 +20,7 @@ export const SEGMENT_LIST: Segment[] = [
   "researcher",
 ];
 
-export const SEGMENT_META: Record<
-  Segment,
-  { label: string; blurb: string; icon: LucideIcon }
-> = {
+export const SEGMENT_META: Record<Segment, { label: string; blurb: string; icon: LucideIcon }> = {
   youth: {
     label: "Youth",
     blurb: "Student or first-generation builder finding your craft.",

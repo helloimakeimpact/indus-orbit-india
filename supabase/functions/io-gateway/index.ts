@@ -6,13 +6,14 @@ import {
   requireWorkspaceMembership,
 } from "../_shared/io/auth.ts";
 import { asGatewayError, GatewayError } from "../_shared/io/errors.ts";
-import { requireActivePartnerEntitlement } from "../_shared/io/policy.ts";
+import { getActiveCapacityEntitlements } from "../_shared/io/policy.ts";
 import {
-  readPartnerConfig,
-  resolveLatestAffordableModel,
-  sendOpenAiCompatibleChat,
+  loadReadyProviderConnections,
+  resolveProviderRoute,
+  sendProviderChat,
 } from "../_shared/io/provider-adapter.ts";
-import type { PartnerResult } from "../_shared/io/types.ts";
+import { writeRouteReceipt, type ProviderAttempt } from "../_shared/io/receipt.ts";
+import type { PartnerResult, RouteSelection } from "../_shared/io/types.ts";
 import { parseGatewayRequest } from "../_shared/io/validation.ts";
 
 const allowedOrigins = new Set([
@@ -71,16 +72,47 @@ Deno.serve(async (request) => {
     const actor = await authenticateGatewayActor(authClient);
     await requireWorkspaceMembership(admin, body.workspaceId, actor.id);
 
+    const entitlements = await getActiveCapacityEntitlements(admin, body.workspaceId);
+    const entitledSourceIds = new Set(entitlements.map((entitlement) => entitlement.sourceId));
+
     if (body.action === "status") {
-      const configured = Boolean(readPartnerConfig());
+      const readyConnectionCount = (await loadReadyProviderConnections(admin)).filter(
+        (connection) => entitledSourceIds.has(connection.capacitySourceId),
+      ).length;
       return json(request, {
         ok: true,
         partner: {
-          configured,
-          mode: configured ? "registry-selected" : "needs-server-secret",
-          modelSelection: configured ? "latest-affordable" : null,
+          configured: readyConnectionCount > 0,
+          mode: "registry-selected",
+          readyConnectionCount,
+          modelSelection: "latest-affordable",
         },
         opencode: { mode: "local-direct", loopbackOnly: true },
+      });
+    }
+
+    if (body.action === "catalog") {
+      const connections = (await loadReadyProviderConnections(admin)).filter((connection) =>
+        entitledSourceIds.has(connection.capacitySourceId),
+      );
+      return json(request, {
+        ok: true,
+        routeStrategies: ["latest_affordable", "lowest_cost", "explicit_model"],
+        models: connections.map((connection) => ({
+          modelId: connection.modelId,
+          providerKey: connection.providerKey,
+          providerDisplayName: connection.providerDisplayName,
+          providerModelId: connection.providerModelId,
+          modelDisplayName: connection.modelDisplayName,
+          tier: connection.autoRouteTier,
+          capacityMode: connection.capacityMode,
+          regionCode: connection.regionCode,
+          residencyCountryCode: connection.residencyCountryCode,
+          retentionClass: connection.retentionClass,
+          currencyCode: connection.currencyCode,
+          capabilityVersion: connection.capabilityVersion,
+          priceVersion: connection.priceVersion,
+        })),
       });
     }
 
@@ -100,20 +132,14 @@ Deno.serve(async (request) => {
       return json(request, { ok: true });
     }
 
-    const config = readPartnerConfig();
-    if (!config) {
-      throw new GatewayError(
-        "not_configured",
-        503,
-        "Partner routing is awaiting secure provider configuration.",
-      );
-    }
-
-    const entitlement = await requireActivePartnerEntitlement(admin, body.workspaceId);
     const id = requestId();
     const messages = body.messages!;
     const mode = body.mode ?? "plan";
-    const selectedModel = await resolveLatestAffordableModel(admin, config, messages);
+    const selection = await resolveProviderRoute(admin, messages, {
+      strategy: body.routeStrategy,
+      requestedModelId: body.requestedModelId,
+      entitledCapacitySourceIds: entitledSourceIds,
+    });
 
     await writeIoAuditEvent(admin, {
       workspaceId: body.workspaceId,
@@ -122,55 +148,122 @@ Deno.serve(async (request) => {
       eventType: "io.partner.requested",
       requestId: id,
       payload: {
-        capacity_source: entitlement.sourceKey,
-        model: selectedModel.model,
-        model_selection: selectedModel.strategy,
-        model_tier: selectedModel.tier,
-        model_release_date: selectedModel.releasedAt,
-        model_candidate_count: selectedModel.candidateCount,
+        capacity_source_id: selection.connection.capacitySourceId,
+        provider_key: selection.connection.providerKey,
+        model: selection.connection.providerModelId,
+        model_selection: selection.strategy,
+        model_tier: selection.tier,
+        model_release_date: selection.connection.modelReleaseDate,
+        model_candidate_count: selection.candidateCount,
+        estimated_cost_nanos: selection.estimatedCostNanos,
+        price_currency: selection.connection.currencyCode,
         mode,
         message_count: messages.length,
         character_count: messages.reduce((sum, message) => sum + message.content.length, 0),
       },
     });
 
-    let result: PartnerResult;
-    try {
-      result = await sendOpenAiCompatibleChat(config, selectedModel.model, messages);
-    } catch (error) {
-      const gatewayError = asGatewayError(error);
+    const attempts: ProviderAttempt[] = [];
+    let result: PartnerResult | null = null;
+    let selectedRoute: RouteSelection | null = null;
+    let lastError: GatewayError | null = null;
+
+    for (const candidate of selection.routeCandidates) {
+      const startedAt = new Date().toISOString();
       try {
+        const candidateResult = await sendProviderChat(candidate.connection, messages);
+        attempts.push({
+          connection: candidate.connection,
+          startedAt,
+          completedAt: new Date().toISOString(),
+          state: "completed",
+          providerRequestId: candidateResult.providerRequestId,
+          inputTokens: candidateResult.usage.inputTokens,
+          outputTokens: candidateResult.usage.outputTokens,
+        });
+        result = candidateResult;
+        selectedRoute = {
+          ...selection,
+          connection: candidate.connection,
+          estimatedCostNanos: candidate.estimatedCostNanos,
+        };
+        break;
+      } catch (error) {
+        const gatewayError = asGatewayError(error);
+        attempts.push({
+          connection: candidate.connection,
+          startedAt,
+          completedAt: new Date().toISOString(),
+          state: "failed",
+          errorCode: gatewayError.code,
+          upstreamStatus: gatewayError.upstreamStatus,
+        });
+        lastError = gatewayError;
+        if (
+          gatewayError.code !== "upstream_failure" &&
+          gatewayError.code !== "rate_limited" &&
+          gatewayError.code !== "not_configured"
+        ) {
+          break;
+        }
+      }
+    }
+
+    if (!result || !selectedRoute) {
+      const failure =
+        lastError ?? new GatewayError("upstream_failure", 502, "No provider route completed.");
+      try {
+        const receiptId = await writeRouteReceipt(admin, {
+          workspaceId: body.workspaceId,
+          requestId: id,
+          actorUserId: actor.id,
+          selection,
+          resultState: "failed",
+          attempts,
+        });
         await writeIoAuditEvent(admin, {
           workspaceId: body.workspaceId,
           actorKind: "provider",
           eventType: "io.partner.failed",
           requestId: id,
           payload: {
-            capacity_source: entitlement.sourceKey,
-            model: selectedModel.model,
-            model_selection: selectedModel.strategy,
-            status: gatewayError.status,
-            code: gatewayError.code,
+            receipt_id: receiptId,
+            attempted_count: attempts.length,
+            code: failure.code,
+            status: failure.status,
           },
         });
-      } catch (auditError) {
+      } catch (receiptError) {
         console.error(
-          "io-gateway failure audit",
-          auditError instanceof Error ? auditError.message : "unknown",
+          "io-gateway failed receipt",
+          receiptError instanceof Error ? receiptError.message : "unknown",
         );
       }
-      throw gatewayError;
+      throw failure;
     }
 
+    const receiptId = await writeRouteReceipt(admin, {
+      workspaceId: body.workspaceId,
+      requestId: id,
+      actorUserId: actor.id,
+      selection: selectedRoute,
+      resultState: "completed",
+      inputTokens: result.usage.inputTokens,
+      outputTokens: result.usage.outputTokens,
+      attempts,
+    });
     await writeIoAuditEvent(admin, {
       workspaceId: body.workspaceId,
       actorKind: "provider",
       eventType: "io.partner.completed",
       requestId: id,
       payload: {
-        capacity_source: entitlement.sourceKey,
-        model: selectedModel.model,
-        model_selection: selectedModel.strategy,
+        receipt_id: receiptId,
+        capacity_source_id: selectedRoute.connection.capacitySourceId,
+        provider_key: selectedRoute.connection.providerKey,
+        model: selectedRoute.connection.providerModelId,
+        model_selection: selectedRoute.strategy,
+        fallback_count: Math.max(0, attempts.length - 1),
         input_tokens: result.usage.inputTokens ?? null,
         output_tokens: result.usage.outputTokens ?? null,
       },
@@ -179,12 +272,28 @@ Deno.serve(async (request) => {
     return json(request, {
       ok: true,
       requestId: id,
-      provider: entitlement.displayName,
-      model: selectedModel.model,
-      modelSelection: selectedModel.strategy,
+      receiptId,
+      provider: selectedRoute.connection.providerDisplayName,
+      model: selectedRoute.connection.providerModelId,
+      modelSelection: selectedRoute.strategy,
       content: result.content,
       usage: result.usage,
-      capacitySource: entitlement.sourceKey,
+      capacitySource:
+        entitlements.find(
+          (entitlement) => entitlement.sourceId === selectedRoute.connection.capacitySourceId,
+        )?.sourceKey ?? "unknown",
+      route: {
+        providerKey: selectedRoute.connection.providerKey,
+        modelId: selectedRoute.connection.modelId,
+        endpointKey: selectedRoute.connection.endpointKey,
+        capacityMode: selectedRoute.connection.capacityMode,
+        regionCode: selectedRoute.connection.regionCode,
+        residencyCountryCode: selectedRoute.connection.residencyCountryCode,
+        retentionClass: selectedRoute.connection.retentionClass,
+        estimatedCostNanos: selectedRoute.estimatedCostNanos,
+        currencyCode: selectedRoute.connection.currencyCode,
+        fallbackCount: Math.max(0, attempts.length - 1),
+      },
     });
   } catch (error) {
     const gatewayError = asGatewayError(error);

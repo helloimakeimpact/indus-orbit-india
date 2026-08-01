@@ -10,7 +10,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { ExternalLink, Shield } from "lucide-react";
 
 export const Route = createFileRoute("/app/admin/reports")({
-  head: () => ({ meta: [{ title: "Reports — Indus Orbit" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({
+    meta: [{ title: "Reports — Indus Orbit" }, { name: "robots", content: "noindex" }],
+  }),
   component: ReportsPage,
 });
 
@@ -69,7 +71,10 @@ function ReportsPage() {
   const [note, setNote] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    if (!loading && !isAdmin) { toast.error("Admins only"); navigate({ to: "/app" }); }
+    if (!loading && !isAdmin) {
+      toast.error("Admins only");
+      navigate({ to: "/app" });
+    }
   }, [isAdmin, loading, navigate]);
 
   async function load() {
@@ -83,7 +88,9 @@ function ReportsPage() {
     setBusy(false);
   }
 
-  useEffect(() => { if (isAdmin) load(); }, [isAdmin, tab]);
+  useEffect(() => {
+    if (isAdmin) void Promise.resolve().then(load);
+  }, [isAdmin, tab]);
 
   async function resolve(r: Report, status: "actioned" | "dismissed") {
     if (!user) return;
@@ -110,7 +117,9 @@ function ReportsPage() {
   return (
     <div className="mx-auto w-full max-w-7xl">
       <h1 className="font-display text-3xl font-medium">Reports</h1>
-      <p className="mt-2 text-sm text-muted-foreground">Member-submitted flags on profiles, posts, requests, and endorsements.</p>
+      <p className="mt-2 text-sm text-muted-foreground">
+        Member-submitted flags on profiles, posts, requests, and endorsements.
+      </p>
 
       <div className="mt-6 flex flex-wrap gap-2">
         {TABS.map((t) => (
@@ -140,7 +149,8 @@ function ReportsPage() {
                 <div>
                   <Badge variant="secondary">{r.target_type}</Badge>
                   <p className="mt-2 text-xs text-muted-foreground">
-                    target id: {r.target_id.slice(0, 8)}… · reporter: {r.reporter_id.slice(0, 8)}… · {new Date(r.created_at).toLocaleString()}
+                    target id: {r.target_id.slice(0, 8)}… · reporter: {r.reporter_id.slice(0, 8)}… ·{" "}
+                    {new Date(r.created_at).toLocaleString()}
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -179,7 +189,9 @@ function ReportsPage() {
                   />
                   <div className="mt-3 flex flex-wrap gap-2">
                     <Button onClick={() => resolve(r, "actioned")}>Mark actioned</Button>
-                    <Button variant="outline" onClick={() => resolve(r, "dismissed")}>Dismiss</Button>
+                    <Button variant="outline" onClick={() => resolve(r, "dismissed")}>
+                      Dismiss
+                    </Button>
                   </div>
                 </>
               )}

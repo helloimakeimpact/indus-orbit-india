@@ -16,7 +16,10 @@ import {
   Target,
 } from "lucide-react";
 import { getCourseBySlug } from "@/server/education.functions";
+import { getErrorMessage } from "@/lib/errors";
 import { cn } from "@/lib/utils";
+
+type CourseDetail = Awaited<ReturnType<typeof getCourseBySlug>>;
 
 export const Route = createFileRoute("/app/education/$courseSlug/")({
   component: CoursePage,
@@ -25,7 +28,7 @@ export const Route = createFileRoute("/app/education/$courseSlug/")({
 function CoursePage() {
   const { courseSlug } = useParams({ from: "/app/education/$courseSlug/" });
   const navigate = useNavigate();
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<CourseDetail>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -33,8 +36,8 @@ function CoursePage() {
       try {
         const d = await getCourseBySlug(courseSlug);
         setData(d);
-      } catch (e: any) {
-        toast.error(e.message);
+      } catch (error) {
+        toast.error(getErrorMessage(error));
       } finally {
         setLoading(false);
       }
@@ -43,21 +46,17 @@ function CoursePage() {
 
   const modules = useMemo(
     () =>
-      (data?.modules ?? []).map((module: any) => ({
+      (data?.modules ?? []).map((module) => ({
         ...module,
-        lessons: (module.lessons ?? []).filter((lesson: any) => lesson.status === "published"),
+        lessons: module.lessons.filter((lesson) => lesson.status === "published"),
       })),
     [data],
   );
-  const allLessons = useMemo(() => modules.flatMap((module: any) => module.lessons), [modules]);
-  const done = allLessons.filter((lesson: any) => data?.progress?.[lesson.id]).length;
+  const allLessons = useMemo(() => modules.flatMap((module) => module.lessons), [modules]);
+  const done = allLessons.filter((lesson) => data?.progress[lesson.id]).length;
   const pct = allLessons.length ? Math.round((done / allLessons.length) * 100) : 0;
-  const totalMinutes = allLessons.reduce(
-    (sum: number, lesson: any) => sum + (lesson.duration_mins ?? 0),
-    0,
-  );
-  const nextLesson =
-    allLessons.find((lesson: any) => !data?.progress?.[lesson.id]) ?? allLessons[0];
+  const totalMinutes = allLessons.reduce((sum, lesson) => sum + (lesson.duration_mins ?? 0), 0);
+  const nextLesson = allLessons.find((lesson) => !data?.progress[lesson.id]) ?? allLessons[0];
 
   function openLesson(lessonSlug: string) {
     navigate({
@@ -133,7 +132,7 @@ function CoursePage() {
               No modules yet.
             </div>
           )}
-          {modules.map((module: any, moduleIndex: number) => (
+          {modules.map((module, moduleIndex) => (
             <section key={module.id} className="app-glass rounded-2xl p-3 sm:p-4">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                 <div>
@@ -158,7 +157,7 @@ function CoursePage() {
                     No lessons yet.
                   </p>
                 )}
-                {module.lessons.map((lesson: any, lessonIndex: number) => {
+                {module.lessons.map((lesson, lessonIndex) => {
                   const completed = !!data.progress[lesson.id];
                   return (
                     <button
@@ -217,9 +216,9 @@ function CoursePage() {
               Course map
             </p>
             <div className="mt-3 space-y-2">
-              {modules.map((module: any, index: number) => {
+              {modules.map((module, index) => {
                 const moduleDone = module.lessons.filter(
-                  (lesson: any) => data.progress[lesson.id],
+                  (lesson) => data.progress[lesson.id],
                 ).length;
                 const modulePct = module.lessons.length
                   ? Math.round((moduleDone / module.lessons.length) * 100)

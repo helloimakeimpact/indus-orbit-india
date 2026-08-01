@@ -50,9 +50,7 @@ function PostPage() {
     );
   }
 
-  const related = posts
-    .filter((p) => p.tag === post.tag && p.slug !== post.slug)
-    .slice(0, 3);
+  const related = posts.filter((p) => p.tag === post.tag && p.slug !== post.slug).slice(0, 3);
 
   return (
     <SiteShell>
@@ -149,7 +147,12 @@ function PostPage() {
                   params={{ slug: p.slug }}
                   className="group flex flex-col overflow-hidden rounded-3xl border border-border bg-card transition hover:-translate-y-1 hover:shadow-xl"
                 >
-                  <div className={cn("relative aspect-[16/10] w-full overflow-hidden bg-gradient-to-br", p.gradient)}>
+                  <div
+                    className={cn(
+                      "relative aspect-[16/10] w-full overflow-hidden bg-gradient-to-br",
+                      p.gradient,
+                    )}
+                  >
                     <img
                       src={tagImage[p.tag]}
                       alt=""

@@ -8,29 +8,47 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { VerifiedBadge } from "@/components/auth/VerifiedBadge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { getErrorMessage } from "@/lib/errors";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/app/mission-admin")({
-  head: () => ({ meta: [{ title: "Mission Admin — Indus Orbit" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({
+    meta: [{ title: "Mission Admin — Indus Orbit" }, { name: "robots", content: "noindex" }],
+  }),
   component: MissionAdminPage,
 });
 
+type AdminMission = Awaited<ReturnType<typeof getMyAdminMissions>>[number];
+type MissionMember = NonNullable<AdminMission["mission_members"]>[number];
+
 function MissionAdminPage() {
-  const [missions, setMissions] = useState<any[]>([]);
+  const [missions, setMissions] = useState<AdminMission[]>([]);
   const [busy, setBusy] = useState(true);
   const [search, setSearch] = useState("");
-  const [memberToRemove, setMemberToRemove] = useState<{ missionId: string; userId: string; name: string } | null>(null);
+  const [memberToRemove, setMemberToRemove] = useState<{
+    missionId: string;
+    userId: string;
+    name: string;
+  } | null>(null);
   const navigate = useNavigate();
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    void Promise.resolve().then(load);
+  }, []);
 
   async function load() {
     setBusy(true);
     try {
       const data = await getMyAdminMissions();
       setMissions(data);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to load missions");
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Failed to load missions"));
     } finally {
       setBusy(false);
     }
@@ -39,12 +57,14 @@ function MissionAdminPage() {
   async function handleRemove() {
     if (!memberToRemove) return;
     try {
-      await removeMissionMember({ data: { missionId: memberToRemove.missionId, targetUserId: memberToRemove.userId } });
+      await removeMissionMember({
+        data: { missionId: memberToRemove.missionId, targetUserId: memberToRemove.userId },
+      });
       toast.success(`${memberToRemove.name} removed from mission.`);
       setMemberToRemove(null);
       load();
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
     }
   }
 
@@ -56,7 +76,9 @@ function MissionAdminPage() {
         <Target className="mx-auto h-12 w-12 text-muted-foreground opacity-50 mb-4" />
         <h1 className="font-display text-3xl font-medium mb-2">No Missions Found</h1>
         <p className="text-muted-foreground mb-8">You are not currently a lead for any missions.</p>
-        <Button variant="outline" onClick={() => navigate({ to: "/app/missions" })}>Browse Missions</Button>
+        <Button variant="outline" onClick={() => navigate({ to: "/app/missions" })}>
+          Browse Missions
+        </Button>
       </div>
     );
   }
@@ -67,15 +89,13 @@ function MissionAdminPage() {
         <h1 className="font-display text-4xl font-semibold leading-tight text-[var(--indigo-night)]">
           Mission Administration
         </h1>
-        <p className="mt-2 text-foreground/70">
-          Manage members of the missions you lead.
-        </p>
+        <p className="mt-2 text-foreground/70">Manage members of the missions you lead.</p>
       </div>
 
       {missions.map((mission) => {
         const members = mission.mission_members || [];
-        const filtered = members.filter((m: any) =>
-          m.profiles?.display_name?.toLowerCase().includes(search.toLowerCase())
+        const filtered = members.filter((m: MissionMember) =>
+          m.profiles?.display_name?.toLowerCase().includes(search.toLowerCase()),
         );
 
         return (
@@ -84,12 +104,16 @@ function MissionAdminPage() {
               <div>
                 <h2 className="font-display text-2xl font-medium text-[var(--indigo-night)] flex items-center gap-3">
                   {mission.title}
-                  <Badge variant="secondary" className="text-xs uppercase tracking-wider">{members.length} members</Badge>
+                  <Badge variant="secondary" className="text-xs uppercase tracking-wider">
+                    {members.length} members
+                  </Badge>
                 </h2>
                 <p className="text-sm text-muted-foreground mt-1">{mission.theme}</p>
               </div>
               <Link to="/app/missions/$missionId" params={{ missionId: mission.id }}>
-                <Button variant="outline" size="sm">Open mission →</Button>
+                <Button variant="outline" size="sm">
+                  Open mission →
+                </Button>
               </Link>
             </div>
 
@@ -100,7 +124,12 @@ function MissionAdminPage() {
                 </h3>
                 <div className="relative w-full sm:w-64">
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input placeholder="Search members..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 bg-muted/50" />
+                  <Input
+                    placeholder="Search members..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="pl-9 bg-muted/50"
+                  />
                 </div>
               </div>
 
@@ -108,7 +137,7 @@ function MissionAdminPage() {
                 {filtered.length === 0 ? (
                   <p className="py-8 text-center text-muted-foreground">No members found.</p>
                 ) : (
-                  filtered.map((m: any) => (
+                  filtered.map((m: MissionMember) => (
                     <div key={m.user_id} className="flex items-center justify-between py-4 group">
                       <div className="flex items-center gap-4">
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--indigo-night)] text-sm font-semibold text-[var(--parchment)]">
@@ -116,13 +145,23 @@ function MissionAdminPage() {
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <Link to="/profile/$id" params={{ id: m.user_id }} className="font-semibold hover:text-[var(--indigo-night)] transition">
+                            <Link
+                              to="/profile/$id"
+                              params={{ id: m.user_id }}
+                              className="font-semibold hover:text-[var(--indigo-night)] transition"
+                            >
                               {m.profiles?.display_name || "Unknown"}
                             </Link>
                             {m.profiles?.is_verified && <VerifiedBadge />}
-                            {m.role === "lead" && <Badge className="bg-[var(--saffron)] text-[var(--indigo-night)] border-none text-[10px] uppercase tracking-wider py-0 h-4">Lead</Badge>}
+                            {m.role === "lead" && (
+                              <Badge className="bg-[var(--saffron)] text-[var(--indigo-night)] border-none text-[10px] uppercase tracking-wider py-0 h-4">
+                                Lead
+                              </Badge>
+                            )}
                           </div>
-                          <p className="text-xs text-muted-foreground line-clamp-1">{m.profiles?.headline || "No headline"}</p>
+                          <p className="text-xs text-muted-foreground line-clamp-1">
+                            {m.profiles?.headline || "No headline"}
+                          </p>
                         </div>
                       </div>
                       {m.role !== "lead" && (
@@ -130,7 +169,13 @@ function MissionAdminPage() {
                           variant="ghost"
                           size="icon"
                           className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:bg-destructive/10"
-                          onClick={() => setMemberToRemove({ missionId: mission.id, userId: m.user_id, name: m.profiles?.display_name || "Unknown" })}
+                          onClick={() =>
+                            setMemberToRemove({
+                              missionId: mission.id,
+                              userId: m.user_id,
+                              name: m.profiles?.display_name || "Unknown",
+                            })
+                          }
                           title="Remove from mission"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -151,11 +196,17 @@ function MissionAdminPage() {
             <DialogTitle>Remove Member</DialogTitle>
           </DialogHeader>
           <p className="py-4 text-sm text-muted-foreground">
-            Are you sure you want to remove <span className="font-semibold text-foreground">{memberToRemove?.name}</span> from this mission?
+            Are you sure you want to remove{" "}
+            <span className="font-semibold text-foreground">{memberToRemove?.name}</span> from this
+            mission?
           </p>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setMemberToRemove(null)}>Cancel</Button>
-            <Button variant="destructive" onClick={handleRemove}>Remove Member</Button>
+            <Button variant="outline" onClick={() => setMemberToRemove(null)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleRemove}>
+              Remove Member
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

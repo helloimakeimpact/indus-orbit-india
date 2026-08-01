@@ -1,6 +1,8 @@
 # Indus Orbit conversation and Discord-like system plan
 
-Status: active code-level plan, 30 July 2026. Direct-message P0 hardening is deployed to the demo project. The first P1 shared-client extraction is implemented in the web app; the shared spatial shell, pagination, RPC boundary and private Broadcast remain planned. This extends the existing conversation product; it does not authorize a Discord clone or a replacement social system.
+Status: active code-level plan, reviewed 31 July 2026. Direct-message P0 hardening is deployed to the demo project. The first P1 shared-client extraction is implemented in the web app; the shared spatial shell, pagination, RPC boundary and private Broadcast remain planned. The I/O nested shell is a branded preview, not the completed shared Discord-like system. This extends the existing conversation product; it does not authorize a Discord clone or a replacement social system.
+
+Operational cross-reference: `IO_PORT_IMPLEMENTATION_STATUS.md` records the current done/partial/not-started boundary for I/O, terminal, and conversation integration.
 
 ## 1. Product decision
 

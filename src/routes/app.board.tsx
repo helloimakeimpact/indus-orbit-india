@@ -81,7 +81,7 @@ function BoardPage() {
   }
 
   useEffect(() => {
-    load();
+    void Promise.resolve().then(load);
   }, [kind, seg]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
