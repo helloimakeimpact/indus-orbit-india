@@ -1,4 +1,5 @@
 export type OpenCodeRunResult = {
+  connectorOrigin: string;
   sessionId: string;
   title: string;
   content: string;
@@ -10,16 +11,31 @@ type OpenCodeMessagePart = {
   text?: string;
 };
 
-function localServerUrl(value: string) {
+type UnknownRecord = Record<string, unknown>;
+
+function asRecord(value: unknown): UnknownRecord | null {
+  return value !== null && typeof value === "object" && !Array.isArray(value)
+    ? (value as UnknownRecord)
+    : null;
+}
+
+export function normalizeOpenCodeOrigin(value: string) {
   const url = new URL(value.trim() || "http://127.0.0.1:4096");
   const localHosts = new Set(["localhost", "127.0.0.1", "::1"]);
-  if (url.protocol !== "http:" || !localHosts.has(url.hostname)) {
+  if (
+    url.protocol !== "http:" ||
+    !localHosts.has(url.hostname) ||
+    url.username ||
+    url.password ||
+    (url.pathname !== "/" && url.pathname !== "") ||
+    url.search ||
+    url.hash
+  ) {
     throw new Error(
-      "For safety, I/O Terminal can only connect to an OpenCode server on this device.",
+      "For safety, I/O Terminal accepts only a credential-free root HTTP origin on this device.",
     );
   }
-  url.pathname = url.pathname.replace(/\/$/, "");
-  return url.toString().replace(/\/$/, "");
+  return url.origin;
 }
 
 function headers(password: string) {
@@ -29,7 +45,11 @@ function headers(password: string) {
 }
 
 async function parseResponse(response: Response) {
-  if (response.ok) return response.json();
+  if (response.ok) {
+    const value: unknown = await response.json().catch(() => null);
+    if (!asRecord(value)) throw new Error("OpenCode returned an invalid JSON object.");
+    return value;
+  }
   const detail = await response.text();
   throw new Error(detail || `OpenCode returned ${response.status}.`);
 }
@@ -40,11 +60,12 @@ export async function runOpenCodeSession(input: {
   title: string;
   prompt: string;
 }): Promise<OpenCodeRunResult> {
-  const baseUrl = localServerUrl(input.serverUrl);
+  const baseUrl = normalizeOpenCodeOrigin(input.serverUrl);
   const healthResponse = await fetch(`${baseUrl}/global/health`, {
     headers: headers(input.password),
   });
   const health = await parseResponse(healthResponse);
+  const healthRecord = asRecord(health)!;
 
   const sessionResponse = await fetch(`${baseUrl}/session`, {
     method: "POST",
@@ -52,23 +73,42 @@ export async function runOpenCodeSession(input: {
     body: JSON.stringify({ title: input.title }),
   });
   const session = await parseResponse(sessionResponse);
+  const sessionRecord = asRecord(session)!;
+  const sessionId = sessionRecord.id;
+  if (typeof sessionId !== "string" || !sessionId.trim() || sessionId.length > 512) {
+    throw new Error("OpenCode returned an invalid session identifier.");
+  }
 
-  const promptResponse = await fetch(`${baseUrl}/session/${session.id}/message`, {
-    method: "POST",
-    headers: headers(input.password),
-    body: JSON.stringify({ parts: [{ type: "text", text: input.prompt }] }),
-  });
+  const promptResponse = await fetch(
+    `${baseUrl}/session/${encodeURIComponent(sessionId)}/message`,
+    {
+      method: "POST",
+      headers: headers(input.password),
+      body: JSON.stringify({ parts: [{ type: "text", text: input.prompt }] }),
+    },
+  );
   const message = await parseResponse(promptResponse);
-  const content = (message.parts ?? [])
-    .filter((part: OpenCodeMessagePart) => part.type === "text" && part.text)
-    .map((part: OpenCodeMessagePart) => part.text)
+  const messageRecord = asRecord(message)!;
+  if (!Array.isArray(messageRecord.parts)) {
+    throw new Error("OpenCode returned an invalid message payload.");
+  }
+  const content = messageRecord.parts
+    .filter(
+      (part): part is OpenCodeMessagePart =>
+        Boolean(asRecord(part)) &&
+        (part as OpenCodeMessagePart).type === "text" &&
+        typeof (part as OpenCodeMessagePart).text === "string",
+    )
+    .map((part) => part.text!.trim())
+    .filter(Boolean)
     .join("\n\n");
 
   return {
-    sessionId: session.id,
-    title: session.title ?? input.title,
+    connectorOrigin: baseUrl,
+    sessionId,
+    title: typeof sessionRecord.title === "string" ? sessionRecord.title : input.title,
     content:
       content || "OpenCode completed the request. Open its session to inspect the full tool trail.",
-    serverVersion: typeof health.version === "string" ? health.version : null,
+    serverVersion: typeof healthRecord.version === "string" ? healthRecord.version : null,
   };
 }

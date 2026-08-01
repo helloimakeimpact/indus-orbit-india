@@ -13,6 +13,7 @@ import {
   sendProviderChat,
 } from "../_shared/io/provider-adapter.ts";
 import { writeRouteReceipt, type ProviderAttempt } from "../_shared/io/receipt.ts";
+import { selectRouteAttempts } from "../_shared/io/routing.ts";
 import type { PartnerResult, RouteSelection } from "../_shared/io/types.ts";
 import { parseGatewayRequest } from "../_shared/io/validation.ts";
 
@@ -168,7 +169,11 @@ Deno.serve(async (request) => {
     let selectedRoute: RouteSelection | null = null;
     let lastError: GatewayError | null = null;
 
-    for (const candidate of selection.routeCandidates) {
+    const routeAttempts = selectRouteAttempts(
+      selection.routeCandidates,
+      Deno.env.get("IO_PROVIDER_MAX_ATTEMPTS"),
+    );
+    for (const candidate of routeAttempts) {
       const startedAt = new Date().toISOString();
       try {
         const candidateResult = await sendProviderChat(candidate.connection, messages);

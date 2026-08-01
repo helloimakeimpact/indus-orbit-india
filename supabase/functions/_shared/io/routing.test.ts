@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { GatewayError } from "./errors.ts";
-import { selectProviderRoute } from "./routing.ts";
+import { selectProviderRoute, selectRouteAttempts } from "./routing.ts";
 import type { ProviderConnection } from "./types.ts";
 
 const settings = {
@@ -131,5 +131,46 @@ describe("selectProviderRoute", () => {
         error.code === "not_configured" &&
         /reviewed FX data/.test(error.message),
     );
+  });
+
+  it("excludes unentitled, deprecated and undersized candidates", () => {
+    const selection = selectProviderRoute(
+      [
+        olderCheaper,
+        connection({ modelId: "unentitled", capacitySourceId: "source-b" }),
+        connection({ modelId: "deprecated", modelDeprecationAt: "2026-07-01T00:00:00Z" }),
+        connection({ modelId: "small", maxContextTokens: 1 }),
+      ],
+      messages,
+      { entitledCapacitySourceIds: new Set(["source-a"]) },
+      settings,
+      now,
+    );
+    assert.equal(selection.candidateCount, 1);
+    assert.equal(selection.connection.modelId, "model-old");
+  });
+
+  it("uses a deterministic provider key tie-break", () => {
+    const alpha = connection({ providerKey: "alpha", providerModelId: "same", modelId: "alpha" });
+    const beta = connection({ providerKey: "beta", providerModelId: "same", modelId: "beta" });
+    const selection = selectProviderRoute(
+      [beta, alpha],
+      messages,
+      { entitledCapacitySourceIds: new Set(["source-a"]) },
+      settings,
+      now,
+    );
+    assert.equal(selection.connection.providerKey, "alpha");
+  });
+});
+
+describe("selectRouteAttempts", () => {
+  it("defaults to one provider attempt", () => {
+    assert.deepEqual(selectRouteAttempts(["a", "b"]), ["a"]);
+  });
+
+  it("requires an explicit bounded setting for fallback", () => {
+    assert.deepEqual(selectRouteAttempts(["a", "b", "c"], "2"), ["a", "b"]);
+    assert.throws(() => selectRouteAttempts(["a"], "4"), /integer from 1 to 3/);
   });
 });

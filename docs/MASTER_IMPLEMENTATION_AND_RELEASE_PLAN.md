@@ -66,8 +66,8 @@ Known release blockers include:
 - the production build contains a 647.86 kB minified JavaScript chunk; route/vendor splitting and measured performance budgets remain required;
 - browser-facing feature data adapters are named `*.server.functions.ts`, obscuring the real trust boundary;
 - `/models` publishes hard-coded model, price, and exchange-rate facts without a versioned evidence process;
-- I/O provider registry and conformance data are empty, so provider keys alone do not activate routing;
-- no repository CI, automated database authorization suite, complete end-to-end suite, or load test was found.
+- five provider records are staged but have no passed conformance evidence, and every runtime switch remains off, so provider keys alone do not activate routing;
+- repository CI is configured for audit, format, lint, types, unit tests and build, but automated database authorization, complete end-to-end and load suites remain absent.
 
 ## 4. Non-negotiable implementation rules
 

@@ -116,7 +116,15 @@ export function requireLocalOpenCodeOrigin(value: unknown) {
   }
 
   const localHosts = new Set(["localhost", "127.0.0.1", "::1", "[::1]"]);
-  if (url.protocol !== "http:" || !localHosts.has(url.hostname) || url.username || url.password) {
+  if (
+    url.protocol !== "http:" ||
+    !localHosts.has(url.hostname) ||
+    url.username ||
+    url.password ||
+    (url.pathname !== "/" && url.pathname !== "") ||
+    url.search ||
+    url.hash
+  ) {
     throw new GatewayError(
       "bad_request",
       400,

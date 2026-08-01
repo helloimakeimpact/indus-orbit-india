@@ -26,21 +26,21 @@ External CI, design, issue, and monitoring links may be used when access and ret
 
 ## 2. Current verified baseline — not release approval
 
-| Check                             | Result on 1 August 2026                | Meaning                                                                                                    |
-| --------------------------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| Production web build              | Pass                                   | The current bundle builds; it does not prove runtime workflows                                             |
-| TypeScript `--noEmit`             | Pass                                   | Current TypeScript compiles                                                                                |
-| Unit tests                        | Pass — 7/7                             | Browser configuration and pure I/O route-selection regression coverage pass                                |
-| Formatting check                  | Pass                                   | Mechanical formatting drift has been removed                                                               |
-| Dependency audit (high and above) | Pass                                   | No critical, high, or moderate dependency advisory remains                                                 |
-| Dependency audit (all severities) | 2 low advisories remain                | Babel/esbuild transitive advisories remain tracked                                                         |
-| GitHub quality workflow           | Configured; no remote run recorded yet | PR/push typecheck, test, build and high-severity audit are defined                                         |
-| Repository lint                   | Pass — 0 errors                        | Local semantic lint gate passes; CI evidence and broader product/integration coverage remain incomplete    |
-| Automated product/router tests    | Core selection coverage only           | New registry router/UI source is browser-build checked but still needs Deno, SQL/RLS and conformance tests |
-| Provider conformance records      | Zero                                   | No provider is production-certified                                                                        |
-| Supabase missing-history recovery | 21 migration files staged locally      | Replay and schema equivalence in a resettable non-production environment remain required                   |
-| Supabase migration equivalence    | Not proven                             | Environment-reproducibility gate is open                                                                   |
-| Supabase storage buckets          | Zero                                   | Education upload workflow is not operational                                                               |
+| Check                             | Result on 1 August 2026                | Meaning                                                                                                             |
+| --------------------------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Production web build              | Pass                                   | The current bundle builds; it does not prove runtime workflows                                                      |
+| TypeScript `--noEmit`             | Pass                                   | Current TypeScript compiles                                                                                         |
+| Unit tests                        | Pass — 24/24                           | Browser configuration, conversation merge, OpenCode, gateway validation, provider adapter and routing fixtures pass |
+| Formatting check                  | Pass                                   | Mechanical formatting drift has been removed                                                                        |
+| Dependency audit (high and above) | Pass                                   | No critical, high, or moderate dependency advisory remains                                                          |
+| Dependency audit (all severities) | 2 low advisories remain                | Babel/esbuild transitive advisories remain tracked                                                                  |
+| GitHub quality workflow           | Configured; no remote run recorded yet | PR/push audit, format, lint, typecheck, unit test and production build are defined                                  |
+| Repository lint                   | Pass — 0 errors                        | Local semantic lint gate passes; CI evidence and broader product/integration coverage remain incomplete             |
+| Automated product/router tests    | Core selection coverage only           | New registry router/UI source is browser-build checked but still needs Deno, SQL/RLS and conformance tests          |
+| Provider conformance records      | Zero                                   | No provider is production-certified                                                                                 |
+| Supabase missing-history recovery | 21 migration files staged locally      | Replay and schema equivalence in a resettable non-production environment remain required                            |
+| Supabase migration equivalence    | Not proven                             | Environment-reproducibility gate is open                                                                            |
+| Supabase storage buckets          | Zero                                   | Education upload workflow is not operational                                                                        |
 
 ## 3. Blocker register
 
@@ -56,10 +56,10 @@ External CI, design, issue, and monitoring links may be used when access and ret
 | B-008 | Browser/server feature data boundaries are misleading and inconsistent                                                                  | Unassigned | Open   | —                   |
 | B-009 | Automated product, integration, database-authorization coverage and executed CI evidence are incomplete                                 | Unassigned | Open   | —                   |
 | B-010 | Public model/price/FX claims are hard-coded without evidence workflow                                                                   | Unassigned | Open   | —                   |
-| B-011 | I/O provider registry, connections, and conformance records are empty                                                                   | Unassigned | Open   | —                   |
+| B-011 | Five I/O providers are staged, but none has passed current endpoint-bound conformance and every runtime switch remains off              | Unassigned | Open   | —                   |
 | B-012 | Operations, legal, privacy, support, backup, and incident approvals are incomplete                                                      | Unassigned | Open   | —                   |
 | B-013 | Production build has a 647.86 kB minified JavaScript chunk; route/vendor splitting and measured performance budgets are not complete    | Unassigned | Open   | —                   |
-| B-014 | I/O multi-provider migration and Edge Function source are local-only; provider routing cannot be treated as deployed or activated       | Unassigned | Open   | —                   |
+| B-014 | I/O gateway is deployed to demo but lacks activation-grade conformance, budget reservation, idempotency and health/circuit controls     | Unassigned | Open   | —                   |
 
 ## G0 — Scope, ownership, and control
 

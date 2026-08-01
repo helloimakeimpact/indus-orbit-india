@@ -81,29 +81,30 @@ The member must be able to understand which model, provider, serving region, dat
 - It supports `latest_affordable`, `lowest_cost`, and an explicit reviewed model. Automatic selection has a configurable tier, freshness window and affordability band; mixed currencies fail closed until reviewed FX conversion exists.
 - An approved connection can resolve only an allowlisted `IO_PROVIDER_*_API_KEY` secret name. The browser receives neither endpoint URL nor credential.
 - The adapter currently normalizes non-streaming OpenAI-compatible Chat Completions and Gemini native `generateContent`; it validates response shapes and normalizes token use and a safe provider request ID.
+- Dispatch defaults to one provider attempt. Operator-enabled fallback is capped at three through `IO_PROVIDER_MAX_ATTEMPTS` and remains unsuitable for paid traffic until idempotency, reservation and policy controls exist.
 - The deployed forward-only migration introduces append-only `io_route_receipts` and `io_provider_attempts`. They exclude prompts, generated text, credentials, headers and raw upstream errors.
 - A follow-up migration covers every receipt/attempt provider, model, endpoint and capacity foreign key used for operator history and reconciliation; the Performance Advisor reports no remaining unindexed foreign key in the new I/O evidence tables.
 
 ### 3.4 Local terminal and conversation foundation
 
-- The browser can connect only to a credential-free loopback OpenCode origin over HTTP; an optional OpenCode password is held in memory.
-- The proof performs OpenCode health, session creation, prompt delivery, and safe completion audit by session ID.
+- The browser can connect only to a credential-free root loopback OpenCode origin over HTTP; paths, query strings, fragments and embedded URL credentials are rejected, while an optional OpenCode password is held in memory.
+- The proof validates OpenCode health/session/message objects, encodes the returned session ID, performs prompt delivery, and reports safe-audit failure separately from local execution success.
 - Existing direct messages remain the human conversation source. I/O prompts and terminal work are not inserted into `direct_messages`.
 - Direct-message RLS/read permissions were hardened, and both the full Messages surface and compact chat now reuse shared hooks and event-driven unread reconciliation.
 
 ### 3.5 Repository verification
 
-| Check                                  | Result          | Interpretation                                                                             |
-| -------------------------------------- | --------------- | ------------------------------------------------------------------------------------------ |
-| `npm run build`                        | Pass            | The current web application produces a production bundle.                                  |
-| `npm run typecheck`                    | Pass            | Current browser/server TypeScript compiles.                                                |
-| `npm run format:check`                 | Pass            | Mechanical formatting drift has been removed.                                              |
-| `npm run test:unit`                    | Pass — 9/9      | Browser config, route selection and five-provider request-shape fixtures have coverage.    |
-| `npm run audit:high`                   | Pass            | No critical, high or moderate dependency advisory remains.                                 |
-| I/O-focused ESLint run                 | Pass            | `src/features/io` and I/O routes pass current lint rules.                                  |
-| Repository-wide `npm run lint --quiet` | Pass — 0 errors | The local semantic lint gate now passes across the repository.                             |
-| Automated I/O router tests             | 6/6 pass        | Four selection tests plus OpenAI/xAI/DeepSeek/Groq and Gemini request-contract tests pass. |
-| Provider conformance tests             | None recorded   | No provider is operationally certified.                                                    |
+| Check                                  | Result          | Interpretation                                                                                |
+| -------------------------------------- | --------------- | --------------------------------------------------------------------------------------------- |
+| `npm run build`                        | Pass            | The current web application produces a production bundle.                                     |
+| `npm run typecheck`                    | Pass            | Current browser/server TypeScript compiles.                                                   |
+| `npm run format:check`                 | Pass            | Mechanical formatting drift has been removed.                                                 |
+| `npm run test:unit`                    | Pass — 24/24    | Config, conversation state, OpenCode, gateway validation, adapters and routing have coverage. |
+| `npm run audit:high`                   | Pass            | No critical, high or moderate dependency advisory remains.                                    |
+| I/O-focused ESLint run                 | Pass            | `src/features/io` and I/O routes pass current lint rules.                                     |
+| Repository-wide `npm run lint --quiet` | Pass — 0 errors | The local semantic lint gate now passes across the repository.                                |
+| Automated I/O/router contract tests    | 19/19 pass      | OpenCode, validation, selection/attempt bounds and provider request/error fixtures pass.      |
+| Provider conformance tests             | None recorded   | No provider is operationally certified.                                                       |
 
 ## 4. Implemented, but requires improvement
 
@@ -114,7 +115,7 @@ The member must be able to understand which model, provider, serving region, dat
 | Provider registry         | Sound public/private schema split plus five staged providers/models/endpoints/prices/connections           | The seed is operator-reviewed inventory, not automated onboarding or live availability                                       | Add operator onboarding, evidence refresh, deprecation and lifecycle workflows                            |
 | Provider adapter          | Local source has OpenAI-compatible and Gemini-native non-streaming adapters                                | No streaming, tools, structured output, multimodal, cancellation, or conformance matrix                                      | Add tested adapter capabilities one provider at a time                                                    |
 | Request validation        | Strict request and normalized response validation                                                          | Streaming frames and provider-specific error schemas are not versioned                                                       | Add schemas and contract tests for each supported feature                                                 |
-| Reliability               | 45-second timeout, rate-limit classification, bounded ordered fallback and attempt records                 | No idempotency, circuit breaker, health sampling, retry budget, queue state, or cancellation                                 | Add these controls before beta traffic                                                                    |
+| Reliability               | 45-second timeout, rate-limit classification, one attempt by default and an explicit maximum of three      | No idempotency, circuit breaker, health sampling, monetary retry budget, queue state, or cancellation                        | Keep fallback disabled for paid traffic until those controls exist                                        |
 | Audit                     | Deployed migration defines immutable receipts and per-provider attempts                                    | No live route has produced one; policy/health/budget snapshots remain incomplete                                             | Add SQL/RLS tests, then verify a bounded conformance receipt and reconcile with the eventual ledger       |
 | Cost estimate             | Character-count token approximation and input/output list price                                            | This is not billing and ignores cached input, tools/media, provider-specific units, FX, fee, tax, and actual settlement      | Add versioned estimation plus reserve-and-settle ledger in integer minor units                            |
 | Capacity truth            | Three labelled demo sources and grants                                                                     | The generic partner/sponsored demo records currently carry `IN` region/residency metadata without provider-specific evidence | Change unknown facts to unknown; attach India claims only to a certified endpoint and evidence version    |

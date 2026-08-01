@@ -2,25 +2,13 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getConversation, markConversationRead, sendMessage } from "@/server/messages.functions";
 import type { DirectMessage } from "@/features/conversations/types";
-
-function isConversationMessage(message: DirectMessage, userId: string, otherUserId: string) {
-  return (
-    (message.sender_id === userId && message.recipient_id === otherUserId) ||
-    (message.sender_id === otherUserId && message.recipient_id === userId)
-  );
-}
-
-function mergeMessages(messages: DirectMessage[], incoming: DirectMessage[]) {
-  const byId = new Map(messages.map((message) => [message.id, message]));
-  incoming.forEach((message) => byId.set(message.id, message));
-
-  return [...byId.values()].sort(
-    (left, right) => new Date(left.created_at).getTime() - new Date(right.created_at).getTime(),
-  );
-}
+import {
+  isConversationMessage,
+  mergeConversationMessages,
+} from "@/features/conversations/conversation-state";
 
 function mergeMessage(messages: DirectMessage[], incoming: DirectMessage) {
-  return mergeMessages(messages, [incoming]);
+  return mergeConversationMessages(messages, [incoming]);
 }
 
 export function useDirectConversation(userId: string | undefined, otherUserId: string | undefined) {
@@ -40,7 +28,7 @@ export function useDirectConversation(userId: string | undefined, otherUserId: s
     setError(null);
     try {
       const loaded = (await getConversation(otherUserId)) as DirectMessage[];
-      setMessages((current) => mergeMessages(current, loaded));
+      setMessages((current) => mergeConversationMessages(current, loaded));
     } catch (cause) {
       setMessages([]);
       setError(cause instanceof Error ? cause.message : "Could not load this conversation.");
@@ -86,7 +74,7 @@ export function useDirectConversation(userId: string | undefined, otherUserId: s
       void getConversation(otherUserId)
         .then((loaded) => {
           if (!active) return;
-          setMessages((current) => mergeMessages(current, loaded as DirectMessage[]));
+          setMessages((current) => mergeConversationMessages(current, loaded as DirectMessage[]));
           void markConversationRead(otherUserId).catch(() => undefined);
         })
         .catch((cause) => {

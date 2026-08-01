@@ -14,6 +14,19 @@ export type RoutingSettings = {
   outputTokenAllowance: number;
 };
 
+export function selectRouteAttempts<T>(candidates: T[], configuredLimit?: string): T[] {
+  const value = configuredLimit?.trim();
+  const limit = value ? Number(value) : 1;
+  if (!Number.isInteger(limit) || limit < 1 || limit > 3) {
+    throw new GatewayError(
+      "internal_error",
+      500,
+      "The IO_PROVIDER_MAX_ATTEMPTS value must be an integer from 1 to 3.",
+    );
+  }
+  return candidates.slice(0, limit);
+}
+
 function dateMillis(date: string) {
   const timestamp = Date.parse(`${date}T00:00:00.000Z`);
   return Number.isFinite(timestamp) ? timestamp : null;

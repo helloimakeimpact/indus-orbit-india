@@ -51,10 +51,10 @@ type SessionMode = "observe" | "plan" | "build" | "run";
 type ExecutionPath = "partner" | "terminal";
 
 const routeSignals = [
-  { label: "India residency", value: "Preferred", icon: Globe2 },
-  { label: "Evidence mode", value: "Required", icon: FileCheck2 },
-  { label: "Budget guard", value: "Workspace policy", icon: IndianRupee },
-  { label: "Data policy", value: "Visible before run", icon: ShieldCheck },
+  { label: "Residency rule", value: "Not enforced yet", icon: Globe2 },
+  { label: "Registry evidence", value: "Required", icon: FileCheck2 },
+  { label: "Budget reservation", value: "Not implemented", icon: IndianRupee },
+  { label: "Retention filter", value: "Not enforced yet", icon: ShieldCheck },
 ];
 
 export function IoOverview() {
@@ -199,12 +199,19 @@ export function IoOverview() {
           prompt: prompt.trim(),
         });
         setTerminalResult(result);
-        void recordLocalOpenCodeSession({
-          workspaceId: workspace.id,
-          connectorOrigin: openCodeUrl,
-          sessionId: result.sessionId,
-        }).then(() => loadWorkspace(workspace.id));
-        toast.success("OpenCode session completed on this device.");
+        try {
+          await recordLocalOpenCodeSession({
+            workspaceId: workspace.id,
+            connectorOrigin: result.connectorOrigin,
+            sessionId: result.sessionId,
+          });
+          await loadWorkspace(workspace.id);
+          toast.success("OpenCode session completed and its safe audit was recorded.");
+        } catch {
+          toast.warning(
+            "OpenCode completed locally, but I/O Port could not record the safe session audit.",
+          );
+        }
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "The session could not run.");
@@ -466,7 +473,9 @@ export function IoOverview() {
                   ) : (
                     <Route className="h-3.5 w-3.5" />
                   )}
-                  {path === "terminal" ? "Local OpenCode only" : "Gateway policy check"}
+                  {path === "terminal"
+                    ? "Local OpenCode only"
+                    : "Entitlement + reviewed registry checks"}
                 </div>
                 <Button
                   type="button"

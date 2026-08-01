@@ -19,14 +19,14 @@ The existing people-messaging system is also now hardened in the demo project: o
 
 The first shared-message client extraction is now in the web app as well: `src/features/conversations/` provides shared contacts, direct-conversation and event-driven unread hooks for both the full Messages route and compact quick chat. A common cache/store, cursor pagination and private Broadcast remain deliberate follow-on work in the companion plan.
 
-| Concern                  | Current code                                                          | Truthful status                                                                                                             |
-| ------------------------ | --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| Web control room         | `src/features/io/IoOverview.tsx`                                      | Member-facing UI with local/OpenCode, safe provider catalogue, route strategy/model selection and completed receipt facts.  |
-| Local terminal connector | `src/features/io/opencode.ts`                                         | Loopback-only health → session → prompt proof. It is not yet a resumable terminal timeline.                                 |
-| Provider gateway         | `supabase/functions/io-gateway/index.ts`                              | Local source contains registry-driven multi-provider selection, safe fallback and receipts; migration replay/deploy remain. |
-| Browser data access      | `src/features/io/io.client.ts`                                        | Browser-facing I/O data access, explicitly separated from privileged Edge/RPC work.                                         |
-| Control-plane schema     | `supabase/migrations/20260730155210_create_io_port_control_plane.sql` | Workspaces, memberships, sources, grants, policy records, key metadata and safe audit events.                               |
-| I/O nested shell         | `src/features/io/IoWorkspaceShell.tsx`                                | Layout proof only. Static workspace, health, counts and activity are explicitly labelled preview, not live operator data.   |
+| Concern                  | Current code                                                          | Truthful status                                                                                                            |
+| ------------------------ | --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Web control room         | `src/features/io/IoOverview.tsx`                                      | Member-facing UI with local/OpenCode, safe provider catalogue, route strategy/model selection and completed receipt facts. |
+| Local terminal connector | `src/features/io/opencode.ts`                                         | Loopback-only health → session → prompt proof. It is not yet a resumable terminal timeline.                                |
+| Provider gateway         | `supabase/functions/io-gateway/index.ts`                              | Deployed demo gateway contains registry-driven selection and receipts; routes remain activation-gated.                     |
+| Browser data access      | `src/features/io/io.client.ts`                                        | Browser-facing I/O data access, explicitly separated from privileged Edge/RPC work.                                        |
+| Control-plane schema     | `supabase/migrations/20260730155210_create_io_port_control_plane.sql` | Workspaces, memberships, sources, grants, policy records, key metadata and safe audit events.                              |
+| I/O nested shell         | `src/features/io/IoWorkspaceShell.tsx`                                | Layout proof only. Static workspace, health, counts and activity are explicitly labelled preview, not live operator data.  |
 
 ## 2. Non-negotiable boundaries
 
@@ -70,7 +70,7 @@ supabase/functions/_shared/io/
 supabase/functions/io-gateway/index.ts  thin HTTP/CORS/action handler
 ```
 
-The local boundary validates request shape, workspace UUIDs, modes, route strategy/model IDs, message limits, local loopback origin/session data and typed public errors before dispatch. It performs membership and entitlement checks separately, audits every requested/completed provider route and writes a safe failure audit without retaining prompt/response text. It validates normalized OpenAI-compatible and Gemini response shapes before returning them. This remains source-only until the migration replays and the Edge Function is redeployed.
+The boundary validates request shape, workspace UUIDs, modes, route strategy/model IDs, message limits, local loopback origin/session data and typed public errors before dispatch. It performs membership and entitlement checks separately, audits every requested/completed provider route and writes a safe failure audit without retaining prompt/response text. It validates normalized OpenAI-compatible and Gemini response shapes before returning them. The gateway is deployed to the demo; empty-database replay equivalence remains open.
 
 Still required before any broad provider rollout: client idempotency keys, formal route-policy versions, health/circuit controls, cancellation semantics, detailed timeout classification, streaming/SSE, SQL/RLS tests and provider-conformance tests. The current adapter is intentionally non-streaming and supports only the reviewed OpenAI-compatible and Gemini-native chat surfaces.
 
@@ -110,7 +110,7 @@ io_route_receipts
 io_provider_attempts
 ```
 
-**Implemented in the demo project:** `supabase/migrations/20260731113000_create_io_provider_registry.sql` establishes the provider, model, endpoint, versioned capability and versioned price-card records. It keeps endpoint URLs, secret-manager references and conformance-run details in the non-exposed `private` schema; public tables contain only member-appropriate catalogue/evidence data and use RLS plus explicit Data API grants. `20260731123500_add_io_provider_registry_fk_indexes.sql` completes the foreign-key indexes identified by the post-deployment Performance Advisor. `20260731150000_add_io_dynamic_model_selection.sql` adds the reviewed release date and automatic-routing tier needed to select a model dynamically rather than bake a model ID into an Edge Function secret. The generated browser client types now include the public registry tables. No provider, model, endpoint, URL or credential has been seeded into this demo registry.
+**Implemented in the demo project:** `supabase/migrations/20260731113000_create_io_provider_registry.sql` establishes the provider, model, endpoint, versioned capability and versioned price-card records. It keeps endpoint URLs, secret-manager references and conformance-run details in the non-exposed `private` schema; public tables contain only member-appropriate catalogue/evidence data and use RLS plus explicit Data API grants. `20260731123500_add_io_provider_registry_fk_indexes.sql` completes the foreign-key indexes identified by the post-deployment Performance Advisor. `20260731150000_add_io_dynamic_model_selection.sql` adds the reviewed release date and automatic-routing tier needed to select a model dynamically rather than bake a model ID into an Edge Function secret. Five providers are staged in testing/conformance with runtime routing disabled; no provider is certified for traffic.
 
 **Implemented locally, awaiting replay/deploy:** `20260801003835_io_route_receipts_and_registry_router.sql` adds a service-role-only resolver for ready private connection rows plus append-only `io_route_receipts` and `io_provider_attempts`. The gateway considers active/listed/non-deprecated, entitled candidates with verified chat capability and a current member-visible price card; automatic routes are limited to a configured tier, freshness window and affordability multiple. It supports `latest_affordable`, `lowest_cost` and a reviewed explicit model. Cross-currency automatic comparison fails closed pending reviewed FX data. Candidate selection is deterministic, response handling supports OpenAI-compatible and Gemini-native chat, safe upstream/rate-limit failures can fall back in order, and a receipt ID reaches the web UI. Secret lookup accepts only operator-approved references matching `IO_PROVIDER_[A-Z0-9_]+_API_KEY`.
 
@@ -155,7 +155,7 @@ The member-visible price must be derived from an immutable route receipt: usage/
 
 The required invariant is **reserve → dispatch → settle once → release remainder**. Provider bills, user invoices, sponsored grants and refunds must be derivable from ledger entries, never recomputed from UI aggregates.
 
-## 7. P3 — operator console inside existing Admin
+## 7. P3 — operator console in the separate admin application
 
 Add I/O operations under the current admin namespace, retaining the existing role system and enforcing every action server-side:
 

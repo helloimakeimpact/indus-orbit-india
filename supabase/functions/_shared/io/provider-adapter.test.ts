@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+import { GatewayError } from "./errors.ts";
 import { sendProviderChat } from "./provider-adapter.ts";
 import type { GatewayMessage, ProviderConnection } from "./types.ts";
 
@@ -45,6 +46,16 @@ type CapturedRequest = {
 
 async function captureProviderRequests(
   run: (requests: CapturedRequest[]) => Promise<void>,
+  responseFactory: () => Response = () =>
+    new Response(
+      JSON.stringify({
+        choices: [{ message: { content: "Fixture response" } }],
+        usage: { prompt_tokens: 10, completion_tokens: 2 },
+        candidates: [{ content: { parts: [{ text: "Fixture response" }] } }],
+        usageMetadata: { promptTokenCount: 10, candidatesTokenCount: 2 },
+      }),
+      { status: 200, headers: { "Content-Type": "application/json", "x-request-id": "req-test" } },
+    ),
 ): Promise<void> {
   const requests: CapturedRequest[] = [];
   const originalFetch = globalThis.fetch;
@@ -61,15 +72,7 @@ async function captureProviderRequests(
       headers: new Headers(init?.headers),
       body: JSON.parse(String(init?.body)) as Record<string, unknown>,
     });
-    return new Response(
-      JSON.stringify({
-        choices: [{ message: { content: "Fixture response" } }],
-        usage: { prompt_tokens: 10, completion_tokens: 2 },
-        candidates: [{ content: { parts: [{ text: "Fixture response" }] } }],
-        usageMetadata: { promptTokenCount: 10, candidatesTokenCount: 2 },
-      }),
-      { status: 200, headers: { "Content-Type": "application/json", "x-request-id": "req-test" } },
-    );
+    return responseFactory();
   };
 
   try {
@@ -152,5 +155,41 @@ describe("sendProviderChat request contracts", { concurrency: false }, () => {
       assert.deepEqual(request.body.systemInstruction, { parts: [{ text: "Be concise." }] });
       assert.deepEqual(request.body.generationConfig, { maxOutputTokens: 1_024 });
     });
+  });
+
+  it("rejects a successful response without assistant content", async () => {
+    await captureProviderRequests(
+      async () => {
+        await assert.rejects(
+          sendProviderChat(connection({}), messages),
+          (error: unknown) =>
+            error instanceof GatewayError &&
+            error.code === "upstream_failure" &&
+            /no usable assistant response/.test(error.message),
+        );
+      },
+      () => Response.json({ choices: [] }),
+    );
+  });
+
+  it("normalizes rate-limit and upstream failures without returning provider bodies", async () => {
+    for (const [status, code] of [
+      [429, "rate_limited"],
+      [500, "upstream_failure"],
+    ] as const) {
+      await captureProviderRequests(
+        async () => {
+          await assert.rejects(
+            sendProviderChat(connection({}), messages),
+            (error: unknown) =>
+              error instanceof GatewayError &&
+              error.code === code &&
+              error.upstreamStatus === status &&
+              !error.message.includes("provider-secret-detail"),
+          );
+        },
+        () => Response.json({ error: "provider-secret-detail" }, { status }),
+      );
+    }
   });
 });
