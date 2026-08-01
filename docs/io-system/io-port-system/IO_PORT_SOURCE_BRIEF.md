@@ -12,7 +12,7 @@ The coherent product is:
 2. **Port:** one compatible API and SDK surface for approved global and Indian model providers, with pinning, policy-aware routing, fallback, budgets, and route receipts.
 3. **Control room:** workspaces, projects, keys, policies, usage, INR accounting, audit, evaluations, and operational status.
 4. **I/O Terminal:** a local-first and web-visible agent workspace based on the strongest OpenCode patterns: durable sessions, plan/build separation, explicit permissions, task trees, diffs, commands, and terminal-to-web handoff.
-5. **People layer:** Indus Orbit members, skills, academy material, loops, missions, chapters, mentors, and verified playbooks make users more capable instead of making model consumption the end goal.
+5. **People layer:** Indus Orbit members, skills, academy material, missions, chapters, mentors, and verified playbooks make users more capable instead of making model consumption the end goal.
 
 The public shorthand “India’s own OpenRouter” is useful internally to explain the gateway category. It is not a sufficient market position. BharatRouter already claims India residency, INR pricing, routing, failover, BYOK, teams, and agent identity. I/O Port must differentiate through evidence, understandable governance, Indian-language and local-workflow evaluation, human expertise, and visible accountability.
 
@@ -35,7 +35,7 @@ The Claude artifact, the public site, the local app, and the live schema all poi
 
 - Indus Orbit is both a company/product platform and a Foundation/public-purpose layer.
 - People are not accounts at the edge of an AI product; identity, verification, vouching, contribution, learning, connection, and collective work are the core graph.
-- The platform already organizes people through five orbit segments, chapters, India Missions, connections, endorsements, asks/offers, mentorship, stories, events, education, skills, S.O.D.A ideas, and iterative Loops.
+- The platform already organizes people through five orbit segments, chapters, India Missions, connections, endorsements, asks/offers, mentorship, stories, events, education, skills, and S.O.D.A ideas.
 - The “100 priorities” and Four Cores in the artifact provide a national mission frame. The current application supplies practical primitives for communities, learning, and action, but does not yet implement the complete deliberation/voting/accountability system implied by the artifact.
 - I/O Port therefore belongs where knowledge becomes action: the Observatory explains intelligence, the Port supplies it, the Terminal applies it, and the community verifies and teaches useful practice.
 
@@ -66,7 +66,7 @@ Repository snapshot: `helloimakeimpact/indus-orbit-india`, `main`, commit `6086d
 | Connections and direct messages                 | human collaboration and private contact; not a terminal event store                |
 | Notifications                                   | approvals, budget alerts, shared-session invitations, evaluation results           |
 | Academy courses, lessons, quizzes, and progress | I/O onboarding, safety training, role-specific learning paths                      |
-| Skills, Loops, and S.O.D.A ideas                | playbooks, evaluation recipes, task templates, and outcome evidence                |
+| Skills and S.O.D.A ideas                        | playbooks, evaluation recipes, task templates, and outcome evidence                |
 | Stories and spotlights                          | publish reviewed case studies and public-interest outcomes                         |
 | Audit log and reports                           | platform moderation summaries; I/O needs an additional high-integrity audit stream |
 
@@ -100,10 +100,10 @@ The live `public` schema contains 43 tables and RLS is enabled on all of them:
 - **Community and collaboration:** `connection_requests`, `asks_offers`, `mentor_sessions`, `notifications`, `direct_messages`.
 - **Missions and chapters:** `missions`, `mission_members`, `mission_updates`, `chapters`, `chapter_members`, `chapter_proposals`.
 - **Publishing and events:** `stories`, `spotlights`, `events`, `event_rsvps`.
-- **Education and knowledge:** `courses`, `course_modules`, `lessons`, `lesson_attachments`, `resources`, `quizzes`, `quiz_questions`, `quiz_options`, `lesson_progress`, `quiz_attempts`, `skills`, `loops`, `soda_ideas`.
+- **Education and knowledge:** `courses`, `course_modules`, `lessons`, `lesson_attachments`, `resources`, `quizzes`, `quiz_questions`, `quiz_options`, `lesson_progress`, `quiz_attempts`, `skills`, `soda_ideas`. The former `loops` table is an inactive read-only archive and is not an I/O product input.
 - **Operations:** `audit_log`, `reports`, `contact_submissions`, `newsletter_subscriptions`.
 
-Existing content should be preserved and linked, not copied into I/O tables. At inspection time the database held 5 courses, 5 course modules, 25 lessons, 56 S.O.D.A ideas, 8 skills, and 8 loops. Most user-generated mission, event, and message tables were still lightly populated, which lowers migration risk but does not remove the need for backups and rollback.
+Existing active content should be linked, not copied into I/O tables. At inspection time the database held 5 courses, 5 course modules, 25 lessons, 56 S.O.D.A ideas, and 8 skills. Eight former Loop records are retained only for archival/retention review. Most user-generated mission, event, and message tables were still lightly populated, which lowers migration risk but does not remove the need for backups and rollback.
 
 ### 5.2 Live state differs from local migrations
 

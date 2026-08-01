@@ -97,19 +97,19 @@ The member must be able to understand which model, provider, serving region, dat
 
 ### 3.5 Repository verification
 
-| Check                                  | Result          | Interpretation                                                                                               |
-| -------------------------------------- | --------------- | ------------------------------------------------------------------------------------------------------------ |
-| `npm run build`                        | Pass            | The current web application produces a production bundle.                                                    |
-| `npm run typecheck`                    | Pass            | Current browser/server TypeScript compiles.                                                                  |
-| `npm run format:check`                 | Pass            | Mechanical formatting drift has been removed.                                                                |
-| `npm run test:unit`                    | Pass — 24/24    | Config, conversation state, OpenCode, gateway validation, adapters and routing have coverage.                |
-| `npm run audit:high`                   | Pass            | No critical, high or moderate dependency advisory remains.                                                   |
-| I/O-focused ESLint run                 | Pass            | `src/features/io` and I/O routes pass current lint rules.                                                    |
-| Repository-wide `npm run lint --quiet` | Pass — 0 errors | The local semantic lint gate now passes across the repository.                                               |
-| Automated I/O/router contract tests    | 19/19 pass      | OpenCode, validation, selection/attempt bounds and provider request/error fixtures pass.                     |
-| Empty Supabase migration replay        | Pass            | A fresh local Postgres database applies the full checked-in chain; demo comparison remains.                  |
-| Database provider/ACL/schema contracts | 115/115 pass    | Latest-evidence routing, notification ownership, vouch/audit behavior and critical schema/grants are tested. |
-| Provider conformance tests             | None recorded   | No provider is operationally certified.                                                                      |
+| Check                                  | Result          | Interpretation                                                                                                                    |
+| -------------------------------------- | --------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run build`                        | Pass            | The current web application produces a production bundle.                                                                         |
+| `npm run typecheck`                    | Pass            | Current browser/server TypeScript compiles.                                                                                       |
+| `npm run format:check`                 | Pass            | Mechanical formatting drift has been removed.                                                                                     |
+| `npm run test:unit`                    | Pass — 24/24    | Config, conversation state, OpenCode, gateway validation, adapters and routing have coverage.                                     |
+| `npm run audit:high`                   | Pass            | No critical, high or moderate dependency advisory remains.                                                                        |
+| I/O-focused ESLint run                 | Pass            | `src/features/io` and I/O routes pass current lint rules.                                                                         |
+| Repository-wide `npm run lint --quiet` | Pass — 0 errors | The local semantic lint gate now passes across the repository.                                                                    |
+| Automated I/O/router contract tests    | 19/19 pass      | OpenCode, validation, selection/attempt bounds and provider request/error fixtures pass.                                          |
+| Empty Supabase migration replay        | Pass            | A fresh local Postgres database applies the full checked-in chain; demo comparison remains.                                       |
+| Database provider/ACL/schema contracts | 127/127 pass    | Latest-evidence routing, notification ownership, vouch/audit behavior, retired-product ACL and critical schema/grants are tested. |
+| Provider conformance tests             | None recorded   | No provider is operationally certified.                                                                                           |
 
 ## 4. Implemented, but requires improvement
 

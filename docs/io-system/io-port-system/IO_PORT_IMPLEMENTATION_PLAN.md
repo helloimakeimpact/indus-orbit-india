@@ -25,7 +25,7 @@ Commercial direction confirmed by the founder: I/O Port is partnership-first and
 - add an evidence-backed public I/O Port page and evolve `/models` into the Observatory;
 - add I/O workspaces, projects, membership, registry, policies, API keys, request receipts, usage ledger, and a narrow gateway;
 - add local I/O Terminal sessions with Observe/Plan/Build/Run permissions, diffs, tasks, approvals, and web visibility;
-- connect current profiles, missions, chapters, Academy, skills, Loops, S.O.D.A, notifications, audit, and people graph;
+- connect current profiles, missions, chapters, Academy, skills, S.O.D.A, notifications, audit, and people graph;
 - implement INR-first transparent pricing experiments and measurement.
 
 ### Explicitly deferred
@@ -112,7 +112,7 @@ If one host is operationally simpler in beta, keep the namespaces even when they
   - **Home:** Home, Board, Stories, Events.
   - **People:** Network, Messages, Vouch, Mentorship, Profile.
   - **Action:** India Missions, Chapters, lead workspaces.
-  - **Learn:** Academy, Skills, Loop, S.O.D.A.
+  - **Learn:** Academy, Skills, S.O.D.A.
   - **I/O:** Port overview, Terminal, Models, Playbooks, Usage.
 - Use existing Indus Orbit logo/art direction and line icons. Active markers remain saffron.
 - Keep Admin as a permission-gated rail destination, not mixed with daily user navigation.
@@ -122,7 +122,7 @@ If one host is operationally simpler in beta, keep the namespaces even when they
 
 - The selected rail space owns its navigation list, recent objects, search, create action, and unread/attention counters.
 - Mission context lists Overview, Members, Updates, Events, Stories, Projects.
-- Learning context lists Academy, Skills, Loops, S.O.D.A, Progress.
+- Learning context lists Academy, Skills, S.O.D.A, Progress.
 - I/O context lists Overview, Sessions, Projects, Models, Playbooks, Usage, Policies, Keys, Team.
 - Use human nouns. Avoid importing Discord terms such as “server,” “guild,” or “channel” when they are not the actual domain object.
 
@@ -376,7 +376,7 @@ Security requirements:
 | `events`, `event_rsvps`                                                                                                                                    | workshops, model evaluation events, office hours                           | link event outcomes to playbooks/evaluations                                                                       |
 | `mentor_sessions`                                                                                                                                          | expert I/O reviews and support                                             | no automatic transcript/prompt disclosure to mentors                                                               |
 | `courses`, `course_modules`, `lessons`, `lesson_attachments`, `resources`, `quizzes`, `quiz_questions`, `quiz_options`, `lesson_progress`, `quiz_attempts` | onboarding, safety, API, evaluation, agent-operation learning              | link completion to recommendations; use explicit policy if a course is ever a permission prerequisite              |
-| `skills`, `loops`, `soda_ideas`                                                                                                                            | playbook sources, standard workloads, route evaluations, iteration history | add link tables instead of copying content blobs                                                                   |
+| `skills`, `soda_ideas`                                                                                                                                     | playbook sources, standard workloads, route evaluations, iteration history | add link tables instead of copying content blobs                                                                   |
 | `stories`, `spotlights`                                                                                                                                    | reviewed public case studies and contributors                              | require consent, redaction, and editorial review                                                                   |
 | `asks_offers`                                                                                                                                              | requests for experts, datasets, evaluation partners, provider support      | keep commercial/provider access workflows separate                                                                 |
 | `reports`, `audit_log`                                                                                                                                     | moderation and high-level administrative actions                           | add `io_audit_events` for immutable I/O-specific security/financial operations; mirror only summaries when helpful |
@@ -450,7 +450,7 @@ Financial mutations occur through narrow transactional functions or a ledger ser
 | Table                    | Essential fields and references                                                                                                                                       |
 | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `io_agent_profiles`      | workspace/global owner, name, mode, prompt/version reference, model/route policy, step/time/spend defaults, permission profile, evaluation score, status              |
-| `io_playbooks`           | owner/author, command/template version, linked `skill`, `loop`, `soda_idea`, course/lesson or mission, evidence, visibility, review state                             |
+| `io_playbooks`           | owner/author, command/template version, linked `skill`, `soda_idea`, course/lesson or mission, evidence, visibility, review state                                     |
 | `io_terminal_sessions`   | workspace/project/environment, creator, title, execution location (`local/hosted`), mode, agent, policy version, state, retention, timestamps, parent/fork reference  |
 | `io_session_members`     | session/user, role (`owner/collaborator/reviewer/viewer`), invited/accepted/expiry/revoked                                                                            |
 | `io_tasks`               | session, parent task, agent, status, model/route constraints, permission/budget snapshot, output summary, timestamps                                                  |
@@ -734,7 +734,7 @@ Exit: Plan cannot mutate, every mutation has approval/audit/diff, web handoff ca
 ### Phase 5 — team and evidence beta (weeks 15–21)
 
 - role templates, session collaboration, service identities, GitHub App draft-PR flow;
-- versioned playbooks tied to skills/Loops/S.O.D.A/Academy;
+- versioned playbooks tied to skills/S.O.D.A/Academy;
 - evaluation datasets/runs, route comparison, regression alerts;
 - BYOK envelope/secret-manager design and rotation if not already used;
 - founder-approved pricing cohort tests.
@@ -830,7 +830,7 @@ Do not restructure the existing app into a monorepo before the gateway/OpenCode 
 
 ### 16.3 Hard acceptance criteria
 
-1. Existing user, chapter, mission, education, skill, loop, message, and notification data is preserved and addressable after the shell migration.
+1. Existing user, chapter, mission, education, skill, message, and notification data is preserved and addressable after the shell migration; retired Loop rows remain available only through the controlled archive.
 2. No normal user can read another workspace’s keys, policies, request metadata, ledger, terminal events, artifacts, or audit records.
 3. No browser or CLI bundle contains a Supabase secret/service-role key or provider credential.
 4. Every inference attempt has an authenticated identity, policy version, route receipt, budget decision, provider attempt record, and final usage state.

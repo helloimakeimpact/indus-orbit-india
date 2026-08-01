@@ -2,7 +2,7 @@
 
 Status: filing for all systems outside the specialist I/O Port, Terminal and Conversation records, 1 August 2026.
 
-The Indus Orbit product is broader than I/O. The checked-in application includes public publishing, auth/onboarding, profiles and directory, connections, vouch, mentorship, missions, Chapters, events, education, skills, Loops, S.O.D.A., stories, notifications, investor and administration surfaces.
+The Indus Orbit product is broader than I/O. The checked-in application includes public publishing, auth/onboarding, profiles and directory, connections, vouch, mentorship, missions, Chapters, events, education, skills, S.O.D.A., stories, notifications, investor and administration surfaces. The former Loops content product is retired from active source; its rows are retained only as a service-role-readable archive pending an explicit retention decision.
 
 The exact done/partial/left boundary is maintained in `../CODE_COMPLETION_REGISTER.md`. Product-wide implementation order is in `../../MASTER_IMPLEMENTATION_AND_RELEASE_PLAN.md`.
 
@@ -14,7 +14,7 @@ The exact done/partial/left boundary is maintained in `../CODE_COMPLETION_REGIST
 | Identity, profile and directory | auth/onboarding/profile/directory/settings routes plus Supabase Auth/profiles                        | Partial; production auth hardening, privacy and authoritative access contracts remain.                                                                                        |
 | Trust and relationships         | connections, endorsements, vouch, mentorship and admin surfaces                                      | Partial; server authority, safety state machines and comprehensive tests remain.                                                                                              |
 | Action                          | Missions, Chapters, events and related admin routes                                                  | Partial; lifecycle/permissions/concurrency, notifications and programme operations remain.                                                                                    |
-| Learning and public knowledge   | education, skills, Loops, S.O.D.A., stories and admin routes                                         | Partial; storage, assessment integrity, provenance, authoring workflow and accessibility remain.                                                                              |
+| Learning and public knowledge   | education, skills, S.O.D.A., stories and admin routes                                                | Partial; storage, assessment integrity, provenance, authoring workflow and accessibility remain.                                                                              |
 | Operations and governance       | standalone `admin-indus-orbit`, this repository's migrations, and compatibility admin routes         | Separate app foundation; super-admin/scoped-team and I/O control boundaries exist, while legacy moderation/support/content/program commands still need purpose-specific RPCs. |
 
 ## Cross-system rule

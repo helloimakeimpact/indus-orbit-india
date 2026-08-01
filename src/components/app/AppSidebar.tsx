@@ -20,7 +20,6 @@ import {
   GraduationCap,
   Lightbulb,
   BadgeCheck,
-  Zap,
   Settings,
   PanelLeftOpen,
   PanelLeftClose,
@@ -81,7 +80,6 @@ const BASE_GROUPS: NavGroup[] = [
     items: [
       { to: "/app/education", label: "Academy", icon: GraduationCap },
       { to: "/app/skills", label: "Skills", icon: BadgeCheck },
-      { to: "/app/loop", label: "Loop", icon: Zap },
       { to: "/app/soda", label: "S.O.D.A List", icon: Lightbulb },
     ],
   },

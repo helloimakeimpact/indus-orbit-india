@@ -8,7 +8,6 @@ import { getHumanCheck, nextHumanCheckIndex } from "@/lib/human-check";
 
 const platformLinks = [
   { to: "/skills", label: "Skills" },
-  { to: "/loops", label: "Loops" },
   { to: "/models", label: "Models" },
   { to: "/members", label: "Members" },
 ] as const;

@@ -4,7 +4,7 @@ Status: empty local replay verified; demo-schema comparison and owner-scoped Rea
 
 ## Empty local replay evidence — 1 August 2026
 
-The locked project dependency `supabase@2.111.0` started a fresh local Supabase stack and replayed the complete checked-in migration chain from an empty Postgres database. No paid hosted branch was created and no hosted database was reset. The recovery checkpoint first applied all 51 migrations through `20260801130427_add_admin_control_plane_fk_indexes.sql`; the final phase gate then applied all 54 migrations through `20260801153734_fix_vouch_audit_contracts.sql` and passed 115/115 pgTAP assertions, public/private schema lint, and both error-level Supabase advisors.
+The locked project dependency `supabase@2.111.0` started a fresh local Supabase stack and replayed the complete checked-in migration chain from an empty Postgres database. No paid hosted branch was created and no hosted database was reset. The recovery checkpoint first applied all 51 migrations through `20260801130427_add_admin_control_plane_fk_indexes.sql`; the current phase gate applies all 55 migrations through `20260801155642_retire_loops_product_surface.sql` and passes 127/127 pgTAP assertions plus public/private schema lint. The prior error-level Supabase security and performance advisor runs also report no findings.
 
 The first replay found three pieces of recovered or environment-specific history that could not execute on a clean CLI database. Each correction is explicitly commented in its source file; none was applied to or used to rewrite the remote migration ledger:
 
