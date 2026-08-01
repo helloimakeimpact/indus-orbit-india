@@ -14,7 +14,7 @@ Use the documents in this order:
 1. this plan defines scope, dependencies, sequencing, and the meaning of complete;
 2. `RELEASE_READINESS_CHECKLIST.md` records evidence for every release gate;
 3. `SUPABASE_SCHEMA_RECONCILIATION.md` governs migration-history recovery;
-4. `IO_PORT_IMPLEMENTATION_STATUS.md` is the current operational truth for I/O Port;
+4. `io-system/io-port-system/IO_PORT_IMPLEMENTATION_STATUS.md` is the current operational truth for I/O Port;
 5. the remaining I/O and conversation documents provide specialist design and delivery detail.
 
 When documents disagree, verified code and deployed-state evidence take priority, followed by this plan, then the specialist plan. Update the documents in the same change that alters architecture, scope, data contracts, or release status.
@@ -59,7 +59,7 @@ Known release blockers include:
 - 41 authenticated or anonymous `SECURITY DEFINER` function-exposure warnings require contract-by-contract review;
 - anonymous insert policies for contact and newsletter data require proper anti-abuse and data-minimisation controls;
 - leaked-password protection is disabled;
-- advisor results include 149 RLS init-plan warnings, 84 multiple-permissive-policy warnings, 21 unindexed foreign keys, and 62 unused-index observations;
+- current advisor results include 149 RLS init-plan warnings, 84 multiple-permissive-policy warnings, 21 unindexed foreign keys, and 67 unused-index observations; the new I/O route-evidence foreign-key gaps were resolved before this count;
 - the education upload path expects an `education` storage bucket, but no storage bucket is deployed;
 - quiz correctness can currently be exposed to or evaluated by browser-facing code;
 - vouch issuance remains browser-initiated; Web Crypto reduces predictability, but authoritative server-side issuance, hashing, and rate limits are still required;
@@ -420,7 +420,7 @@ Exit criteria:
 
 **Goal:** deliver India's people-centred AI access port as a governed, transparent exchange, not a single overwritten provider secret.
 
-The detailed implementation status and route design remain in `IO_PORT_IMPLEMENTATION_STATUS.md`, `IO_PORT_CODE_LEVEL_ROADMAP.md`, and `IO_PORT_IMPLEMENTATION_PLAN.md`. The cross-product sequence is:
+The detailed implementation status and route design remain in `io-system/io-port-system/IO_PORT_IMPLEMENTATION_STATUS.md`, `io-system/io-port-system/IO_PORT_CODE_LEVEL_ROADMAP.md`, and `io-system/io-port-system/IO_PORT_IMPLEMENTATION_PLAN.md`. The cross-product sequence is:
 
 1. **Connection resolver:** local source now replaces the three global `IO_PARTNER_*` values with approved endpoint connections using restricted secret references, not stored plaintext. Replay/deploy it and extend it for partner, owned/rented, sponsored/donated, BYOK, and local classes.
 2. **Registry operations:** build reviewed provider/model/endpoint onboarding, versioned capability and pricing records, lifecycle state, evidence, and health inputs.

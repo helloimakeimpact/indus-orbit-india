@@ -28,7 +28,7 @@
     "typecheck": "tsc --noEmit",
     "audit:high": "npm audit --audit-level=high",
     "audit:production": "npm audit --omit=dev --audit-level=high",
-    "test:unit": "node --import tsx --test src/integrations/supabase/runtime-config.test.ts supabase/functions/_shared/io/routing.test.ts",
+    "test:unit": "node --import tsx --test src/integrations/supabase/runtime-config.test.ts supabase/functions/_shared/io/provider-adapter.test.ts supabase/functions/_shared/io/routing.test.ts",
     "verify": "npm run typecheck && npm run build"
   },
   "dependencies": {

@@ -282,6 +282,29 @@ function toGeminiRequest(messages: GatewayMessage[]) {
   };
 }
 
+function toOpenAiCompatibleRequest(connection: ProviderConnection, messages: GatewayMessage[]) {
+  const usesModernCompletionLimit =
+    connection.providerKey === "openai" || connection.providerKey === "groq";
+  const reasoningSettings =
+    connection.providerKey === "deepseek"
+      ? { thinking: { type: "disabled" } }
+      : connection.providerKey === "openai" ||
+          connection.providerKey === "xai" ||
+          connection.providerKey === "groq"
+        ? { reasoning_effort: "low" }
+        : {};
+
+  return {
+    model: connection.providerModelId,
+    messages,
+    ...(usesModernCompletionLimit
+      ? { max_completion_tokens: defaultOutputTokenAllowance }
+      : { max_tokens: defaultOutputTokenAllowance }),
+    ...reasoningSettings,
+    stream: false,
+  };
+}
+
 export async function sendProviderChat(
   connection: ProviderConnection,
   messages: GatewayMessage[],
@@ -297,12 +320,7 @@ export async function sendProviderChat(
     : { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" };
   const body = isGemini
     ? toGeminiRequest(messages)
-    : {
-        model: connection.providerModelId,
-        messages,
-        max_tokens: defaultOutputTokenAllowance,
-        stream: false,
-      };
+    : toOpenAiCompatibleRequest(connection, messages);
 
   let upstream: Response;
   try {

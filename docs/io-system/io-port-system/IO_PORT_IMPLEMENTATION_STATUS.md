@@ -2,29 +2,32 @@
 
 Status: local code, UI, and deployed-database assessment, updated 1 August 2026.
 
-This is the operational source of truth for the current I/O Port implementation. It separates what exists from what is only represented in a plan or preview. Cross-product dependencies and release gates are governed by `MASTER_IMPLEMENTATION_AND_RELEASE_PLAN.md` and `RELEASE_READINESS_CHECKLIST.md`. Product direction remains in `IO_PORT_IMPLEMENTATION_PLAN.md`; the detailed delivery sequence remains in `IO_PORT_CODE_LEVEL_ROADMAP.md`.
+This is the operational source of truth for the current I/O Port implementation. It separates what exists from what is only represented in a plan or preview. Cross-product dependencies and release gates are governed by `../../MASTER_IMPLEMENTATION_AND_RELEASE_PLAN.md` and `../../RELEASE_READINESS_CHECKLIST.md`. Product direction remains in `IO_PORT_IMPLEMENTATION_PLAN.md`; the detailed delivery sequence remains in `IO_PORT_CODE_LEVEL_ROADMAP.md`; the OpenRouter comparison is in `OPENROUTER_CAPABILITY_AND_CAPACITY_PLAN.md`.
 
 ## 1. Executive verdict
 
-I/O Port is **not operationally a multi-provider router yet**. Its local source now contains the multi-provider routing foundation, but its new migration has not been replayed, the gateway has not been redeployed, and there are no reviewed connection records or conformance results.
+I/O Port is **not operationally routing external provider traffic yet**, but its multi-provider foundation is now deployed to the demo project. The route-receipt/resolver migration, five-provider seed and `io-gateway` v17 are live. OpenAI, SpaceXAI/xAI, Gemini, DeepSeek and Groq are staged with separate private connection records and secret references. Every connection remains `testing`, every capability proof remains `draft`, and every provider/endpoint remains in `conformance`, so the resolver returns zero ready routes.
 
-The local code now resolves many approved registry connections through a service-role-only resolver, allows only approved `IO_PROVIDER_*_API_KEY` secret references, evaluates entitled candidates across providers, supports OpenAI-compatible and Gemini-native request adapters, performs bounded fallback for safe upstream failures, and writes a redacted route receipt plus per-provider attempts. The browser can request latest-affordable, lowest-cost, or an approved explicit model and displays the completed receipt. None of this by itself activates a provider or sends traffic.
+The deployed gateway resolves approved registry connections through a service-role-only resolver, allows only approved `IO_PROVIDER_*_API_KEY` secret references, evaluates entitled candidates across providers, supports provider-aware OpenAI-compatible and Gemini-native request adapters, performs bounded fallback for safe upstream failures, and writes a redacted route receipt plus per-provider attempts. The browser can request latest-affordable, lowest-cost, or an approved explicit model and display the completed receipt. None of this by itself activates a provider or sends traffic.
 
-The deployed provider registry is empty. Therefore provider API keys by themselves do not make a provider routable. At the time of this audit the deployed counts are:
+Provider API keys by themselves do not make a provider routable. The verified deployed cohort counts are:
 
 | Deployed record                        | Count |
 | -------------------------------------- | ----: |
-| `io_providers`                         |     0 |
-| `io_models`                            |     0 |
-| `io_model_endpoints`                   |     0 |
-| `io_endpoint_capability_versions`      |     0 |
-| `io_endpoint_pricing_versions`         |     0 |
-| `private.io_endpoint_connections`      |     0 |
+| staged direct `io_providers`           |     5 |
+| staged `io_models`                     |     5 |
+| staged `io_model_endpoints`            |     5 |
+| draft capability versions              |     5 |
+| published evidence-backed price cards  |     5 |
+| testing endpoint connections           |     5 |
 | `private.io_provider_conformance_runs` |     0 |
+| ready resolver results                 |     0 |
+| `io_route_receipts`                    |     0 |
+| `io_provider_attempts`                 |     0 |
 | `io_route_policies`                    |     0 |
 | `io_audit_events`                      |     0 |
 
-The last read-only audit found the Supabase project active with an empty provider registry. This update makes no hosted-database or provider-secret change. The remaining work is migration replay, trusted operator onboarding, conformance, provider deployment, idempotency/health/budget controls, billing ledger, and a fuller live control room.
+The demo deployment contains metadata and secret references, not key values. No provider completion or billable conformance call was made. The remaining work is no-cost contract testing, trusted operator/conformance workflow, deliberately approved bounded live tests, individual provider activation, idempotency/health/budget controls, billing ledger, OpenRouter/other capacity partnerships and a fuller live control room.
 
 ## 2. What “I/O Port” must mean
 
@@ -67,7 +70,7 @@ The member must be able to understand which model, provider, serving region, dat
 - Endpoint connection details and conformance runs are kept in the private schema rather than exposed through the browser Data API.
 - The dynamic-model migration adds reviewed release dates and `economy`/`balanced`/`premium` automatic-route tiers.
 
-### 3.3 Local gateway implementation — awaiting database replay and deployment
+### 3.3 Deployed gateway foundation
 
 - `io-gateway` verifies a user token, active workspace membership, active capacity entitlement, request shape, message limits, and CORS origin.
 - Provider credentials remain server-side.
@@ -76,7 +79,8 @@ The member must be able to understand which model, provider, serving region, dat
 - It supports `latest_affordable`, `lowest_cost`, and an explicit reviewed model. Automatic selection has a configurable tier, freshness window and affordability band; mixed currencies fail closed until reviewed FX conversion exists.
 - An approved connection can resolve only an allowlisted `IO_PROVIDER_*_API_KEY` secret name. The browser receives neither endpoint URL nor credential.
 - The adapter currently normalizes non-streaming OpenAI-compatible Chat Completions and Gemini native `generateContent`; it validates response shapes and normalizes token use and a safe provider request ID.
-- A fresh forward-only migration introduces append-only `io_route_receipts` and `io_provider_attempts`. They exclude prompts, generated text, credentials, headers and raw upstream errors.
+- The deployed forward-only migration introduces append-only `io_route_receipts` and `io_provider_attempts`. They exclude prompts, generated text, credentials, headers and raw upstream errors.
+- A follow-up migration covers every receipt/attempt provider, model, endpoint and capacity foreign key used for operator history and reconciliation; the Performance Advisor reports no remaining unindexed foreign key in the new I/O evidence tables.
 
 ### 3.4 Local terminal and conversation foundation
 
@@ -87,29 +91,29 @@ The member must be able to understand which model, provider, serving region, dat
 
 ### 3.5 Repository verification
 
-| Check                                  | Result                   | Interpretation                                                                              |
-| -------------------------------------- | ------------------------ | ------------------------------------------------------------------------------------------- |
-| `npm run build`                        | Pass                     | The current web application produces a production bundle.                                   |
-| `npm run typecheck`                    | Pass                     | Current browser/server TypeScript compiles.                                                 |
-| `npm run format:check`                 | Pass                     | Mechanical formatting drift has been removed.                                               |
-| `npm run test:unit`                    | Pass — 7/7               | Browser runtime configuration and pure route selection have regression coverage.            |
-| `npm run audit:high`                   | Pass                     | No critical, high or moderate dependency advisory remains.                                  |
-| I/O-focused ESLint run                 | Pass                     | `src/features/io` and I/O routes pass current lint rules.                                   |
-| Repository-wide `npm run lint --quiet` | Pass — 0 errors          | The local semantic lint gate now passes across the repository.                              |
-| Automated I/O router tests             | Core selection: 4/4 pass | The new router source still needs Deno, SQL/RLS and provider-conformance regression suites. |
-| Provider conformance tests             | None recorded            | No provider is operationally certified.                                                     |
+| Check                                  | Result          | Interpretation                                                                             |
+| -------------------------------------- | --------------- | ------------------------------------------------------------------------------------------ |
+| `npm run build`                        | Pass            | The current web application produces a production bundle.                                  |
+| `npm run typecheck`                    | Pass            | Current browser/server TypeScript compiles.                                                |
+| `npm run format:check`                 | Pass            | Mechanical formatting drift has been removed.                                              |
+| `npm run test:unit`                    | Pass — 9/9      | Browser config, route selection and five-provider request-shape fixtures have coverage.    |
+| `npm run audit:high`                   | Pass            | No critical, high or moderate dependency advisory remains.                                 |
+| I/O-focused ESLint run                 | Pass            | `src/features/io` and I/O routes pass current lint rules.                                  |
+| Repository-wide `npm run lint --quiet` | Pass — 0 errors | The local semantic lint gate now passes across the repository.                             |
+| Automated I/O router tests             | 6/6 pass        | Four selection tests plus OpenAI/xAI/DeepSeek/Groq and Gemini request-contract tests pass. |
+| Provider conformance tests             | None recorded   | No provider is operationally certified.                                                    |
 
 ## 4. Implemented, but requires improvement
 
 | Area                      | What exists                                                                                                | Why it is insufficient                                                                                                       | Required improvement                                                                                      |
 | ------------------------- | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| Provider connection       | Local source resolves approved private connection records and provider-specific secret references          | Migration is not applied; no connection has been onboarded or conformance-tested                                             | Replay the migration, then add an audited operator onboarding workflow and reviewed records               |
+| Provider connection       | Five deployed private connection records use distinct provider-specific secret references                  | All remain testing and no conformance result exists                                                                          | Add audited conformance workflow, then activate one approved connection at a time                         |
 | Dynamic model selection   | Local source compares entitled, priced candidates across connections                                       | It does not yet apply formal route-policy versions, health, latency, budget, FX, cached pricing, or user policy              | Add hard policy filters and versioned scoring inputs before activation                                    |
-| Provider registry         | Sound public/private schema split                                                                          | It has no provider, model, endpoint, capability, price, or connection data                                                   | Add an operator onboarding workflow and seed only reviewed records                                        |
+| Provider registry         | Sound public/private schema split plus five staged providers/models/endpoints/prices/connections           | The seed is operator-reviewed inventory, not automated onboarding or live availability                                       | Add operator onboarding, evidence refresh, deprecation and lifecycle workflows                            |
 | Provider adapter          | Local source has OpenAI-compatible and Gemini-native non-streaming adapters                                | No streaming, tools, structured output, multimodal, cancellation, or conformance matrix                                      | Add tested adapter capabilities one provider at a time                                                    |
 | Request validation        | Strict request and normalized response validation                                                          | Streaming frames and provider-specific error schemas are not versioned                                                       | Add schemas and contract tests for each supported feature                                                 |
 | Reliability               | 45-second timeout, rate-limit classification, bounded ordered fallback and attempt records                 | No idempotency, circuit breaker, health sampling, retry budget, queue state, or cancellation                                 | Add these controls before beta traffic                                                                    |
-| Audit                     | Local migration defines immutable receipts and per-provider attempts                                       | It is not yet replayed or operationally verified; policy/health/budget snapshots remain incomplete                           | Apply, RLS-test and reconcile receipts with the eventual ledger                                           |
+| Audit                     | Deployed migration defines immutable receipts and per-provider attempts                                    | No live route has produced one; policy/health/budget snapshots remain incomplete                                             | Add SQL/RLS tests, then verify a bounded conformance receipt and reconcile with the eventual ledger       |
 | Cost estimate             | Character-count token approximation and input/output list price                                            | This is not billing and ignores cached input, tools/media, provider-specific units, FX, fee, tax, and actual settlement      | Add versioned estimation plus reserve-and-settle ledger in integer minor units                            |
 | Capacity truth            | Three labelled demo sources and grants                                                                     | The generic partner/sponsored demo records currently carry `IN` region/residency metadata without provider-specific evidence | Change unknown facts to unknown; attach India claims only to a certified endpoint and evidence version    |
 | Auth runtime              | JWT check with legacy anon/service-role environment variables                                              | It works, but newer publishable/secret key rotation and narrower privileged access should be planned                         | Move to current Supabase key conventions and keep admin client use inside the smallest possible functions |
@@ -174,30 +178,23 @@ Durable terminal work still needs `io_sessions`, session members, events, approv
 
 Do not paste or commit any key. Keep each provider under a unique Supabase Edge Function secret name.
 
-The last deployed gateway reads only this **legacy single-provider proof**:
+The deployed registry/gateway contract uses one unique secret per provider:
 
 ```text
-IO_PARTNER_BASE_URL
-IO_PARTNER_API_KEY
-IO_PARTNER_PROVIDER_KEY
+IO_PROVIDER_OPENAI_API_KEY
+IO_PROVIDER_XAI_API_KEY
+IO_PROVIDER_GEMINI_API_KEY
+IO_PROVIDER_DEEPSEEK_API_KEY
+IO_PROVIDER_GROQ_API_KEY
+IO_PROVIDER_SARVAM_API_KEY       # only after partnership/conformance
+IO_PROVIDER_OPENROUTER_API_KEY   # only if OpenRouter capacity is contracted
 ```
 
-Each name can contain only one value. The confirmation that `IO_PARTNER_BASE_URL` already exists means the new value would replace the existing value. That is normal secret-manager behavior, but it proves this contract is not appropriate for a port with multiple providers.
+The first five names exist in the Supabase Edge Function secret store. Their values were not read, copied or exposed during registry deployment. Additional provider and owned-capacity secrets follow the same unique-name rule. Canonical endpoint URLs, provider identity, account scope, and the secret **name** belong in `private.io_endpoint_connections`; the secret value remains only in the Edge Function secret store.
 
-The target multi-provider secret contract is:
+The deployed gateway reads a provider-specific value only after the service-role-only registry resolver approves its connection and the reference matches `IO_PROVIDER_[A-Z0-9_]+_API_KEY`. The current five rows use the five exact first-cohort names above, but they remain testing and therefore resolve to no route.
 
-```text
-IO_OPENAI_API_KEY
-IO_XAI_API_KEY
-IO_GEMINI_API_KEY
-IO_DEEPSEEK_API_KEY
-IO_SARVAM_API_KEY          # when partnership/conformance is ready
-IO_GROQ_API_KEY            # example future global benchmark
-```
-
-Additional provider and owned-capacity secrets follow the same unique-name rule. Canonical endpoint URLs, provider identity, account scope, and the secret **name** belong in `private.io_endpoint_connections`; the secret value remains only in the Edge Function secret store.
-
-The updated local gateway reads provider-specific names only after a service-role-only registry resolver approves the connection and the secret reference matches `IO_PROVIDER_[A-Z0-9_]+_API_KEY`. Preserve existing provider-specific values and associate their exact names with reviewed private connection rows during onboarding. If several values were successively stored under `IO_PARTNER_API_KEY`, only the final value remains under that legacy name.
+Legacy `IO_PARTNER_BASE_URL`, `IO_PARTNER_API_KEY` and `IO_PARTNER_PROVIDER_KEY` values, if still present, are no longer the current multi-provider contract. Do not overwrite one legacy name repeatedly to add providers.
 
 GitHub repository secrets are not used by the current runtime because this repository has no workflow that synchronizes them into Supabase. Production provider credentials belong in Supabase Edge Function secrets unless a narrowly scoped deployment workflow is deliberately added later.
 
@@ -285,9 +282,9 @@ Only eligible candidates are scored. Score weights must be policy-versioned and 
 
 ### Phase A — truthful state and credential contract
 
-**Local source progress:** items 1 and 3 are implemented in source, but not replayed/deployed. The exit criterion remains open.
+**Deployment progress:** items 1 and 3 are deployed. Five connections coexist safely, but the exit criterion remains open until diagnostics and conformance workflow exist.
 
-1. Preserve provider-specific secrets and stop treating `IO_PARTNER_*` as the target contract. Local code now accepts only restricted `IO_PROVIDER_*_API_KEY` references from approved connection rows.
+1. Preserve provider-specific secrets and stop treating `IO_PARTNER_*` as the target contract. Deployed code accepts only restricted `IO_PROVIDER_*_API_KEY` references from approved connection rows.
 2. Correct generic demo residency/region fields to unknown until endpoint evidence exists.
 3. Add a server-only connection resolver with a strict secret-reference allowlist.
 4. Add current-state/admin diagnostics that report configured connection names and states, never secret values.

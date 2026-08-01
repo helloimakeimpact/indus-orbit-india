@@ -1,8 +1,8 @@
 # I/O Port: 20-provider implementation inventory
 
-Status: operator research inventory and next-phase implementation plan, 31 July 2026. Current deployed readiness and the corrected multi-provider architecture are tracked in `IO_PORT_IMPLEMENTATION_STATUS.md`.
+Status: operator research inventory and next-phase implementation plan, updated 1 August 2026. Current deployed readiness and the corrected multi-provider architecture are tracked in `IO_PORT_IMPLEMENTATION_STATUS.md`.
 
-This is an **evaluation inventory**, not a public model catalogue and not an activation list. Provider keys may now exist in the operator's secret store, but no external provider is currently routable through I/O Port: the deployed registry, endpoint connections, capability certificates, price cards and conformance runs remain empty. A secret is credential material, not activation evidence. Prices, model lists, limits and deployment regions change often; a linked provider page is evidence for research, not a substitute for a signed agreement or an immutable I/O price card.
+This is an **evaluation inventory**, not a public model catalogue and not an activation list. Five direct providers now have one staged model, endpoint, testing connection, draft capability certificate and published evidence-backed price card in the demo registry, but no external provider is routable and no conformance run exists. The other inventory entries remain research only. A secret is credential material, not activation evidence. Prices, model lists, limits and deployment regions change often; a linked provider page is evidence for research, not a substitute for a signed agreement or an immutable I/O price card.
 
 ## 1. How to read the inventory
 

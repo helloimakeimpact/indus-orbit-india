@@ -2,7 +2,7 @@
 
 Indus Orbit is a people-centred Indian community and learning network with public knowledge, member collaboration, action programmes, and the future I/O Port for governed AI access.
 
-The complete delivery order and release gates are in [docs/MASTER_IMPLEMENTATION_AND_RELEASE_PLAN.md](docs/MASTER_IMPLEMENTATION_AND_RELEASE_PLAN.md). The current I/O Port truth is in [docs/IO_PORT_IMPLEMENTATION_STATUS.md](docs/IO_PORT_IMPLEMENTATION_STATUS.md).
+The living whole-product record is in [docs/io-system/README.md](docs/io-system/README.md). The complete delivery order and release gates are in [docs/MASTER_IMPLEMENTATION_AND_RELEASE_PLAN.md](docs/MASTER_IMPLEMENTATION_AND_RELEASE_PLAN.md), and the current I/O Port truth is in [docs/io-system/io-port-system/IO_PORT_IMPLEMENTATION_STATUS.md](docs/io-system/io-port-system/IO_PORT_IMPLEMENTATION_STATUS.md).
 
 ## Local development
 

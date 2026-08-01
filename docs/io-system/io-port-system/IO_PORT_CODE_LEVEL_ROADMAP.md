@@ -8,8 +8,8 @@ Related documents:
 - `IO_PORT_IMPLEMENTATION_STATUS.md` — verified done/partial/not-started assessment and the corrected multi-provider credential/architecture plan.
 - `IO_PORT_OPERATIONS_GUIDE.md` — what is actually deployed in the demo project and how to activate it safely.
 - `IO_PORT_PROVIDER_INVENTORY.md` — the 20-provider research inventory and the ordered implementation gates for converting it into routable capacity.
-- `CONVERSATION_SYSTEM_IMPLEMENTATION_PLAN.md` — the shared Indus Orbit conversation and Discord-like shell plan.
-- `SUPABASE_SCHEMA_RECONCILIATION.md` — remote/local migration-history evidence and recovery sequence.
+- `../conversation-system/CONVERSATION_SYSTEM_IMPLEMENTATION_PLAN.md` — the shared Indus Orbit conversation and Discord-like shell plan.
+- `../../SUPABASE_SCHEMA_RECONCILIATION.md` — remote/local migration-history evidence and recovery sequence.
 
 ## 1. Current implemented proof
 
@@ -114,7 +114,7 @@ io_provider_attempts
 
 **Implemented locally, awaiting replay/deploy:** `20260801003835_io_route_receipts_and_registry_router.sql` adds a service-role-only resolver for ready private connection rows plus append-only `io_route_receipts` and `io_provider_attempts`. The gateway considers active/listed/non-deprecated, entitled candidates with verified chat capability and a current member-visible price card; automatic routes are limited to a configured tier, freshness window and affordability multiple. It supports `latest_affordable`, `lowest_cost` and a reviewed explicit model. Cross-currency automatic comparison fails closed pending reviewed FX data. Candidate selection is deterministic, response handling supports OpenAI-compatible and Gemini-native chat, safe upstream/rate-limit failures can fall back in order, and a receipt ID reaches the web UI. Secret lookup accepts only operator-approved references matching `IO_PROVIDER_[A-Z0-9_]+_API_KEY`.
 
-This replaces the local source's legacy `IO_PARTNER_*` contract; it does not replace anything in the deployed demo until the migration is reconciled and applied, the Edge Function is deployed, and reviewed records/secrets/conformance evidence exist.
+This replaces the legacy `IO_PARTNER_*` contract. The migration and Edge Function are now deployed to the demo, with five reviewed inventory records staged in testing/conformance. No provider is routable until its paid conformance evidence is approved and its connection/capability/endpoint/provider states are deliberately activated.
 
 Provider, model and endpoint records must capture the research gates before they can be activated: `terms_version`, `contracted_region`, `residency_evidence`, retention/training class, resale rights, model revision/licence, commercial-hosting rights, `capacity_mode`, `metering_basis`, health/queue signal, feature support and a versioned price card. See `IO_PORT_PROVIDER_LANDSCAPE.md` for evidence, licence constraints and the proposed commercial model.
 
@@ -199,7 +199,7 @@ Add local-server health, reconnect, session resume, event timeline, approval/rej
 
 ## 9. P5 — shared Discord-like system
 
-The I/O nested shell is a useful prototype, but the lasting system belongs in the app shell so Messages, Missions, Learning and I/O gain the same spatial model. Implement the plan in `CONVERSATION_SYSTEM_IMPLEMENTATION_PLAN.md` through a shared `AppShellContext`, orbit rail, context sidebar and inspector.
+The I/O nested shell is a useful prototype, but the lasting system belongs in the app shell so Messages, Missions, Learning and I/O gain the same spatial model. Implement the plan in `../conversation-system/CONVERSATION_SYSTEM_IMPLEMENTATION_PLAN.md` through a shared `AppShellContext`, orbit rail, context sidebar and inspector.
 
 The data distinction is fixed:
 

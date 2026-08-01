@@ -722,107 +722,6 @@ export type Database = {
         };
         Relationships: [];
       };
-      io_environments: {
-        Row: {
-          created_at: string;
-          created_by: string;
-          environment_type: string;
-          id: string;
-          monthly_budget_inr: number | null;
-          name: string;
-          project_id: string;
-          slug: string;
-          status: string;
-          updated_at: string;
-          workspace_id: string;
-        };
-        Insert: {
-          created_at?: string;
-          created_by: string;
-          environment_type?: string;
-          id?: string;
-          monthly_budget_inr?: number | null;
-          name: string;
-          project_id: string;
-          slug: string;
-          status?: string;
-          updated_at?: string;
-          workspace_id: string;
-        };
-        Update: {
-          created_at?: string;
-          created_by?: string;
-          environment_type?: string;
-          id?: string;
-          monthly_budget_inr?: number | null;
-          name?: string;
-          project_id?: string;
-          slug?: string;
-          status?: string;
-          updated_at?: string;
-          workspace_id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "io_environments_project_workspace_fkey";
-            columns: ["project_id", "workspace_id"];
-            isOneToOne: false;
-            referencedRelation: "io_projects";
-            referencedColumns: ["id", "workspace_id"];
-          },
-          {
-            foreignKeyName: "io_environments_workspace_id_fkey";
-            columns: ["workspace_id"];
-            isOneToOne: false;
-            referencedRelation: "io_workspaces";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
-      io_projects: {
-        Row: {
-          created_at: string;
-          created_by: string;
-          description: string | null;
-          id: string;
-          name: string;
-          slug: string;
-          status: string;
-          updated_at: string;
-          workspace_id: string;
-        };
-        Insert: {
-          created_at?: string;
-          created_by: string;
-          description?: string | null;
-          id?: string;
-          name: string;
-          slug: string;
-          status?: string;
-          updated_at?: string;
-          workspace_id: string;
-        };
-        Update: {
-          created_at?: string;
-          created_by?: string;
-          description?: string | null;
-          id?: string;
-          name?: string;
-          slug?: string;
-          status?: string;
-          updated_at?: string;
-          workspace_id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "io_projects_workspace_id_fkey";
-            columns: ["workspace_id"];
-            isOneToOne: false;
-            referencedRelation: "io_workspaces";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
       io_endpoint_capability_versions: {
         Row: {
           endpoint_id: string;
@@ -964,6 +863,63 @@ export type Database = {
             columns: ["endpoint_id"];
             isOneToOne: false;
             referencedRelation: "io_model_endpoints";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      io_environments: {
+        Row: {
+          created_at: string;
+          created_by: string;
+          environment_type: string;
+          id: string;
+          monthly_budget_inr: number | null;
+          name: string;
+          project_id: string;
+          slug: string;
+          status: string;
+          updated_at: string;
+          workspace_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          created_by: string;
+          environment_type?: string;
+          id?: string;
+          monthly_budget_inr?: number | null;
+          name: string;
+          project_id: string;
+          slug: string;
+          status?: string;
+          updated_at?: string;
+          workspace_id: string;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string;
+          environment_type?: string;
+          id?: string;
+          monthly_budget_inr?: number | null;
+          name?: string;
+          project_id?: string;
+          slug?: string;
+          status?: string;
+          updated_at?: string;
+          workspace_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "io_environments_project_workspace_fkey";
+            columns: ["project_id", "workspace_id"];
+            isOneToOne: false;
+            referencedRelation: "io_projects";
+            referencedColumns: ["id", "workspace_id"];
+          },
+          {
+            foreignKeyName: "io_environments_workspace_id_fkey";
+            columns: ["workspace_id"];
+            isOneToOne: false;
+            referencedRelation: "io_workspaces";
             referencedColumns: ["id"];
           },
         ];
@@ -1120,6 +1076,130 @@ export type Database = {
           },
         ];
       };
+      io_projects: {
+        Row: {
+          created_at: string;
+          created_by: string;
+          description: string | null;
+          id: string;
+          name: string;
+          slug: string;
+          status: string;
+          updated_at: string;
+          workspace_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          created_by: string;
+          description?: string | null;
+          id?: string;
+          name: string;
+          slug: string;
+          status?: string;
+          updated_at?: string;
+          workspace_id: string;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string;
+          description?: string | null;
+          id?: string;
+          name?: string;
+          slug?: string;
+          status?: string;
+          updated_at?: string;
+          workspace_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "io_projects_workspace_id_fkey";
+            columns: ["workspace_id"];
+            isOneToOne: false;
+            referencedRelation: "io_workspaces";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      io_provider_attempts: {
+        Row: {
+          attempt_index: number;
+          attempt_state: string;
+          completed_at: string;
+          endpoint_id: string | null;
+          error_code: string | null;
+          id: string;
+          input_tokens: number | null;
+          model_id: string | null;
+          output_tokens: number | null;
+          provider_id: string | null;
+          provider_request_id: string | null;
+          receipt_id: string;
+          started_at: string;
+          upstream_status: number | null;
+        };
+        Insert: {
+          attempt_index: number;
+          attempt_state: string;
+          completed_at: string;
+          endpoint_id?: string | null;
+          error_code?: string | null;
+          id?: string;
+          input_tokens?: number | null;
+          model_id?: string | null;
+          output_tokens?: number | null;
+          provider_id?: string | null;
+          provider_request_id?: string | null;
+          receipt_id: string;
+          started_at: string;
+          upstream_status?: number | null;
+        };
+        Update: {
+          attempt_index?: number;
+          attempt_state?: string;
+          completed_at?: string;
+          endpoint_id?: string | null;
+          error_code?: string | null;
+          id?: string;
+          input_tokens?: number | null;
+          model_id?: string | null;
+          output_tokens?: number | null;
+          provider_id?: string | null;
+          provider_request_id?: string | null;
+          receipt_id?: string;
+          started_at?: string;
+          upstream_status?: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "io_provider_attempts_endpoint_id_fkey";
+            columns: ["endpoint_id"];
+            isOneToOne: false;
+            referencedRelation: "io_model_endpoints";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "io_provider_attempts_model_id_fkey";
+            columns: ["model_id"];
+            isOneToOne: false;
+            referencedRelation: "io_models";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "io_provider_attempts_provider_id_fkey";
+            columns: ["provider_id"];
+            isOneToOne: false;
+            referencedRelation: "io_providers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "io_provider_attempts_receipt_id_fkey";
+            columns: ["receipt_id"];
+            isOneToOne: false;
+            referencedRelation: "io_route_receipts";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       io_providers: {
         Row: {
           catalogue_visibility: string;
@@ -1239,6 +1319,132 @@ export type Database = {
           },
           {
             foreignKeyName: "io_route_policies_workspace_id_fkey";
+            columns: ["workspace_id"];
+            isOneToOne: false;
+            referencedRelation: "io_workspaces";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      io_route_receipts: {
+        Row: {
+          actor_user_id: string;
+          candidate_count: number;
+          candidate_summary: Json;
+          capability_version: number | null;
+          completed_at: string;
+          created_at: string;
+          estimated_cost_nanos: number | null;
+          fallback_count: number;
+          id: string;
+          input_tokens: number | null;
+          output_tokens: number | null;
+          policy_snapshot: Json;
+          price_version: number | null;
+          request_id: string;
+          result_state: string;
+          route_strategy: string;
+          selected_capacity_mode: string | null;
+          selected_capacity_source_id: string | null;
+          selected_endpoint_id: string | null;
+          selected_model_id: string | null;
+          selected_model_key: string | null;
+          selected_provider_id: string | null;
+          selected_provider_key: string | null;
+          selected_region_code: string | null;
+          selected_residency_country_code: string | null;
+          selected_retention_class: string | null;
+          workspace_id: string;
+        };
+        Insert: {
+          actor_user_id: string;
+          candidate_count?: number;
+          candidate_summary?: Json;
+          capability_version?: number | null;
+          completed_at?: string;
+          created_at?: string;
+          estimated_cost_nanos?: number | null;
+          fallback_count?: number;
+          id?: string;
+          input_tokens?: number | null;
+          output_tokens?: number | null;
+          policy_snapshot?: Json;
+          price_version?: number | null;
+          request_id: string;
+          result_state: string;
+          route_strategy: string;
+          selected_capacity_mode?: string | null;
+          selected_capacity_source_id?: string | null;
+          selected_endpoint_id?: string | null;
+          selected_model_id?: string | null;
+          selected_model_key?: string | null;
+          selected_provider_id?: string | null;
+          selected_provider_key?: string | null;
+          selected_region_code?: string | null;
+          selected_residency_country_code?: string | null;
+          selected_retention_class?: string | null;
+          workspace_id: string;
+        };
+        Update: {
+          actor_user_id?: string;
+          candidate_count?: number;
+          candidate_summary?: Json;
+          capability_version?: number | null;
+          completed_at?: string;
+          created_at?: string;
+          estimated_cost_nanos?: number | null;
+          fallback_count?: number;
+          id?: string;
+          input_tokens?: number | null;
+          output_tokens?: number | null;
+          policy_snapshot?: Json;
+          price_version?: number | null;
+          request_id?: string;
+          result_state?: string;
+          route_strategy?: string;
+          selected_capacity_mode?: string | null;
+          selected_capacity_source_id?: string | null;
+          selected_endpoint_id?: string | null;
+          selected_model_id?: string | null;
+          selected_model_key?: string | null;
+          selected_provider_id?: string | null;
+          selected_provider_key?: string | null;
+          selected_region_code?: string | null;
+          selected_residency_country_code?: string | null;
+          selected_retention_class?: string | null;
+          workspace_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "io_route_receipts_selected_capacity_source_id_fkey";
+            columns: ["selected_capacity_source_id"];
+            isOneToOne: false;
+            referencedRelation: "io_capacity_sources";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "io_route_receipts_selected_endpoint_id_fkey";
+            columns: ["selected_endpoint_id"];
+            isOneToOne: false;
+            referencedRelation: "io_model_endpoints";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "io_route_receipts_selected_model_id_fkey";
+            columns: ["selected_model_id"];
+            isOneToOne: false;
+            referencedRelation: "io_models";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "io_route_receipts_selected_provider_id_fkey";
+            columns: ["selected_provider_id"];
+            isOneToOne: false;
+            referencedRelation: "io_providers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "io_route_receipts_workspace_id_fkey";
             columns: ["workspace_id"];
             isOneToOne: false;
             referencedRelation: "io_workspaces";
@@ -2844,8 +3050,25 @@ export type Database = {
       };
       can_author_education: { Args: { _user_id: string }; Returns: boolean };
       create_my_io_workspace: {
-        Args: Record<PropertyKey, never>;
-        Returns: Database["public"]["Tables"]["io_workspaces"]["Row"];
+        Args: never;
+        Returns: {
+          chapter_id: string | null;
+          created_at: string;
+          created_by: string;
+          description: string | null;
+          id: string;
+          mission_id: string | null;
+          name: string;
+          slug: string;
+          status: string;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "io_workspaces";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
       };
       event_rsvp_counts: { Args: { _event_id: string }; Returns: Json };
       get_connection_email: {
@@ -2858,6 +3081,37 @@ export type Database = {
           _user_id: string;
         };
         Returns: boolean;
+      };
+      io_get_ready_endpoint_connections: {
+        Args: never;
+        Returns: {
+          auto_route_tier: string;
+          capability_version: number;
+          capacity_mode: string;
+          capacity_source_id: string;
+          currency_code: string;
+          endpoint_base_url: string;
+          endpoint_id: string;
+          endpoint_key: string;
+          input_price_nanos: number;
+          integration_style: string;
+          max_context_tokens: number;
+          model_deprecation_at: string;
+          model_display_name: string;
+          model_id: string;
+          model_release_date: string;
+          output_price_nanos: number;
+          price_version: number;
+          provider_display_name: string;
+          provider_id: string;
+          provider_key: string;
+          provider_model_id: string;
+          region_code: string;
+          residency_country_code: string;
+          retention_class: string;
+          secret_reference: string;
+          unit_quantity: number;
+        }[];
       };
       is_chapter_lead: {
         Args: { _chapter_id: string; _user_id: string };

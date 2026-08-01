@@ -1,8 +1,7 @@
 -- I/O Port: server-only registry resolver and immutable route evidence.
 --
--- This migration is source-only until migration history is reconciled in a
--- resettable non-production database. It never stores provider credentials,
--- prompts, generated content, headers, or raw provider errors.
+-- It never stores provider credentials, prompts, generated content, headers,
+-- or raw provider errors.
 
 -- Endpoint destinations and secret-reference names are private metadata. Edge
 -- Functions need a narrow server-only way to read already-approved connection
@@ -43,12 +42,8 @@ set search_path = ''
 as $function$
 begin
   -- This public-schema RPC exists only because Edge Functions reach Postgres
-  -- through the Supabase API. It is deliberately callable only with the
-  -- service-role JWT and is separately revoked from browser-facing roles.
-  if coalesce(auth.role(), '') <> 'service_role' then
-    raise exception 'I/O endpoint connection lookup is service-role only'
-      using errcode = '42501';
-  end if;
+  -- through the Supabase API. EXECUTE is deliberately granted only to the
+  -- service_role database role and revoked from browser-facing roles.
 
   return query
   select
@@ -125,7 +120,7 @@ revoke all on function public.io_get_ready_endpoint_connections() from public, a
 grant execute on function public.io_get_ready_endpoint_connections() to service_role;
 
 comment on function public.io_get_ready_endpoint_connections() is
-  'Service-role-only registry resolver. It rejects non-service JWTs and returns approved endpoint destinations and secret-reference names, never credential values.';
+  'Service-role-only registry resolver. EXECUTE privileges restrict callers; it returns approved endpoint destinations and secret-reference names, never credential values.';
 
 create table public.io_route_receipts (
   id uuid primary key default gen_random_uuid(),
@@ -249,3 +244,4 @@ using (
 
 revoke all on public.io_route_receipts, public.io_provider_attempts from anon, authenticated;
 grant select on public.io_route_receipts, public.io_provider_attempts to authenticated;
+grant select, insert on public.io_route_receipts, public.io_provider_attempts to service_role;
