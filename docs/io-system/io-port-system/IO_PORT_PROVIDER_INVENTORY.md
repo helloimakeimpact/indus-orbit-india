@@ -171,7 +171,7 @@ For a direct API, the calculation is input + cached input + output + media/tool/
 
 **Goal:** expose the decision, not just the model name.
 
-Extend the current `/app/io` UI and its Discord-like persistent-space shell with:
+Extend the current top-level `/io` UI and its Discord-like persistent-space shell with:
 
 1. a policy selector explaining India-only, India-preferred, global, local device and BYOK in plain language;
 2. a model chooser showing revision, creator/origin, licence, capabilities, price-card version and endpoint region evidence;

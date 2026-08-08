@@ -204,10 +204,10 @@ Exit criteria:
 - Performance Advisor findings are resolved or documented with benchmark evidence and an owner;
 - authorization tests pass in CI and after deployment.
 
-Implementation evidence on 1 August 2026:
+Implementation evidence updated 8 August 2026:
 
 - **Verified locally:** the full checked-in migration chain replays from an empty database after three documented historical/environment recovery corrections;
-- **Verified locally:** 127 pgTAP assertions cover critical schema/grants, notification owner access, endpoint-bound latest-conformance routing, guarded vouch/audit contracts and the read-only Loops archive boundary;
+- **Verified locally:** all 57 migrations replay and 231 pgTAP assertions cover critical schema/grants, notification owner access, endpoint-bound latest-conformance routing, guarded vouch/audit contracts, the read-only Loops archive, I/O/Community product separation and global-location privacy;
 - **Verified locally:** public/private schema lint and error-level Supabase security/performance advisors report no findings;
 - **Implemented, remote evidence pending:** `.github/workflows/database.yml` replays migrations, runs pgTAP and fails on database lint errors with the locked Supabase CLI dependency;
 - **Partial containment:** anonymous notification access is removed locally, but the authenticated generic notification RPC remains temporarily compatible and high risk;

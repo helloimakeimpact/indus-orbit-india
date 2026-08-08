@@ -1,6 +1,6 @@
 # Indus Orbit Production v1 release readiness checklist
 
-Status: active evidence tracker, updated 1 August 2026  
+Status: active evidence tracker, updated 8 August 2026
 Release candidate: not assigned  
 Release owner: unassigned  
 Production target: not scheduled  
@@ -26,11 +26,11 @@ External CI, design, issue, and monitoring links may be used when access and ret
 
 ## 2. Current verified baseline — not release approval
 
-| Check                             | Result on 1 August 2026                | Meaning                                                                                                                   |
+| Check                             | Result on 8 August 2026                | Meaning                                                                                                                   |
 | --------------------------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
 | Production web build              | Pass                                   | The current bundle builds; it does not prove runtime workflows                                                            |
 | TypeScript `--noEmit`             | Pass                                   | Current TypeScript compiles                                                                                               |
-| Unit tests                        | Pass — 24/24                           | Browser configuration, conversation merge, OpenCode, gateway validation, provider adapter and routing fixtures pass       |
+| Unit tests                        | Pass — 32/32                           | Auth intent, product/location contracts, configuration, conversations, OpenCode, gateway, provider and routing tests pass |
 | Formatting check                  | Pass                                   | Mechanical formatting drift has been removed                                                                              |
 | Dependency audit (high and above) | Pass                                   | No critical, high, or moderate dependency advisory remains                                                                |
 | Dependency audit (all severities) | 2 low advisories remain                | Babel/esbuild transitive advisories remain tracked                                                                        |
@@ -38,7 +38,7 @@ External CI, design, issue, and monitoring links may be used when access and ret
 | GitHub database workflow          | Configured; no remote run recorded yet | Empty replay, pgTAP, public/private schema lint and guaranteed local-stack cleanup are defined                            |
 | Repository lint                   | Pass — 0 errors                        | Local semantic lint gate passes; CI evidence and broader product/integration coverage remain incomplete                   |
 | Automated product/router tests    | Core selection coverage only           | New registry router/UI source is browser-build checked but still needs Deno, SQL/RLS and conformance tests                |
-| Database contract tests           | Pass — 127/127                         | Critical schema/grants, notification owner ACL, provider evidence, vouch contracts and Loops archival access pass locally |
+| Database contract tests           | Pass — 231/231                         | Adds product separation and global-location privacy to schema/grant, notification, provider, vouch and archive contracts  |
 | Provider conformance records      | Zero                                   | No provider is production-certified                                                                                       |
 | Supabase missing-history recovery | Empty local replay passes              | Three explicit historical/environment recovery exceptions are documented; remote history was not rewritten                |
 | Supabase migration equivalence    | Partial                                | Local replay is proven; demo comparison, Realtime owner policy and generated-type drift remain open                       |
@@ -60,7 +60,7 @@ External CI, design, issue, and monitoring links may be used when access and ret
 | B-010 | Public model/price/FX claims are hard-coded without evidence workflow                                                                         | Unassigned | Open   | —                                                                               |
 | B-011 | Five I/O providers are staged, but none has passed current endpoint-bound conformance and every runtime switch remains off                    | Unassigned | Open   | —                                                                               |
 | B-012 | Operations, legal, privacy, support, backup, and incident approvals are incomplete                                                            | Unassigned | Open   | —                                                                               |
-| B-013 | Production build has a 647.86 kB minified JavaScript chunk; route/vendor splitting and measured performance budgets are not complete          | Unassigned | Open   | —                                                                               |
+| B-013 | Production build has a 645.62 kB minified JavaScript chunk; route/vendor splitting and measured performance budgets are not complete          | Unassigned | Open   | —                                                                               |
 | B-014 | I/O gateway is deployed to demo but lacks activation-grade conformance, budget reservation, idempotency and health/circuit controls           | Unassigned | Open   | —                                                                               |
 | B-015 | Generic authenticated notification injection and the browser-callable arbitrary-recipient/subject/HTML email dispatcher remain unsafe         | Unassigned | Open   | `docs/io-system/conversation-system/CONVERSATION_SYSTEM_IMPLEMENTATION_PLAN.md` |
 

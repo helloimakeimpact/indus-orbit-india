@@ -3,15 +3,13 @@ import { useEffect, useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { getHumanCheck, nextHumanCheckIndex } from "@/lib/human-check";
+import { getAuthSearch, type AuthReturnPath } from "@/lib/auth-navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { cn } from "@/lib/utils";
 import logo from "@/assets/indus-orbit-logo.png";
-import contactImg from "@/assets/contact-rooftop.jpg";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -20,10 +18,7 @@ export const Route = createFileRoute("/auth")({
       { name: "description", content: "Sign in or create your Indus Orbit member account." },
     ],
   }),
-  validateSearch: (s: Record<string, unknown>) => ({
-    tab: s.tab === "signup" ? "signup" : "signin",
-    admin: s.admin === "true" || s.admin === true,
-  }),
+  validateSearch: getAuthSearch,
   component: AuthPage,
 });
 
@@ -45,13 +40,9 @@ function AuthPage() {
 
   useEffect(() => {
     if (!loading && user) {
-      navigate({ to: "/onboarding" });
+      navigate({ to: search.next, replace: true });
     }
-  }, [user, loading, navigate]);
-
-  if (!search.admin) {
-    return <RestrictedAuthView />;
-  }
+  }, [user, loading, navigate, search.next]);
 
   return (
     <div className="min-h-screen bg-[var(--indigo-night)] text-[var(--parchment)] flex items-center justify-center px-4 py-12">
@@ -70,14 +61,16 @@ function AuthPage() {
             <TabsContent value="signin" className="mt-6">
               <SignInForm />
               <Divider />
-              <GoogleButton />
+              <GoogleButton destination={search.next} />
             </TabsContent>
             <TabsContent value="signup" className="mt-6">
-              <SignUpForm />
+              <SignUpForm destination={search.next} />
               <Divider />
-              <GoogleButton />
+              <GoogleButton destination={search.next} />
               <p className="mt-4 text-center text-xs text-muted-foreground">
-                After you sign up, we'll ask a few quick questions to set up your profile.
+                {search.intent === "io"
+                  ? "Your account opens I/O Port first. Joining the community is a separate choice."
+                  : "After signing in, you can choose whether to join and set up your community profile."}
               </p>
             </TabsContent>
           </Tabs>
@@ -180,7 +173,7 @@ function SignInForm() {
   );
 }
 
-function SignUpForm() {
+function SignUpForm({ destination }: { destination: AuthReturnPath }) {
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -198,7 +191,7 @@ function SignUpForm() {
       email: parsed.data.email,
       password: parsed.data.password,
       options: {
-        emailRedirectTo: `${window.location.origin}/onboarding`,
+        emailRedirectTo: `${window.location.origin}${destination}`,
         data: { display_name: parsed.data.displayName },
       },
     });
@@ -207,7 +200,11 @@ function SignUpForm() {
       toast.error(error.message);
       return;
     }
-    toast.success("Account created. Let's set up your profile.");
+    toast.success(
+      destination === "/io"
+        ? "Account created. Check your email if confirmation is required."
+        : "Account created. Continue to the community when you are ready.",
+    );
   }
 
   return (
@@ -253,13 +250,13 @@ function SignUpForm() {
   );
 }
 
-function GoogleButton() {
+function GoogleButton({ destination }: { destination: AuthReturnPath }) {
   const [busy, setBusy] = useState(false);
   async function onClick() {
     setBusy(true);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/onboarding` },
+      options: { redirectTo: `${window.location.origin}${destination}` },
     });
     if (error) {
       toast.error(error.message);
@@ -288,155 +285,5 @@ function GoogleButton() {
       </svg>
       Continue with Google
     </Button>
-  );
-}
-
-function RestrictedAuthView() {
-  const [role, setRole] = useState<"Youth" | "Expert" | "Investor" | "Partner">("Youth");
-  const [submitting, setSubmitting] = useState(false);
-  const [humanCheckIndex, setHumanCheckIndex] = useState(0);
-  const [answer, setAnswer] = useState("");
-  const { left: num1, right: num2 } = getHumanCheck(humanCheckIndex);
-
-  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (parseInt(answer) !== num1 + num2) {
-      toast.error("Incorrect math answer. Are you human?");
-      return;
-    }
-    setSubmitting(true);
-
-    const formData = new FormData(e.currentTarget);
-    const name = formData.get("name") as string;
-    const email = formData.get("email") as string;
-    const message = formData.get("message") as string;
-
-    const { error } = await supabase.from("contact_submissions").insert([
-      {
-        name,
-        email,
-        role,
-        message,
-        source: "auth_restricted_page",
-      },
-    ]);
-
-    setSubmitting(false);
-
-    if (error) {
-      toast.error("Failed to send message. Please try again later.");
-    } else {
-      (e.target as HTMLFormElement).reset();
-      setAnswer("");
-      setHumanCheckIndex(nextHumanCheckIndex);
-      toast.success("Thanks — we'll be in touch soon.");
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-[var(--indigo-night)] flex flex-col md:flex-row">
-      <div className="w-full md:w-1/2 relative h-64 md:h-auto">
-        <img
-          src={contactImg}
-          alt="Indus Orbit Rooftop"
-          className="absolute inset-0 h-full w-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-[var(--indigo-night)] via-[var(--indigo-night)]/80 to-transparent" />
-        <div className="absolute bottom-10 left-6 md:left-12 max-w-sm">
-          <Link to="/" className="flex items-center gap-2 mb-6">
-            <img src={logo} alt="Indus Orbit" width={32} height={32} className="invert" />
-            <span className="font-display text-2xl font-semibold text-white">Indus Orbit</span>
-          </Link>
-          <h1 className="text-3xl md:text-4xl font-display font-medium text-white mb-3 leading-tight">
-            Access Restricted
-          </h1>
-          <p className="text-white/80 leading-relaxed">
-            Indus Orbit platform access is currently invitation only. If you'd like to join the
-            orbit as a builder, expert, or partner, please get in touch.
-          </p>
-        </div>
-      </div>
-
-      <div className="w-full md:w-1/2 flex items-center justify-center p-6 md:p-12 overflow-y-auto">
-        <div className="w-full max-w-md bg-[var(--parchment)] p-8 rounded-3xl shadow-2xl">
-          <h2 className="text-2xl font-display font-semibold mb-6 text-foreground">
-            Request Access
-          </h2>
-          <form onSubmit={onSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="name">Your name</Label>
-              <Input id="name" name="name" required className="mt-1" placeholder="Aarav Sharma" />
-            </div>
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                required
-                className="mt-1"
-                placeholder="you@domain.com"
-              />
-            </div>
-            <div>
-              <Label>I am a...</Label>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {(["Youth", "Expert", "Investor", "Partner"] as const).map((r) => (
-                  <button
-                    key={r}
-                    type="button"
-                    onClick={() => setRole(r)}
-                    className={cn(
-                      "rounded-full border px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition",
-                      role === r
-                        ? "border-[var(--indigo-night)] bg-[var(--indigo-night)] text-[var(--parchment)]"
-                        : "border-border bg-background text-foreground/70 hover:bg-foreground/5",
-                    )}
-                  >
-                    {r}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="message">Message</Label>
-              <textarea
-                id="message"
-                name="message"
-                required
-                rows={3}
-                placeholder="Tell us what you're building or what you'd like to bring."
-                className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              />
-            </div>
-            <div>
-              <Label>
-                Verify you're human: {num1} + {num2} = ?
-              </Label>
-              <Input
-                type="number"
-                value={answer}
-                onChange={(e) => setAnswer(e.target.value)}
-                required
-                className="mt-1 w-24"
-                placeholder="Answer"
-              />
-            </div>
-            <Button
-              type="submit"
-              disabled={submitting}
-              className="w-full mt-6 bg-[var(--indigo-night)] text-[var(--parchment)] hover:bg-[var(--indigo-night)]/90 py-6 text-base"
-            >
-              {submitting ? "Sending..." : "Send to the orbit"}
-            </Button>
-          </form>
-          <div className="mt-6 text-center">
-            <Link to="/" className="text-sm text-muted-foreground hover:underline">
-              ← Back to home
-            </Link>
-          </div>
-        </div>
-      </div>
-    </div>
   );
 }

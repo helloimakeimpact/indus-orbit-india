@@ -446,7 +446,9 @@ function PublicProfilePage() {
               )}
               {!user && (
                 <Button asChild className="rounded-full">
-                  <Link to="/auth">Join to connect</Link>
+                  <Link to="/auth" search={{ tab: "signup", intent: "community", next: "/app" }}>
+                    Join to connect
+                  </Link>
                 </Button>
               )}
               <Button onClick={copyProfile} variant="outline" className="rounded-full">
@@ -483,7 +485,9 @@ function PublicProfilePage() {
                   build in public.
                 </p>
                 <Button asChild className="mt-4 w-full rounded-full">
-                  <Link to="/auth">Create account</Link>
+                  <Link to="/auth" search={{ tab: "signup", intent: "community", next: "/app" }}>
+                    Create account
+                  </Link>
                 </Button>
               </section>
             )}

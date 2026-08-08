@@ -1,6 +1,6 @@
 # I/O Port implementation status and multi-provider readiness
 
-Status: local code, UI, and deployed-database assessment, updated 1 August 2026.
+Status: local code, UI, and deployed-database assessment, updated 8 August 2026.
 
 This is the operational source of truth for the current I/O Port implementation. It separates what exists from what is only represented in a plan or preview. Cross-product dependencies and release gates are governed by `../../MASTER_IMPLEMENTATION_AND_RELEASE_PLAN.md` and `../../RELEASE_READINESS_CHECKLIST.md`. Product direction remains in `IO_PORT_IMPLEMENTATION_PLAN.md`; the detailed delivery sequence remains in `IO_PORT_CODE_LEVEL_ROADMAP.md`; the OpenRouter comparison is in `OPENROUTER_CAPABILITY_AND_CAPACITY_PLAN.md`.
 
@@ -58,7 +58,8 @@ The member must be able to understand which model, provider, serving region, dat
 ### 3.1 Product and UI foundation
 
 - Public `/io-port` accurately describes the gateway and control room as private beta and the terminal as next. It does not claim that providers or public capacity are live.
-- Authenticated `/app/io` exists inside the existing Indus Orbit shell and keeps the visual language indigo, parchment, saffron, and people-centred.
+- Authenticated top-level `/io` has its own branded product shell and accepts any signed-in Indus Orbit identity without Community onboarding, location, vouch or verification. `/app/io` redirects before the Community gate.
+- The Community switch opens `/app`; a nonmember sees an explicit I/O-versus-Community choice and setup starts only after a deliberate Community action.
 - The working overview can create/select a workspace, display entitled capacity sources and safe audit events, select Observe/Plan/Build/Run, and choose between local OpenCode and a provider-partnership path.
 - The provider path calls a safe catalogue action and presents `Latest + affordable`, `Lowest cost`, and an explicit reviewed-model selector. It remains disabled until the gateway returns an entitled reviewed route.
 - The nested I/O shell provides the intended context navigation and activity-inspector geometry. Its static counts, health, workspace label, and activity cards are visibly labelled preview.
@@ -97,19 +98,20 @@ The member must be able to understand which model, provider, serving region, dat
 
 ### 3.5 Repository verification
 
-| Check                                  | Result          | Interpretation                                                                                                                    |
-| -------------------------------------- | --------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `npm run build`                        | Pass            | The current web application produces a production bundle.                                                                         |
-| `npm run typecheck`                    | Pass            | Current browser/server TypeScript compiles.                                                                                       |
-| `npm run format:check`                 | Pass            | Mechanical formatting drift has been removed.                                                                                     |
-| `npm run test:unit`                    | Pass — 24/24    | Config, conversation state, OpenCode, gateway validation, adapters and routing have coverage.                                     |
-| `npm run audit:high`                   | Pass            | No critical, high or moderate dependency advisory remains.                                                                        |
-| I/O-focused ESLint run                 | Pass            | `src/features/io` and I/O routes pass current lint rules.                                                                         |
-| Repository-wide `npm run lint --quiet` | Pass — 0 errors | The local semantic lint gate now passes across the repository.                                                                    |
-| Automated I/O/router contract tests    | 19/19 pass      | OpenCode, validation, selection/attempt bounds and provider request/error fixtures pass.                                          |
-| Empty Supabase migration replay        | Pass            | A fresh local Postgres database applies the full checked-in chain; demo comparison remains.                                       |
-| Database provider/ACL/schema contracts | 127/127 pass    | Latest-evidence routing, notification ownership, vouch/audit behavior, retired-product ACL and critical schema/grants are tested. |
-| Provider conformance tests             | None recorded   | No provider is operationally certified.                                                                                           |
+| Check                                  | Result          | Interpretation                                                                                                                      |
+| -------------------------------------- | --------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run build`                        | Pass            | The current web application produces a production bundle.                                                                           |
+| `npm run typecheck`                    | Pass            | Current browser/server TypeScript compiles.                                                                                         |
+| `npm run format:check`                 | Pass            | Mechanical formatting drift has been removed.                                                                                       |
+| `npm run test:unit`                    | Pass — 32/32    | Auth intent, product/location decoders, config, conversation state, OpenCode, gateway validation, adapters and routing are covered. |
+| `npm run audit:high`                   | Pass            | No critical, high or moderate dependency advisory remains.                                                                          |
+| I/O-focused ESLint run                 | Pass            | `src/features/io` and I/O routes pass current lint rules.                                                                           |
+| Repository-wide `npm run lint --quiet` | Pass — 0 errors | The local semantic lint gate now passes across the repository.                                                                      |
+| Automated I/O/router contract tests    | 19/19 pass      | OpenCode, validation, selection/attempt bounds and provider request/error fixtures pass.                                            |
+| Empty Supabase migration replay        | Pass — 57       | A fresh local Postgres database applies every checked-in migration; demo comparison remains.                                        |
+| Database provider/ACL/schema contracts | 231/231 pass    | Adds product separation and global-location privacy to provider, notification, vouch, archive and core schema/grant coverage.       |
+| Supabase schema lint                   | Pass            | The local `public` and `private` schemas report no lint errors.                                                                     |
+| Provider conformance tests             | None recorded   | No provider is operationally certified.                                                                                             |
 
 ## 4. Implemented, but requires improvement
 
@@ -355,21 +357,19 @@ Exit: a capped private cohort can operate under measured reliability, spend, pri
 
 ## 10. Immediate next code slice
 
-The highest-leverage next slice is **Phase A plus the schema half of Phase C**:
+The highest-leverage next slice is **deploy and prove the locally Verified boundary, then finish provider conformance without enabling general traffic**:
 
-1. migrate route definitions, idempotency records, receipts, attempts, and health samples;
-2. formalize the private connection record and secret-reference restriction;
-3. implement provider-specific credential resolution without dispatching traffic;
-4. seed reviewed provider/model/endpoint records for the four available global keys, with region/retention left unverified until evidence is recorded;
-5. implement conformance-only adapter calls;
-6. add unit/integration tests for candidate filtering, secret isolation, response validation, and fallback invariants.
-
-This turns the added keys into safe, simultaneous connections and creates the base on which the UI, pricing ledger, partnerships, and public API can honestly proceed.
+1. deploy the product-access and global-location migrations and verify remote grants/RLS/backfill;
+2. run I/O-only, Community opt-in, existing-member and location-consent browser personas;
+3. add location review/withdrawal to Settings and operator-only aggregate measurement with small-cohort suppression;
+4. build the provider evidence/conformance runner and two-person activation review;
+5. run only explicitly approved, bounded provider conformance calls and store sanitized results;
+6. add budget reservation, idempotency, health and kill-switch evidence before making any provider routable.
 
 ## 11. Verification basis and limits
 
-This assessment used the local source, migration history, build/type/lint checks, the running public `/io-port` page, and read-only inspection of the connected Supabase project, its tables, migrations, and Edge Functions.
+This assessment used the local source, a zero-state 57-migration replay, 231 pgTAP assertions, schema lint, build/type/format/lint checks, and read-only inspection of the connected Supabase project, its tables, migrations and Edge Functions.
 
 The connected Supabase tools do not expose Edge Function secret names or values. Consequently this audit confirms what names the code reads and what provider records exist, but it cannot confirm which provider-specific secrets the operator added. No secret should be copied into an issue, chat, document, log, table, or repository to overcome that limitation.
 
-The authenticated `/app/io` page redirected to invitation-only access in the available browser session, so its live member data was not exercised. Its routes, components, data client, and gateway calls were inspected directly, and the I/O-focused code passed build/type/lint verification. No database row, secret, Edge Function, or production configuration was changed during this assessment.
+The top-level `/io` route, explicit Community gate and optional country-first location journey are locally Verified in source and database contracts, but their full browser personas and remote deployment have not yet been exercised. No provider request, secret read, Edge Function deployment or paid traffic was performed during this phase.

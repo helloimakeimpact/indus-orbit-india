@@ -499,6 +499,129 @@ export type Database = {
           },
         ];
       };
+      geo_countries: {
+        Row: {
+          active: boolean;
+          country_code: string;
+          display_name: string;
+          source_version: string;
+        };
+        Insert: {
+          active?: boolean;
+          country_code: string;
+          display_name: string;
+          source_version?: string;
+        };
+        Update: {
+          active?: boolean;
+          country_code?: string;
+          display_name?: string;
+          source_version?: string;
+        };
+        Relationships: [];
+      };
+      geo_places: {
+        Row: {
+          active: boolean;
+          country_code: string;
+          created_at: string;
+          display_name: string;
+          id: string;
+          normalized_name: string;
+          region_id: string | null;
+          source_key: string | null;
+          source_version: string | null;
+          timezone_name: string | null;
+        };
+        Insert: {
+          active?: boolean;
+          country_code: string;
+          created_at?: string;
+          display_name: string;
+          id?: string;
+          normalized_name: string;
+          region_id?: string | null;
+          source_key?: string | null;
+          source_version?: string | null;
+          timezone_name?: string | null;
+        };
+        Update: {
+          active?: boolean;
+          country_code?: string;
+          created_at?: string;
+          display_name?: string;
+          id?: string;
+          normalized_name?: string;
+          region_id?: string | null;
+          source_key?: string | null;
+          source_version?: string | null;
+          timezone_name?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "geo_places_country_code_fkey";
+            columns: ["country_code"];
+            isOneToOne: false;
+            referencedRelation: "geo_countries";
+            referencedColumns: ["country_code"];
+          },
+          {
+            foreignKeyName: "geo_places_region_country_fkey";
+            columns: ["region_id", "country_code"];
+            isOneToOne: false;
+            referencedRelation: "geo_regions";
+            referencedColumns: ["id", "country_code"];
+          },
+          {
+            foreignKeyName: "geo_places_region_id_fkey";
+            columns: ["region_id"];
+            isOneToOne: false;
+            referencedRelation: "geo_regions";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      geo_regions: {
+        Row: {
+          active: boolean;
+          country_code: string;
+          created_at: string;
+          display_name: string;
+          id: string;
+          region_code: string;
+          source_key: string | null;
+          source_version: string | null;
+        };
+        Insert: {
+          active?: boolean;
+          country_code: string;
+          created_at?: string;
+          display_name: string;
+          id?: string;
+          region_code: string;
+          source_key?: string | null;
+          source_version?: string | null;
+        };
+        Update: {
+          active?: boolean;
+          country_code?: string;
+          created_at?: string;
+          display_name?: string;
+          id?: string;
+          region_code?: string;
+          source_key?: string | null;
+          source_version?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "geo_regions_country_code_fkey";
+            columns: ["country_code"];
+            isOneToOne: false;
+            referencedRelation: "geo_countries";
+            referencedColumns: ["country_code"];
+          },
+        ];
+      };
       io_api_keys: {
         Row: {
           created_at: string;
@@ -1829,6 +1952,77 @@ export type Database = {
         };
         Relationships: [];
       };
+      member_location_shares: {
+        Row: {
+          audience: string;
+          city_label: string | null;
+          consent_version: string;
+          country_code: string;
+          place_id: string | null;
+          precision: string;
+          region_id: string | null;
+          region_label: string | null;
+          shared_at: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          audience: string;
+          city_label?: string | null;
+          consent_version: string;
+          country_code: string;
+          place_id?: string | null;
+          precision: string;
+          region_id?: string | null;
+          region_label?: string | null;
+          shared_at?: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          audience?: string;
+          city_label?: string | null;
+          consent_version?: string;
+          country_code?: string;
+          place_id?: string | null;
+          precision?: string;
+          region_id?: string | null;
+          region_label?: string | null;
+          shared_at?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "member_location_shares_country_code_fkey";
+            columns: ["country_code"];
+            isOneToOne: false;
+            referencedRelation: "geo_countries";
+            referencedColumns: ["country_code"];
+          },
+          {
+            foreignKeyName: "member_location_shares_place_country_fkey";
+            columns: ["place_id", "country_code"];
+            isOneToOne: false;
+            referencedRelation: "geo_places";
+            referencedColumns: ["id", "country_code"];
+          },
+          {
+            foreignKeyName: "member_location_shares_region_country_fkey";
+            columns: ["region_id", "country_code"];
+            isOneToOne: false;
+            referencedRelation: "geo_regions";
+            referencedColumns: ["id", "country_code"];
+          },
+          {
+            foreignKeyName: "member_location_shares_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: true;
+            referencedRelation: "profiles";
+            referencedColumns: ["user_id"];
+          },
+        ];
+      };
       member_suspensions: {
         Row: {
           actor_id: string;
@@ -3106,6 +3300,17 @@ export type Database = {
         Returns: Json;
       };
       can_author_education: { Args: { _user_id: string }; Returns: boolean };
+      complete_my_community_onboarding: {
+        Args: { _client_operation_id: string; _version: number };
+        Returns: {
+          community_access: boolean;
+          community_current_step: string;
+          community_status: string;
+          community_version: number;
+          io_access: boolean;
+          measurement_consent: boolean;
+        }[];
+      };
       create_my_io_workspace: {
         Args: never;
         Returns: {
@@ -3133,6 +3338,18 @@ export type Database = {
         Returns: string;
       };
       get_my_admin_access: { Args: never; Returns: Json };
+      get_my_location_preferences: { Args: never; Returns: Json };
+      get_my_product_access: {
+        Args: never;
+        Returns: {
+          community_access: boolean;
+          community_current_step: string;
+          community_status: string;
+          community_version: number;
+          io_access: boolean;
+          measurement_consent: boolean;
+        }[];
+      };
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"];
@@ -3209,6 +3426,14 @@ export type Database = {
         }[];
       };
       my_lead_summary: { Args: never; Returns: Json };
+      record_my_product_event: {
+        Args: {
+          _client_operation_id: string;
+          _event_name: string;
+          _surface: string;
+        };
+        Returns: boolean;
+      };
       redeem_vouch_code: { Args: { _code: string }; Returns: Json };
       send_notification: {
         Args: {
@@ -3219,10 +3444,44 @@ export type Database = {
         };
         Returns: string;
       };
+      set_my_community_location: {
+        Args: {
+          _city_label: string;
+          _client_operation_id: string;
+          _consent_version: string;
+          _country_code: string;
+          _region_label: string;
+          _share_audience: string;
+          _share_precision: string;
+          _timezone_name: string;
+          _use_for_recommendations: boolean;
+          _use_for_scheduling: boolean;
+        };
+        Returns: Json;
+      };
+      set_my_measurement_consent: {
+        Args: { _client_operation_id: string; _enabled: boolean };
+        Returns: boolean;
+      };
+      start_my_community_onboarding: {
+        Args: { _client_operation_id: string; _version: number };
+        Returns: {
+          community_access: boolean;
+          community_current_step: string;
+          community_status: string;
+          community_version: number;
+          io_access: boolean;
+          measurement_consent: boolean;
+        }[];
+      };
       vouch_directly: { Args: { _recipient_id: string }; Returns: Json };
       vouch_effective_quota: { Args: { _user_id: string }; Returns: number };
       vouch_remaining: { Args: { _user_id: string }; Returns: number };
       vouch_used_in_window: { Args: { _user_id: string }; Returns: number };
+      withdraw_my_location_consent: {
+        Args: { _client_operation_id: string; _consent_version: string };
+        Returns: Json;
+      };
     };
     Enums: {
       app_role: "admin" | "member" | "chapter_lead" | "editor";

@@ -958,7 +958,7 @@ function ModelsPage() {
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Link
               to="/auth"
-              search={{ tab: "signup" }}
+              search={{ tab: "signup", intent: "io", next: "/io" }}
               className="inline-flex items-center gap-2 rounded-full bg-[var(--saffron)] px-6 py-3 text-sm font-semibold text-[var(--indigo-night)] transition hover:bg-[var(--parchment)]"
             >
               Join the Orbit <ArrowRight className="h-4 w-4" />

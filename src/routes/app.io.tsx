@@ -1,5 +1,4 @@
-import { createFileRoute, Outlet } from "@tanstack/react-router";
-import { IoWorkspaceShell } from "@/features/io/IoWorkspaceShell";
+import { createFileRoute, Navigate } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/app/io")({
   head: () => ({
@@ -12,13 +11,9 @@ export const Route = createFileRoute("/app/io")({
       { name: "robots", content: "noindex" },
     ],
   }),
-  component: IoLayout,
+  component: LegacyIoRedirect,
 });
 
-function IoLayout() {
-  return (
-    <IoWorkspaceShell>
-      <Outlet />
-    </IoWorkspaceShell>
-  );
+function LegacyIoRedirect() {
+  return <Navigate to="/io" replace />;
 }

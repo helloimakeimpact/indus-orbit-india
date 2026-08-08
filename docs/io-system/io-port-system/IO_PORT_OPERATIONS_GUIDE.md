@@ -1,6 +1,6 @@
 # I/O Port operating guide
 
-Operational truth, updated 1 August 2026: the registry-driven multi-provider foundation and `io-gateway` v17 are deployed to the demo project. Five providers are staged, but every connection/capability/provider/endpoint remains gated and the ready resolver returns zero routes. Read `IO_PORT_IMPLEMENTATION_STATUS.md` before activating traffic.
+Operational truth, updated 8 August 2026: the registry-driven multi-provider foundation and `io-gateway` v17 are deployed to the demo project. Five providers are staged, but every connection/capability/provider/endpoint remains gated and the ready resolver returns zero routes. The top-level `/io` product boundary is Verified locally but still needs deployment. Read `IO_PORT_IMPLEMENTATION_STATUS.md` before activating traffic.
 
 ## What is live in the demo project
 
@@ -9,7 +9,7 @@ I/O Port is one web workspace with two execution boundaries:
 1. **Provider partnership route** — the browser calls the authenticated `io-gateway` Edge Function. The gateway verifies workspace membership and an active capacity grant, resolves only fully approved registry connections, selects an entitled candidate, and can call OpenAI-compatible or Gemini-native APIs. It writes a redacted route receipt/attempt trail that excludes prompt and response text. No current provider passes all activation gates, so no external request is sent.
 2. **I/O Terminal route** — the browser talks directly to a member's own OpenCode server running on loopback. OpenCode keeps the agent session, tool permissions, filesystem, terminal, and Git state on that device. I/O records only the connector origin and OpenCode session ID after the run succeeds.
 
-The web surface is `/app/io`. It reuses the existing authenticated Indus Orbit shell, conversation dropdown, member context, missions, and skills rather than introducing another community system.
+The canonical web surface is `/io`, with a distinct I/O Port shell and shared Indus Orbit identity. It does not require a Community segment, profile journey, location choice, vouch or verification. `/app/io` is compatibility-only and redirects before the Community gate. Shared visual primitives and product switching preserve the Indus Orbit system without collapsing I/O into the Community application.
 
 The nested I/O layout is still a **preview shell**: its workspace label, availability indicator, navigation counts and inspector activity cards are illustrative until the code-level roadmap connects each of them to authorized live data. The runnable session controls and capacity/audit cards in the overview are the current live demo elements.
 
@@ -17,7 +17,7 @@ The nested I/O layout is still a **preview shell**: its workspace label, availab
 
 ```mermaid
 flowchart LR
-  U["Signed-in Indus Orbit member"] --> W["I/O Port web UI"]
+  U["Signed-in Indus Orbit identity"] --> W["Top-level /io product UI"]
   W -->|"Partner request + user JWT"| G["io-gateway Edge Function"]
   G -->|"membership + entitlement"| DB[("Supabase I/O control plane")]
   G -->|"approved server-side secret only"| P["Direct, aggregator, owned or sponsored provider"]

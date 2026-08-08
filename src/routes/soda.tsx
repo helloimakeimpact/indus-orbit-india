@@ -532,6 +532,7 @@ function SodaPage() {
               <div className="flex flex-wrap gap-3 pt-2">
                 <Link
                   to="/auth"
+                  search={{ tab: "signin", intent: "community", next: "/app" }}
                   className="inline-flex items-center gap-2 rounded-full bg-[var(--indigo-night)] px-5 py-2.5 text-sm font-semibold text-[var(--parchment)] hover:bg-[var(--saffron)] hover:text-[var(--indigo-night)] transition"
                 >
                   Claim this idea <ArrowRight className="h-4 w-4" />
@@ -562,7 +563,11 @@ function SodaPage() {
               <p className="mt-2 text-sm text-foreground/60">
                 Showing this week's top-signal and freshest ideas. The full S.O.D.A database lives
                 behind the Orbit —{" "}
-                <Link to="/auth" className="font-semibold text-[var(--indigo-night)] underline">
+                <Link
+                  to="/auth"
+                  search={{ tab: "signin", intent: "community", next: "/app" }}
+                  className="font-semibold text-[var(--indigo-night)] underline"
+                >
                   sign in
                 </Link>{" "}
                 to browse all {rows.length || ""} entries.
@@ -638,6 +643,7 @@ function SodaPage() {
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
                 to="/auth"
+                search={{ tab: "signup", intent: "community", next: "/app" }}
                 className="inline-flex items-center gap-2 rounded-full bg-[var(--saffron)] px-5 py-2.5 text-sm font-semibold text-[var(--indigo-night)] hover:opacity-90"
               >
                 Join the Orbit <ArrowRight className="h-4 w-4" />
@@ -698,6 +704,7 @@ function SodaPage() {
           </p>
           <Link
             to="/auth"
+            search={{ tab: "signup", intent: "community", next: "/app" }}
             className="mt-8 inline-flex items-center gap-2 rounded-full bg-[var(--indigo-night)] px-6 py-3 text-sm font-semibold text-[var(--parchment)] hover:bg-[var(--saffron)] hover:text-[var(--indigo-night)] transition"
           >
             Subscribe to S.O.D.A <ArrowRight className="h-4 w-4" />
@@ -760,6 +767,7 @@ function IdeaCard({ idea }: { idea: Idea }) {
         </div>
         <Link
           to="/auth"
+          search={{ tab: "signin", intent: "community", next: "/app" }}
           className="inline-flex items-center gap-1 rounded-full bg-[var(--indigo-night)] px-3 py-1.5 text-[11px] font-semibold text-[var(--parchment)] hover:bg-[var(--saffron)] hover:text-[var(--indigo-night)] transition"
         >
           Open <ArrowRight className="h-3 w-3" />

@@ -1,6 +1,6 @@
 # I/O Port code-level roadmap
 
-Status: active implementation roadmap, updated 1 August 2026. It distinguishes local source work from the deployed demo proof and from work required before a private or paid beta. The current operational verdict is in `IO_PORT_IMPLEMENTATION_STATUS.md`.
+Status: active implementation roadmap, updated 8 August 2026. It distinguishes local source work from the deployed demo proof and from work required before a private or paid beta. The current operational verdict is in `IO_PORT_IMPLEMENTATION_STATUS.md`.
 
 Related documents:
 
@@ -13,7 +13,7 @@ Related documents:
 
 ## 1. Current implemented proof
 
-The demo project has an RLS-protected I/O control plane, three clearly labelled demo capacity sources, a verified-JWT `io-gateway` Edge Function, and the authenticated `/app/io` web UI.
+The demo project has an RLS-protected I/O control plane, three clearly labelled demo capacity sources and a verified-JWT `io-gateway` Edge Function. Local Verified web source moves the authenticated product to `/io`; it uses its own shell and does not require Community onboarding.
 
 The existing people-messaging system is also now hardened in the demo project: only accepted, non-suspended connections can insert a direct message, recipients can update only `read_at`, and new messages are capped at 4,000 characters.
 
@@ -35,7 +35,7 @@ The first shared-message client extraction is now in the web app as well: `src/f
 3. **No browser-supplied provider destination or credential.** The Edge Function selects a registered endpoint and reads its secret server-side.
 4. **No paid traffic before a reserve-and-settle ledger.** UI totals are never the billing source of truth.
 5. **Preview signals may not look live.** Replace static activity/health/counts before a beta, or label them as illustrative.
-6. **Use the existing app shell.** Discord-like means persistent spaces, context and inspectable activity—never a copied Discord interface or vocabulary.
+6. **Share system primitives, not access gates.** I/O owns its top-level product shell; Discord-like means persistent spaces, context and inspectable activity—never copied Discord vocabulary or a dependency on Community onboarding.
 
 ## 3. Delivery order
 
@@ -244,7 +244,7 @@ Build P0 in this order:
 1. **Implemented and deployed:** introduce I/O contracts and pure gateway modules;
 2. **Implemented:** rename the browser I/O data module and add active-workspace context/switching;
 3. **Implemented in demo:** create and test atomic workspace creation;
-4. make `/app/io` shell values real or explicitly preview-only;
+4. **Implemented locally:** move the product to `/io`, redirect `/app/io`, and keep preview-only shell values visibly labelled;
 5. add the conversation security and shared-query work from the companion plan.
 
 This creates the foundation for provider onboarding without making provider credentials or paid traffic a dependency.

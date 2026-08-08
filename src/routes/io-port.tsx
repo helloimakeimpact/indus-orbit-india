@@ -274,23 +274,30 @@ function IOPortPage() {
             </p>
             <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link
-                to="/models"
+                to="/io"
                 className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[var(--saffron)] px-6 py-3 text-sm font-semibold text-[var(--indigo-night)] transition hover:bg-[var(--gold)] sm:w-auto"
+              >
+                Open I/O workspace
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
+              <Link
+                to="/models"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-[var(--parchment)]/25 px-6 py-3 text-sm font-semibold text-[var(--parchment)] transition hover:bg-white/10 sm:w-auto"
               >
                 Explore the Observatory
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Link>
-              <Link
-                to="/contact"
-                className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-[var(--parchment)]/25 px-6 py-3 text-sm font-semibold text-[var(--parchment)] transition hover:bg-white/10 sm:w-auto"
-              >
-                Discuss a partnership
-              </Link>
             </div>
             <p className="mt-5 text-xs text-[var(--parchment)]/50">
-              The Observatory is public. Gateway, terminal and shared capacity access are not yet
-              publicly available.
+              The workspace is available to signed-in users as a preview. External provider routing
+              and shared capacity remain controlled beta capabilities.
             </p>
+            <Link
+              to="/contact"
+              className="mt-3 inline-flex text-xs font-medium text-[var(--parchment)]/60 underline decoration-white/20 underline-offset-4 transition hover:text-[var(--parchment)]"
+            >
+              Discuss a provider or capacity partnership
+            </Link>
           </div>
           <div className="mt-16 md:mt-20">
             <TerminalPreview />

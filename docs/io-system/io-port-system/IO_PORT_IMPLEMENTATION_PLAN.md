@@ -9,7 +9,7 @@ Companion evidence: `IO_PORT_SOURCE_BRIEF.md` and the workspace-level `IO_PORT_T
 Ship I/O Port as one coherent Indus Orbit product with three connected surfaces:
 
 1. **Public `/io-port`:** trustworthy explanation, live Observatory preview, transparent price structure, capability/data-policy language, Terminal preview, and design-partner/beta entry.
-2. **Authenticated `/app/io`:** a Discord-like but Indus-branded control room for workspaces, projects, sessions, models/routes, keys, usage, policies, playbooks, and team activity.
+2. **Authenticated `/io`:** a Discord-like but Indus-branded control room for workspaces, projects, sessions, models/routes, keys, usage, policies, playbooks, and team activity; it is independent of Community onboarding.
 3. **Developer surfaces:** `api.indusorbit.com/v1` and a local `io` terminal client, both governed by the same workspace identity, model registry, route policy, budget, receipt, and audit system.
 
 The first production release must be useful with one or two contractually approved providers. Breadth is not an exit criterion. Correct isolation, spend control, reconciliation, model conformance, explicit fallback, and understandable evidence are exit criteria.
@@ -56,21 +56,21 @@ Add **I/O Port** to `SiteNav` between Models and Writing. Keep **Models** as the
 
 ### 3.2 Authenticated routes
 
-Use `/app/io` as a nested product area:
+Use `/io` as a top-level product area with shared identity and its own shell:
 
 ```text
-/app/io                         overview, recent sessions, budget, recommendations
-/app/io/workspaces              workspace switcher and membership
-/app/io/projects                projects and environments
-/app/io/sessions                session/task history
-/app/io/sessions/$sessionId     terminal timeline, plan, diff, approvals, evidence
-/app/io/models                  models, endpoints, routes, capability/data filters
-/app/io/playbooks               skills, commands, routes, evaluations, community recipes
-/app/io/keys                    I/O keys and later BYOK connections
-/app/io/usage                   requests, receipts, cost, wallet/credits, exports
-/app/io/policies                models, data, fallback, tool, egress, retention, budget
-/app/io/team                    members, roles, invites, service identities
-/app/io/settings                workspace and project settings
+/io                         overview, recent sessions, budget, recommendations
+/io/workspaces              workspace switcher and membership
+/io/projects                projects and environments
+/io/sessions                session/task history
+/io/sessions/$sessionId     terminal timeline, plan, diff, approvals, evidence
+/io/models                  models, endpoints, routes, capability/data filters
+/io/playbooks               skills, commands, routes, evaluations, community recipes
+/io/keys                    I/O keys and later BYOK connections
+/io/usage                   requests, receipts, cost, wallet/credits, exports
+/io/policies                models, data, fallback, tool, egress, retention, budget
+/io/team                    members, roles, invites, service identities
+/io/settings                workspace and project settings
 ```
 
 Do not create a second `/auth`, profile system, directory, or notification system.

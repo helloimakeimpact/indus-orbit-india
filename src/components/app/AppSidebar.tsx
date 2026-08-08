@@ -84,8 +84,8 @@ const BASE_GROUPS: NavGroup[] = [
     ],
   },
   {
-    label: "I/O",
-    items: [{ to: "/app/io", label: "I/O Port", icon: Terminal }],
+    label: "Products",
+    items: [{ to: "/io", label: "Switch to I/O Port", icon: Terminal, exact: true }],
   },
 ];
 

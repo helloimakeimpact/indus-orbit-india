@@ -1,6 +1,6 @@
 # Indus Orbit living system record
 
-Status: canonical documentation hub, established 1 August 2026.
+Status: canonical documentation hub, updated 8 August 2026.
 
 This folder files the Indus Orbit product as a system: what it means, which code exists, what is operational, what remains, and how every subsystem fits the people-centred mission. Runtime source stays in its correct `src/` and `supabase/` locations; this record points to that source and distinguishes implementation from deployment.
 
@@ -13,6 +13,7 @@ This folder files the Indus Orbit product as a system: what it means, which code
 5. `conversation-system/README.md` — current direct-message foundation and branded Discord-like spatial system.
 6. `admin-system/README.md` — separate admin control plane, super-admin boundary, scoped team duties and remaining domain migrations.
 7. `platform-system/README.md` — the rest of the Indus Orbit platform and cross-system work.
+8. `platform-system/PRODUCT_BOUNDARIES_LOCATION_AND_CONVERSION_PLAN.md` — the I/O/community identity split, optional global location and separate scientific conversion funnels.
 
 Product-wide delivery sequencing remains in `../MASTER_IMPLEMENTATION_AND_RELEASE_PLAN.md`; release decisions remain in `../RELEASE_READINESS_CHECKLIST.md`; database recovery and historical drift remain in `../SUPABASE_SCHEMA_RECONCILIATION.md`.
 
@@ -41,13 +42,13 @@ The product is not an AI router with a community attached. It is a people networ
 | System                                | State                        | Current truth                                                                                                                                                                                                                                                                                           |
 | ------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Public site and product surfaces      | Partial                      | A substantial responsive site and member application exist; content truth, live data, canonical metadata, accessibility evidence, and production release discipline remain incomplete.                                                                                                                  |
-| Identity, people, trust and community | Partial                      | Auth, onboarding, profiles, directory, connections, vouch, mentorship, missions, Chapters, learning, events and admin surfaces exist; several critical mutations and abuse controls still need authoritative server contracts and tests.                                                                |
+| Identity, people, trust and community | Partial                      | One identity now separates immediate `/io` access from explicitly chosen Community onboarding. Optional global country/location consent and consent-off measurement are locally Verified; directory privacy, settings/revocation UI, critical mutations and abuse controls still need completion.       |
 | Administration and operations         | Separate app foundation      | `admin-indus-orbit` now owns the standalone admin UI; database authority remains in this platform migration history. Root admins are distinguished from six scoped duties, and I/O/team operations have checked RPCs. Legacy trust/member/content/program modules still require server-bound migration. |
 | Conversations                         | Partial                      | Durable direct messages, notifications, shared hooks, hardened demo RLS, and realtime reconciliation exist; common store, cursor paging, RPC sends, private Broadcast, group collaboration, and the shared spatial shell remain.                                                                        |
 | I/O Port                              | Partial, deployed foundation | The control plane, five-provider staged registry, dynamic selection, gateway v17, route receipts, fail-closed runtime switch and member/operator UIs exist. All five direct providers remain deliberately non-routable until conformance is approved and recorded.                                      |
 | I/O Terminal                          | Partial proof                | A safe loopback OpenCode proof exists. Durable sessions, permissions, approvals, tools, diffs, artifacts, handoffs, recovery and hosted runners remain.                                                                                                                                                 |
-| Data and Supabase                     | Partial                      | The active demo project and new I/O migrations are live. Historical drift, old security-advisor findings, full authorization suites and production environment separation remain.                                                                                                                       |
-| Quality and release operations        | Partial                      | Build, typecheck, unit tests, lint and a GitHub quality workflow exist. Full browser/database/provider tests, telemetry, incident response, protected delivery, performance budgets and production evidence remain.                                                                                     |
+| Data and Supabase                     | Partial                      | The local stack replays all 57 migrations and passes 231 database contracts plus schema lint. The demo project still needs the newest product-separation/location migrations, remote verification, drift reconciliation and production separation.                                                      |
+| Quality and release operations        | Partial                      | Typecheck and 32 unit tests pass; full migration replay, 231 pgTAP assertions and schema lint pass locally. Browser personas, provider conformance, telemetry, incident response, protected delivery, performance budgets and production evidence remain.                                               |
 
 ## Evidence rules
 

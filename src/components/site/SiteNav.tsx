@@ -1,6 +1,14 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Menu, X, LogOut, User as UserIcon, LayoutDashboard, ShieldCheck } from "lucide-react";
+import {
+  Menu,
+  X,
+  LogOut,
+  User as UserIcon,
+  LayoutDashboard,
+  ShieldCheck,
+  Terminal,
+} from "lucide-react";
 import logo from "@/assets/indus-orbit-logo.png";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -74,8 +82,11 @@ function UserMenu() {
           {user.email}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => navigate({ to: "/io" })}>
+          <Terminal className="mr-2 h-4 w-4" /> I/O Port
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={() => navigate({ to: "/app" })}>
-          <LayoutDashboard className="mr-2 h-4 w-4" /> Workspace
+          <LayoutDashboard className="mr-2 h-4 w-4" /> Community
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => navigate({ to: "/app/profile" })}>
           <UserIcon className="mr-2 h-4 w-4" /> Profile
@@ -145,7 +156,7 @@ export function SiteNav({ tone = "light" }: { tone?: "light" | "dark" }) {
           ) : (
             <Link
               to="/auth"
-              search={{ tab: "signup" }}
+              search={{ tab: "signup", intent: "community", next: "/app" }}
               className="hidden sm:inline-flex items-center rounded-full bg-[var(--indigo-night)] px-4 py-2 text-xs font-semibold uppercase tracking-wider text-[var(--parchment)] transition hover:bg-[var(--saffron)] hover:text-[var(--indigo-night)]"
             >
               Join the Orbit
@@ -178,7 +189,7 @@ export function SiteNav({ tone = "light" }: { tone?: "light" | "dark" }) {
             {!user && (
               <Link
                 to="/auth"
-                search={{ tab: "signup" }}
+                search={{ tab: "signup", intent: "community", next: "/app" }}
                 onClick={() => setOpen(false)}
                 className="mt-1 rounded-2xl bg-[var(--indigo-night)] px-4 py-3 text-center text-sm font-semibold text-[var(--parchment)]"
               >

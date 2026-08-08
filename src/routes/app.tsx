@@ -1,9 +1,9 @@
-import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app/AppShell";
+import { getMyProductAccess } from "@/features/product/product-access";
 
 export const Route = createFileRoute("/app")({
   component: AppLayout,
@@ -12,6 +12,7 @@ export const Route = createFileRoute("/app")({
 function AppLayout() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
   const [checked, setChecked] = useState(false);
   const [accessError, setAccessError] = useState<string | null>(null);
   const [accessCheckVersion, setAccessCheckVersion] = useState(0);
@@ -19,6 +20,14 @@ function AppLayout() {
   useEffect(() => {
     if (loading) return;
     let active = true;
+
+    const normalizedPath = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
+    if (normalizedPath === "/app/io") {
+      navigate({ to: "/io", replace: true });
+      return () => {
+        active = false;
+      };
+    }
 
     const checkAccess = async () => {
       setChecked(false);
@@ -28,23 +37,20 @@ function AppLayout() {
         return;
       }
 
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("orbit_segment")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      if (!active) return;
-      if (error) {
+      try {
+        const access = await getMyProductAccess();
+        if (!active) return;
+        if (!access.communityAccess) {
+          navigate({ to: "/onboarding" });
+          return;
+        }
+        setChecked(true);
+      } catch {
+        if (!active) return;
         const message = "We could not verify access to your member workspace.";
         toast.error(message);
         setAccessError(message);
-        return;
       }
-      if (!data?.orbit_segment) {
-        navigate({ to: "/onboarding" });
-        return;
-      }
-      setChecked(true);
     };
 
     void Promise.resolve().then(checkAccess);
@@ -52,7 +58,7 @@ function AppLayout() {
     return () => {
       active = false;
     };
-  }, [user, loading, navigate, accessCheckVersion]);
+  }, [user, loading, navigate, pathname, accessCheckVersion]);
 
   if (!loading && user && accessError) {
     return (

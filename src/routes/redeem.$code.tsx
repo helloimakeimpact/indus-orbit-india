@@ -96,7 +96,9 @@ function RedeemPage() {
           <>
             <p className="mt-4 text-sm">{issuerName} has invited you. Sign in to accept.</p>
             <Button className="mt-4" asChild>
-              <Link to="/auth">Sign in or create account</Link>
+              <Link to="/auth" search={{ tab: "signin", intent: "community", next: "/app" }}>
+                Sign in or create account
+              </Link>
             </Button>
           </>
         ) : (

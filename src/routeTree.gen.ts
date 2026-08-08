@@ -15,6 +15,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as IoRouteImport } from './routes/io'
 import { Route as IoPortRouteImport } from './routes/io-port'
 import { Route as MembersRouteImport } from './routes/members'
 import { Route as ModelsRouteImport } from './routes/models'
@@ -45,6 +46,7 @@ import { Route as AppSkillsRouteImport } from './routes/app.skills'
 import { Route as AppSodaRouteImport } from './routes/app.soda'
 import { Route as AppStoriesRouteImport } from './routes/app.stories'
 import { Route as AppVouchRouteImport } from './routes/app.vouch'
+import { Route as IoIndexRouteImport } from './routes/io.index'
 import { Route as ProfileIdRouteImport } from './routes/profile.$id'
 import { Route as RedeemCodeRouteImport } from './routes/redeem.$code'
 import { Route as WritingSlugRouteImport } from './routes/writing.$slug'
@@ -69,7 +71,6 @@ import { Route as AppEducationIndexRouteImport } from './routes/app.education.in
 import { Route as AppEducationCourseSlugRouteImport } from './routes/app.education.$courseSlug'
 import { Route as AppEventsIndexRouteImport } from './routes/app.events.index'
 import { Route as AppEventsIdRouteImport } from './routes/app.events.$id'
-import { Route as AppIoIndexRouteImport } from './routes/app.io.index'
 import { Route as AppMissionsIndexRouteImport } from './routes/app.missions.index'
 import { Route as AppMissionsMissionIdRouteImport } from './routes/app.missions.$missionId'
 import { Route as AppSkillsIndexRouteImport } from './routes/app.skills.index'
@@ -109,6 +110,11 @@ const AuthRoute = AuthRouteImport.update({
 const ContactRoute = ContactRouteImport.update({
   id: '/contact',
   path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IoRoute = IoRouteImport.update({
+  id: '/io',
+  path: '/io',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IoPortRoute = IoPortRouteImport.update({
@@ -261,6 +267,11 @@ const AppVouchRoute = AppVouchRouteImport.update({
   path: '/vouch',
   getParentRoute: () => AppRoute,
 } as any)
+const IoIndexRoute = IoIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => IoRoute,
+} as any)
 const ProfileIdRoute = ProfileIdRouteImport.update({
   id: '/profile/$id',
   path: '/profile/$id',
@@ -381,11 +392,6 @@ const AppEventsIdRoute = AppEventsIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AppEventsRoute,
 } as any)
-const AppIoIndexRoute = AppIoIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AppIoRoute,
-} as any)
 const AppMissionsIndexRoute = AppMissionsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -446,6 +452,7 @@ export interface FileRoutesByFullPath {
   '/app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
+  '/io': typeof IoRouteWithChildren
   '/io-port': typeof IoPortRoute
   '/members': typeof MembersRoute
   '/models': typeof ModelsRoute
@@ -463,7 +470,7 @@ export interface FileRoutesByFullPath {
   '/app/education': typeof AppEducationRouteWithChildren
   '/app/events': typeof AppEventsRouteWithChildren
   '/app/investor-feed': typeof AppInvestorFeedRoute
-  '/app/io': typeof AppIoRouteWithChildren
+  '/app/io': typeof AppIoRoute
   '/app/mentor': typeof AppMentorRoute
   '/app/messages': typeof AppMessagesRoute
   '/app/mission-admin': typeof AppMissionAdminRoute
@@ -479,6 +486,7 @@ export interface FileRoutesByFullPath {
   '/redeem/$code': typeof RedeemCodeRoute
   '/writing/$slug': typeof WritingSlugRoute
   '/app/': typeof AppIndexRoute
+  '/io/': typeof IoIndexRoute
   '/app/admin/audit': typeof AppAdminAuditRoute
   '/app/admin/content': typeof AppAdminContentRoute
   '/app/admin/education': typeof AppAdminEducationRoute
@@ -504,7 +512,6 @@ export interface FileRoutesByFullPath {
   '/app/chapters/': typeof AppChaptersIndexRoute
   '/app/education/': typeof AppEducationIndexRoute
   '/app/events/': typeof AppEventsIndexRoute
-  '/app/io/': typeof AppIoIndexRoute
   '/app/missions/': typeof AppMissionsIndexRoute
   '/app/skills/': typeof AppSkillsIndexRoute
   '/app/soda/': typeof AppSodaIndexRoute
@@ -532,6 +539,7 @@ export interface FileRoutesByTo {
   '/app/chapter-admin': typeof AppChapterAdminRoute
   '/app/directory': typeof AppDirectoryRoute
   '/app/investor-feed': typeof AppInvestorFeedRoute
+  '/app/io': typeof AppIoRoute
   '/app/mentor': typeof AppMentorRoute
   '/app/messages': typeof AppMessagesRoute
   '/app/mission-admin': typeof AppMissionAdminRoute
@@ -543,6 +551,7 @@ export interface FileRoutesByTo {
   '/redeem/$code': typeof RedeemCodeRoute
   '/writing/$slug': typeof WritingSlugRoute
   '/app': typeof AppIndexRoute
+  '/io': typeof IoIndexRoute
   '/app/admin/audit': typeof AppAdminAuditRoute
   '/app/admin/content': typeof AppAdminContentRoute
   '/app/admin/education': typeof AppAdminEducationRoute
@@ -567,7 +576,6 @@ export interface FileRoutesByTo {
   '/app/chapters': typeof AppChaptersIndexRoute
   '/app/education': typeof AppEducationIndexRoute
   '/app/events': typeof AppEventsIndexRoute
-  '/app/io': typeof AppIoIndexRoute
   '/app/missions': typeof AppMissionsIndexRoute
   '/app/skills': typeof AppSkillsIndexRoute
   '/app/soda': typeof AppSodaIndexRoute
@@ -583,6 +591,7 @@ export interface FileRoutesById {
   '/app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
+  '/io': typeof IoRouteWithChildren
   '/io-port': typeof IoPortRoute
   '/members': typeof MembersRoute
   '/models': typeof ModelsRoute
@@ -600,7 +609,7 @@ export interface FileRoutesById {
   '/app/education': typeof AppEducationRouteWithChildren
   '/app/events': typeof AppEventsRouteWithChildren
   '/app/investor-feed': typeof AppInvestorFeedRoute
-  '/app/io': typeof AppIoRouteWithChildren
+  '/app/io': typeof AppIoRoute
   '/app/mentor': typeof AppMentorRoute
   '/app/messages': typeof AppMessagesRoute
   '/app/mission-admin': typeof AppMissionAdminRoute
@@ -616,6 +625,7 @@ export interface FileRoutesById {
   '/redeem/$code': typeof RedeemCodeRoute
   '/writing/$slug': typeof WritingSlugRoute
   '/app/': typeof AppIndexRoute
+  '/io/': typeof IoIndexRoute
   '/app/admin/audit': typeof AppAdminAuditRoute
   '/app/admin/content': typeof AppAdminContentRoute
   '/app/admin/education': typeof AppAdminEducationRoute
@@ -641,7 +651,6 @@ export interface FileRoutesById {
   '/app/chapters/': typeof AppChaptersIndexRoute
   '/app/education/': typeof AppEducationIndexRoute
   '/app/events/': typeof AppEventsIndexRoute
-  '/app/io/': typeof AppIoIndexRoute
   '/app/missions/': typeof AppMissionsIndexRoute
   '/app/skills/': typeof AppSkillsIndexRoute
   '/app/soda/': typeof AppSodaIndexRoute
@@ -658,6 +667,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/auth'
     | '/contact'
+    | '/io'
     | '/io-port'
     | '/members'
     | '/models'
@@ -691,6 +701,7 @@ export interface FileRouteTypes {
     | '/redeem/$code'
     | '/writing/$slug'
     | '/app/'
+    | '/io/'
     | '/app/admin/audit'
     | '/app/admin/content'
     | '/app/admin/education'
@@ -716,7 +727,6 @@ export interface FileRouteTypes {
     | '/app/chapters/'
     | '/app/education/'
     | '/app/events/'
-    | '/app/io/'
     | '/app/missions/'
     | '/app/skills/'
     | '/app/soda/'
@@ -744,6 +754,7 @@ export interface FileRouteTypes {
     | '/app/chapter-admin'
     | '/app/directory'
     | '/app/investor-feed'
+    | '/app/io'
     | '/app/mentor'
     | '/app/messages'
     | '/app/mission-admin'
@@ -755,6 +766,7 @@ export interface FileRouteTypes {
     | '/redeem/$code'
     | '/writing/$slug'
     | '/app'
+    | '/io'
     | '/app/admin/audit'
     | '/app/admin/content'
     | '/app/admin/education'
@@ -779,7 +791,6 @@ export interface FileRouteTypes {
     | '/app/chapters'
     | '/app/education'
     | '/app/events'
-    | '/app/io'
     | '/app/missions'
     | '/app/skills'
     | '/app/soda'
@@ -794,6 +805,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/auth'
     | '/contact'
+    | '/io'
     | '/io-port'
     | '/members'
     | '/models'
@@ -827,6 +839,7 @@ export interface FileRouteTypes {
     | '/redeem/$code'
     | '/writing/$slug'
     | '/app/'
+    | '/io/'
     | '/app/admin/audit'
     | '/app/admin/content'
     | '/app/admin/education'
@@ -852,7 +865,6 @@ export interface FileRouteTypes {
     | '/app/chapters/'
     | '/app/education/'
     | '/app/events/'
-    | '/app/io/'
     | '/app/missions/'
     | '/app/skills/'
     | '/app/soda/'
@@ -868,6 +880,7 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   AuthRoute: typeof AuthRoute
   ContactRoute: typeof ContactRoute
+  IoRoute: typeof IoRouteWithChildren
   IoPortRoute: typeof IoPortRoute
   MembersRoute: typeof MembersRoute
   ModelsRoute: typeof ModelsRoute
@@ -924,6 +937,13 @@ declare module '@tanstack/react-router' {
       path: '/contact'
       fullPath: '/contact'
       preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/io': {
+      id: '/io'
+      path: '/io'
+      fullPath: '/io'
+      preLoaderRoute: typeof IoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/io-port': {
@@ -1136,6 +1156,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppVouchRouteImport
       parentRoute: typeof AppRoute
     }
+    '/io/': {
+      id: '/io/'
+      path: '/'
+      fullPath: '/io/'
+      preLoaderRoute: typeof IoIndexRouteImport
+      parentRoute: typeof IoRoute
+    }
     '/profile/$id': {
       id: '/profile/$id'
       path: '/profile/$id'
@@ -1304,13 +1331,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppEventsIdRouteImport
       parentRoute: typeof AppEventsRoute
     }
-    '/app/io/': {
-      id: '/app/io/'
-      path: '/'
-      fullPath: '/app/io/'
-      preLoaderRoute: typeof AppIoIndexRouteImport
-      parentRoute: typeof AppIoRoute
-    }
     '/app/missions/': {
       id: '/app/missions/'
       path: '/'
@@ -1467,16 +1487,6 @@ const AppEventsRouteWithChildren = AppEventsRoute._addFileChildren(
   AppEventsRouteChildren,
 )
 
-interface AppIoRouteChildren {
-  AppIoIndexRoute: typeof AppIoIndexRoute
-}
-
-const AppIoRouteChildren: AppIoRouteChildren = {
-  AppIoIndexRoute: AppIoIndexRoute,
-}
-
-const AppIoRouteWithChildren = AppIoRoute._addFileChildren(AppIoRouteChildren)
-
 interface AppMissionsRouteChildren {
   AppMissionsMissionIdRoute: typeof AppMissionsMissionIdRoute
   AppMissionsIndexRoute: typeof AppMissionsIndexRoute
@@ -1540,7 +1550,7 @@ interface AppRouteChildren {
   AppEducationRoute: typeof AppEducationRouteWithChildren
   AppEventsRoute: typeof AppEventsRouteWithChildren
   AppInvestorFeedRoute: typeof AppInvestorFeedRoute
-  AppIoRoute: typeof AppIoRouteWithChildren
+  AppIoRoute: typeof AppIoRoute
   AppMentorRoute: typeof AppMentorRoute
   AppMessagesRoute: typeof AppMessagesRoute
   AppMissionAdminRoute: typeof AppMissionAdminRoute
@@ -1566,7 +1576,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppEducationRoute: AppEducationRouteWithChildren,
   AppEventsRoute: AppEventsRouteWithChildren,
   AppInvestorFeedRoute: AppInvestorFeedRoute,
-  AppIoRoute: AppIoRouteWithChildren,
+  AppIoRoute: AppIoRoute,
   AppMentorRoute: AppMentorRoute,
   AppMessagesRoute: AppMessagesRoute,
   AppMissionAdminRoute: AppMissionAdminRoute,
@@ -1586,6 +1596,16 @@ const AppRouteChildren: AppRouteChildren = {
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
+interface IoRouteChildren {
+  IoIndexRoute: typeof IoIndexRoute
+}
+
+const IoRouteChildren: IoRouteChildren = {
+  IoIndexRoute: IoIndexRoute,
+}
+
+const IoRouteWithChildren = IoRoute._addFileChildren(IoRouteChildren)
+
 interface WritingRouteChildren {
   WritingSlugRoute: typeof WritingSlugRoute
 }
@@ -1604,6 +1624,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   AuthRoute: AuthRoute,
   ContactRoute: ContactRoute,
+  IoRoute: IoRouteWithChildren,
   IoPortRoute: IoPortRoute,
   MembersRoute: MembersRoute,
   ModelsRoute: ModelsRoute,
