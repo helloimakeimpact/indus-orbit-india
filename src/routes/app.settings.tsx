@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/contexts/AuthContext";
+import { LocationPrivacySettings } from "@/features/location/LocationPrivacySettings";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/app/settings")({
@@ -152,6 +153,14 @@ function SettingsPage() {
               checked={prefs.reduceMotion}
               onCheckedChange={(checked) => updatePref("reduceMotion", checked)}
             />
+          </SettingsSection>
+
+          <SettingsSection
+            emoji="🌍"
+            title="Location and measurement privacy"
+            description="Review explicit purposes, sharing, withdrawal, and limited product measurement."
+          >
+            <LocationPrivacySettings />
           </SettingsSection>
 
           <SettingsSection

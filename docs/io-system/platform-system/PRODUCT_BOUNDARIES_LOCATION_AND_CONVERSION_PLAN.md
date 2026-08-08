@@ -170,9 +170,9 @@ Before an A/B test:
 - [ ] replace direct profile directory reads with an allowlisted discovery RPC;
 - [ ] split public event location from attendee-only venue/link details;
 - [ ] local opportunity recommendations only after opt-in;
-- [ ] location confirmation/revocation in settings;
+- [x] location confirmation, purpose/audience changes and immediate revocation in Community Settings;
 - [ ] browser persona, accessibility, privacy, and load tests.
 
 ## Release boundary
 
-All 57 migrations replay from zero, all 231 database assertions pass, and the `public`/`private` schema lint reports no errors on the local demo stack. The TypeScript client and 32 unit tests also pass. These facts are `Verified`, not `Released`: deployment still requires the same migrations and routes on the demo/production targets, remote grants/RLS checks, an existing-member backfill review, and I/O-only/community browser personas. No provider request, payment, hosted database reset, or automatic location collection is part of this phase.
+All 57 migrations replay from zero, all 231 database assertions pass, and the `public`/`private` schema lint reports no errors on the local demo stack. The TypeScript client and 34 unit tests also pass. These facts are `Verified`, not `Released`: deployment still requires the same migrations and routes on the demo/production targets, remote grants/RLS checks, an existing-member backfill review, and I/O-only/community browser personas. No provider request, payment, hosted database reset, or automatic location collection is part of this phase.

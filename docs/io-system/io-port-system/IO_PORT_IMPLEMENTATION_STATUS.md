@@ -103,7 +103,7 @@ The member must be able to understand which model, provider, serving region, dat
 | `npm run build`                        | Pass            | The current web application produces a production bundle.                                                                           |
 | `npm run typecheck`                    | Pass            | Current browser/server TypeScript compiles.                                                                                         |
 | `npm run format:check`                 | Pass            | Mechanical formatting drift has been removed.                                                                                       |
-| `npm run test:unit`                    | Pass — 32/32    | Auth intent, product/location decoders, config, conversation state, OpenCode, gateway validation, adapters and routing are covered. |
+| `npm run test:unit`                    | Pass — 34/34    | Auth intent, product/location decoders, config, conversation state, OpenCode, gateway validation, adapters and routing are covered. |
 | `npm run audit:high`                   | Pass            | No critical, high or moderate dependency advisory remains.                                                                          |
 | I/O-focused ESLint run                 | Pass            | `src/features/io` and I/O routes pass current lint rules.                                                                           |
 | Repository-wide `npm run lint --quiet` | Pass — 0 errors | The local semantic lint gate now passes across the repository.                                                                      |
@@ -361,7 +361,7 @@ The highest-leverage next slice is **deploy and prove the locally Verified bound
 
 1. deploy the product-access and global-location migrations and verify remote grants/RLS/backfill;
 2. run I/O-only, Community opt-in, existing-member and location-consent browser personas;
-3. add location review/withdrawal to Settings and operator-only aggregate measurement with small-cohort suppression;
+3. add operator-only aggregate measurement with small-cohort suppression and validate withdrawal in browser personas;
 4. build the provider evidence/conformance runner and two-person activation review;
 5. run only explicitly approved, bounded provider conformance calls and store sanitized results;
 6. add budget reservation, idempotency, health and kill-switch evidence before making any provider routable.

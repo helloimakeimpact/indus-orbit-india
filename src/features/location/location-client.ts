@@ -1,5 +1,10 @@
 import { supabase } from "@/integrations/supabase/client";
-import { decodeLocationMutationResult, type LocationMutationResult } from "./location-contract";
+import {
+  decodeLocationMutationResult,
+  decodeLocationPreferences,
+  type LocationMutationResult,
+  type LocationPreferences,
+} from "./location-contract";
 
 export type CountryOption = {
   countryCode: string;
@@ -34,6 +39,12 @@ export async function listGlobalCountries(): Promise<CountryOption[]> {
     countryCode: country.country_code,
     displayName: country.display_name,
   }));
+}
+
+export async function getMyLocationPreferences(): Promise<LocationPreferences> {
+  const { data, error } = await supabase.rpc("get_my_location_preferences");
+  if (error) throw new Error(error.message);
+  return decodeLocationPreferences(data);
 }
 
 export async function setMyCommunityLocation(
