@@ -1,6 +1,6 @@
 # Discord-like capability plan, translated for Indus Orbit
 
-Status: detailed intended-system and implementation-gap record, 1 August 2026.
+Status: detailed intended-system and implementation-gap record, 8 August 2026.
 
 ## Product decision
 
@@ -38,7 +38,7 @@ People, agents and system notices must be visually and semantically distinct. A 
 | Persistent global rail          | Partial: app navigation plus I/O-specific rail preview        | Extract one Orbit rail for People, Learn, Action, Messages and I/O; live attention, keyboard navigation, responsive behavior and no duplicated shell state.                              |
 | Context sidebar                 | Partial in app/I/O layouts                                    | Make the selected Space drive rooms, recent items, search and permissions; persist useful preference without hiding inaccessible content.                                                |
 | Main workspace and inspector    | Partial I/O preview                                           | Shared responsive frame, focus restoration, loading/error/offline states and contextual inspector for profile, members, approvals, evidence or route receipt.                            |
-| One-to-one DMs                  | Partial working product                                       | Add trusted send/read RPCs, cursor paging, idempotency, common cache, blocks/rate limits, robust reconnect, attachments and full tests.                                                  |
+| One-to-one DMs                  | Partial: trusted local RPC boundary plus working product      | Deploy/verify the caller-bound send/read RPCs, then add cursor paging, common cache, explicit blocks, robust reconnect, attachments and E2E/load tests.                                  |
 | Group DMs                       | Not implemented                                               | Add bounded membership, invite/leave/remove, ownership, history visibility and notification rules after DM core is secure.                                                               |
 | Spaces and membership           | Domain memberships exist separately                           | Define conversation Space projection over Chapter/Mission/I/O membership; do not duplicate authoritative domain membership; add space roles and lifecycle.                               |
 | Rooms/channels/categories       | Not implemented                                               | Add typed rooms, order/grouping, create/archive, visibility, posting policy, slow mode and permission evaluation. Start with Announcements, Conversation, Evidence and Help.             |
@@ -123,7 +123,7 @@ Agents appear as agents. Each agent message/action shows provider/model/route re
 
 ## Delivery phases
 
-1. **Secure DMs:** atomic send/read RPCs, blocks/rate limits, idempotency, paging and tests.
+1. **Secure DMs:** caller-bound send/read, sender idempotency, suspension/rate checks and 38 database assertions are locally Verified; deploy them, then add explicit blocks, paging and E2E/load tests.
 2. **Shared client:** one store, timeline/composer primitives, retry/offline and multi-device reconciliation.
 3. **Private realtime:** Broadcast authorization, durable backfill, presence/typing and load tests.
 4. **Shared branded shell:** Orbit rail, context sidebar, main canvas and inspector across Messages and I/O.

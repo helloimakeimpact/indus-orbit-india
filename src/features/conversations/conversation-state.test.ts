@@ -9,6 +9,7 @@ function message(id: string, sender: string, recipient: string, createdAt: strin
     sender_id: sender,
     recipient_id: recipient,
     content: id,
+    client_request_id: null,
     created_at: createdAt,
     read_at: null,
   };

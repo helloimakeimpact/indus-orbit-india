@@ -26,23 +26,23 @@ External CI, design, issue, and monitoring links may be used when access and ret
 
 ## 2. Current verified baseline — not release approval
 
-| Check                             | Result on 8 August 2026                | Meaning                                                                                                                   |
-| --------------------------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| Production web build              | Pass                                   | The current bundle builds; it does not prove runtime workflows                                                            |
-| TypeScript `--noEmit`             | Pass                                   | Current TypeScript compiles                                                                                               |
-| Unit tests                        | Pass — 34/34                           | Auth intent, product/location contracts, configuration, conversations, OpenCode, gateway, provider and routing tests pass |
-| Formatting check                  | Pass                                   | Mechanical formatting drift has been removed                                                                              |
-| Dependency audit (high and above) | Pass                                   | No critical, high, or moderate dependency advisory remains                                                                |
-| Dependency audit (all severities) | 2 low advisories remain                | Babel/esbuild transitive advisories remain tracked                                                                        |
-| GitHub quality workflow           | Configured; no remote run recorded yet | PR/push audit, format, lint, typecheck, unit test and production build are defined                                        |
-| GitHub database workflow          | Configured; no remote run recorded yet | Empty replay, pgTAP, public/private schema lint and guaranteed local-stack cleanup are defined                            |
-| Repository lint                   | Pass — 0 errors                        | Local semantic lint gate passes; CI evidence and broader product/integration coverage remain incomplete                   |
-| Automated product/router tests    | Core selection coverage only           | New registry router/UI source is browser-build checked but still needs Deno, SQL/RLS and conformance tests                |
-| Database contract tests           | Pass — 231/231                         | Adds product separation and global-location privacy to schema/grant, notification, provider, vouch and archive contracts  |
-| Provider conformance records      | Zero                                   | No provider is production-certified                                                                                       |
-| Supabase missing-history recovery | Empty local replay passes              | Three explicit historical/environment recovery exceptions are documented; remote history was not rewritten                |
-| Supabase migration equivalence    | Partial                                | Local replay is proven; demo comparison, Realtime owner policy and generated-type drift remain open                       |
-| Supabase storage buckets          | Zero                                   | Education upload workflow is not operational                                                                              |
+| Check                             | Result on 8 August 2026                | Meaning                                                                                                                      |
+| --------------------------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Production web build              | Pass                                   | The current bundle builds; it does not prove runtime workflows                                                               |
+| TypeScript `--noEmit`             | Pass                                   | Current TypeScript compiles                                                                                                  |
+| Unit tests                        | Pass — 34/34                           | Auth intent, product/location contracts, configuration, conversations, OpenCode, gateway, provider and routing tests pass    |
+| Formatting check                  | Pass                                   | Mechanical formatting drift has been removed                                                                                 |
+| Dependency audit (high and above) | Pass                                   | No critical, high, or moderate dependency advisory remains                                                                   |
+| Dependency audit (all severities) | Pass — 0 known vulnerabilities         | Patched overrides and non-breaking transitive updates clear the current npm advisory report                                  |
+| GitHub quality workflow           | Configured; no remote run recorded yet | PR/push audit, format, lint, typecheck, unit test and production build are defined                                           |
+| GitHub database workflow          | Configured; no remote run recorded yet | Empty replay, pgTAP, public/private schema lint and guaranteed local-stack cleanup are defined                               |
+| Repository lint                   | Pass — 0 errors                        | Local semantic lint gate passes; CI evidence and broader product/integration coverage remain incomplete                      |
+| Automated product/router tests    | Core selection coverage only           | New registry router/UI source is browser-build checked but still needs Deno, SQL/RLS and conformance tests                   |
+| Database contract tests           | Pass — 269/269                         | Adds direct-message RPC/grant/idempotency coverage to product, location, notification, provider, vouch and archive contracts |
+| Provider conformance records      | Zero                                   | No provider is production-certified                                                                                          |
+| Supabase missing-history recovery | Empty local replay passes              | Three explicit historical/environment recovery exceptions are documented; remote history was not rewritten                   |
+| Supabase migration equivalence    | Partial                                | Local replay is proven; demo comparison, Realtime owner policy and generated-type drift remain open                          |
+| Supabase storage buckets          | Zero                                   | Education upload workflow is not operational                                                                                 |
 
 ## 3. Blocker register
 

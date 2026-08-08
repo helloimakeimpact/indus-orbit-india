@@ -109,7 +109,7 @@ The member must be able to understand which model, provider, serving region, dat
 | Repository-wide `npm run lint --quiet` | Pass — 0 errors | The local semantic lint gate now passes across the repository.                                                                      |
 | Automated I/O/router contract tests    | 19/19 pass      | OpenCode, validation, selection/attempt bounds and provider request/error fixtures pass.                                            |
 | Empty Supabase migration replay        | Pass — 57       | A fresh local Postgres database applies every checked-in migration; demo comparison remains.                                        |
-| Database provider/ACL/schema contracts | 231/231 pass    | Adds product separation and global-location privacy to provider, notification, vouch, archive and core schema/grant coverage.       |
+| Database provider/ACL/schema contracts | 269/269 pass    | Adds direct-message RPC/grant/idempotency coverage to provider, product/location, notification, vouch, archive and core contracts.  |
 | Supabase schema lint                   | Pass            | The local `public` and `private` schemas report no lint errors.                                                                     |
 | Provider conformance tests             | None recorded   | No provider is operationally certified.                                                                                             |
 
@@ -368,7 +368,7 @@ The highest-leverage next slice is **deploy and prove the locally Verified bound
 
 ## 11. Verification basis and limits
 
-This assessment used the local source, a zero-state 57-migration replay, 231 pgTAP assertions, schema lint, build/type/format/lint checks, and read-only inspection of the connected Supabase project, its tables, migrations and Edge Functions.
+This assessment used the local source, a zero-state 58-migration replay, 269 pgTAP assertions, schema lint, build/type/format/lint checks, and the last successful read-only inspection of the connected Supabase project, its tables, migrations and Edge Functions. The newest local migrations remain `Verified`, not `Released`.
 
 The connected Supabase tools do not expose Edge Function secret names or values. Consequently this audit confirms what names the code reads and what provider records exist, but it cannot confirm which provider-specific secrets the operator added. No secret should be copied into an issue, chat, document, log, table, or repository to overcome that limitation.
 

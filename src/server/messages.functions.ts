@@ -1,5 +1,4 @@
 import { supabase } from "@/integrations/supabase/client";
-import { sendNotification } from "@/server/notification.functions";
 
 // Get all connections (accepted) so we know who you can message
 export async function getConnections() {
@@ -56,38 +55,15 @@ export async function sendMessage(recipientId: string, content: string) {
   if (!message) throw new Error("Message cannot be empty.");
   if (message.length > 4000) throw new Error("Messages cannot exceed 4,000 characters.");
 
-  // Verify they are connected
-  const { data: conn, error: connError } = await supabase
-    .from("connection_requests")
-    .select("id")
-    .eq("status", "accepted")
-    .or(
-      `and(sender_id.eq.${userId},recipient_id.eq.${recipientId}),and(sender_id.eq.${recipientId},recipient_id.eq.${userId})`,
-    )
-    .maybeSingle();
-
-  if (connError) throw new Error(connError.message);
-  if (!conn) throw new Error("You can only message connected members.");
-
   const { data: msg, error } = await supabase
-    .from("direct_messages")
-    .insert({ sender_id: userId, recipient_id: recipientId, content: message })
-    .select()
+    .rpc("send_my_direct_message", {
+      _recipient_id: recipientId,
+      _content: message,
+      _client_request_id: crypto.randomUUID(),
+    })
     .single();
 
   if (error) throw new Error(error.message);
-
-  try {
-    await sendNotification({
-      userId: recipientId,
-      type: "connect_requests",
-      message: "You have a new message.",
-      link: `/app/messages?user=${userId}`,
-    });
-  } catch {
-    // Message delivery should not fail if notification delivery is unavailable.
-  }
-
   return msg;
 }
 
@@ -95,14 +71,10 @@ export async function sendMessage(recipientId: string, content: string) {
 export async function markConversationRead(otherUserId: string) {
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) return;
-  const userId = userData.user.id;
 
-  const { error } = await supabase
-    .from("direct_messages")
-    .update({ read_at: new Date().toISOString() })
-    .eq("sender_id", otherUserId)
-    .eq("recipient_id", userId)
-    .is("read_at", null);
+  const { error } = await supabase.rpc("mark_my_direct_conversation_read", {
+    _other_user_id: otherUserId,
+  });
 
   if (error) throw new Error(error.message);
 }

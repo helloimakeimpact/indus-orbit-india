@@ -347,6 +347,7 @@ export type Database = {
       };
       direct_messages: {
         Row: {
+          client_request_id: string | null;
           content: string;
           created_at: string;
           id: string;
@@ -355,6 +356,7 @@ export type Database = {
           sender_id: string;
         };
         Insert: {
+          client_request_id?: string | null;
           content: string;
           created_at?: string;
           id?: string;
@@ -363,6 +365,7 @@ export type Database = {
           sender_id: string;
         };
         Update: {
+          client_request_id?: string | null;
           content?: string;
           created_at?: string;
           id?: string;
@@ -3425,6 +3428,10 @@ export type Database = {
           status: string;
         }[];
       };
+      mark_my_direct_conversation_read: {
+        Args: { _other_user_id: string };
+        Returns: number;
+      };
       my_lead_summary: { Args: never; Returns: Json };
       record_my_product_event: {
         Args: {
@@ -3443,6 +3450,22 @@ export type Database = {
           _user_id: string;
         };
         Returns: string;
+      };
+      send_my_direct_message: {
+        Args: {
+          _client_request_id: string;
+          _content: string;
+          _recipient_id: string;
+        };
+        Returns: {
+          client_request_id: string | null;
+          content: string;
+          created_at: string;
+          id: string;
+          read_at: string | null;
+          recipient_id: string;
+          sender_id: string;
+        };
       };
       set_my_community_location: {
         Args: {
