@@ -1,6 +1,6 @@
 # I/O Port operating guide
 
-Operational truth, updated 9 August 2026: the registry-driven multi-provider foundation, latest-evidence resolver, `io-gateway` v17 and top-level `/io` product boundary are deployed to the demo project. Five providers are staged, but every connection/capability/provider/endpoint remains gated, all five runtime switches are off, and route receipts/provider attempts remain zero. Read `IO_PORT_IMPLEMENTATION_STATUS.md` before activating traffic.
+Operational truth, updated 9 August 2026: the registry-driven multi-provider foundation, latest-evidence resolver, `io-gateway` v17 and top-level `/io` boundary are deployed. Current live provider/model/endpoint/capacity/control and ready-route counts are zero; receipts/attempts are also zero. Secrets alone do not provision or activate routing. Read `IO_PORT_IMPLEMENTATION_STATUS.md` before any inventory or traffic change.
 
 ## What is live in the demo project
 

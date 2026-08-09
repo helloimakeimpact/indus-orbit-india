@@ -274,18 +274,11 @@ function DirectoryPage() {
   }, [viewMode, loadRequests]);
 
   async function respond(r: Req, status: "accepted" | "declined" | "withdrawn") {
-    const { error } = await supabase.from("connection_requests").update({ status }).eq("id", r.id);
+    const { error } = await supabase.rpc("respond_to_my_connection_request", {
+      _request_id: r.id,
+      _status: status,
+    });
     if (error) return toast.error(error.message);
-    if (status === "accepted" && viewMode === "incoming") {
-      const { error: notifyError } = await supabase.rpc("send_notification", {
-        _user_id: r.sender_id,
-        _type: "connect_requests",
-        _message: `${user?.email} has accepted your connection request.`,
-        _link: "/app/directory",
-      });
-      if (notifyError)
-        toast.error(`Request accepted, but notification failed: ${notifyError.message}`);
-    }
     toast.success(`Request ${status}`);
     loadRequests();
   }

@@ -15,13 +15,15 @@ with release_versions(version) as (
     ('20260801195033'),
     ('20260801195108'),
     ('20260808190000'),
-    ('20260809132035')
+    ('20260809132035'),
+    ('20260809142000'),
+    ('20260809150000')
 ),
 checks(check_name, passed, detail) as (
   select
     'release migrations recorded',
-    count(*) = 8,
-    format('%s of 8 versions present', count(*))
+    count(*) = 10,
+    format('%s of 10 versions present', count(*))
   from supabase_migrations.schema_migrations as migration
   join release_versions as expected on expected.version = migration.version
 
@@ -30,7 +32,7 @@ checks(check_name, passed, detail) as (
   select
     'release relations exist',
     bool_and(relation_name is not null),
-    format('%s of 10 relations present', count(relation_name))
+    format('%s of 11 relations present', count(relation_name))
   from (
     values
       (to_regclass('private.community_onboarding_state')),
@@ -42,8 +44,16 @@ checks(check_name, passed, detail) as (
       (to_regclass('public.geo_places')),
       (to_regclass('private.member_location_preferences')),
       (to_regclass('public.member_location_shares')),
-      (to_regclass('private.member_location_consent_events'))
+      (to_regclass('private.member_location_consent_events')),
+      (to_regclass('private.email_delivery_outbox'))
   ) as relations(relation_name)
+
+  union all
+
+  select
+    'email outbox recipient lookup is indexed',
+    to_regclass('private.email_delivery_outbox_recipient_user_idx') is not null,
+    'recipient foreign key has a covering index'
 
   union all
 
@@ -75,24 +85,70 @@ checks(check_name, passed, detail) as (
         'public.lead_reject_story(uuid,text)',
         'EXECUTE'
       )
+      and not coalesce(
+        has_function_privilege(
+          'anon',
+          to_regprocedure('public.lead_remove_chapter_member(uuid,uuid)'),
+          'EXECUTE'
+        ),
+        false
+      )
+      and not coalesce(
+        has_function_privilege(
+          'anon',
+          to_regprocedure('public.lead_remove_mission_member(uuid,uuid)'),
+          'EXECUTE'
+        ),
+        false
+      )
       and not has_function_privilege(
         'anon',
-        'public.lead_remove_chapter_member(uuid,uuid)',
+        'public.create_my_connection_request(uuid,text,text,uuid)',
         'EXECUTE'
       )
       and not has_function_privilege(
         'anon',
-        'public.lead_remove_mission_member(uuid,uuid)',
+        'public.respond_to_my_connection_request(uuid,text)',
+        'EXECUTE'
+      )
+      and not has_function_privilege(
+        'anon',
+        'public.request_my_mentor_session(uuid,text,integer,uuid)',
+        'EXECUTE'
+      )
+      and not has_function_privilege(
+        'anon',
+        'public.transition_my_mentor_session(uuid,text,text,timestamptz)',
+        'EXECUTE'
+      )
+      and not has_function_privilege(
+        'anon',
+        'public.post_my_mission_update(uuid,text,uuid)',
+        'EXECUTE'
+      )
+      and not has_function_privilege(
+        'anon',
+        'public.request_my_vouch(text,uuid,uuid)',
+        'EXECUTE'
+      )
+      and not has_function_privilege(
+        'anon',
+        'public.approve_chapter_proposal(uuid)',
+        'EXECUTE'
+      )
+      and not has_function_privilege(
+        'anon',
+        'public.reject_chapter_proposal(uuid)',
         'EXECUTE'
       ),
-    '8 inherited privileged functions deny anonymous execution'
+    '16 privileged functions deny anonymous execution'
 
   union all
 
   select
     'caller-bound RPCs exist',
     bool_and(function_name is not null),
-    format('%s of 9 functions present', count(function_name))
+    format('%s of 17 functions present', count(function_name))
   from (
     values
       (to_regprocedure('public.get_my_product_access()')),
@@ -103,7 +159,15 @@ checks(check_name, passed, detail) as (
       (to_regprocedure('public.get_my_location_preferences()')),
       (to_regprocedure('public.withdraw_my_location_consent(text,uuid)')),
       (to_regprocedure('public.send_my_direct_message(uuid,text,uuid)')),
-      (to_regprocedure('public.mark_my_direct_conversation_read(uuid)'))
+      (to_regprocedure('public.mark_my_direct_conversation_read(uuid)')),
+      (to_regprocedure('public.create_my_connection_request(uuid,text,text,uuid)')),
+      (to_regprocedure('public.respond_to_my_connection_request(uuid,text)')),
+      (to_regprocedure('public.request_my_mentor_session(uuid,text,integer,uuid)')),
+      (to_regprocedure('public.transition_my_mentor_session(uuid,text,text,timestamptz)')),
+      (to_regprocedure('public.post_my_mission_update(uuid,text,uuid)')),
+      (to_regprocedure('public.request_my_vouch(text,uuid,uuid)')),
+      (to_regprocedure('public.approve_chapter_proposal(uuid)')),
+      (to_regprocedure('public.reject_chapter_proposal(uuid)'))
   ) as functions(function_name)
 
   union all
@@ -265,6 +329,53 @@ checks(check_name, passed, detail) as (
       and not has_table_privilege('authenticated', 'public.notifications', 'INSERT')
       and not has_table_privilege('authenticated', 'public.notifications', 'DELETE'),
     'authenticated can read and update only is_read'
+
+  union all
+
+  select
+    'product events use trusted RPC-only writes',
+    has_table_privilege('authenticated', 'public.connection_requests', 'SELECT')
+      and not has_table_privilege('authenticated', 'public.connection_requests', 'INSERT')
+      and not has_table_privilege('authenticated', 'public.connection_requests', 'UPDATE')
+      and has_table_privilege('authenticated', 'public.mentor_sessions', 'SELECT')
+      and not has_table_privilege('authenticated', 'public.mentor_sessions', 'INSERT')
+      and not has_table_privilege('authenticated', 'public.mentor_sessions', 'UPDATE')
+      and not has_table_privilege('authenticated', 'public.mission_updates', 'INSERT')
+      and not has_table_privilege('authenticated', 'public.vouch_requests', 'INSERT')
+      and not has_table_privilege('authenticated', 'public.vouch_requests', 'UPDATE')
+      and not has_table_privilege('authenticated', 'public.chapter_proposals', 'UPDATE')
+      and not has_function_privilege(
+        'authenticated',
+        'public.send_notification(uuid,text,text,text)',
+        'EXECUTE'
+      ),
+    'browser retains scoped reads; event writes and notifications are server-derived'
+
+  union all
+
+  select
+    'email outbox is private and service-leased',
+    (
+      select class.relrowsecurity
+      from pg_catalog.pg_class as class
+      where class.oid = 'private.email_delivery_outbox'::regclass
+    )
+      and not has_table_privilege(
+        'authenticated',
+        'private.email_delivery_outbox',
+        'SELECT'
+      )
+      and not has_function_privilege(
+        'authenticated',
+        'public.claim_email_delivery_batch(integer)',
+        'EXECUTE'
+      )
+      and has_function_privilege(
+        'service_role',
+        'public.claim_email_delivery_batch(integer)',
+        'EXECUTE'
+      ),
+    'RLS=true; browser=false; service worker claim=true'
 
   union all
 

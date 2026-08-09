@@ -134,16 +134,7 @@ function AdminQueue() {
       return;
     }
     try {
-      await approveChapterProposal({
-        data: {
-          proposalId: prop.id,
-          proposerId: prop.proposer_id,
-          name: prop.proposed_name,
-          city: prop.city,
-          country: prop.country,
-          rationale: prop.rationale,
-        },
-      });
+      await approveChapterProposal(prop.id);
       toast.success(`Chapter ${prop.proposed_name} created successfully!`);
       load();
     } catch (error) {

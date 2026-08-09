@@ -1,16 +1,4 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { Database } from "@/integrations/supabase/types";
-import { sendNotification } from "@/server/notification.functions";
-
-type MentorSessionUpdate = Database["public"]["Tables"]["mentor_sessions"]["Update"];
-
-const escapeHtml = (value: string) =>
-  value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
 
 export const requestMentorSession = async ({
   data,
@@ -20,48 +8,21 @@ export const requestMentorSession = async ({
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) throw new Error("Unauthorized");
 
-  const userId = userData.user.id;
-  if (data.expertId === userId) throw new Error("You cannot book a session with yourself.");
+  if (data.expertId === userData.user.id)
+    throw new Error("You cannot book a session with yourself.");
 
   const message = data.message.trim();
   if (message.length < 20) throw new Error("Please provide a bit more context (20+ chars).");
   if (![30, 60].includes(data.durationMins)) throw new Error("Choose a 30 or 60 minute session.");
 
-  // Ensure the booker is verified
-  const { data: bookerProfile, error: bookerError } = await supabase
-    .from("profiles")
-    .select("is_verified")
-    .eq("user_id", userId)
-    .maybeSingle();
-  if (bookerError) throw new Error(bookerError.message);
-
-  if (!bookerProfile?.is_verified) {
-    throw new Error("Only verified members can book sessions. Please get verified first.");
-  }
-
-  const { error, data: session } = await supabase
-    .from("mentor_sessions")
-    .insert({
-      expert_id: data.expertId,
-      booker_id: userId,
-      message,
-      duration_mins: data.durationMins,
-    })
-    .select("id")
-    .single();
+  const { error, data: session } = await supabase.rpc("request_my_mentor_session", {
+    _expert_id: data.expertId,
+    _message: message,
+    _duration_mins: data.durationMins,
+    _client_request_id: crypto.randomUUID(),
+  });
 
   if (error) throw new Error(error.message);
-
-  try {
-    await sendNotification({
-      userId: data.expertId,
-      type: "mentor_request",
-      message: "You have a new mentorship session request.",
-      link: "/app/mentor",
-    });
-  } catch {
-    // Booking should not fail if notification delivery is unavailable.
-  }
 
   return { ok: true, sessionId: session.id };
 };
@@ -79,84 +40,18 @@ export const updateMentorSession = async ({
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) throw new Error("Unauthorized");
 
-  const userId = userData.user.id;
-
-  const { data: session, error: sessionError } = await supabase
-    .from("mentor_sessions")
-    .select("*")
-    .eq("id", data.sessionId)
-    .maybeSingle();
-  if (sessionError) throw new Error(sessionError.message);
-  if (!session) throw new Error("Session not found.");
-
-  const isExpert = session.expert_id === userId;
-  const isBooker = session.booker_id === userId;
-
-  if (!isExpert && !isBooker) throw new Error("Unauthorized");
-
-  // Only experts can accept/decline/complete. Booker can only cancel.
-  if (!isExpert && ["accepted", "declined", "completed"].includes(data.status)) {
-    throw new Error("Only the expert can perform this action.");
-  }
   if (data.scheduledFor && Number.isNaN(new Date(data.scheduledFor).getTime())) {
     throw new Error("Choose a valid session time.");
   }
 
-  const updatePayload: MentorSessionUpdate = {
-    status: data.status,
-    updated_at: new Date().toISOString(),
-  };
-  if (data.meetingUrl !== undefined) updatePayload.meeting_url = data.meetingUrl.trim() || null;
-  if (data.scheduledFor !== undefined) updatePayload.scheduled_for = data.scheduledFor;
-
-  const { error } = await supabase
-    .from("mentor_sessions")
-    .update(updatePayload)
-    .eq("id", data.sessionId);
+  const { error } = await supabase.rpc("transition_my_mentor_session", {
+    _session_id: data.sessionId,
+    _status: data.status,
+    _meeting_url: data.meetingUrl?.trim() || undefined,
+    _scheduled_for: data.scheduledFor,
+  });
 
   if (error) throw new Error(error.message);
-
-  const notifyId = isExpert ? session.booker_id : session.expert_id;
-  try {
-    await sendNotification({
-      userId: notifyId,
-      type: "mentor_update",
-      message: `Your mentorship session was marked as ${data.status}.`,
-      link: "/app/mentor",
-    });
-  } catch {
-    // Session updates should not fail if notification delivery is unavailable.
-  }
-
-  // If accepted and we are the expert, trigger the email dispatcher
-  if (isExpert && data.status === "accepted") {
-    // Get the mentor's name
-    const { data: expertProfile } = await supabase
-      .from("profiles")
-      .select("display_name")
-      .eq("user_id", userId)
-      .single();
-    const mentorName = expertProfile?.display_name || "A Mentor";
-    const mentorNameHtml = escapeHtml(mentorName);
-    const meetingUrl = data.meetingUrl?.trim();
-
-    const htmlBody = `
-      <h2>Mentorship Session Accepted</h2>
-      <p><strong>${mentorNameHtml}</strong> has accepted your mentorship request.</p>
-      ${data.scheduledFor ? `<p><strong>Scheduled for:</strong> ${new Date(data.scheduledFor).toLocaleString()}</p>` : ""}
-      ${meetingUrl ? `<p><strong>Meeting Link:</strong> <a href="${escapeHtml(meetingUrl)}">${escapeHtml(meetingUrl)}</a></p>` : ""}
-      <p>Log into Indus Orbit to view details or cancel the session.</p>
-    `;
-
-    await supabase.functions.invoke("resend-email-dispatcher", {
-      body: {
-        user_id: session.booker_id,
-        category: "mentorship",
-        subject: `Mentorship Accepted by ${mentorName}`,
-        html_body: htmlBody,
-      },
-    });
-  }
 
   return { ok: true };
 };

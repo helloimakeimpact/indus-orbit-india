@@ -9,7 +9,7 @@ Status: researched capability gap and adoption decision, 1 August 2026. Official
 1. **Router capability:** one normalized API, model/provider catalogue, policy filters, dynamic selection, fallbacks, usage and observability.
 2. **Router capacity:** access to an aggregator’s commercial provider accounts and settlement system.
 
-I/O Port currently owns a partial router capability. It does not currently consume OpenRouter shared capacity. The five provider keys supplied by the founder are direct operator credentials; they are staged as five separate direct connections and intentionally remain non-routable.
+I/O Port currently owns a partial router capability. It does not consume OpenRouter shared capacity. Provider secret names may be configured, but the current live registry/capacity inventory is empty; the five intended direct connections must be provisioned through an operator-reviewed workflow and remain non-routable until conformance and spend approval.
 
 OpenRouter’s official quickstart describes a unified API across hundreds of models with fallback and cost-aware selection. Its provider-routing controls include order/allow/ignore lists, fallbacks, required-parameter filtering, data-collection and ZDR filters, quantization, maximum price, latency and throughput preferences. Its BYOK system prioritizes member/provider keys and may fall back to shared OpenRouter capacity. Its model fallback, auto-router, workspace, presets and optional router-metadata surfaces fill out a mature gateway baseline.
 

@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
 
-select plan(16);
+select plan(24);
 
 -- Every hosted function in this list must deny anonymous execution. Two
 -- lead-removal RPCs are hosted-history additions that may be absent from a
@@ -22,6 +22,8 @@ select ok(
 from (
   values
     ('public.admin_resolve_vouch_request(uuid,boolean,text)'),
+    ('public.approve_chapter_proposal(uuid)'),
+    ('public.create_my_connection_request(uuid,text,text,uuid)'),
     ('public.handle_new_user()'),
     ('public.lead_approve_event(uuid)'),
     ('public.lead_approve_story(uuid)'),
@@ -29,6 +31,12 @@ from (
     ('public.lead_reject_story(uuid,text)'),
     ('public.lead_remove_chapter_member(uuid,uuid)'),
     ('public.lead_remove_mission_member(uuid,uuid)')
+    ,('public.post_my_mission_update(uuid,text,uuid)')
+    ,('public.reject_chapter_proposal(uuid)')
+    ,('public.request_my_mentor_session(uuid,text,integer,uuid)')
+    ,('public.request_my_vouch(text,uuid,uuid)')
+    ,('public.respond_to_my_connection_request(uuid,text)')
+    ,('public.transition_my_mentor_session(uuid,text,text,timestamptz)')
 ) as privileged_functions(signature);
 
 -- The seven browser-facing RPCs retain their authenticated contract when the

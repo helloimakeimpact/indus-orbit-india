@@ -26,44 +26,44 @@ External CI, design, issue, and monitoring links may be used when access and ret
 
 ## 2. Current verified baseline — not release approval
 
-| Check                             | Result on 8 August 2026                   | Meaning                                                                                                                   |
-| --------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| Production web build              | Pass                                      | The current bundle builds; it does not prove runtime workflows                                                            |
-| TypeScript `--noEmit`             | Pass                                      | Current TypeScript compiles                                                                                               |
-| Unit tests                        | Pass — 34/34                              | Auth intent, product/location contracts, configuration, conversations, OpenCode, gateway, provider and routing tests pass |
-| Formatting check                  | Pass                                      | Mechanical formatting drift has been removed                                                                              |
-| Dependency audit (high and above) | Pass                                      | No critical, high, or moderate dependency advisory remains                                                                |
-| Dependency audit (all severities) | Pass — 0 known vulnerabilities            | Patched overrides and non-breaking transitive updates clear the current npm advisory report                               |
-| GitHub quality workflow           | Configured; no remote run recorded yet    | PR/push audit, format, lint, typecheck, unit test and production build are defined                                        |
-| GitHub database workflow          | Configured; no remote run recorded yet    | Empty replay, pgTAP, public/private schema lint and guaranteed local-stack cleanup are defined                            |
-| Repository lint                   | Pass — 0 errors                           | Local semantic lint gate passes; CI evidence and broader product/integration coverage remain incomplete                   |
-| Automated product/router tests    | Core selection coverage only              | New registry router/UI source is browser-build checked but still needs Deno, SQL/RLS and conformance tests                |
-| Database contract tests           | Prior pass — 269/269; current 285 pending | New privilege tests add 16 assertions, but local Storage health prevented the full post-release rerun                     |
-| Provider conformance records      | Zero                                      | No provider is production-certified                                                                                       |
-| Supabase missing-history recovery | Hosted ledger preserved                   | 26 timestamp aliases are mapped; eight release versions deployed without history repair or reset                          |
-| Supabase migration equivalence    | Partial                                   | Live contract and public types pass; durable aliases, managed Realtime, full object diff and snapshot upgrade remain      |
-| Supabase storage buckets          | Zero                                      | Education upload workflow is not operational                                                                              |
+| Check                             | Result on 8 August 2026                | Meaning                                                                                                                        |
+| --------------------------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Production web build              | Pass                                   | The current bundle builds; it does not prove runtime workflows                                                                 |
+| TypeScript `--noEmit`             | Pass                                   | Current TypeScript compiles                                                                                                    |
+| Unit tests                        | Pass — 37/37                           | Auth intent, product/location contracts, conversations, OpenCode, gateway/provider routing and fixed email-template tests pass |
+| Formatting check                  | Pass                                   | Mechanical formatting drift has been removed                                                                                   |
+| Dependency audit (high and above) | Pass                                   | No critical, high, or moderate dependency advisory remains                                                                     |
+| Dependency audit (all severities) | Pass — 0 known vulnerabilities         | Patched overrides and non-breaking transitive updates clear the current npm advisory report                                    |
+| GitHub quality workflow           | Configured; no remote run recorded yet | PR/push audit, format, lint, typecheck, unit test and production build are defined                                             |
+| GitHub database workflow          | Configured; no remote run recorded yet | Empty replay, pgTAP, public/private schema lint and guaranteed local-stack cleanup are defined                                 |
+| Repository lint                   | Pass — 0 errors                        | Local semantic lint gate passes; CI evidence and broader product/integration coverage remain incomplete                        |
+| Automated product/router tests    | Core selection coverage only           | New registry router/UI source is browser-build checked but still needs Deno, SQL/RLS and conformance tests                     |
+| Database contract tests           | Upgraded local pass — 376/376          | All ten pgTAP files pass; fresh 61-migration empty replay and retained remote CI evidence remain                               |
+| Provider conformance records      | Zero                                   | No provider is production-certified                                                                                            |
+| Supabase missing-history recovery | Hosted ledger preserved                | 26 timestamp aliases are mapped; eight release versions deployed without history repair or reset                               |
+| Supabase migration equivalence    | Partial                                | Live contract and public types pass; durable aliases, managed Realtime, full object diff and snapshot upgrade remain           |
+| Supabase storage buckets          | Zero                                   | Education upload workflow is not operational                                                                                   |
 
 ## 3. Blocker register
 
-| ID    | Blocker                                                                                                                                 | Owner      | Status | Resolution evidence                                                             |
-| ----- | --------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------ | ------------------------------------------------------------------------------- |
-| B-001 | Hosted history is preserved and mapped, but 26 timestamp aliases, full object comparison, managed Realtime and snapshot upgrade remain  | Unassigned | Open   | `docs/SUPABASE_SCHEMA_RECONCILIATION.md`                                        |
-| B-002 | Anonymous privileged-function warnings are zero; 40 authenticated `SECURITY DEFINER` functions still require classification/tests       | Unassigned | Open   | `docs/release-evidence/demo-2026-08-09/supabase-release.md`                     |
-| B-003 | Anonymous contact/newsletter insertion lacks production anti-abuse boundary                                                             | Unassigned | Open   | —                                                                               |
-| B-004 | Leaked-password protection is disabled                                                                                                  | Unassigned | Open   | —                                                                               |
-| B-005 | Education answer-key/scoring trust boundary is unsafe                                                                                   | Unassigned | Open   | —                                                                               |
-| B-006 | Required education storage bucket and policies do not exist                                                                             | Unassigned | Open   | —                                                                               |
-| B-007 | Vouch code remains browser-issued; Web Crypto reduces predictability but cannot enforce authoritative issuance, hashing, or rate limits | Unassigned | Open   | —                                                                               |
-| B-008 | Browser/server feature data boundaries are misleading and inconsistent                                                                  | Unassigned | Open   | —                                                                               |
-| B-009 | Automated product, integration, database-authorization coverage and executed CI evidence are incomplete                                 | Unassigned | Open   | —                                                                               |
-| B-010 | Public model/price/FX claims are hard-coded without evidence workflow                                                                   | Unassigned | Open   | —                                                                               |
-| B-011 | Five I/O providers are staged, but none has passed current endpoint-bound conformance and every runtime switch remains off              | Unassigned | Open   | —                                                                               |
-| B-012 | Operations, legal, privacy, support, backup, and incident approvals are incomplete                                                      | Unassigned | Open   | —                                                                               |
-| B-013 | Production build has a 645.40 kB minified JavaScript chunk; route/vendor splitting and measured performance budgets are not complete    | Unassigned | Open   | —                                                                               |
-| B-014 | I/O gateway is deployed to demo but lacks activation-grade conformance, budget reservation, idempotency and health/circuit controls     | Unassigned | Open   | —                                                                               |
-| B-015 | Generic authenticated notification injection and the browser-callable arbitrary-recipient/subject/HTML email dispatcher remain unsafe   | Unassigned | Open   | `docs/io-system/conversation-system/CONVERSATION_SYSTEM_IMPLEMENTATION_PLAN.md` |
-| B-016 | The 59th migration replays, but the upgraded local Storage container is unhealthy and the complete 285-assertion CI rerun is missing    | Unassigned | Open   | `docs/release-evidence/demo-2026-08-09/supabase-release.md`                     |
+| ID    | Blocker                                                                                                                                                                                           | Owner      | Status | Resolution evidence                                                             |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------ | ------------------------------------------------------------------------------- |
+| B-001 | Hosted history is preserved and mapped, but 26 timestamp aliases, full object comparison, managed Realtime and snapshot upgrade remain                                                            | Unassigned | Open   | `docs/SUPABASE_SCHEMA_RECONCILIATION.md`                                        |
+| B-002 | Identified anonymous privileged execution is closed; 45 authenticated definer, 47 GraphQL-exposure and two always-true-policy warnings require classification/tests                               | Unassigned | Open   | `docs/release-evidence/demo-2026-08-09/supabase-release.md`                     |
+| B-003 | Anonymous contact/newsletter insertion lacks production anti-abuse boundary                                                                                                                       | Unassigned | Open   | —                                                                               |
+| B-004 | Leaked-password protection is disabled                                                                                                                                                            | Unassigned | Open   | —                                                                               |
+| B-005 | Education answer-key/scoring trust boundary is unsafe                                                                                                                                             | Unassigned | Open   | —                                                                               |
+| B-006 | Required education storage bucket and policies do not exist                                                                                                                                       | Unassigned | Open   | —                                                                               |
+| B-007 | Vouch code remains browser-issued; Web Crypto reduces predictability but cannot enforce authoritative issuance, hashing, or rate limits                                                           | Unassigned | Open   | —                                                                               |
+| B-008 | Browser/server feature data boundaries are misleading and inconsistent                                                                                                                            | Unassigned | Open   | —                                                                               |
+| B-009 | Automated product, integration, database-authorization coverage and executed CI evidence are incomplete                                                                                           | Unassigned | Open   | —                                                                               |
+| B-010 | Public model/price/FX claims are hard-coded without evidence workflow                                                                                                                             | Unassigned | Open   | —                                                                               |
+| B-011 | Five I/O providers are staged, but none has passed current endpoint-bound conformance and every runtime switch remains off                                                                        | Unassigned | Open   | —                                                                               |
+| B-012 | Operations, legal, privacy, support, backup, and incident approvals are incomplete                                                                                                                | Unassigned | Open   | —                                                                               |
+| B-013 | Production build has a 645.31 kB minified JavaScript chunk; route/vendor splitting and measured performance budgets are not complete                                                              | Unassigned | Open   | —                                                                               |
+| B-014 | I/O gateway is deployed to demo but lacks activation-grade conformance, budget reservation, idempotency and health/circuit controls                                                               | Unassigned | Open   | —                                                                               |
+| B-015 | Database notification/email injection is closed and the legacy dispatcher is a 410 tombstone; fixed-template worker deployment, sender-domain proof, scheduling and dead-letter operations remain | Unassigned | Open   | `docs/io-system/conversation-system/TRUSTED_NOTIFICATION_AND_EMAIL_BOUNDARY.md` |
+| B-016 | The upgraded local chain passes 376/376, but a fresh 61-migration empty replay, snapshot upgrade and retained remote CI run are missing                                                           | Unassigned | Open   | `docs/release-evidence/demo-2026-08-09/supabase-release.md`                     |
 
 ## G0 — Scope, ownership, and control
 
@@ -93,10 +93,10 @@ Decision: Not passed
 
 - [ ] Missing remote migration history is recovered and reviewed without rewriting deployed history. Evidence: hosted ledger fetched/preserved and eight migrations released without repair; platform-owner review pending.
 - [ ] Local filename-to-remote-version mapping is documented. Evidence: all 26 alias pairs are recorded in `docs/SUPABASE_SCHEMA_RECONCILIATION.md`; owner approval and durable mechanism pending.
-- [ ] Empty-database migration replay passes. Evidence: 58-migration baseline passes; migration 59 applied at SQL stage, but local Storage health prevented the full 285-test rerun.
+- [ ] Empty-database migration replay passes. Evidence: 58-migration baseline passed historically and the current upgraded chain passes 376/376; fresh 61-migration replay is pending.
 - [ ] Upgrade from a production-like snapshot passes. Evidence: —
 - [ ] Resettable non-production schema matches the intended production schema, grants, RLS, functions, triggers, enums, extensions, and storage policies. Evidence: —
-- [ ] Generated Supabase TypeScript types match the approved schema. Evidence: hosted public generation matches `src/integrations/supabase/types.ts`; schema approval pending.
+- [ ] Generated Supabase TypeScript types match the approved schema. Evidence: declarations cover current trusted-event contracts; automated byte-for-byte drift gate and schema approval remain.
 - [ ] Local setup produces a functioning application from documented commands. Evidence: —
 - [ ] Node/package manager/dependency versions are pinned and deterministic. Evidence: —
 - [ ] Pull-request CI runs format, lint, typecheck, unit, database, and build checks. Evidence: quality and database workflow source exists; first GitHub run and branch-protection evidence pending.
@@ -131,7 +131,7 @@ Decision: Not passed
 - [ ] Private Realtime Broadcast authorization passes subscriber-isolation tests. Evidence: —
 - [ ] Upload paths validate ownership, type, size, access, and unsafe content strategy. Evidence: —
 - [ ] Personal, message, prompt, audit, and financial data retention/export/deletion rules are implemented. Evidence: —
-- [ ] Security Advisor findings are resolved or formally justified with tests and owners. Evidence: zero error-level findings and zero anonymous-definer warnings; 40 authenticated-definer and leaked-password findings remain.
+- [ ] Security Advisor findings are resolved or formally justified with tests and owners. Evidence: zero error-level findings; 45 authenticated-definer, 47 GraphQL-exposure and two always-true-policy warnings remain.
 - [ ] Dependency, secret, static-analysis, and manual high-risk-flow reviews pass. Evidence: —
 - [ ] No open critical/high finding remains for in-scope paths. Evidence: —
 
@@ -154,7 +154,7 @@ Decision: Not passed
 - [ ] Audit events are append-only, actor/target/reason/correlation aware, and privacy-safe. Evidence: —
 - [ ] Vouch codes are cryptographically issued server-side, protected at rest, rate-limited, expiring, and single-use. Evidence: —
 - [ ] Quiz answer keys are not readable by learners and grading/results are server-authoritative. Evidence: —
-- [ ] Notifications/email use an idempotent outbox with retries and dead-letter handling. Evidence: —
+- [ ] Notifications/email use an idempotent outbox with retries and dead-letter handling. Evidence: private outbox, leasing, retries/dead state and 79 local assertions exist; worker deployment and operator evidence remain.
 - [ ] Storage object ownership and lifecycle stay consistent with database records. Evidence: —
 - [ ] I/O reservations, settlements, refunds, sponsored credits, and route receipts reconcile exactly. Evidence: —
 - [ ] Foreign-key indexes and RLS performance findings are resolved or benchmark-justified. Evidence: —

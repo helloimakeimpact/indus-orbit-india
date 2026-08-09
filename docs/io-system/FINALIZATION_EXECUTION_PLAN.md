@@ -16,8 +16,9 @@ Completed in the demo environment:
 - consent-aware global location foundation;
 - caller-bound, idempotent direct-message send/read boundary;
 - removal of anonymous access to eight privileged functions;
-- live 17-check database contract, zero error-level advisor findings and exact public generated types;
-- all five provider runtime switches off and zero provider traffic evidence.
+- caller-bound domain mutations, retirement of generic notification execution and a private service-leased email outbox;
+- live 20-check database contract and a complete 376-assertion upgraded-local database run;
+- zero provider inventory, ready routes and traffic evidence.
 
 The product is still a release candidate foundation, not a finished production system.
 
@@ -27,8 +28,8 @@ Deliverables:
 
 1. Preserve the hosted ledger and document or baseline the 26 timestamp aliases so ordinary `supabase db push` works without a temporary migration view.
 2. Decide whether the separate builder/course/S.O.D.A. seed belongs in demo only; never mix that decision into schema deployment.
-3. Repair the local Supabase Storage bootstrap, then replay all 59 migrations from empty.
-4. Run all 285 pgTAP assertions, public/private lint, local Security/Performance Advisors and the GitHub database workflow.
+3. Replay all 61 migrations from an empty database; the current upgraded local chain already passes all contracts.
+4. Run all 372 pgTAP assertions, public/private lint, local Security/Performance Advisors and the GitHub database workflow in that empty replay.
 5. Add an automated generated-public-types drift gate.
 6. Verify the owner-scoped managed `realtime.messages` policy in its real owner environment.
 7. Prove an upgrade from a production-like snapshot, not only an empty reset.
@@ -48,7 +49,7 @@ Deliverables:
 
 1. Run Playwright personas for I/O-only sign-up, Community opt-in, existing Community member, interrupted/resumed onboarding and suspended access.
 2. Cover location Skip, private country, members-country, public-country, purpose changes and immediate withdrawal.
-3. Configure production email confirmation, OAuth redirects, recovery, session revocation, privileged MFA/re-auth and leaked-password protection.
+3. Configure production email confirmation, OAuth redirects, recovery, session revocation and privileged MFA/re-auth; verify leaked-password protection and enable it if disabled.
 4. Move trusted onboarding/workspace lifecycle events into transactional RPCs.
 5. Build aggregate-only conversion reporting with consent-off defaults and small-cohort suppression.
 6. Run an A/A instrumentation test before any product experiment.
@@ -66,10 +67,10 @@ User input needed: approve production Auth domains/providers, consent copy and m
 
 Deliverables:
 
-1. Replace every remaining generic `send_notification` caller with domain-owned event RPCs.
-2. Add a private idempotent outbox, fixed-template worker, retries, dead-letter state and redacted operator controls.
-3. Remove authenticated execution from the generic notification RPC and reject arbitrary browser recipient/subject/HTML email requests.
-4. Audit all 40 authenticated `SECURITY DEFINER` warnings for caller binding, capability checks, fixed empty `search_path`, grants, validation and audit.
+1. **Released:** every former generic `send_notification` caller now uses a domain-owned event RPC.
+2. **Released/Verified:** the private idempotent outbox, leases, retries and dead-letter state exist; the fixed-template worker source is locally Verified. Provider configuration, deployment, scheduling and operator controls remain.
+3. **Released:** authenticated generic notification execution is revoked and arbitrary browser recipient/subject/HTML email requests are removed from source.
+4. Audit all 45 authenticated `SECURITY DEFINER` warnings for caller binding, capability checks, fixed empty `search_path`, grants, validation and audit; classify the GraphQL and always-true-policy findings separately.
 5. Add abuse protection for contact, newsletter, auth, recovery, vouch, messaging and uploads.
 6. Move vouch issuance/hashing and education quiz correctness fully behind trusted server boundaries.
 7. Add the education storage bucket with ownership, type, size, signing and lifecycle policies.
@@ -80,7 +81,7 @@ Exit criteria:
 - every privileged function has positive and negative role tests;
 - no unresolved critical/high trust-boundary finding remains.
 
-User input needed: choose the transactional email provider/domain and nominate security/privacy ownership.
+User input needed: choose/verify the transactional email provider and sender domain, then nominate security/privacy ownership. Current worker source targets Resend but is not deployed.
 
 ## Phase 4 — finish the people-centred Discord-like Community system
 
@@ -110,7 +111,7 @@ Deliverables:
 1. Build the operator conformance runner and evidence UI; validate chat, streaming, tools, structured output, usage, errors, cancellation and safety one provider at a time.
 2. Add request idempotency, hard workspace budgets, reserve/settle accounting, retry budgets, circuit breakers, health/latency sampling and kill-switch drills.
 3. Complete dynamic model refresh with evidence timestamps, region/residency labels that are never inferred, price versions and approved FX snapshots.
-4. Expand from the five staged direct providers to the reviewed 20-provider inventory using partnership, owned/rented and donated-capacity adapters.
+4. Provision the empty live registry toward the reviewed 20-provider inventory using partnership, owned/rented and donated-capacity adapters.
 5. Add OpenAI-compatible partner and local endpoints while preserving provider-specific adapters where semantics differ.
 6. Add member usage, credit, sponsorship, estimate, receipt and failure/offline UI.
 7. Activate one provider at a time only after contract tests; make one bounded live conformance call only with explicit spend approval.
@@ -172,7 +173,7 @@ Deliverables:
 1. Complete state/permission/concurrency contracts for profiles, connections, mentorship, Missions, Chapters, events, learning, skills, S.O.D.A. and stories.
 2. Replace hard-coded/public claims with approved, evidence-backed content and correct canonical metadata.
 3. Resolve the 147 lint warnings, beginning with missing Hook dependencies; split component-only exports where it improves reliability.
-4. Split the 645.40 kB chunk and set measured Core Web Vitals and bundle budgets.
+4. Split the 645.31 kB chunk and set measured Core Web Vitals and bundle budgets.
 5. Add component, Playwright, accessibility, visual, load and recovery coverage.
 6. Decide Loops archive retention/export/deletion with backup evidence; do not restore it as a product surface.
 

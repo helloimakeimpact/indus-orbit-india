@@ -1,5 +1,4 @@
 import { supabase } from "@/integrations/supabase/client";
-import { sendNotification } from "@/server/notification.functions";
 
 function generateCode(): string {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -173,36 +172,14 @@ export async function requestVouch(message: string, targetVerifierId?: string | 
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) throw new Error("Unauthorized");
 
-  const userId = userData.user.id;
   if (message.trim().length < 10) throw new Error("Please add a short message (10+ chars).");
 
-  const { error } = await supabase.from("vouch_requests").insert({
-    requester_id: userId,
-    target_verifier_id: targetVerifierId ?? null,
-    message: message.trim(),
+  const { error } = await supabase.rpc("request_my_vouch", {
+    _message: message.trim(),
+    _target_verifier_id: targetVerifierId ?? null,
+    _client_request_id: crypto.randomUUID(),
   });
   if (error) throw new Error(error.message);
-
-  await supabase.from("audit_log").insert({
-    actor_id: userId,
-    action: "vouch.request_created",
-    target_type: "profile",
-    target_id: targetVerifierId ?? null,
-  });
-
-  // Notify the target verifier if one was specified
-  if (targetVerifierId) {
-    try {
-      await sendNotification({
-        userId: targetVerifierId,
-        type: "vouch_request",
-        message: "Someone has requested a vouch from you.",
-        link: "/app/vouch",
-      });
-    } catch {
-      // Vouch requests are still valid if notification delivery is unavailable.
-    }
-  }
 
   return { ok: true };
 }

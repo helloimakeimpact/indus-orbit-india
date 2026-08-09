@@ -46,11 +46,11 @@ export function ReachOutDialog({
     if (trimmed.length < 10) return toast.error("Note must be at least 10 chars");
     if (trimmed.length > 280) return toast.error("Note must be under 280 chars");
     setBusy(true);
-    const { error } = await supabase.from("connection_requests").insert({
-      sender_id: senderId,
-      recipient_id: recipientId,
-      reason,
-      note: trimmed,
+    const { error } = await supabase.rpc("create_my_connection_request", {
+      _recipient_id: recipientId,
+      _reason: reason,
+      _note: trimmed,
+      _client_request_id: crypto.randomUUID(),
     });
 
     if (error) {
@@ -58,18 +58,6 @@ export function ReachOutDialog({
       if (error.code === "23505")
         return toast.error("You already have a pending request to this member");
       return toast.error(error.message);
-    }
-
-    // Notify the recipient via SECURITY DEFINER RPC
-    const { error: notifyError } = await supabase.rpc("send_notification", {
-      _user_id: recipientId,
-      _type: "connection_request",
-      _message: "You have a new connection request.",
-      _link: "/app/directory",
-    });
-    if (notifyError) {
-      setBusy(false);
-      return toast.error(notifyError.message);
     }
 
     setBusy(false);

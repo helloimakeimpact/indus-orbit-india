@@ -81,12 +81,12 @@ SELECT ok(
 );
 
 SELECT ok(
-  has_function_privilege(
+  NOT has_function_privilege(
     'authenticated',
     'public.send_notification(uuid,text,text,text)',
     'EXECUTE'
   ),
-  'authenticated clients retain legacy notification RPC access during cutover'
+  'authenticated clients cannot invoke the retired arbitrary notification RPC'
 );
 SELECT ok(
   NOT has_function_privilege('anon', 'public.send_notification(uuid,text,text,text)', 'EXECUTE'),
@@ -101,9 +101,9 @@ SELECT ok(
       ),
       ''
     ),
-    'DEPRECATED / HIGH RISK'
+    'RETIRED'
   ) > 0,
-  'legacy notification RPC is explicitly documented as deprecated and high risk'
+  'legacy notification RPC is explicitly documented as retired'
 );
 
 SELECT ok(
@@ -214,16 +214,13 @@ SELECT throws_ok(
   'owner A cannot insert even a self-addressed notification directly'
 );
 
-SELECT lives_ok(
-  $$
-    SELECT public.send_notification(
-      '10000000-0000-4000-8000-000000000002'::uuid,
-      'legacy_test',
-      'Legacy compatibility notification',
-      '/app/notifications'
-    )
-  $$,
-  'legacy authenticated notification RPC remains callable during cutover'
+SELECT ok(
+  NOT has_function_privilege(
+    'authenticated',
+    'public.send_notification(uuid,text,text,text)',
+    'EXECUTE'
+  ),
+  'legacy authenticated notification RPC remains unavailable during runtime checks'
 );
 
 RESET ROLE;
@@ -233,8 +230,8 @@ SET LOCAL "request.jwt.claim.role" = 'authenticated';
 
 SELECT results_eq(
   $$SELECT count(*)::bigint FROM public.notifications$$,
-  ARRAY[2::bigint],
-  'owner B sees their seed row and legacy compatibility row only'
+  ARRAY[1::bigint],
+  'owner B sees only their seed row after legacy cutover'
 );
 SELECT results_eq(
   $$

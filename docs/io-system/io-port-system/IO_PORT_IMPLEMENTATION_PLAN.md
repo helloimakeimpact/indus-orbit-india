@@ -1,6 +1,6 @@
 # I/O Port implementation plan
 
-Status: implementation baseline, updated 1 August 2026. The demo control plane, registry-driven `io-gateway` v17, route receipts and five staged direct providers are deployed; every external provider remains non-routable pending conformance and activation. This document remains the production-grade plan, not a claim that every planned surface is live. Verified operational status is maintained in `IO_PORT_IMPLEMENTATION_STATUS.md`.
+Status: implementation baseline, updated 9 August 2026. The demo control plane, registry-driven `io-gateway` v17 and route-receipt schema are deployed; current provider inventory is empty and every external route remains unavailable pending reviewed provisioning, conformance and activation. This document remains the production-grade plan, not a claim that every planned surface is live. Verified operational status is maintained in `IO_PORT_IMPLEMENTATION_STATUS.md`.
 
 Companion evidence: `IO_PORT_SOURCE_BRIEF.md` and the workspace-level `IO_PORT_TECHNICAL_AND_PRICING_PLAN.md`. Implementation detail: `IO_PORT_CODE_LEVEL_ROADMAP.md`. OpenRouter comparison: `OPENROUTER_CAPABILITY_AND_CAPACITY_PLAN.md`. Shared conversation and shell work: `../conversation-system/CONVERSATION_SYSTEM_IMPLEMENTATION_PLAN.md`. Migration-history evidence: `../../SUPABASE_SCHEMA_RECONCILIATION.md`.
 

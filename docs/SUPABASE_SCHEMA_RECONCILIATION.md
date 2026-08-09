@@ -1,12 +1,18 @@
 # Supabase schema-reconciliation record
 
-Status: demo release deployed and remotely verified; durable timestamp-alias reconciliation, managed Realtime and production-like upgrade replay remain pending, updated 9 August 2026.
+Status: ten-migration demo release deployed and remotely verified; the upgraded-local 376/376 suite passes. Durable historical timestamp reconciliation, managed Realtime, fresh empty replay and production-like upgrade replay remain pending, updated 9 August 2026.
+
+## Current addendum — trusted product events
+
+The forward migrations `20260809142000_create_trusted_product_event_rpcs.sql` and `20260809150000_harden_email_delivery_claims.sql` use the same versions in source and the hosted ledger, so they add no new timestamp alias. They applied to the existing local chain before all ten database test files passed 376/376. This is upgrade-path evidence, not a fresh 61-migration empty replay.
+
+The hosted read-only contract now passes 20/20. It verifies the new caller-bound domain RPCs, revoked generic notification execution, RPC-only protected writes, indexed private service-leased email outbox, ten release versions, zero ready provider routes and zero provider traffic. The live provider/model/endpoint/capacity/runtime-control tables currently contain zero records; older five-provider demo claims are no longer current.
 
 ## Empty local replay evidence — 8 August 2026
 
 The locked project dependency `supabase@2.111.0` started a fresh local Supabase stack and replayed the complete checked-in migration chain from an empty Postgres database. No paid hosted branch was created and no hosted database was reset. The 8 August phase gate applied all 58 migrations through `20260808190000_create_direct_message_rpc_boundary.sql` and passed 269/269 pgTAP assertions plus public/private schema lint.
 
-On 9 August, the 59th privilege-hardening migration also replayed successfully at the SQL stage. The reset command then failed because the upgraded local Storage container remained unhealthy and Postgres terminated before the complete suite could rerun. This is recorded as an environment limitation, not represented as a 285/285 pass. The hosted demo release is independently covered by the read-only 17-check contract and advisor evidence in `docs/release-evidence/demo-2026-08-09/supabase-release.md`.
+On 9 August, the 59th privilege-hardening migration replayed successfully at the SQL stage before a temporary Storage/Postgres health failure interrupted that empty-reset run. The containers later recovered; migration 60 applied to the existing chain and all 372 assertions passed. The fresh-empty evidence remains the older 58/269 baseline, while the hosted demo is independently covered by the current 19-check contract.
 
 The first replay found three pieces of recovered or environment-specific history that could not execute on a clean CLI database. Each correction is explicitly commented in its source file; none was applied to or used to rewrite the remote migration ledger:
 
@@ -16,7 +22,7 @@ The first replay found three pieces of recovered or environment-specific history
 | `20260505084656_6d71cafe-feeb-45dc-bbef-bbc7ec24e27c.sql` | The CLI migration role does not own managed `realtime.messages` and cannot assume its owner role.                    | Applies the recovered policy only when the runner has sufficient ownership; otherwise records a notice. Environment verification remains required. |
 | `20260801121231_seed_io_direct_provider_registry.sql`     | Demo provider staging required out-of-band `indus-demo` workspace and `partner-gateway` rows.                        | Treats staging as optional demo data and exits with a notice when either prerequisite is absent.                                                   |
 
-This proves the 58-migration baseline is replayable and the 59th migration is valid SQL in that chain. It does **not** yet prove complete production equivalence: durable alias reconciliation, the managed Realtime policy, a full schema-object comparison and upgrade replay from a production-like snapshot remain open gates. Public generated types now match the hosted project exactly.
+This proves the 58-migration baseline is replayable and the current three forward migrations are valid on the upgraded chain. It does **not** yet prove complete production equivalence: fresh 61-migration replay, durable alias reconciliation, managed Realtime, a full schema-object comparison, generated-type drift automation and a production-like snapshot upgrade remain open gates.
 
 ## What was verified
 
@@ -112,28 +118,29 @@ Supabase CLI authentication and linked migration access now work. The authoritat
 | `20260731123500_add_io_provider_registry_fk_indexes.sql`      | `add_io_provider_registry_fk_indexes`    | Covers provider-registry foreign-key paths used by policy/operator queries.                  | Performance Advisor covering-index check.                                                                      |
 | `20260731150000_add_io_dynamic_model_selection.sql`           | `add_io_dynamic_model_selection`         | Reviewed model release dates and automatic route tiers.                                      | Local deterministic selection tests pass.                                                                      |
 | `20260801120115_io_route_receipts_and_registry_router.sql`    | `io_route_receipts_and_registry_router`  | Service-only ready resolver plus append-only route/attempt evidence.                         | Ready resolver returns zero; receipt/attempt counts remain zero before live traffic.                           |
-| `20260801121231_seed_io_direct_provider_registry.sql`         | `seed_io_direct_provider_registry`       | Stages five direct providers with unique secret references and reviewed inventory metadata.  | Five testing connections, five draft capability versions and no paid conformance call.                         |
+| `20260801121231_seed_io_direct_provider_registry.sql`         | `seed_io_direct_provider_registry`       | Conditionally stages five direct providers when demo workspace/capacity prerequisites exist. | Current live prerequisites were absent; provider/model/endpoint/capacity/control counts are zero.              |
 | `20260801122329_add_io_route_evidence_fk_indexes.sql`         | `add_io_route_evidence_fk_indexes`       | Covers route-evidence provider/model/endpoint/capacity foreign keys.                         | Advisor reports no remaining unindexed foreign key in the new evidence tables.                                 |
-| `20260801123802_create_admin_control_plane.sql`               | `create_admin_control_plane`             | Scoped admin-team authority, I/O operator snapshot and fail-closed provider runtime switch.  | Super-admin projection verified; five controls disabled; zero ready routes and zero scoped assignments.        |
+| `20260801123802_create_admin_control_plane.sql`               | `create_admin_control_plane`             | Scoped admin-team authority, I/O operator snapshot and fail-closed provider runtime switch.  | Contracts exist; current provider/runtime-control inventory and ready routes are zero.                         |
 | `20260801124706_harden_super_admin_role_management.sql`       | `harden_super_admin_role_management`     | Removes authenticated browser DML from root platform roles.                                  | `authenticated`: SELECT true; INSERT/UPDATE/DELETE false on `public.user_roles`.                               |
 | `20260801130427_add_admin_control_plane_fk_indexes.sql`       | `add_admin_control_plane_fk_indexes`     | Covers assignment, audit-actor and provider-control foreign-key paths.                       | All nine foreign keys across the four affected private tables are index-backed; no missing path remains.       |
-| `20260801152819_enforce_latest_endpoint_conformance.sql`      | same version                             | Makes current endpoint capability plus current bound conformance the only route eligibility. | Live release contract passes; all five provider runtime switches remain disabled.                              |
-| `20260801152820_contain_notification_privileges.sql`          | same version                             | Restricts browser notification access to owner read and `is_read` update.                    | Live grant checks pass; generic compatibility RPC remains a documented blocker.                                |
+| `20260801152819_enforce_latest_endpoint_conformance.sql`      | same version                             | Makes current endpoint capability plus current bound conformance the only route eligibility. | Live release contract passes; no current inventory can route.                                                  |
+| `20260801152820_contain_notification_privileges.sql`          | same version                             | Restricts browser notification access to owner read and `is_read` update.                    | Live grant checks pass; the later event migration retires generic authenticated execution.                     |
 | `20260801153734_fix_vouch_audit_contracts.sql`                | same version                             | Serialises vouch mutations and repairs UUID audit targets.                                   | Migration recorded; existing focused local contracts remain green from the 8 August baseline.                  |
 | `20260801155642_retire_loops_product_surface.sql`             | same version                             | Removes browser Loops access while preserving a read-only service archive.                   | Anonymous/authenticated read false; service-role read true.                                                    |
 | `20260801195033_separate_io_and_community_product_access.sql` | same version                             | Separates immediate authenticated I/O access from explicit Community completion.             | Nine caller-bound product/location functions exist; existing-member backfill has zero missing rows.            |
 | `20260801195108_create_global_location_foundation.sql`        | same version                             | Adds private consent-aware location and explicit share projection.                           | 249 active countries; seven private tables use RLS; legacy rows remain unconsented.                            |
 | `20260808190000_create_direct_message_rpc_boundary.sql`       | same version                             | Moves direct sends/read acknowledgement behind caller-bound RPCs.                            | Direct browser writes false; zero write policies; authenticated RPC execution true.                            |
 | `20260809132035_revoke_anonymous_security_definer_access.sql` | same version                             | Revokes anonymous execution from eight privileged inherited functions.                       | Live contract passes and Security Advisor anonymous-definer warnings fall from eight to zero.                  |
+| `20260809142000_create_trusted_product_event_rpcs.sql`        | same version                             | Adds atomic connection/mentor/mission/vouch/Chapter event RPCs and private email outbox.     | 79 focused local assertions and 19 hosted checks pass; generic authenticated notification execution is false.  |
 
 These are additive hardening migrations. They do not modify or delete existing message rows.
 
 ## Safe recovery sequence for the remaining history
 
 1. Choose and review a durable baseline/alias strategy for the 26 mapped versions. Do not rename, delete or mark hosted history as reverted merely to make the lists look equal.
-2. Repair the local Storage bootstrap and rerun all 59 migrations, 285 pgTAP assertions and public/private lint in CI.
+2. Prove a fresh 61-migration replay with all 376 pgTAP assertions and public/private lint in CI; the current upgraded-local chain already passes the full suite.
 3. Compare grants, policies, functions, triggers, extensions and enum values with the demo project; separately verify the owner-scoped `realtime.messages` policy.
-4. Public generated types already match the hosted project; add a repeatable drift gate so they remain equal.
+4. Regenerate public types and add a repeatable drift gate; current declarations include the trusted-event columns/RPCs, including an intentional nullable vouch-target argument accommodation.
 5. Prove a production-like snapshot upgrade before making the reconciled chain the only supported deployment path.
 
 ## Guardrails

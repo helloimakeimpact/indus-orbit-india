@@ -201,6 +201,7 @@ export type Database = {
       };
       connection_requests: {
         Row: {
+          client_request_id: string | null;
           created_at: string;
           id: string;
           note: string;
@@ -211,6 +212,7 @@ export type Database = {
           status: string;
         };
         Insert: {
+          client_request_id?: string | null;
           created_at?: string;
           id?: string;
           note: string;
@@ -221,6 +223,7 @@ export type Database = {
           status?: string;
         };
         Update: {
+          client_request_id?: string | null;
           created_at?: string;
           id?: string;
           note?: string;
@@ -2059,6 +2062,7 @@ export type Database = {
       mentor_sessions: {
         Row: {
           booker_id: string;
+          client_request_id: string | null;
           created_at: string;
           duration_mins: number;
           expert_id: string;
@@ -2071,6 +2075,7 @@ export type Database = {
         };
         Insert: {
           booker_id: string;
+          client_request_id?: string | null;
           created_at?: string;
           duration_mins?: number;
           expert_id: string;
@@ -2083,6 +2088,7 @@ export type Database = {
         };
         Update: {
           booker_id?: string;
+          client_request_id?: string | null;
           created_at?: string;
           duration_mins?: number;
           expert_id?: string;
@@ -2155,6 +2161,7 @@ export type Database = {
       mission_updates: {
         Row: {
           author_id: string;
+          client_request_id: string | null;
           content: string;
           created_at: string;
           id: string;
@@ -2163,6 +2170,7 @@ export type Database = {
         };
         Insert: {
           author_id: string;
+          client_request_id?: string | null;
           content: string;
           created_at?: string;
           id?: string;
@@ -2171,6 +2179,7 @@ export type Database = {
         };
         Update: {
           author_id?: string;
+          client_request_id?: string | null;
           content?: string;
           created_at?: string;
           id?: string;
@@ -3049,6 +3058,7 @@ export type Database = {
       };
       vouch_requests: {
         Row: {
+          client_request_id: string | null;
           created_at: string;
           id: string;
           message: string;
@@ -3058,6 +3068,7 @@ export type Database = {
           target_verifier_id: string | null;
         };
         Insert: {
+          client_request_id?: string | null;
           created_at?: string;
           id?: string;
           message: string;
@@ -3067,6 +3078,7 @@ export type Database = {
           target_verifier_id?: string | null;
         };
         Update: {
+          client_request_id?: string | null;
           created_at?: string;
           id?: string;
           message?: string;
@@ -3302,7 +3314,21 @@ export type Database = {
         };
         Returns: Json;
       };
+      approve_chapter_proposal: {
+        Args: { _proposal_id: string };
+        Returns: string;
+      };
       can_author_education: { Args: { _user_id: string }; Returns: boolean };
+      claim_email_delivery_batch: {
+        Args: { _limit?: number };
+        Returns: {
+          id: string;
+          lease_token: string;
+          recipient_email: string;
+          template_data: Json;
+          template_key: string;
+        }[];
+      };
       complete_my_community_onboarding: {
         Args: { _client_operation_id: string; _version: number };
         Returns: {
@@ -3313,6 +3339,25 @@ export type Database = {
           io_access: boolean;
           measurement_consent: boolean;
         }[];
+      };
+      complete_email_delivery: {
+        Args: {
+          _error?: string;
+          _id: string;
+          _lease_token: string;
+          _provider_message_id?: string;
+          _succeeded: boolean;
+        };
+        Returns: undefined;
+      };
+      create_my_connection_request: {
+        Args: {
+          _client_request_id: string;
+          _note: string;
+          _reason: string;
+          _recipient_id: string;
+        };
+        Returns: Database["public"]["Tables"]["connection_requests"]["Row"];
       };
       create_my_io_workspace: {
         Args: never;
@@ -3433,6 +3478,10 @@ export type Database = {
         Returns: number;
       };
       my_lead_summary: { Args: never; Returns: Json };
+      post_my_mission_update: {
+        Args: { _client_request_id: string; _content: string; _mission_id: string };
+        Returns: Database["public"]["Tables"]["mission_updates"]["Row"];
+      };
       record_my_product_event: {
         Args: {
           _client_operation_id: string;
@@ -3442,6 +3491,31 @@ export type Database = {
         Returns: boolean;
       };
       redeem_vouch_code: { Args: { _code: string }; Returns: Json };
+      reject_chapter_proposal: {
+        Args: { _proposal_id: string };
+        Returns: undefined;
+      };
+      request_my_mentor_session: {
+        Args: {
+          _client_request_id: string;
+          _duration_mins: number;
+          _expert_id: string;
+          _message: string;
+        };
+        Returns: Database["public"]["Tables"]["mentor_sessions"]["Row"];
+      };
+      request_my_vouch: {
+        Args: {
+          _client_request_id: string;
+          _message: string;
+          _target_verifier_id: string | null;
+        };
+        Returns: Database["public"]["Tables"]["vouch_requests"]["Row"];
+      };
+      respond_to_my_connection_request: {
+        Args: { _request_id: string; _status: string };
+        Returns: Database["public"]["Tables"]["connection_requests"]["Row"];
+      };
       send_my_direct_message: {
         Args: {
           _client_request_id: string;
@@ -3502,6 +3576,15 @@ export type Database = {
           io_access: boolean;
           measurement_consent: boolean;
         }[];
+      };
+      transition_my_mentor_session: {
+        Args: {
+          _meeting_url?: string;
+          _scheduled_for?: string;
+          _session_id: string;
+          _status: string;
+        };
+        Returns: Database["public"]["Tables"]["mentor_sessions"]["Row"];
       };
       vouch_directly: { Args: { _recipient_id: string }; Returns: Json };
       vouch_effective_quota: { Args: { _user_id: string }; Returns: number };

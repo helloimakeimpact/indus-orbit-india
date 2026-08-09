@@ -1,5 +1,4 @@
 import { supabase } from "@/integrations/supabase/client";
-import { sendNotification } from "@/server/notification.functions";
 
 type MissionStatus = "open" | "completed" | "archived";
 
@@ -263,48 +262,13 @@ export const postMissionUpdate = async ({
   const content = data.content.trim();
   if (!content) throw new Error("Update content is required");
 
-  const canPost =
-    (await isMissionMember(userData.user.id, data.missionId)) ||
-    (await hasAdminRole(userData.user.id));
-  if (!canPost) throw new Error("Join this mission before posting updates");
-
-  const { error, data: updateRow } = await supabase
-    .from("mission_updates")
-    .insert({
-      mission_id: data.missionId,
-      author_id: userData.user.id,
-      content,
-    })
-    .select()
-    .single();
+  const { error, data: updateRow } = await supabase.rpc("post_my_mission_update", {
+    _mission_id: data.missionId,
+    _content: content,
+    _client_request_id: crypto.randomUUID(),
+  });
 
   if (error) throw new Error(error.message);
-
-  // Trigger notifications
-  const { data: members } = await supabase
-    .from("mission_members")
-    .select("user_id")
-    .eq("mission_id", data.missionId);
-  const { data: mission } = await supabase
-    .from("missions")
-    .select("title")
-    .eq("id", data.missionId)
-    .single();
-
-  if (members && mission) {
-    await Promise.allSettled(
-      members
-        .filter((m) => m.user_id !== userData.user!.id)
-        .map((m) =>
-          sendNotification({
-            userId: m.user_id,
-            type: "mission_updates",
-            message: `New update in mission: ${mission.title}`,
-            link: `/app/missions/${data.missionId}`,
-          }),
-        ),
-    );
-  }
 
   return { ok: true, update: updateRow };
 };

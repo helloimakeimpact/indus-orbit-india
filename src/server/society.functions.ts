@@ -1,5 +1,4 @@
 import { supabase } from "@/integrations/supabase/client";
-import { sendNotification } from "@/server/notification.functions";
 
 // 1. Stories
 export const submitStory = async ({
@@ -259,70 +258,14 @@ export const getChapterProposals = async () => {
   return data ?? [];
 };
 
-export const approveChapterProposal = async ({
-  data,
-}: {
-  data: {
-    proposalId: string;
-    proposerId: string;
-    name: string;
-    city: string;
-    country: string;
-    rationale: string;
-  };
-}) => {
+export const approveChapterProposal = async (proposalId: string) => {
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) throw new Error("Unauthorized");
 
-  const { data: roleData } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", userData.user.id)
-    .eq("role", "admin")
-    .maybeSingle();
-  if (!roleData) throw new Error("Only admins can approve proposals");
-
-  // 1. Create the chapter
-  const { error: chapterError, data: newChapter } = await supabase
-    .from("chapters")
-    .insert({
-      name: data.name.trim(),
-      city: data.city.trim(),
-      country: data.country.trim(),
-      description: data.rationale.trim().slice(0, 200), // basic description from rationale
-    })
-    .select("id")
-    .single();
-
-  if (chapterError) throw new Error(chapterError.message);
-
-  // 2. Make proposer a lead
-  const { error: memberError } = await supabase.from("chapter_members").insert({
-    chapter_id: newChapter.id,
-    user_id: data.proposerId,
-    role: "lead",
+  const { error } = await supabase.rpc("approve_chapter_proposal", {
+    _proposal_id: proposalId,
   });
-  if (memberError) throw new Error(memberError.message);
-
-  // 3. Mark proposal as approved
-  const { error: proposalError } = await supabase
-    .from("chapter_proposals")
-    .update({
-      status: "approved",
-    })
-    .eq("id", data.proposalId);
-  if (proposalError) throw new Error(proposalError.message);
-
-  try {
-    await sendNotification({
-      userId: data.proposerId,
-      type: "chapter_approved",
-      message: `Your proposal for ${data.name} was approved! You are now the Lead.`,
-      link: "/app/chapters",
-    });
-  } catch {
-    // Approval should not fail if notification delivery is unavailable.
-  }
+  if (error) throw new Error(error.message);
 
   return { ok: true };
 };
@@ -331,20 +274,9 @@ export const rejectChapterProposal = async (proposalId: string) => {
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) throw new Error("Unauthorized");
 
-  const { data: roleData } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", userData.user.id)
-    .eq("role", "admin")
-    .maybeSingle();
-  if (!roleData) throw new Error("Only admins can reject proposals");
-
-  const { error } = await supabase
-    .from("chapter_proposals")
-    .update({
-      status: "rejected",
-    })
-    .eq("id", proposalId);
+  const { error } = await supabase.rpc("reject_chapter_proposal", {
+    _proposal_id: proposalId,
+  });
   if (error) throw new Error(error.message);
 
   return { ok: true };

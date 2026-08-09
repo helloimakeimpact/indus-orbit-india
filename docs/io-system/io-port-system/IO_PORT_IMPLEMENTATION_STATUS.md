@@ -6,9 +6,9 @@ This is the operational source of truth for the current I/O Port implementation.
 
 ## 1. Executive verdict
 
-I/O Port is **not operationally routing external provider traffic yet**, but its multi-provider foundation is now deployed to the demo project. The route-receipt/resolver migration, five-provider seed and `io-gateway` v17 are live. OpenAI, SpaceXAI/xAI, Gemini, DeepSeek and Groq are staged with separate private connection records and secret references. Every connection remains `testing`, every capability proof remains `draft`, and every provider/endpoint remains in `conformance`, so the resolver returns zero ready routes.
+I/O Port is **not operationally routing external provider traffic yet**, but its multi-provider schema, resolver and `io-gateway` v17 are deployed to the demo project. The conditional five-provider seed is recorded but skipped because the required demo workspace/capacity rows were absent. Current provider, model, endpoint, connection, capacity and runtime-control counts are zero, so the resolver returns zero ready routes.
 
-Newer local source is `Verified` but not `Released`: `20260801152819_enforce_latest_endpoint_conformance.sql` binds each conformance result to a capability version from the same endpoint and makes the latest capability plus latest conformance run the shared rule for operator snapshot, activation and runtime resolution. The demo remains safe while this waits for deployment because all five runtime switches are off, but the deployed resolver must not be treated as activation-grade until the migration is applied and remotely tested.
+`20260801152819_enforce_latest_endpoint_conformance.sql` is Released: it binds each conformance result to a capability version from the same endpoint and makes the latest capability plus latest conformance run the shared rule for operator snapshot, activation and runtime resolution. The resolver must still not be treated as activation-grade until reviewed inventory exists and one endpoint passes conformance, budget and explicit spend gates.
 
 The deployed gateway resolves approved registry connections through a service-role-only resolver, allows only approved `IO_PROVIDER_*_API_KEY` secret references, evaluates entitled candidates across providers, supports provider-aware OpenAI-compatible and Gemini-native request adapters, performs bounded fallback for safe upstream failures, and writes a redacted route receipt plus per-provider attempts. The browser can request latest-affordable, lowest-cost, or an approved explicit model and display the completed receipt. None of this by itself activates a provider or sends traffic.
 
@@ -16,12 +16,13 @@ Provider API keys by themselves do not make a provider routable. The verified de
 
 | Deployed record                        | Count |
 | -------------------------------------- | ----: |
-| staged direct `io_providers`           |     5 |
-| staged `io_models`                     |     5 |
-| staged `io_model_endpoints`            |     5 |
-| draft capability versions              |     5 |
-| published evidence-backed price cards  |     5 |
-| testing endpoint connections           |     5 |
+| staged direct `io_providers`           |     0 |
+| staged `io_models`                     |     0 |
+| staged `io_model_endpoints`            |     0 |
+| draft capability versions              |     0 |
+| published evidence-backed price cards  |     0 |
+| testing endpoint connections           |     0 |
+| runtime controls                       |     0 |
 | `private.io_provider_conformance_runs` |     0 |
 | ready resolver results                 |     0 |
 | `io_route_receipts`                    |     0 |
@@ -72,7 +73,7 @@ The member must be able to understand which model, provider, serving region, dat
 - Provider, model, endpoint, versioned capability, and versioned pricing tables exist.
 - Endpoint connection details and conformance runs are kept in the private schema rather than exposed through the browser Data API.
 - The dynamic-model migration adds reviewed release dates and `economy`/`balanced`/`premium` automatic-route tiers.
-- A private provider runtime-control table and append-only control-event table are deployed. All five staged providers default disabled.
+- A private provider runtime-control table and append-only control-event table are deployed. No provider runtime-control row currently exists.
 - The separate `admin-indus-orbit` application has a capability-checked I/O readiness/control room. The browser receives lifecycle and conformance states but no credential value, prompt or generated content.
 - Local Verified migration source now rejects a historical passing run after any newer failed/running/cancelled run, rejects a pass for an older capability version, enforces same-endpoint capability references, and prevents an eligible endpoint from making an ineligible sibling routable.
 
@@ -98,22 +99,22 @@ The member must be able to understand which model, provider, serving region, dat
 
 ### 3.5 Repository verification
 
-| Check                                  | Result          | Interpretation                                                                                                                      |
-| -------------------------------------- | --------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `npm run build`                        | Pass            | The current web application produces a production bundle.                                                                           |
-| `npm run typecheck`                    | Pass            | Current browser/server TypeScript compiles.                                                                                         |
-| `npm run format:check`                 | Pass            | Mechanical formatting drift has been removed.                                                                                       |
-| `npm run test:unit`                    | Pass — 34/34    | Auth intent, product/location decoders, config, conversation state, OpenCode, gateway validation, adapters and routing are covered. |
-| `npm run audit:high`                   | Pass            | No critical, high or moderate dependency advisory remains.                                                                          |
-| I/O-focused ESLint run                 | Pass            | `src/features/io` and I/O routes pass current lint rules.                                                                           |
-| Repository-wide `npm run lint --quiet` | Pass — 0 errors | The local semantic lint gate now passes across the repository.                                                                      |
-| Automated I/O/router contract tests    | 19/19 pass      | OpenCode, validation, selection/attempt bounds and provider request/error fixtures pass.                                            |
-| Empty Supabase migration replay        | Prior 58 pass   | The 59th SQL migration replayed, but local Storage health prevented a fresh full-suite result; CI rerun remains open.               |
-| Database provider/ACL/schema contracts | 269/269 pass    | Adds direct-message RPC/grant/idempotency coverage to provider, product/location, notification, vouch, archive and core contracts.  |
-| Supabase schema lint                   | Pass            | The local `public` and `private` schemas report no lint errors.                                                                     |
-| Hosted demo release contract           | 17/17 pass      | Confirms migrations, RLS/grants, backfill, message boundary, Loops retirement and provider runtime-off state.                       |
-| Hosted public generated types          | Exact match     | Fresh hosted generation matches the checked-in public types after repository formatting.                                            |
-| Provider conformance tests             | None recorded   | No provider is operationally certified.                                                                                             |
+| Check                                  | Result          | Interpretation                                                                                                                         |
+| -------------------------------------- | --------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run build`                        | Pass            | The current web application produces a production bundle.                                                                              |
+| `npm run typecheck`                    | Pass            | Current browser/server TypeScript compiles.                                                                                            |
+| `npm run format:check`                 | Pass            | Mechanical formatting drift has been removed.                                                                                          |
+| `npm run test:unit`                    | Pass — 37/37    | Auth/product/location, conversations, OpenCode, gateway/adapters/routing and fixed email-template rendering are covered.               |
+| `npm run audit:high`                   | Pass            | No critical, high or moderate dependency advisory remains.                                                                             |
+| I/O-focused ESLint run                 | Pass            | `src/features/io` and I/O routes pass current lint rules.                                                                              |
+| Repository-wide `npm run lint --quiet` | Pass — 0 errors | The local semantic lint gate now passes across the repository.                                                                         |
+| Automated I/O/router contract tests    | 19/19 pass      | OpenCode, validation, selection/attempt bounds and provider request/error fixtures pass.                                               |
+| Empty Supabase migration replay        | Prior 58 pass   | The 59th SQL migration replayed, but local Storage health prevented a fresh full-suite result; CI rerun remains open.                  |
+| Database provider/ACL/schema contracts | 269/269 pass    | Adds direct-message RPC/grant/idempotency coverage to provider, product/location, notification, vouch, archive and core contracts.     |
+| Supabase schema lint                   | Pass            | The local `public` and `private` schemas report no lint errors.                                                                        |
+| Hosted demo release contract           | 20/20 pass      | Confirms migrations, RLS/grants, product/message event boundaries, indexed private outbox, Loops retirement and zero provider routing. |
+| Hosted public generated types          | Exact match     | Fresh hosted generation matches the checked-in public types after repository formatting.                                               |
+| Provider conformance tests             | None recorded   | No provider is operationally certified.                                                                                                |
 
 ## 4. Implemented, but requires improvement
 
@@ -121,7 +122,7 @@ The member must be able to understand which model, provider, serving region, dat
 | ------------------------- | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
 | Provider connection       | Five deployed private connection records use distinct provider-specific secret references                  | All remain testing and no conformance result exists                                                                          | Add audited conformance workflow, then activate one approved connection at a time                         |
 | Dynamic model selection   | Local source compares entitled, priced candidates across connections                                       | It does not yet apply formal route-policy versions, health, latency, budget, FX, cached pricing, or user policy              | Add hard policy filters and versioned scoring inputs before activation                                    |
-| Provider registry         | Sound public/private schema split plus five staged providers/models/endpoints/prices/connections           | The seed is operator-reviewed inventory, not automated onboarding or live availability                                       | Add operator onboarding, evidence refresh, deprecation and lifecycle workflows                            |
+| Provider registry         | Sound public/private schema split; current live providers/models/endpoints/prices/connections are all zero | The conditional seed was skipped and is not current inventory                                                                | Add operator onboarding, evidence refresh, deprecation and lifecycle workflows                            |
 | Provider adapter          | Local source has OpenAI-compatible and Gemini-native non-streaming adapters                                | No streaming, tools, structured output, multimodal, cancellation, or conformance matrix                                      | Add tested adapter capabilities one provider at a time                                                    |
 | Request validation        | Strict request and normalized response validation                                                          | Streaming frames and provider-specific error schemas are not versioned                                                       | Add schemas and contract tests for each supported feature                                                 |
 | Reliability               | 45-second timeout, rate-limit classification, one attempt by default and an explicit maximum of three      | No idempotency, circuit breaker, health sampling, monetary retry budget, queue state, or cancellation                        | Keep fallback disabled for paid traffic until those controls exist                                        |
@@ -361,7 +362,7 @@ Exit: a capped private cohort can operate under measured reliability, spend, pri
 
 The highest-leverage next slice is **make the Released boundary reproducible, then finish provider conformance without enabling general traffic**:
 
-1. reconcile the 26 migration timestamp aliases and restore the 59-migration/285-test CI gate;
+1. reconcile the 26 historical migration timestamp aliases and prove a fresh 61-migration/376-test CI gate;
 2. run I/O-only, Community opt-in, existing-member and location-consent browser personas;
 3. add operator-only aggregate measurement with small-cohort suppression and validate withdrawal in browser personas;
 4. build the provider evidence/conformance runner and two-person activation review;
@@ -374,4 +375,4 @@ This assessment uses local source, the prior zero-state 58-migration/269-asserti
 
 The connected Supabase tools do not expose Edge Function secret names or values. Consequently this audit confirms what names the code reads and what provider records exist, but it cannot confirm which provider-specific secrets the operator added. No secret should be copied into an issue, chat, document, log, table, or repository to overcome that limitation.
 
-The top-level `/io` route, explicit Community gate and optional country-first location journey are Released to the demo database and remotely verified at the schema/grant/backfill level. Their full browser personas remain open. Provider runtime is still off: zero of five controls is enabled, route receipts and provider attempts remain zero, and no provider request, secret read or paid traffic was performed during this release.
+The top-level `/io` route, explicit Community gate and optional country-first location journey are Released to the demo database and remotely verified at the schema/grant/backfill level. Their full browser personas remain open. Provider runtime is still off: current provider/model/endpoint/capacity/control and ready-route counts are zero, route receipts and provider attempts remain zero, and no provider request, secret read or paid traffic was performed during this release.
