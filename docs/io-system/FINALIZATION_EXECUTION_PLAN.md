@@ -17,8 +17,9 @@ Completed in the demo environment:
 - caller-bound, idempotent direct-message send/read boundary;
 - removal of anonymous access to eight privileged functions;
 - caller-bound domain mutations, retirement of generic notification execution and a private service-leased email outbox;
-- live 20-check database contract and a complete 376-assertion upgraded-local database run;
-- zero provider inventory, ready routes and traffic evidence.
+- Chapter/Mission Space schema, deterministic Room blueprints, membership projection and caller-bound lifecycle/message/read operations;
+- clean 62-migration replay with 433/433 assertions plus hosted schema/RLS/RPC/Realtime contract and public lint;
+- five-provider/model/endpoint inventory with three capacity sources/grants, while route receipts and provider attempts remain zero.
 
 The product is still a release candidate foundation, not a finished production system.
 
@@ -28,8 +29,8 @@ Deliverables:
 
 1. Preserve the hosted ledger and document or baseline the 26 timestamp aliases so ordinary `supabase db push` works without a temporary migration view.
 2. Decide whether the separate builder/course/S.O.D.A. seed belongs in demo only; never mix that decision into schema deployment.
-3. Replay all 61 migrations from an empty database; the current upgraded local chain already passes all contracts.
-4. Run all 372 pgTAP assertions, public/private lint, local Security/Performance Advisors and the GitHub database workflow in that empty replay.
+3. **Verified:** all 62 migrations replay from an empty database.
+4. **Verified locally:** all 433 pgTAP assertions and public/private lint pass; keep these and the GitHub database workflow required in CI.
 5. Add an automated generated-public-types drift gate.
 6. Verify the owner-scoped managed `realtime.messages` policy in its real owner environment.
 7. Prove an upgrade from a production-like snapshot, not only an empty reset.
@@ -70,7 +71,7 @@ Deliverables:
 1. **Released:** every former generic `send_notification` caller now uses a domain-owned event RPC.
 2. **Released/Verified:** the private idempotent outbox, leases, retries and dead-letter state exist; the fixed-template worker source is locally Verified. Provider configuration, deployment, scheduling and operator controls remain.
 3. **Released:** authenticated generic notification execution is revoked and arbitrary browser recipient/subject/HTML email requests are removed from source.
-4. Audit all 45 authenticated `SECURITY DEFINER` warnings for caller binding, capability checks, fixed empty `search_path`, grants, validation and audit; classify the GraphQL and always-true-policy findings separately.
+4. Audit every current authenticated `SECURITY DEFINER` warning for caller binding, capability checks, fixed empty `search_path`, grants, validation and audit; classify GraphQL and permissive-policy findings separately. The post-Space Security Advisor currently reports 61 warnings and 18 information notices in total.
 5. Add abuse protection for contact, newsletter, auth, recovery, vouch, messaging and uploads.
 6. Move vouch issuance/hashing and education quiz correctness fully behind trusted server boundaries.
 7. Add the education storage bucket with ownership, type, size, signing and lifecycle policies.
@@ -91,7 +92,7 @@ Deliverables:
 2. Add a shared conversation cache/store, cursor pagination, deterministic retries, reconnect and multi-device unread resolution.
 3. Implement explicit block/unblock state and make it revoke messaging and realtime immediately.
 4. Replace Postgres Changes proof subscriptions with authorized private Broadcast topics.
-5. Add scoped Spaces/rooms/channels, announcements, threads/forums and role-aware membership without copying Discord branding or engagement mechanics.
+5. **Released foundation:** Chapter/Mission Spaces, grouped Rooms, role-aware membership projection, Threads/message/read schema and first branded web surface exist. Complete Thread/role/Room administration, Boards and hosted browser personas without copying Discord branding or engagement mechanics.
 6. Add presence, typing, mentions, reactions, pins, bookmarks, attachments, search, retention/export/deletion, reports and moderation in evidence-gated slices.
 7. Keep prompts, terminal output, files and tools outside human-message storage; handoffs carry permissioned references only.
 
@@ -111,7 +112,7 @@ Deliverables:
 1. Build the operator conformance runner and evidence UI; validate chat, streaming, tools, structured output, usage, errors, cancellation and safety one provider at a time.
 2. Add request idempotency, hard workspace budgets, reserve/settle accounting, retry budgets, circuit breakers, health/latency sampling and kill-switch drills.
 3. Complete dynamic model refresh with evidence timestamps, region/residency labels that are never inferred, price versions and approved FX snapshots.
-4. Provision the empty live registry toward the reviewed 20-provider inventory using partnership, owned/rented and donated-capacity adapters.
+4. Validate and expand the live five-provider registry toward the reviewed 20-provider inventory using partnership, owned/rented and donated-capacity adapters.
 5. Add OpenAI-compatible partner and local endpoints while preserving provider-specific adapters where semantics differ.
 6. Add member usage, credit, sponsorship, estimate, receipt and failure/offline UI.
 7. Activate one provider at a time only after contract tests; make one bounded live conformance call only with explicit spend approval.

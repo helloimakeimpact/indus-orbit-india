@@ -1,6 +1,6 @@
 # Discord-like capability plan, translated for Indus Orbit
 
-Status: intended-system and implementation-gap record updated after the Chapter/Mission Space foundation was Verified locally, 9 August 2026.
+Status: intended-system and implementation-gap record updated after the Chapter/Mission Space foundation was Released to demo, 9 August 2026.
 
 ## Product decision
 
@@ -40,7 +40,7 @@ People, agents and system notices must be visually and semantically distinct. A 
 | Main workspace and inspector    | Partial: live Space timeline/People panel and I/O preview     | Shared responsive frame, focus restoration, offline states and contextual inspectors for profiles, approvals, evidence and route receipts.                                     |
 | One-to-one DMs                  | Partial: trusted Released RPC boundary plus working product   | Add cursor paging, common cache, explicit blocks, robust reconnect, attachments and E2E/load tests.                                                                            |
 | Group DMs                       | Not implemented                                               | Add bounded membership, invite/leave/remove, ownership, history visibility and notification rules after DM core is secure.                                                     |
-| Spaces and membership           | Verified locally for Chapter and Mission projection           | Deploy/verify hosted; finish invite/request/leave/rejoin UX, effective-role explanation and later I/O Space projection.                                                        |
+| Spaces and membership           | Released for Chapter and Mission projection                   | Finish invite/request/leave/rejoin UX, effective-role explanation, hosted browser personas and later I/O Space projection.                                                     |
 | Rooms/channels/categories       | Verified schema, blueprints, access and first member UI       | Add audited create/reorder/archive/operator UI, complete override evaluation, slow mode and view-as-role tests.                                                                |
 | Threads                         | Partial: durable schema, membership and create RPC exist      | Add timeline, follow/unfollow, archive/lock, unread/notification UI and private-thread permission personas.                                                                    |
 | Boards/forums                   | S.O.D.A./stories are separate content types                   | Add structured topic templates, tags, sorting, accepted outcome and moderation only where discussion needs long-lived discoverability; link rather than copy existing content. |
@@ -127,7 +127,7 @@ Agents appear as agents. Each agent message/action shows provider/model/route re
 2. **Shared client:** one store, timeline/composer primitives, retry/offline and multi-device reconciliation.
 3. **Private realtime:** Broadcast authorization, durable backfill, presence/typing and load tests.
 4. **Shared branded shell:** Orbit rail, context sidebar, main canvas and inspector across Messages and I/O.
-5. **Spaces and rooms:** Chapter/Mission schema, deterministic blueprints, membership projection, mutation RPCs and first web surface are Verified locally; deploy/verify hosted and complete role/Room administration.
+5. **Spaces and rooms:** Chapter/Mission schema, deterministic blueprints, membership projection and mutation RPCs are Released; the first web surface is pushed. Complete hosted browser personas and role/Room administration.
 6. **Threads and boards:** Thread schema/create foundation is Verified locally; build timelines, membership/read state, tags, templates, search, pins and notification preferences.
 7. **Trust and operations:** permission overrides, moderation, audit, export/delete, dashboards and support.
 8. **I/O collaboration:** safe session links, approvals, artifacts, agent identity and route receipts.

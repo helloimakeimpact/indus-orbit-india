@@ -115,7 +115,7 @@ Conclusion: never replay the local folder against production or a new environmen
 
 ### 5.3 Security and performance baseline
 
-The counts below are the original research snapshot. The 9 August 2026 live release evidence supersedes them operationally: identified anonymous privileged execution is closed, while 45 authenticated-definer, 47 GraphQL-exposure, two always-true-policy, 134 init-plan and 77 multiple-policy warnings remain. See `../../release-evidence/demo-2026-08-09/supabase-release.md`.
+The counts below are the original research snapshot. The 9 August 2026 post-Space release evidence supersedes them operationally: identified anonymous privileged execution is closed; the current Security Advisor reports 61 warnings/18 information notices and Performance Advisor reports 166 warnings/179 information notices. Neither attaches a warning to a new `conversation_*` object. See `../../release-evidence/demo-2026-08-09/supabase-release.md`.
 
 The live Supabase Security Advisor reported 43 warnings:
 

@@ -1,6 +1,6 @@
 # Conversation and branded spatial system record
 
-Status: direct messages are Released to demo; the Chapter/Mission Space foundation and first branded UI are Verified locally and await hosted migration, 9 August 2026.
+Status: direct messages and the Chapter/Mission Space foundation are Released to demo; the first branded UI is pushed to GitHub, 9 August 2026.
 
 ## Current truth
 
@@ -20,7 +20,7 @@ Implemented:
 - retired authenticated `send_notification` execution and no remaining browser call to the former arbitrary email dispatcher;
 - private email delivery outbox with idempotency, leases, bounded retry/dead-letter state and locally Verified fixed-template worker source;
 - a branded I/O preview with rail, context navigation, main workspace and inspector geometry;
-- locally Verified `conversation_spaces`, roles, memberships, context groups, typed Rooms, overrides, Threads, messages, revisions, mentions, reactions, attachments, pins, bookmarks, read state, preferences, reports, private moderation and outbox schema;
+- Released `conversation_spaces`, roles, memberships, context groups, typed Rooms, overrides, Threads, messages, revisions, mentions, reactions, attachments, pins, bookmarks, read state, preferences, reports, private moderation and outbox schema;
 - Chapter and Mission domain memberships projected into Space access without replacing the authoritative domain records;
 - deterministic seven-Room Chapter and six-Room Mission blueprints;
 - caller-bound Chapter proposal/creation/approval/lifecycle/lead and Mission creation/lifecycle/member RPC boundaries with optimistic versioning and idempotency where creation is retryable;
@@ -35,7 +35,7 @@ Still left:
 - add an explicit block relationship and safe metadata-only audit where operationally necessary;
 - one cross-surface conversation store, cursor paging, retry/offline/reconnect and multi-device conflict handling;
 - authorized private Realtime Broadcast topics;
-- deploy and verify the three missing hosted migrations before the new Space contracts can be called Released;
+- run hosted authenticated browser personas across proposal/approval, Chapter/Mission lifecycle, membership, Room send/read and outsider privacy;
 - Threads UI, Thread membership/read behavior, Boards/forums and administrative Room/role configuration;
 - presence, typing, reaction/mention UI, pins, bookmarks, attachment storage/scanning, search and notification controls;
 - conversation moderation/report UI, retention/export/deletion and redacted operator tools;

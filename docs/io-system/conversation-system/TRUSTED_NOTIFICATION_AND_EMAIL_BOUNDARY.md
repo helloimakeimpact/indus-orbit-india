@@ -1,12 +1,12 @@
 # Trusted notification and email boundary
 
-Status: database/browser cutover and email worker source are Verified locally; the two forward migrations and worker remain Pending on the active demo project, updated 9 August 2026.
+Status: database/browser cutover is Released to the active demo project; email worker source is Verified locally but intentionally undeployed, updated 9 August 2026.
 
 This record defines what now owns cross-member notifications and email. It replaces the former pattern in which browser code could choose a notification recipient, category, message, link, email subject and HTML. That former contract is no longer executable by authenticated users.
 
-## Verified database boundary
+## Released database boundary
 
-`20260809142000_create_trusted_product_event_rpcs.sql` and its operational hardening follow-up `20260809150000_harden_email_delivery_claims.sql` pass the clean local replay but are not yet recorded in the demo migration ledger. They provide these transactional product contracts once released:
+`20260809142000_create_trusted_product_event_rpcs.sql` and its operational hardening follow-up `20260809150000_harden_email_delivery_claims.sql` pass the clean local replay and are recorded in the demo migration ledger. They provide these transactional product contracts:
 
 | Product action                     | Trusted contract                   | Database-owned effects                                                                                                          |
 | ---------------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
@@ -25,7 +25,7 @@ Every idempotent creation uses a caller-scoped `client_request_id` and unique pa
 
 ## Private email outbox
 
-`private.email_delivery_outbox` is Verified locally with RLS and no browser read/write grant. The mentorship acceptance transaction enqueues one `mentor_session_accepted` event when the recipient has email enabled. The queue stores only:
+`private.email_delivery_outbox` is Released with RLS and no browser read/write grant. The mentorship acceptance transaction enqueues one `mentor_session_accepted` event when the recipient has email enabled. The queue stores only:
 
 - a unique database-owned event key;
 - recipient user ID;
@@ -61,8 +61,8 @@ IO_EMAIL_FROM=Indus Orbit <notifications@approved-domain>
 - The trusted-product-event and email-claim pgTAP assertions pass within the current suite.
 - The complete clean local 62-migration database suite passes 433/433 assertions.
 - Thirty notification ACL assertions pass after retirement of generic authenticated execution.
-- The earlier hosted read-only contract predates these two migrations and is not evidence that they are Released.
-- Hosted migration/object/RLS/function checks must be rerun after exact forward deployment.
+- The current hosted release contract finds no missing forward migration or expected caller-bound function.
+- Hosted public-schema lint reports no error; Advisor backlog remains tracked separately.
 - The fixed email renderer has three unit tests covering the approved template, HTML escaping/unsafe URL rejection and fail-closed unknown templates.
 
 ## Remaining before production

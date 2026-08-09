@@ -26,30 +26,30 @@ External CI, design, issue, and monitoring links may be used when access and ret
 
 ## 2. Current verified baseline — not release approval
 
-| Check                             | Result on 8 August 2026                | Meaning                                                                                                                        |
-| --------------------------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| Production web build              | Pass                                   | The current bundle builds; it does not prove runtime workflows                                                                 |
-| TypeScript `--noEmit`             | Pass                                   | Current TypeScript compiles                                                                                                    |
-| Unit tests                        | Pass — 37/37                           | Auth intent, product/location contracts, conversations, OpenCode, gateway/provider routing and fixed email-template tests pass |
-| Formatting check                  | Pass                                   | Mechanical formatting drift has been removed                                                                                   |
-| Dependency audit (high and above) | Pass                                   | No critical, high, or moderate dependency advisory remains                                                                     |
-| Dependency audit (all severities) | Pass — 0 known vulnerabilities         | Patched overrides and non-breaking transitive updates clear the current npm advisory report                                    |
-| GitHub quality workflow           | Configured; no remote run recorded yet | PR/push audit, format, lint, typecheck, unit test and production build are defined                                             |
-| GitHub database workflow          | Configured; no remote run recorded yet | Empty replay, pgTAP, public/private schema lint and guaranteed local-stack cleanup are defined                                 |
-| Repository lint                   | Pass — 0 errors                        | Local semantic lint gate passes; CI evidence and broader product/integration coverage remain incomplete                        |
-| Automated product/router tests    | Core selection coverage only           | New registry router/UI source is browser-build checked but still needs Deno, SQL/RLS and conformance tests                     |
-| Database contract tests           | Upgraded local pass — 376/376          | All ten pgTAP files pass; fresh 61-migration empty replay and retained remote CI evidence remain                               |
-| Provider conformance records      | Zero                                   | No provider is production-certified                                                                                            |
-| Supabase missing-history recovery | Hosted ledger preserved                | 26 timestamp aliases are mapped; eight release versions deployed without history repair or reset                               |
-| Supabase migration equivalence    | Partial                                | Live contract and public types pass; durable aliases, managed Realtime, full object diff and snapshot upgrade remain           |
-| Supabase storage buckets          | Zero                                   | Education upload workflow is not operational                                                                                   |
+| Check                             | Result on 9 August 2026                | Meaning                                                                                                                                |
+| --------------------------------- | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Production web build              | Pass                                   | The current bundle builds; it does not prove runtime workflows                                                                         |
+| TypeScript `--noEmit`             | Pass                                   | Current TypeScript compiles                                                                                                            |
+| Unit tests                        | Pass — 38/38                           | Auth intent, product/location/schema-compat contracts, conversations, OpenCode, gateway/provider routing and email-template tests pass |
+| Formatting check                  | Pass                                   | Mechanical formatting drift has been removed                                                                                           |
+| Dependency audit (high and above) | Pass                                   | No critical, high, or moderate dependency advisory remains                                                                             |
+| Dependency audit (all severities) | Pass — 0 known vulnerabilities         | Patched overrides and non-breaking transitive updates clear the current npm advisory report                                            |
+| GitHub quality workflow           | Configured; no remote run recorded yet | PR/push audit, format, lint, typecheck, unit test and production build are defined                                                     |
+| GitHub database workflow          | Configured; no remote run recorded yet | Empty replay, pgTAP, public/private schema lint and guaranteed local-stack cleanup are defined                                         |
+| Repository lint                   | Pass — 0 errors                        | Local semantic lint gate passes; CI evidence and broader product/integration coverage remain incomplete                                |
+| Automated product/router tests    | Core selection coverage only           | New registry router/UI source is browser-build checked but still needs Deno, SQL/RLS and conformance tests                             |
+| Database contract tests           | Clean local pass — 433/433             | All 62 migrations and eleven pgTAP files pass; retained remote CI and production-like snapshot upgrade remain                          |
+| Provider conformance records      | Zero                                   | No provider is production-certified                                                                                                    |
+| Supabase missing-history recovery | Hosted ledger preserved                | 26 timestamp aliases are mapped; current forward set deployed without history repair or reset                                          |
+| Supabase migration equivalence    | Partial                                | Hosted Space contract, local types and clean replay pass; durable aliases, full object diff and snapshot upgrade remain                |
+| Supabase storage buckets          | Zero                                   | Education upload workflow is not operational                                                                                           |
 
 ## 3. Blocker register
 
 | ID    | Blocker                                                                                                                                                                                           | Owner      | Status | Resolution evidence                                                             |
 | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------ | ------------------------------------------------------------------------------- |
 | B-001 | Hosted history is preserved and mapped, but 26 timestamp aliases, full object comparison, managed Realtime and snapshot upgrade remain                                                            | Unassigned | Open   | `docs/SUPABASE_SCHEMA_RECONCILIATION.md`                                        |
-| B-002 | Identified anonymous privileged execution is closed; 45 authenticated definer, 47 GraphQL-exposure and two always-true-policy warnings require classification/tests                               | Unassigned | Open   | `docs/release-evidence/demo-2026-08-09/supabase-release.md`                     |
+| B-002 | Identified anonymous privileged execution is closed; current 61 Security Advisor warnings require contract-by-contract classification/tests                                                       | Unassigned | Open   | `docs/release-evidence/demo-2026-08-09/supabase-release.md`                     |
 | B-003 | Anonymous contact/newsletter insertion lacks production anti-abuse boundary                                                                                                                       | Unassigned | Open   | —                                                                               |
 | B-004 | Leaked-password protection is disabled                                                                                                                                                            | Unassigned | Open   | —                                                                               |
 | B-005 | Education answer-key/scoring trust boundary is unsafe                                                                                                                                             | Unassigned | Open   | —                                                                               |
@@ -63,7 +63,7 @@ External CI, design, issue, and monitoring links may be used when access and ret
 | B-013 | Production build has a 645.31 kB minified JavaScript chunk; route/vendor splitting and measured performance budgets are not complete                                                              | Unassigned | Open   | —                                                                               |
 | B-014 | I/O gateway is deployed to demo but lacks activation-grade conformance, budget reservation, idempotency and health/circuit controls                                                               | Unassigned | Open   | —                                                                               |
 | B-015 | Database notification/email injection is closed and the legacy dispatcher is a 410 tombstone; fixed-template worker deployment, sender-domain proof, scheduling and dead-letter operations remain | Unassigned | Open   | `docs/io-system/conversation-system/TRUSTED_NOTIFICATION_AND_EMAIL_BOUNDARY.md` |
-| B-016 | The upgraded local chain passes 376/376, but a fresh 61-migration empty replay, snapshot upgrade and retained remote CI run are missing                                                           | Unassigned | Open   | `docs/release-evidence/demo-2026-08-09/supabase-release.md`                     |
+| B-016 | The clean 62-migration chain passes 433/433, but a production-like snapshot upgrade and retained remote CI run are missing                                                                        | Unassigned | Open   | `docs/release-evidence/demo-2026-08-09/supabase-release.md`                     |
 
 ## G0 — Scope, ownership, and control
 
@@ -93,10 +93,10 @@ Decision: Not passed
 
 - [ ] Missing remote migration history is recovered and reviewed without rewriting deployed history. Evidence: hosted ledger fetched/preserved and eight migrations released without repair; platform-owner review pending.
 - [ ] Local filename-to-remote-version mapping is documented. Evidence: all 26 alias pairs are recorded in `docs/SUPABASE_SCHEMA_RECONCILIATION.md`; owner approval and durable mechanism pending.
-- [ ] Empty-database migration replay passes. Evidence: 58-migration baseline passed historically and the current upgraded chain passes 376/376; fresh 61-migration replay is pending.
+- [x] Empty-database migration replay passes. Evidence: all 62 migrations and 433/433 assertions pass locally; retained remote CI evidence remains a separate unchecked gate.
 - [ ] Upgrade from a production-like snapshot passes. Evidence: —
 - [ ] Resettable non-production schema matches the intended production schema, grants, RLS, functions, triggers, enums, extensions, and storage policies. Evidence: —
-- [ ] Generated Supabase TypeScript types match the approved schema. Evidence: declarations cover current trusted-event contracts; automated byte-for-byte drift gate and schema approval remain.
+- [ ] Generated Supabase TypeScript types match the approved schema. Evidence: declarations were regenerated from the clean 62-migration schema; automated hosted byte-for-byte drift gate and schema approval remain.
 - [ ] Local setup produces a functioning application from documented commands. Evidence: —
 - [ ] Node/package manager/dependency versions are pinned and deterministic. Evidence: —
 - [ ] Pull-request CI runs format, lint, typecheck, unit, database, and build checks. Evidence: quality and database workflow source exists; first GitHub run and branch-protection evidence pending.
@@ -131,7 +131,7 @@ Decision: Not passed
 - [ ] Private Realtime Broadcast authorization passes subscriber-isolation tests. Evidence: —
 - [ ] Upload paths validate ownership, type, size, access, and unsafe content strategy. Evidence: —
 - [ ] Personal, message, prompt, audit, and financial data retention/export/deletion rules are implemented. Evidence: —
-- [ ] Security Advisor findings are resolved or formally justified with tests and owners. Evidence: zero error-level findings; 45 authenticated-definer, 47 GraphQL-exposure and two always-true-policy warnings remain.
+- [ ] Security Advisor findings are resolved or formally justified with tests and owners. Evidence: hosted public-schema lint has no error; the current Advisor reports 61 warnings/18 information notices and no warning tied to a new `conversation_*` object.
 - [ ] Dependency, secret, static-analysis, and manual high-risk-flow reviews pass. Evidence: —
 - [ ] No open critical/high finding remains for in-scope paths. Evidence: —
 

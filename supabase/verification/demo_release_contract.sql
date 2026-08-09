@@ -17,13 +17,14 @@ with release_versions(version) as (
     ('20260808190000'),
     ('20260809132035'),
     ('20260809142000'),
-    ('20260809150000')
+    ('20260809150000'),
+    ('20260809152439')
 ),
 checks(check_name, passed, detail) as (
   select
     'release migrations recorded',
-    count(*) = 10,
-    format('%s of 10 versions present', count(*))
+    count(*) = 11,
+    format('%s of 11 versions present', count(*))
   from supabase_migrations.schema_migrations as migration
   join release_versions as expected on expected.version = migration.version
 

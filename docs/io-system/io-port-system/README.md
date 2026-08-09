@@ -4,7 +4,7 @@ Status: deployed provider foundation and top-level product boundary, updated 9 A
 
 ## Current operational truth
 
-I/O Port has a real web surface, Supabase control plane and registry-driven gateway. Its live provider/model/endpoint/capacity inventory is currently empty. It does **not** yet have shared OpenRouter capacity or any active direct-provider route.
+I/O Port has a real web surface, Supabase control plane and registry-driven gateway. Its live inventory contains five provider/model/endpoint/control records and three capacity sources/grants. It does **not** yet have shared OpenRouter capacity or any active direct-provider route; route receipts and provider attempts remain zero.
 
 | Layer                      | Current state                                                                                                  |
 | -------------------------- | -------------------------------------------------------------------------------------------------------------- |
