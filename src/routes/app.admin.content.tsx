@@ -20,6 +20,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Trash2, Pause, Play, CheckCircle2, XCircle, Star, type LucideIcon } from "lucide-react";
 import { formatChapterBaseLocation } from "@/lib/location";
+import { updateMissionStatus } from "@/server/mission.functions";
+import { isMissingSchemaContract } from "@/integrations/supabase/schema-compat";
 
 export const Route = createFileRoute("/app/admin/content")({
   head: () => ({
@@ -165,12 +167,38 @@ function ContentAdmin() {
   }
 
   // ---------- Mission actions ----------
-  async function setMissionStatus(id: string, status: string) {
-    const { error } = await supabase.from("missions").update({ status }).eq("id", id);
+  async function setMissionStatus(id: string, status: "open" | "paused" | "closed") {
+    try {
+      await updateMissionStatus({ data: { missionId: id, status } });
+      toast.success(`Mission ${status}`);
+      void load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not update Mission lifecycle");
+    }
+  }
+
+  async function archiveChapter(chapter: ChapterRow) {
+    const { error: contractError } = await supabase.rpc("transition_managed_chapter", {
+      _chapter_id: chapter.id,
+      _target_state: "archived",
+      _expected_version: chapter.state_version,
+      _reason: "Archived through content operations",
+    });
+    if (!contractError) {
+      toast.success("Chapter archived");
+      void load();
+      return;
+    }
+    if (!isMissingSchemaContract(contractError)) {
+      toast.error(contractError.message);
+      return;
+    }
+
+    const { error } = await supabase.from("chapters").delete().eq("id", chapter.id);
     if (error) return toast.error(error.message);
-    await audit(`content.mission_${status}`, "mission", id);
-    toast.success(`Mission ${status}`);
-    load();
+    await audit("content.chapter_deleted", "chapter", chapter.id);
+    toast.success("Chapter removed");
+    void load();
   }
 
   if (!isAdmin) return null;
@@ -383,13 +411,9 @@ function ContentAdmin() {
                 >
                   <DeleteBtn
                     label={c.name}
-                    onConfirm={async () => {
-                      const { error } = await supabase.from("chapters").delete().eq("id", c.id);
-                      if (error) return toast.error(error.message);
-                      await audit("content.chapter_deleted", "chapter", c.id);
-                      toast.success("Chapter deleted");
-                      load();
-                    }}
+                    verb="Archive"
+                    description="The Chapter and its Space will become read-only history. Its evidence is preserved."
+                    onConfirm={() => archiveChapter(c)}
                   />
                 </Card>
               ))
@@ -448,28 +472,36 @@ function Btn({
 function DeleteBtn({
   label,
   onConfirm,
+  verb = "Delete",
+  description = "This action is permanent and cannot be undone.",
 }: {
   label: string;
   onConfirm: () => void | Promise<unknown>;
+  verb?: "Delete" | "Archive";
+  description?: string;
 }) {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button size="sm" variant="destructive">
-          <Trash2 className="h-4 w-4 mr-1" />
-          Delete
+        <Button size="sm" variant={verb === "Delete" ? "destructive" : "outline"}>
+          {verb === "Delete" ? (
+            <Trash2 className="h-4 w-4 mr-1" />
+          ) : (
+            <Pause className="h-4 w-4 mr-1" />
+          )}
+          {verb}
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete "{label}"?</AlertDialogTitle>
-          <AlertDialogDescription>
-            This action is permanent and cannot be undone.
-          </AlertDialogDescription>
+          <AlertDialogTitle>
+            {verb} "{label}"?
+          </AlertDialogTitle>
+          <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm}>Delete</AlertDialogAction>
+          <AlertDialogAction onClick={onConfirm}>{verb}</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

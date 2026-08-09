@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { Database } from "@/integrations/supabase/types";
+import { isMissingSchemaContract } from "@/integrations/supabase/schema-compat";
 
 type Candidate = Pick<
   Database["public"]["Tables"]["profiles"]["Row"],
@@ -15,6 +16,8 @@ type Candidate = Pick<
 type HubMember = {
   user_id: string;
   role: string;
+  membership_state?: string;
+  state_version?: number;
   profiles: Pick<Database["public"]["Tables"]["profiles"]["Row"], "display_name"> | null;
 };
 type ChapterWithMembers = Database["public"]["Tables"]["chapters"]["Row"] & {
@@ -23,6 +26,45 @@ type ChapterWithMembers = Database["public"]["Tables"]["chapters"]["Row"] & {
 type MissionWithMembers = Database["public"]["Tables"]["missions"]["Row"] & {
   mission_members?: HubMember[] | null;
 };
+
+async function setManagedSpaceLead({
+  sourceType,
+  sourceId,
+  targetUserId,
+  enabled,
+  expectedVersion,
+}: {
+  sourceType: "chapter" | "mission";
+  sourceId: string;
+  targetUserId: string;
+  enabled: boolean;
+  expectedVersion: number;
+}): Promise<boolean> {
+  const spaceQuery = supabase.from("conversation_spaces").select("id");
+  const { data: space, error: spaceError } =
+    sourceType === "chapter"
+      ? await spaceQuery.eq("chapter_id", sourceId).maybeSingle()
+      : await spaceQuery.eq("mission_id", sourceId).maybeSingle();
+
+  if (spaceError) {
+    if (isMissingSchemaContract(spaceError)) return false;
+    throw new Error(spaceError.message);
+  }
+  if (!space) throw new Error("Collaboration Space not found");
+
+  const { error } = await supabase.rpc("set_managed_space_lead", {
+    _space_id: space.id,
+    _target_user_id: targetUserId,
+    _enabled: enabled,
+    _expected_version: expectedVersion,
+    _reason: enabled
+      ? "Assigned through programme operations"
+      : "Role changed by programme operations",
+  });
+  if (!error) return true;
+  if (isMissingSchemaContract(error)) return false;
+  throw new Error(error.message);
+}
 
 export const Route = createFileRoute("/app/admin/hubs")({
   head: () => ({
@@ -87,7 +129,7 @@ function ChapterLeadsManager() {
     setBusy(true);
     const { data, error } = await supabase
       .from("chapters")
-      .select("*, chapter_members(user_id, role, profiles(display_name))")
+      .select("*, chapter_members(*, profiles!chapter_members_user_id_fkey(display_name))")
       .order("name");
     if (error) {
       setLoadError(error.message);
@@ -122,10 +164,25 @@ function ChapterLeadsManager() {
 
   async function assignLead(userId: string) {
     if (!selectedChapter) return;
-    const { error } = await supabase
-      .from("chapter_members")
-      .upsert({ chapter_id: selectedChapter, user_id: userId, role: "lead" });
-    if (error) return toast.error(error.message);
+    const chapter = chapters.find((row) => row.id === selectedChapter);
+    const current = chapter?.chapter_members?.find((member) => member.user_id === userId);
+    try {
+      const handled = await setManagedSpaceLead({
+        sourceType: "chapter",
+        sourceId: selectedChapter,
+        targetUserId: userId,
+        enabled: true,
+        expectedVersion: current?.state_version ?? 0,
+      });
+      if (!handled) {
+        const { error } = await supabase
+          .from("chapter_members")
+          .upsert({ chapter_id: selectedChapter, user_id: userId, role: "lead" });
+        if (error) throw new Error(error.message);
+      }
+    } catch (error) {
+      return toast.error(error instanceof Error ? error.message : "Could not assign lead");
+    }
     toast.success("Lead assigned");
     setSearch("");
     setCandidates([]);
@@ -134,14 +191,29 @@ function ChapterLeadsManager() {
   }
 
   async function removeLead(chapterId: string, userId: string) {
-    const { error } = await supabase
-      .from("chapter_members")
-      .delete()
-      .eq("chapter_id", chapterId)
-      .eq("user_id", userId)
-      .eq("role", "lead");
-    if (error) return toast.error(error.message);
-    toast.success("Lead removed");
+    const chapter = chapters.find((row) => row.id === chapterId);
+    const current = chapter?.chapter_members?.find((member) => member.user_id === userId);
+    try {
+      const handled = await setManagedSpaceLead({
+        sourceType: "chapter",
+        sourceId: chapterId,
+        targetUserId: userId,
+        enabled: false,
+        expectedVersion: current?.state_version ?? 0,
+      });
+      if (!handled) {
+        const { error } = await supabase
+          .from("chapter_members")
+          .delete()
+          .eq("chapter_id", chapterId)
+          .eq("user_id", userId)
+          .eq("role", "lead");
+        if (error) throw new Error(error.message);
+      }
+    } catch (error) {
+      return toast.error(error instanceof Error ? error.message : "Could not change lead role");
+    }
+    toast.success("Lead role changed to member");
     load();
   }
 
@@ -152,7 +224,11 @@ function ChapterLeadsManager() {
   return (
     <div className="space-y-6">
       {chapters.map((c) => {
-        const leads = c.chapter_members?.filter((m) => m.role === "lead") || [];
+        const leads =
+          c.chapter_members?.filter(
+            (member) =>
+              member.role === "lead" && (member.membership_state ?? "active") === "active",
+          ) || [];
         return (
           <div key={c.id} className="rounded-3xl border border-border bg-card p-6">
             <h3 className="font-display text-lg font-semibold">{c.name}</h3>
@@ -236,7 +312,7 @@ function MissionLeadsManager() {
     setBusy(true);
     const { data, error } = await supabase
       .from("missions")
-      .select("*, mission_members(user_id, role, profiles(display_name))")
+      .select("*, mission_members(*, profiles!mission_members_user_id_fkey(display_name))")
       .order("title");
     if (error) {
       setLoadError(error.message);
@@ -271,10 +347,25 @@ function MissionLeadsManager() {
 
   async function assignLead(userId: string) {
     if (!selectedMission) return;
-    const { error } = await supabase
-      .from("mission_members")
-      .upsert({ mission_id: selectedMission, user_id: userId, role: "lead" });
-    if (error) return toast.error(error.message);
+    const mission = missions.find((row) => row.id === selectedMission);
+    const current = mission?.mission_members?.find((member) => member.user_id === userId);
+    try {
+      const handled = await setManagedSpaceLead({
+        sourceType: "mission",
+        sourceId: selectedMission,
+        targetUserId: userId,
+        enabled: true,
+        expectedVersion: current?.state_version ?? 0,
+      });
+      if (!handled) {
+        const { error } = await supabase
+          .from("mission_members")
+          .upsert({ mission_id: selectedMission, user_id: userId, role: "lead" });
+        if (error) throw new Error(error.message);
+      }
+    } catch (error) {
+      return toast.error(error instanceof Error ? error.message : "Could not assign lead");
+    }
     toast.success("Lead assigned");
     setSearch("");
     setCandidates([]);
@@ -283,14 +374,29 @@ function MissionLeadsManager() {
   }
 
   async function removeLead(missionId: string, userId: string) {
-    const { error } = await supabase
-      .from("mission_members")
-      .delete()
-      .eq("mission_id", missionId)
-      .eq("user_id", userId)
-      .eq("role", "lead");
-    if (error) return toast.error(error.message);
-    toast.success("Lead removed");
+    const mission = missions.find((row) => row.id === missionId);
+    const current = mission?.mission_members?.find((member) => member.user_id === userId);
+    try {
+      const handled = await setManagedSpaceLead({
+        sourceType: "mission",
+        sourceId: missionId,
+        targetUserId: userId,
+        enabled: false,
+        expectedVersion: current?.state_version ?? 0,
+      });
+      if (!handled) {
+        const { error } = await supabase
+          .from("mission_members")
+          .delete()
+          .eq("mission_id", missionId)
+          .eq("user_id", userId)
+          .eq("role", "lead");
+        if (error) throw new Error(error.message);
+      }
+    } catch (error) {
+      return toast.error(error instanceof Error ? error.message : "Could not change lead role");
+    }
+    toast.success("Lead role changed to member");
     load();
   }
 
@@ -301,7 +407,11 @@ function MissionLeadsManager() {
   return (
     <div className="space-y-6">
       {missions.map((m) => {
-        const leads = m.mission_members?.filter((mem) => mem.role === "lead") || [];
+        const leads =
+          m.mission_members?.filter(
+            (member) =>
+              member.role === "lead" && (member.membership_state ?? "active") === "active",
+          ) || [];
         return (
           <div key={m.id} className="rounded-3xl border border-border bg-card p-6">
             <h3 className="font-display text-lg font-semibold">{m.title}</h3>

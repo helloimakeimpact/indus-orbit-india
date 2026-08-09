@@ -1,11 +1,6 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.5";
-  };
   public: {
     Tables: {
       asks_offers: {
@@ -89,20 +84,53 @@ export type Database = {
       chapter_members: {
         Row: {
           chapter_id: string;
+          client_request_id: string | null;
           created_at: string;
+          decided_at: string | null;
+          decided_by: string | null;
+          invited_by: string | null;
+          left_at: string | null;
+          membership_state: string;
+          removal_reason: string | null;
+          request_message: string | null;
+          requested_at: string | null;
           role: string;
+          state_version: number;
+          updated_at: string;
           user_id: string;
         };
         Insert: {
           chapter_id: string;
+          client_request_id?: string | null;
           created_at?: string;
+          decided_at?: string | null;
+          decided_by?: string | null;
+          invited_by?: string | null;
+          left_at?: string | null;
+          membership_state?: string;
+          removal_reason?: string | null;
+          request_message?: string | null;
+          requested_at?: string | null;
           role?: string;
+          state_version?: number;
+          updated_at?: string;
           user_id: string;
         };
         Update: {
           chapter_id?: string;
+          client_request_id?: string | null;
           created_at?: string;
+          decided_at?: string | null;
+          decided_by?: string | null;
+          invited_by?: string | null;
+          left_at?: string | null;
+          membership_state?: string;
+          removal_reason?: string | null;
+          request_message?: string | null;
+          requested_at?: string | null;
           role?: string;
+          state_version?: number;
+          updated_at?: string;
           user_id?: string;
         };
         Relationships: [
@@ -112,6 +140,20 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "chapters";
             referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "chapter_members_decided_by_fkey";
+            columns: ["decided_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["user_id"];
+          },
+          {
+            foreignKeyName: "chapter_members_invited_by_fkey";
+            columns: ["invited_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["user_id"];
           },
           {
             foreignKeyName: "chapter_members_user_id_fkey";
@@ -124,48 +166,121 @@ export type Database = {
       };
       chapter_proposals: {
         Row: {
+          approved_chapter_id: string | null;
           city: string | null;
+          client_request_id: string | null;
           country: string | null;
+          country_code: string | null;
           created_at: string | null;
+          decision_reason: string | null;
           expected_size: number | null;
           id: string;
+          join_policy: string;
+          place_id: string | null;
           proposed_name: string;
+          proposed_stewards: Json;
           proposer_background: string;
           proposer_id: string;
           rationale: string;
+          region_id: string | null;
+          requested_information: string | null;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          state_version: number;
           status: string | null;
+          submitted_at: string | null;
           target_audience: string | null;
+          updated_at: string;
+          visibility: string;
         };
         Insert: {
+          approved_chapter_id?: string | null;
           city?: string | null;
+          client_request_id?: string | null;
           country?: string | null;
+          country_code?: string | null;
           created_at?: string | null;
+          decision_reason?: string | null;
           expected_size?: number | null;
           id?: string;
+          join_policy?: string;
+          place_id?: string | null;
           proposed_name: string;
+          proposed_stewards?: Json;
           proposer_background: string;
           proposer_id: string;
           rationale: string;
+          region_id?: string | null;
+          requested_information?: string | null;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          state_version?: number;
           status?: string | null;
+          submitted_at?: string | null;
           target_audience?: string | null;
+          updated_at?: string;
+          visibility?: string;
         };
         Update: {
+          approved_chapter_id?: string | null;
           city?: string | null;
+          client_request_id?: string | null;
           country?: string | null;
+          country_code?: string | null;
           created_at?: string | null;
+          decision_reason?: string | null;
           expected_size?: number | null;
           id?: string;
+          join_policy?: string;
+          place_id?: string | null;
           proposed_name?: string;
+          proposed_stewards?: Json;
           proposer_background?: string;
           proposer_id?: string;
           rationale?: string;
+          region_id?: string | null;
+          requested_information?: string | null;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          state_version?: number;
           status?: string | null;
+          submitted_at?: string | null;
           target_audience?: string | null;
+          updated_at?: string;
+          visibility?: string;
         };
         Relationships: [
           {
-            foreignKeyName: "chapter_proposals_proposer_id_fkey";
-            columns: ["proposer_id"];
+            foreignKeyName: "chapter_proposals_approved_chapter_id_fkey";
+            columns: ["approved_chapter_id"];
+            isOneToOne: false;
+            referencedRelation: "chapters";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "chapter_proposals_country_code_fkey";
+            columns: ["country_code"];
+            isOneToOne: false;
+            referencedRelation: "geo_countries";
+            referencedColumns: ["country_code"];
+          },
+          {
+            foreignKeyName: "chapter_proposals_place_id_fkey";
+            columns: ["place_id"];
+            isOneToOne: false;
+            referencedRelation: "geo_places";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "chapter_proposals_region_id_fkey";
+            columns: ["region_id"];
+            isOneToOne: false;
+            referencedRelation: "geo_regions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "chapter_proposals_reviewed_by_fkey";
+            columns: ["reviewed_by"];
             isOneToOne: false;
             referencedRelation: "profiles";
             referencedColumns: ["user_id"];
@@ -174,30 +289,108 @@ export type Database = {
       };
       chapters: {
         Row: {
+          activated_at: string | null;
+          archived_at: string | null;
           city: string | null;
+          client_request_id: string | null;
           country: string | null;
+          country_code: string | null;
           created_at: string;
+          created_by: string | null;
           description: string;
           id: string;
+          join_policy: string;
+          lifecycle_state: string;
           name: string;
+          paused_at: string | null;
+          place_id: string | null;
+          region_id: string | null;
+          source_proposal_id: string | null;
+          state_version: number;
+          updated_at: string;
+          visibility: string;
         };
         Insert: {
+          activated_at?: string | null;
+          archived_at?: string | null;
           city?: string | null;
+          client_request_id?: string | null;
           country?: string | null;
+          country_code?: string | null;
           created_at?: string;
+          created_by?: string | null;
           description: string;
           id?: string;
+          join_policy?: string;
+          lifecycle_state?: string;
           name: string;
+          paused_at?: string | null;
+          place_id?: string | null;
+          region_id?: string | null;
+          source_proposal_id?: string | null;
+          state_version?: number;
+          updated_at?: string;
+          visibility?: string;
         };
         Update: {
+          activated_at?: string | null;
+          archived_at?: string | null;
           city?: string | null;
+          client_request_id?: string | null;
           country?: string | null;
+          country_code?: string | null;
           created_at?: string;
+          created_by?: string | null;
           description?: string;
           id?: string;
+          join_policy?: string;
+          lifecycle_state?: string;
           name?: string;
+          paused_at?: string | null;
+          place_id?: string | null;
+          region_id?: string | null;
+          source_proposal_id?: string | null;
+          state_version?: number;
+          updated_at?: string;
+          visibility?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "chapters_country_code_fkey";
+            columns: ["country_code"];
+            isOneToOne: false;
+            referencedRelation: "geo_countries";
+            referencedColumns: ["country_code"];
+          },
+          {
+            foreignKeyName: "chapters_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["user_id"];
+          },
+          {
+            foreignKeyName: "chapters_place_id_fkey";
+            columns: ["place_id"];
+            isOneToOne: false;
+            referencedRelation: "geo_places";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "chapters_region_id_fkey";
+            columns: ["region_id"];
+            isOneToOne: false;
+            referencedRelation: "geo_regions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "chapters_source_proposal_id_fkey";
+            columns: ["source_proposal_id"];
+            isOneToOne: false;
+            referencedRelation: "chapter_proposals";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       connection_requests: {
         Row: {
@@ -264,6 +457,985 @@ export type Database = {
           source?: string;
         };
         Relationships: [];
+      };
+      conversation_attachments: {
+        Row: {
+          alt_text: string | null;
+          byte_size: number;
+          content_type: string;
+          created_at: string;
+          file_name: string;
+          id: string;
+          message_id: string;
+          scan_status: string;
+          storage_bucket: string;
+          storage_path: string;
+          uploaded_by: string;
+        };
+        Insert: {
+          alt_text?: string | null;
+          byte_size: number;
+          content_type: string;
+          created_at?: string;
+          file_name: string;
+          id?: string;
+          message_id: string;
+          scan_status?: string;
+          storage_bucket: string;
+          storage_path: string;
+          uploaded_by: string;
+        };
+        Update: {
+          alt_text?: string | null;
+          byte_size?: number;
+          content_type?: string;
+          created_at?: string;
+          file_name?: string;
+          id?: string;
+          message_id?: string;
+          scan_status?: string;
+          storage_bucket?: string;
+          storage_path?: string;
+          uploaded_by?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "conversation_attachments_message_id_fkey";
+            columns: ["message_id"];
+            isOneToOne: false;
+            referencedRelation: "conversation_messages";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "conversation_attachments_uploaded_by_fkey";
+            columns: ["uploaded_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["user_id"];
+          },
+        ];
+      };
+      conversation_bookmarks: {
+        Row: {
+          created_at: string;
+          message_id: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          message_id: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          message_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "conversation_bookmarks_message_id_fkey";
+            columns: ["message_id"];
+            isOneToOne: false;
+            referencedRelation: "conversation_messages";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "conversation_bookmarks_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["user_id"];
+          },
+        ];
+      };
+      conversation_context_groups: {
+        Row: {
+          created_at: string;
+          display_name: string;
+          id: string;
+          position: number;
+          space_id: string;
+          system_key: string;
+        };
+        Insert: {
+          created_at?: string;
+          display_name: string;
+          id?: string;
+          position?: number;
+          space_id: string;
+          system_key: string;
+        };
+        Update: {
+          created_at?: string;
+          display_name?: string;
+          id?: string;
+          position?: number;
+          space_id?: string;
+          system_key?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "conversation_context_groups_space_id_fkey";
+            columns: ["space_id"];
+            isOneToOne: false;
+            referencedRelation: "conversation_spaces";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      conversation_mentions: {
+        Row: {
+          created_at: string;
+          mentioned_role_id: string | null;
+          mentioned_user_id: string | null;
+          message_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          mentioned_role_id?: string | null;
+          mentioned_user_id?: string | null;
+          message_id: string;
+        };
+        Update: {
+          created_at?: string;
+          mentioned_role_id?: string | null;
+          mentioned_user_id?: string | null;
+          message_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "conversation_mentions_mentioned_role_id_fkey";
+            columns: ["mentioned_role_id"];
+            isOneToOne: false;
+            referencedRelation: "conversation_space_roles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "conversation_mentions_mentioned_user_id_fkey";
+            columns: ["mentioned_user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["user_id"];
+          },
+          {
+            foreignKeyName: "conversation_mentions_message_id_fkey";
+            columns: ["message_id"];
+            isOneToOne: false;
+            referencedRelation: "conversation_messages";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      conversation_message_revisions: {
+        Row: {
+          id: string;
+          message_id: string;
+          previous_content: string;
+          revised_at: string;
+          revised_by: string;
+        };
+        Insert: {
+          id?: string;
+          message_id: string;
+          previous_content: string;
+          revised_at?: string;
+          revised_by: string;
+        };
+        Update: {
+          id?: string;
+          message_id?: string;
+          previous_content?: string;
+          revised_at?: string;
+          revised_by?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "conversation_message_revisions_message_id_fkey";
+            columns: ["message_id"];
+            isOneToOne: false;
+            referencedRelation: "conversation_messages";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "conversation_message_revisions_revised_by_fkey";
+            columns: ["revised_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["user_id"];
+          },
+        ];
+      };
+      conversation_messages: {
+        Row: {
+          author_id: string;
+          client_request_id: string | null;
+          content: string;
+          created_at: string;
+          deleted_at: string | null;
+          edited_at: string | null;
+          id: string;
+          message_type: string;
+          provenance: Json;
+          reply_to_message_id: string | null;
+          room_id: string;
+          thread_id: string | null;
+        };
+        Insert: {
+          author_id: string;
+          client_request_id?: string | null;
+          content: string;
+          created_at?: string;
+          deleted_at?: string | null;
+          edited_at?: string | null;
+          id?: string;
+          message_type?: string;
+          provenance?: Json;
+          reply_to_message_id?: string | null;
+          room_id: string;
+          thread_id?: string | null;
+        };
+        Update: {
+          author_id?: string;
+          client_request_id?: string | null;
+          content?: string;
+          created_at?: string;
+          deleted_at?: string | null;
+          edited_at?: string | null;
+          id?: string;
+          message_type?: string;
+          provenance?: Json;
+          reply_to_message_id?: string | null;
+          room_id?: string;
+          thread_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "conversation_messages_author_id_fkey";
+            columns: ["author_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["user_id"];
+          },
+          {
+            foreignKeyName: "conversation_messages_reply_to_message_id_fkey";
+            columns: ["reply_to_message_id"];
+            isOneToOne: false;
+            referencedRelation: "conversation_messages";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "conversation_messages_room_id_fkey";
+            columns: ["room_id"];
+            isOneToOne: false;
+            referencedRelation: "conversation_rooms";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "conversation_messages_thread_id_fkey";
+            columns: ["thread_id"];
+            isOneToOne: false;
+            referencedRelation: "conversation_threads";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      conversation_notification_preferences: {
+        Row: {
+          preference: string;
+          quiet_hours: Json;
+          room_id: string | null;
+          space_id: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          preference?: string;
+          quiet_hours?: Json;
+          room_id?: string | null;
+          space_id: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          preference?: string;
+          quiet_hours?: Json;
+          room_id?: string | null;
+          space_id?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "conversation_notification_preferences_room_id_fkey";
+            columns: ["room_id"];
+            isOneToOne: false;
+            referencedRelation: "conversation_rooms";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "conversation_notification_preferences_space_id_fkey";
+            columns: ["space_id"];
+            isOneToOne: false;
+            referencedRelation: "conversation_spaces";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "conversation_notification_preferences_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["user_id"];
+          },
+        ];
+      };
+      conversation_pins: {
+        Row: {
+          message_id: string;
+          pinned_at: string;
+          pinned_by: string;
+          room_id: string;
+        };
+        Insert: {
+          message_id: string;
+          pinned_at?: string;
+          pinned_by: string;
+          room_id: string;
+        };
+        Update: {
+          message_id?: string;
+          pinned_at?: string;
+          pinned_by?: string;
+          room_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "conversation_pins_message_id_fkey";
+            columns: ["message_id"];
+            isOneToOne: false;
+            referencedRelation: "conversation_messages";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "conversation_pins_pinned_by_fkey";
+            columns: ["pinned_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["user_id"];
+          },
+          {
+            foreignKeyName: "conversation_pins_room_id_fkey";
+            columns: ["room_id"];
+            isOneToOne: false;
+            referencedRelation: "conversation_rooms";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      conversation_reactions: {
+        Row: {
+          created_at: string;
+          message_id: string;
+          reaction_key: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          message_id: string;
+          reaction_key: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          message_id?: string;
+          reaction_key?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "conversation_reactions_message_id_fkey";
+            columns: ["message_id"];
+            isOneToOne: false;
+            referencedRelation: "conversation_messages";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "conversation_reactions_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["user_id"];
+          },
+        ];
+      };
+      conversation_read_states: {
+        Row: {
+          last_read_at: string;
+          last_read_message_id: string | null;
+          room_id: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          last_read_at?: string;
+          last_read_message_id?: string | null;
+          room_id: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          last_read_at?: string;
+          last_read_message_id?: string | null;
+          room_id?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "conversation_read_states_last_read_message_id_fkey";
+            columns: ["last_read_message_id"];
+            isOneToOne: false;
+            referencedRelation: "conversation_messages";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "conversation_read_states_room_id_fkey";
+            columns: ["room_id"];
+            isOneToOne: false;
+            referencedRelation: "conversation_rooms";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "conversation_read_states_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["user_id"];
+          },
+        ];
+      };
+      conversation_reports: {
+        Row: {
+          category: string;
+          created_at: string;
+          description: string;
+          id: string;
+          message_id: string | null;
+          reporter_id: string;
+          room_id: string | null;
+          space_id: string;
+          status: string;
+          updated_at: string;
+        };
+        Insert: {
+          category: string;
+          created_at?: string;
+          description: string;
+          id?: string;
+          message_id?: string | null;
+          reporter_id: string;
+          room_id?: string | null;
+          space_id: string;
+          status?: string;
+          updated_at?: string;
+        };
+        Update: {
+          category?: string;
+          created_at?: string;
+          description?: string;
+          id?: string;
+          message_id?: string | null;
+          reporter_id?: string;
+          room_id?: string | null;
+          space_id?: string;
+          status?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "conversation_reports_message_id_fkey";
+            columns: ["message_id"];
+            isOneToOne: false;
+            referencedRelation: "conversation_messages";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "conversation_reports_reporter_id_fkey";
+            columns: ["reporter_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["user_id"];
+          },
+          {
+            foreignKeyName: "conversation_reports_room_id_fkey";
+            columns: ["room_id"];
+            isOneToOne: false;
+            referencedRelation: "conversation_rooms";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "conversation_reports_space_id_fkey";
+            columns: ["space_id"];
+            isOneToOne: false;
+            referencedRelation: "conversation_spaces";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      conversation_room_permission_overrides: {
+        Row: {
+          capability: string;
+          created_at: string;
+          created_by: string;
+          effect: string;
+          id: string;
+          role_id: string | null;
+          room_id: string;
+          user_id: string | null;
+        };
+        Insert: {
+          capability: string;
+          created_at?: string;
+          created_by: string;
+          effect: string;
+          id?: string;
+          role_id?: string | null;
+          room_id: string;
+          user_id?: string | null;
+        };
+        Update: {
+          capability?: string;
+          created_at?: string;
+          created_by?: string;
+          effect?: string;
+          id?: string;
+          role_id?: string | null;
+          room_id?: string;
+          user_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "conversation_room_permission_overrides_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["user_id"];
+          },
+          {
+            foreignKeyName: "conversation_room_permission_overrides_role_id_fkey";
+            columns: ["role_id"];
+            isOneToOne: false;
+            referencedRelation: "conversation_space_roles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "conversation_room_permission_overrides_room_id_fkey";
+            columns: ["room_id"];
+            isOneToOne: false;
+            referencedRelation: "conversation_rooms";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "conversation_room_permission_overrides_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["user_id"];
+          },
+        ];
+      };
+      conversation_rooms: {
+        Row: {
+          archived_at: string | null;
+          context_group_id: string | null;
+          created_at: string;
+          created_by: string | null;
+          description: string;
+          display_name: string;
+          id: string;
+          position: number;
+          posting_policy: string;
+          room_type: string;
+          space_id: string;
+          system_key: string;
+          updated_at: string;
+          visibility: string;
+        };
+        Insert: {
+          archived_at?: string | null;
+          context_group_id?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          description?: string;
+          display_name: string;
+          id?: string;
+          position?: number;
+          posting_policy?: string;
+          room_type: string;
+          space_id: string;
+          system_key: string;
+          updated_at?: string;
+          visibility?: string;
+        };
+        Update: {
+          archived_at?: string | null;
+          context_group_id?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          description?: string;
+          display_name?: string;
+          id?: string;
+          position?: number;
+          posting_policy?: string;
+          room_type?: string;
+          space_id?: string;
+          system_key?: string;
+          updated_at?: string;
+          visibility?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "conversation_rooms_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["user_id"];
+          },
+          {
+            foreignKeyName: "conversation_rooms_space_id_context_group_id_fkey";
+            columns: ["space_id", "context_group_id"];
+            isOneToOne: false;
+            referencedRelation: "conversation_context_groups";
+            referencedColumns: ["space_id", "id"];
+          },
+          {
+            foreignKeyName: "conversation_rooms_space_id_fkey";
+            columns: ["space_id"];
+            isOneToOne: false;
+            referencedRelation: "conversation_spaces";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      conversation_space_memberships: {
+        Row: {
+          domain_role: string;
+          joined_at: string | null;
+          left_at: string | null;
+          membership_state: string;
+          source_membership_version: number;
+          space_id: string;
+          synced_at: string;
+          user_id: string;
+        };
+        Insert: {
+          domain_role: string;
+          joined_at?: string | null;
+          left_at?: string | null;
+          membership_state: string;
+          source_membership_version?: number;
+          space_id: string;
+          synced_at?: string;
+          user_id: string;
+        };
+        Update: {
+          domain_role?: string;
+          joined_at?: string | null;
+          left_at?: string | null;
+          membership_state?: string;
+          source_membership_version?: number;
+          space_id?: string;
+          synced_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "conversation_space_memberships_space_id_fkey";
+            columns: ["space_id"];
+            isOneToOne: false;
+            referencedRelation: "conversation_spaces";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "conversation_space_memberships_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["user_id"];
+          },
+        ];
+      };
+      conversation_space_role_members: {
+        Row: {
+          assigned_at: string;
+          assigned_by: string | null;
+          role_id: string;
+          space_id: string;
+          user_id: string;
+        };
+        Insert: {
+          assigned_at?: string;
+          assigned_by?: string | null;
+          role_id: string;
+          space_id: string;
+          user_id: string;
+        };
+        Update: {
+          assigned_at?: string;
+          assigned_by?: string | null;
+          role_id?: string;
+          space_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "conversation_space_role_members_assigned_by_fkey";
+            columns: ["assigned_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["user_id"];
+          },
+          {
+            foreignKeyName: "conversation_space_role_members_space_id_role_id_fkey";
+            columns: ["space_id", "role_id"];
+            isOneToOne: false;
+            referencedRelation: "conversation_space_roles";
+            referencedColumns: ["space_id", "id"];
+          },
+          {
+            foreignKeyName: "conversation_space_role_members_space_id_user_id_fkey";
+            columns: ["space_id", "user_id"];
+            isOneToOne: false;
+            referencedRelation: "conversation_space_memberships";
+            referencedColumns: ["space_id", "user_id"];
+          },
+        ];
+      };
+      conversation_space_roles: {
+        Row: {
+          capabilities: string[];
+          created_at: string;
+          display_name: string;
+          id: string;
+          is_system: boolean;
+          position: number;
+          space_id: string;
+          system_key: string;
+        };
+        Insert: {
+          capabilities?: string[];
+          created_at?: string;
+          display_name: string;
+          id?: string;
+          is_system?: boolean;
+          position?: number;
+          space_id: string;
+          system_key: string;
+        };
+        Update: {
+          capabilities?: string[];
+          created_at?: string;
+          display_name?: string;
+          id?: string;
+          is_system?: boolean;
+          position?: number;
+          space_id?: string;
+          system_key?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "conversation_space_roles_space_id_fkey";
+            columns: ["space_id"];
+            isOneToOne: false;
+            referencedRelation: "conversation_spaces";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      conversation_spaces: {
+        Row: {
+          archived_at: string | null;
+          blueprint_key: string;
+          blueprint_version: number;
+          chapter_id: string | null;
+          created_at: string;
+          created_by: string | null;
+          description: string;
+          display_name: string;
+          id: string;
+          join_policy: string;
+          lifecycle_state: string;
+          mission_id: string | null;
+          source_type: string;
+          updated_at: string;
+          visibility: string;
+        };
+        Insert: {
+          archived_at?: string | null;
+          blueprint_key: string;
+          blueprint_version?: number;
+          chapter_id?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          description?: string;
+          display_name: string;
+          id?: string;
+          join_policy?: string;
+          lifecycle_state?: string;
+          mission_id?: string | null;
+          source_type: string;
+          updated_at?: string;
+          visibility?: string;
+        };
+        Update: {
+          archived_at?: string | null;
+          blueprint_key?: string;
+          blueprint_version?: number;
+          chapter_id?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          description?: string;
+          display_name?: string;
+          id?: string;
+          join_policy?: string;
+          lifecycle_state?: string;
+          mission_id?: string | null;
+          source_type?: string;
+          updated_at?: string;
+          visibility?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "conversation_spaces_chapter_id_fkey";
+            columns: ["chapter_id"];
+            isOneToOne: true;
+            referencedRelation: "chapters";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "conversation_spaces_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["user_id"];
+          },
+          {
+            foreignKeyName: "conversation_spaces_mission_id_fkey";
+            columns: ["mission_id"];
+            isOneToOne: true;
+            referencedRelation: "missions";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      conversation_thread_members: {
+        Row: {
+          added_at: string;
+          added_by: string | null;
+          left_at: string | null;
+          thread_id: string;
+          user_id: string;
+        };
+        Insert: {
+          added_at?: string;
+          added_by?: string | null;
+          left_at?: string | null;
+          thread_id: string;
+          user_id: string;
+        };
+        Update: {
+          added_at?: string;
+          added_by?: string | null;
+          left_at?: string | null;
+          thread_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "conversation_thread_members_added_by_fkey";
+            columns: ["added_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["user_id"];
+          },
+          {
+            foreignKeyName: "conversation_thread_members_thread_id_fkey";
+            columns: ["thread_id"];
+            isOneToOne: false;
+            referencedRelation: "conversation_threads";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "conversation_thread_members_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["user_id"];
+          },
+        ];
+      };
+      conversation_threads: {
+        Row: {
+          archived_at: string | null;
+          client_request_id: string | null;
+          created_at: string;
+          created_by: string;
+          id: string;
+          locked_at: string | null;
+          parent_message_id: string | null;
+          room_id: string;
+          title: string | null;
+          updated_at: string;
+          visibility: string;
+        };
+        Insert: {
+          archived_at?: string | null;
+          client_request_id?: string | null;
+          created_at?: string;
+          created_by: string;
+          id?: string;
+          locked_at?: string | null;
+          parent_message_id?: string | null;
+          room_id: string;
+          title?: string | null;
+          updated_at?: string;
+          visibility?: string;
+        };
+        Update: {
+          archived_at?: string | null;
+          client_request_id?: string | null;
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          locked_at?: string | null;
+          parent_message_id?: string | null;
+          room_id?: string;
+          title?: string | null;
+          updated_at?: string;
+          visibility?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "conversation_threads_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["user_id"];
+          },
+          {
+            foreignKeyName: "conversation_threads_parent_message_id_fkey";
+            columns: ["parent_message_id"];
+            isOneToOne: false;
+            referencedRelation: "conversation_messages";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "conversation_threads_room_id_fkey";
+            columns: ["room_id"];
+            isOneToOne: false;
+            referencedRelation: "conversation_rooms";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       course_modules: {
         Row: {
@@ -2118,30 +3290,74 @@ export type Database = {
       };
       mission_members: {
         Row: {
+          client_request_id: string | null;
           commitment_type: string | null;
           created_at: string;
+          decided_at: string | null;
+          decided_by: string | null;
+          invited_by: string | null;
+          left_at: string | null;
+          membership_state: string;
           message: string | null;
           mission_id: string;
+          removal_reason: string | null;
+          requested_at: string | null;
           role: string;
+          state_version: number;
+          updated_at: string;
           user_id: string;
         };
         Insert: {
+          client_request_id?: string | null;
           commitment_type?: string | null;
           created_at?: string;
+          decided_at?: string | null;
+          decided_by?: string | null;
+          invited_by?: string | null;
+          left_at?: string | null;
+          membership_state?: string;
           message?: string | null;
           mission_id: string;
+          removal_reason?: string | null;
+          requested_at?: string | null;
           role: string;
+          state_version?: number;
+          updated_at?: string;
           user_id: string;
         };
         Update: {
+          client_request_id?: string | null;
           commitment_type?: string | null;
           created_at?: string;
+          decided_at?: string | null;
+          decided_by?: string | null;
+          invited_by?: string | null;
+          left_at?: string | null;
+          membership_state?: string;
           message?: string | null;
           mission_id?: string;
+          removal_reason?: string | null;
+          requested_at?: string | null;
           role?: string;
+          state_version?: number;
+          updated_at?: string;
           user_id?: string;
         };
         Relationships: [
+          {
+            foreignKeyName: "mission_members_decided_by_fkey";
+            columns: ["decided_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["user_id"];
+          },
+          {
+            foreignKeyName: "mission_members_invited_by_fkey";
+            columns: ["invited_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["user_id"];
+          },
           {
             foreignKeyName: "mission_members_mission_id_fkey";
             columns: ["mission_id"];
@@ -2205,37 +3421,94 @@ export type Database = {
       };
       missions: {
         Row: {
+          activated_at: string | null;
+          archived_at: string | null;
           chapter_id: string | null;
+          client_request_id: string | null;
+          completed_at: string | null;
+          country_code: string | null;
           created_at: string;
           created_by: string;
+          decision_reason: string | null;
           description: string;
           id: string;
+          join_policy: string;
+          lifecycle_state: string;
+          max_members: number | null;
+          place_id: string | null;
+          region_id: string | null;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          risk_classification: string;
+          state_version: number;
           status: string;
+          submitted_at: string | null;
+          template_key: string | null;
+          template_version: number | null;
           theme: string;
           title: string;
           updated_at: string;
+          visibility: string;
         };
         Insert: {
+          activated_at?: string | null;
+          archived_at?: string | null;
           chapter_id?: string | null;
+          client_request_id?: string | null;
+          completed_at?: string | null;
+          country_code?: string | null;
           created_at?: string;
           created_by: string;
+          decision_reason?: string | null;
           description: string;
           id?: string;
+          join_policy?: string;
+          lifecycle_state?: string;
+          max_members?: number | null;
+          place_id?: string | null;
+          region_id?: string | null;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          risk_classification?: string;
+          state_version?: number;
           status?: string;
+          submitted_at?: string | null;
+          template_key?: string | null;
+          template_version?: number | null;
           theme: string;
           title: string;
           updated_at?: string;
+          visibility?: string;
         };
         Update: {
+          activated_at?: string | null;
+          archived_at?: string | null;
           chapter_id?: string | null;
+          client_request_id?: string | null;
+          completed_at?: string | null;
+          country_code?: string | null;
           created_at?: string;
           created_by?: string;
+          decision_reason?: string | null;
           description?: string;
           id?: string;
+          join_policy?: string;
+          lifecycle_state?: string;
+          max_members?: number | null;
+          place_id?: string | null;
+          region_id?: string | null;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          risk_classification?: string;
+          state_version?: number;
           status?: string;
+          submitted_at?: string | null;
+          template_key?: string | null;
+          template_version?: number | null;
           theme?: string;
           title?: string;
           updated_at?: string;
+          visibility?: string;
         };
         Relationships: [
           {
@@ -2246,8 +3519,36 @@ export type Database = {
             referencedColumns: ["id"];
           },
           {
+            foreignKeyName: "missions_country_code_fkey";
+            columns: ["country_code"];
+            isOneToOne: false;
+            referencedRelation: "geo_countries";
+            referencedColumns: ["country_code"];
+          },
+          {
             foreignKeyName: "missions_created_by_fkey";
             columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["user_id"];
+          },
+          {
+            foreignKeyName: "missions_place_id_fkey";
+            columns: ["place_id"];
+            isOneToOne: false;
+            referencedRelation: "geo_places";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "missions_region_id_fkey";
+            columns: ["region_id"];
+            isOneToOne: false;
+            referencedRelation: "geo_regions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "missions_reviewed_by_fkey";
+            columns: ["reviewed_by"];
             isOneToOne: false;
             referencedRelation: "profiles";
             referencedColumns: ["user_id"];
@@ -3329,6 +4630,16 @@ export type Database = {
           template_key: string;
         }[];
       };
+      complete_email_delivery: {
+        Args: {
+          _error?: string;
+          _id: string;
+          _lease_token: string;
+          _provider_message_id?: string;
+          _succeeded: boolean;
+        };
+        Returns: undefined;
+      };
       complete_my_community_onboarding: {
         Args: { _client_operation_id: string; _version: number };
         Returns: {
@@ -3340,15 +4651,93 @@ export type Database = {
           measurement_consent: boolean;
         }[];
       };
-      complete_email_delivery: {
+      create_managed_chapter: {
         Args: {
-          _error?: string;
-          _id: string;
-          _lease_token: string;
-          _provider_message_id?: string;
-          _succeeded: boolean;
+          _city: string;
+          _client_request_id: string;
+          _country: string;
+          _description: string;
+          _join_policy: string;
+          _name: string;
+          _visibility: string;
         };
-        Returns: undefined;
+        Returns: {
+          activated_at: string | null;
+          archived_at: string | null;
+          city: string | null;
+          client_request_id: string | null;
+          country: string | null;
+          country_code: string | null;
+          created_at: string;
+          created_by: string | null;
+          description: string;
+          id: string;
+          join_policy: string;
+          lifecycle_state: string;
+          name: string;
+          paused_at: string | null;
+          place_id: string | null;
+          region_id: string | null;
+          source_proposal_id: string | null;
+          state_version: number;
+          updated_at: string;
+          visibility: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "chapters";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      create_my_chapter_proposal: {
+        Args: {
+          _city: string;
+          _client_request_id: string;
+          _country: string;
+          _country_code: string;
+          _expected_size: number;
+          _join_policy: string;
+          _proposed_name: string;
+          _proposer_background: string;
+          _rationale: string;
+          _target_audience: string;
+          _visibility: string;
+        };
+        Returns: {
+          approved_chapter_id: string | null;
+          city: string | null;
+          client_request_id: string | null;
+          country: string | null;
+          country_code: string | null;
+          created_at: string | null;
+          decision_reason: string | null;
+          expected_size: number | null;
+          id: string;
+          join_policy: string;
+          place_id: string | null;
+          proposed_name: string;
+          proposed_stewards: Json;
+          proposer_background: string;
+          proposer_id: string;
+          rationale: string;
+          region_id: string | null;
+          requested_information: string | null;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          state_version: number;
+          status: string | null;
+          submitted_at: string | null;
+          target_audience: string | null;
+          updated_at: string;
+          visibility: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "chapter_proposals";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
       };
       create_my_connection_request: {
         Args: {
@@ -3357,7 +4746,51 @@ export type Database = {
           _reason: string;
           _recipient_id: string;
         };
-        Returns: Database["public"]["Tables"]["connection_requests"]["Row"];
+        Returns: {
+          client_request_id: string | null;
+          created_at: string;
+          id: string;
+          note: string;
+          reason: string;
+          recipient_id: string;
+          responded_at: string | null;
+          sender_id: string;
+          status: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "connection_requests";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      create_my_conversation_thread: {
+        Args: {
+          _client_request_id: string;
+          _parent_message_id: string;
+          _room_id: string;
+          _title: string;
+          _visibility: string;
+        };
+        Returns: {
+          archived_at: string | null;
+          client_request_id: string | null;
+          created_at: string;
+          created_by: string;
+          id: string;
+          locked_at: string | null;
+          parent_message_id: string | null;
+          room_id: string;
+          title: string | null;
+          updated_at: string;
+          visibility: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "conversation_threads";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
       };
       create_my_io_workspace: {
         Args: never;
@@ -3379,6 +4812,64 @@ export type Database = {
           isOneToOne: true;
           isSetofReturn: false;
         };
+      };
+      create_my_mission: {
+        Args: {
+          _chapter_id: string;
+          _client_request_id: string;
+          _description: string;
+          _join_policy: string;
+          _theme: string;
+          _title: string;
+          _visibility: string;
+        };
+        Returns: {
+          activated_at: string | null;
+          archived_at: string | null;
+          chapter_id: string | null;
+          client_request_id: string | null;
+          completed_at: string | null;
+          country_code: string | null;
+          created_at: string;
+          created_by: string;
+          decision_reason: string | null;
+          description: string;
+          id: string;
+          join_policy: string;
+          lifecycle_state: string;
+          max_members: number | null;
+          place_id: string | null;
+          region_id: string | null;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          risk_classification: string;
+          state_version: number;
+          status: string;
+          submitted_at: string | null;
+          template_key: string | null;
+          template_version: number | null;
+          theme: string;
+          title: string;
+          updated_at: string;
+          visibility: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "missions";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      decide_space_membership: {
+        Args: {
+          _decision: string;
+          _expected_version: number;
+          _reason: string;
+          _role: string;
+          _space_id: string;
+          _target_user_id: string;
+        };
+        Returns: Json;
       };
       event_rsvp_counts: { Args: { _event_id: string }; Returns: Json };
       get_connection_email: {
@@ -3456,12 +4947,8 @@ export type Database = {
         Args: { _reason?: string; _story_id: string };
         Returns: undefined;
       };
-      lead_remove_chapter_member: {
-        Args: { _chapter_id: string; _target_user_id: string };
-        Returns: undefined;
-      };
-      lead_remove_mission_member: {
-        Args: { _mission_id: string; _target_user_id: string };
+      leave_my_conversation_space: {
+        Args: { _expected_version: number; _space_id: string };
         Returns: undefined;
       };
       lookup_vouch_code: {
@@ -3473,14 +4960,48 @@ export type Database = {
           status: string;
         }[];
       };
+      mark_my_conversation_room_read: {
+        Args: { _message_id: string; _room_id: string };
+        Returns: {
+          last_read_at: string;
+          last_read_message_id: string | null;
+          room_id: string;
+          updated_at: string;
+          user_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "conversation_read_states";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       mark_my_direct_conversation_read: {
         Args: { _other_user_id: string };
         Returns: number;
       };
       my_lead_summary: { Args: never; Returns: Json };
       post_my_mission_update: {
-        Args: { _client_request_id: string; _content: string; _mission_id: string };
-        Returns: Database["public"]["Tables"]["mission_updates"]["Row"];
+        Args: {
+          _client_request_id: string;
+          _content: string;
+          _mission_id: string;
+        };
+        Returns: {
+          author_id: string;
+          client_request_id: string | null;
+          content: string;
+          created_at: string;
+          id: string;
+          is_pinned: boolean | null;
+          mission_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "mission_updates";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
       };
       record_my_product_event: {
         Args: {
@@ -3502,19 +5023,105 @@ export type Database = {
           _expert_id: string;
           _message: string;
         };
-        Returns: Database["public"]["Tables"]["mentor_sessions"]["Row"];
+        Returns: {
+          booker_id: string;
+          client_request_id: string | null;
+          created_at: string;
+          duration_mins: number;
+          expert_id: string;
+          id: string;
+          meeting_url: string | null;
+          message: string;
+          scheduled_for: string | null;
+          status: string;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "mentor_sessions";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      request_my_space_membership: {
+        Args: {
+          _client_request_id: string;
+          _message: string;
+          _requested_role: string;
+          _space_id: string;
+        };
+        Returns: Json;
       };
       request_my_vouch: {
         Args: {
           _client_request_id: string;
           _message: string;
-          _target_verifier_id: string | null;
+          _target_verifier_id: string;
         };
-        Returns: Database["public"]["Tables"]["vouch_requests"]["Row"];
+        Returns: {
+          client_request_id: string | null;
+          created_at: string;
+          id: string;
+          message: string;
+          requester_id: string;
+          responded_at: string | null;
+          status: string;
+          target_verifier_id: string | null;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "vouch_requests";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
       };
       respond_to_my_connection_request: {
         Args: { _request_id: string; _status: string };
-        Returns: Database["public"]["Tables"]["connection_requests"]["Row"];
+        Returns: {
+          client_request_id: string | null;
+          created_at: string;
+          id: string;
+          note: string;
+          reason: string;
+          recipient_id: string;
+          responded_at: string | null;
+          sender_id: string;
+          status: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "connection_requests";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      send_my_conversation_message: {
+        Args: {
+          _client_request_id: string;
+          _content: string;
+          _room_id: string;
+          _thread_id: string;
+        };
+        Returns: {
+          author_id: string;
+          client_request_id: string | null;
+          content: string;
+          created_at: string;
+          deleted_at: string | null;
+          edited_at: string | null;
+          id: string;
+          message_type: string;
+          provenance: Json;
+          reply_to_message_id: string | null;
+          room_id: string;
+          thread_id: string | null;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "conversation_messages";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
       };
       send_my_direct_message: {
         Args: {
@@ -3547,6 +5154,16 @@ export type Database = {
         };
         Returns: string;
       };
+      set_managed_space_lead: {
+        Args: {
+          _enabled: boolean;
+          _expected_version: number;
+          _reason: string;
+          _space_id: string;
+          _target_user_id: string;
+        };
+        Returns: Json;
+      };
       set_my_community_location: {
         Args: {
           _city_label: string;
@@ -3577,6 +5194,42 @@ export type Database = {
           measurement_consent: boolean;
         }[];
       };
+      transition_managed_chapter: {
+        Args: {
+          _chapter_id: string;
+          _expected_version: number;
+          _reason: string;
+          _target_state: string;
+        };
+        Returns: {
+          activated_at: string | null;
+          archived_at: string | null;
+          city: string | null;
+          client_request_id: string | null;
+          country: string | null;
+          country_code: string | null;
+          created_at: string;
+          created_by: string | null;
+          description: string;
+          id: string;
+          join_policy: string;
+          lifecycle_state: string;
+          name: string;
+          paused_at: string | null;
+          place_id: string | null;
+          region_id: string | null;
+          source_proposal_id: string | null;
+          state_version: number;
+          updated_at: string;
+          visibility: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "chapters";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       transition_my_mentor_session: {
         Args: {
           _meeting_url?: string;
@@ -3584,7 +5237,109 @@ export type Database = {
           _session_id: string;
           _status: string;
         };
-        Returns: Database["public"]["Tables"]["mentor_sessions"]["Row"];
+        Returns: {
+          booker_id: string;
+          client_request_id: string | null;
+          created_at: string;
+          duration_mins: number;
+          expert_id: string;
+          id: string;
+          meeting_url: string | null;
+          message: string;
+          scheduled_for: string | null;
+          status: string;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "mentor_sessions";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      transition_my_mission: {
+        Args: {
+          _expected_version: number;
+          _mission_id: string;
+          _reason: string;
+          _target_state: string;
+        };
+        Returns: {
+          activated_at: string | null;
+          archived_at: string | null;
+          chapter_id: string | null;
+          client_request_id: string | null;
+          completed_at: string | null;
+          country_code: string | null;
+          created_at: string;
+          created_by: string;
+          decision_reason: string | null;
+          description: string;
+          id: string;
+          join_policy: string;
+          lifecycle_state: string;
+          max_members: number | null;
+          place_id: string | null;
+          region_id: string | null;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          risk_classification: string;
+          state_version: number;
+          status: string;
+          submitted_at: string | null;
+          template_key: string | null;
+          template_version: number | null;
+          theme: string;
+          title: string;
+          updated_at: string;
+          visibility: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "missions";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      update_my_chapter_details: {
+        Args: {
+          _chapter_id: string;
+          _city: string;
+          _country: string;
+          _country_code: string;
+          _description: string;
+          _expected_version: number;
+          _join_policy: string;
+          _visibility: string;
+        };
+        Returns: {
+          activated_at: string | null;
+          archived_at: string | null;
+          city: string | null;
+          client_request_id: string | null;
+          country: string | null;
+          country_code: string | null;
+          created_at: string;
+          created_by: string | null;
+          description: string;
+          id: string;
+          join_policy: string;
+          lifecycle_state: string;
+          name: string;
+          paused_at: string | null;
+          place_id: string | null;
+          region_id: string | null;
+          source_proposal_id: string | null;
+          state_version: number;
+          updated_at: string;
+          visibility: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "chapters";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
       };
       vouch_directly: { Args: { _recipient_id: string }; Returns: Json };
       vouch_effective_quota: { Args: { _user_id: string }; Returns: number };

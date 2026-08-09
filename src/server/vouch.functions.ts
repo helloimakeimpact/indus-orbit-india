@@ -176,7 +176,7 @@ export async function requestVouch(message: string, targetVerifierId?: string | 
 
   const { error } = await supabase.rpc("request_my_vouch", {
     _message: message.trim(),
-    _target_verifier_id: targetVerifierId ?? null,
+    _target_verifier_id: targetVerifierId ?? (null as unknown as string),
     _client_request_id: crypto.randomUUID(),
   });
   if (error) throw new Error(error.message);

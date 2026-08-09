@@ -10,6 +10,7 @@ import {
   BookOpen,
   MoreVertical,
   Trash,
+  MessageSquare,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
@@ -39,6 +40,7 @@ import {
 } from "@/server/mission.functions";
 import { formatEventLocation, formatLocationTypeLabel } from "@/lib/location";
 import { getErrorMessage } from "@/lib/errors";
+import { getSourceSpaceId } from "@/features/spaces/space-client";
 
 export const Route = createFileRoute("/app/missions/$missionId")({
   component: MissionDetailPage,
@@ -54,11 +56,16 @@ function MissionDetailPage() {
   const [updateText, setUpdateText] = useState("");
   const [posting, setPosting] = useState(false);
   const [memberToRemove, setMemberToRemove] = useState<{ id: string; name: string } | null>(null);
+  const [spaceId, setSpaceId] = useState<string | null>(null);
 
   async function load() {
     try {
-      const data = await getMission(missionId);
+      const [data, resolvedSpaceId] = await Promise.all([
+        getMission(missionId),
+        getSourceSpaceId("mission", missionId),
+      ]);
       setMission(data);
+      setSpaceId(resolvedSpaceId);
     } catch (error: unknown) {
       toast.error(getErrorMessage(error, "Failed to load mission."));
     } finally {
@@ -88,7 +95,11 @@ function MissionDetailPage() {
   if (busy) return <p className="mt-8 text-muted-foreground px-4">Loading mission workspace…</p>;
   if (!mission) return <p className="mt-8 text-muted-foreground px-4">Mission not found.</p>;
 
-  const userMemberRecord = mission.mission_members?.find((member) => member.user_id === user?.id);
+  const activeMembers =
+    mission.mission_members?.filter(
+      (member) => (member.membership_state ?? "active") === "active",
+    ) ?? [];
+  const userMemberRecord = activeMembers.find((member) => member.user_id === user?.id);
   const hasJoined = !!userMemberRecord;
   const isLead = userMemberRecord?.role === "lead";
 
@@ -139,41 +150,54 @@ function MissionDetailPage() {
             <Globe2 className="h-48 w-48" />
           </div>
           <div className="relative z-10">
-            <div className="flex justify-between items-start">
+            <div className="flex justify-between items-start gap-3">
               <Badge className="bg-[var(--saffron)] text-[var(--indigo-night)] uppercase tracking-widest text-[10px]">
                 {mission.theme}
               </Badge>
-              {isLead ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="bg-[var(--parchment)]/10 border-[var(--parchment)]/20 text-[var(--parchment)] hover:bg-[var(--parchment)]/20"
-                    >
-                      {mission.status.toUpperCase()} <MoreVertical className="h-3 w-3 ml-2" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => handleStatusChange("open")}>
-                      Open
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleStatusChange("completed")}>
-                      Completed
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleStatusChange("archived")}>
-                      Archived
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                <Badge
-                  variant="outline"
-                  className="border-[var(--parchment)]/20 text-[var(--parchment)]"
-                >
-                  {mission.status.toUpperCase()}
-                </Badge>
-              )}
+              <div className="flex items-center gap-2">
+                {hasJoined && spaceId && (
+                  <Button
+                    asChild
+                    size="sm"
+                    className="bg-[var(--saffron)] text-[var(--indigo-night)] hover:bg-[var(--saffron)]/90"
+                  >
+                    <Link to="/app/spaces/$spaceId" params={{ spaceId }}>
+                      <MessageSquare className="mr-2 h-4 w-4" /> Open Space
+                    </Link>
+                  </Button>
+                )}
+                {isLead ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="bg-[var(--parchment)]/10 border-[var(--parchment)]/20 text-[var(--parchment)] hover:bg-[var(--parchment)]/20"
+                      >
+                        {mission.status.toUpperCase()} <MoreVertical className="h-3 w-3 ml-2" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleStatusChange("open")}>
+                        Open
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleStatusChange("completed")}>
+                        Completed
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleStatusChange("archived")}>
+                        Archived
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                  <Badge
+                    variant="outline"
+                    className="border-[var(--parchment)]/20 text-[var(--parchment)]"
+                  >
+                    {mission.status.toUpperCase()}
+                  </Badge>
+                )}
+              </div>
             </div>
             <h1 className="mt-4 font-display text-3xl font-semibold md:text-4xl max-w-2xl">
               {mission.title}
@@ -397,12 +421,10 @@ function MissionDetailPage() {
         <div className="space-y-6">
           <div className="rounded-3xl border border-border bg-card p-6">
             <h3 className="font-display text-lg font-medium mb-4">Mission Roster</h3>
-            <p className="text-2xl font-bold mb-6">
-              {mission.mission_members?.length || 0} Members
-            </p>
+            <p className="text-2xl font-bold mb-6">{activeMembers.length} Members</p>
 
             <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
-              {mission.mission_members?.map((m) => (
+              {activeMembers.map((m) => (
                 <div key={m.user_id} className="flex items-center gap-3">
                   <Avatar className="h-10 w-10">
                     <AvatarImage src={m.profiles?.avatar_url ?? undefined} />

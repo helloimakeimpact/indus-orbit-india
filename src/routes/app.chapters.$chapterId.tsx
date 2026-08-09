@@ -11,6 +11,7 @@ import {
   Target,
   Plus,
   Trash2,
+  MessageSquare,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +33,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { getErrorMessage } from "@/lib/errors";
 import { formatChapterBaseLocation, formatEventLocation } from "@/lib/location";
 import { createMission } from "@/server/mission.functions";
+import { getSourceSpaceId } from "@/features/spaces/space-client";
 import {
   joinChapter,
   submitStory,
@@ -49,7 +51,7 @@ export const Route = createFileRoute("/app/chapters/$chapterId")({
 type Chapter = Database["public"]["Tables"]["chapters"]["Row"];
 type ChapterMember = Pick<
   Database["public"]["Tables"]["chapter_members"]["Row"],
-  "user_id" | "role"
+  "user_id" | "role" | "membership_state" | "state_version"
 > & {
   profiles: Pick<
     Database["public"]["Tables"]["profiles"]["Row"],
@@ -77,6 +79,7 @@ function ChapterWorkspace() {
   const [missions, setMissions] = useState<MissionSummary[]>([]);
   const [stories, setStories] = useState<StorySummary[]>([]);
   const [events, setEvents] = useState<EventSummary[]>([]);
+  const [spaceId, setSpaceId] = useState<string | null>(null);
   const [busy, setBusy] = useState(true);
 
   // Dialog States
@@ -106,10 +109,12 @@ function ChapterWorkspace() {
   async function load() {
     setBusy(true);
     try {
-      const [chapterRes, missionsRes, storiesRes, eventsRes] = await Promise.all([
+      const [chapterRes, missionsRes, storiesRes, eventsRes, resolvedSpaceId] = await Promise.all([
         supabase
           .from("chapters")
-          .select(`*, chapter_members(user_id, role, profiles(display_name, avatar_url))`)
+          .select(
+            `*, chapter_members(*, profiles!chapter_members_user_id_fkey(display_name, avatar_url))`,
+          )
           .eq("id", chapterId)
           .single(),
         supabase
@@ -121,6 +126,7 @@ function ChapterWorkspace() {
           .from("events")
           .select("id, title, start_time, location")
           .eq("chapter_id", chapterId),
+        getSourceSpaceId("chapter", chapterId),
       ]);
       const loadError = [
         chapterRes.error,
@@ -134,6 +140,7 @@ function ChapterWorkspace() {
       setMissions(missionsRes.data || []);
       setStories(storiesRes.data || []);
       setEvents(eventsRes.data || []);
+      setSpaceId(resolvedSpaceId);
     } catch (error: unknown) {
       toast.error(getErrorMessage(error));
       setChapter(null);
@@ -150,16 +157,20 @@ function ChapterWorkspace() {
   if (!chapter) return <p className="mt-8 text-muted-foreground px-4">Chapter not found.</p>;
 
   const activeChapter = chapter;
-  const leads = chapter.chapter_members.filter((member) => member.role === "lead");
-  const members = chapter.chapter_members;
-  const isMember = chapter.chapter_members.some((member) => member.user_id === user?.id);
+  const members = chapter.chapter_members.filter(
+    (member) => (member.membership_state ?? "active") === "active",
+  );
+  const leads = members.filter((member) => member.role === "lead");
+  const isMember = members.some((member) => member.user_id === user?.id);
   const isLead = leads.some((member) => member.user_id === user?.id);
 
   async function handleJoin() {
     if (!user) return toast.error("Log in first");
     try {
-      await joinChapter({ data: { chapterId: activeChapter.id } });
-      toast.success("Joined chapter!");
+      const result = await joinChapter({ data: { chapterId: activeChapter.id } });
+      toast.success(
+        result.membershipState === "active" ? "Joined Chapter" : "Chapter membership request sent",
+      );
       load();
     } catch (error: unknown) {
       toast.error(getErrorMessage(error));
@@ -259,12 +270,21 @@ function ChapterWorkspace() {
           </div>
           <div className="flex flex-col gap-3 min-w-[220px]">
             {isMember ? (
-              <Badge
-                variant="secondary"
-                className="justify-center py-2 text-sm bg-muted/50 border border-border font-semibold"
-              >
-                Member
-              </Badge>
+              <>
+                <Badge
+                  variant="secondary"
+                  className="justify-center py-2 text-sm bg-muted/50 border border-border font-semibold"
+                >
+                  Member
+                </Badge>
+                {spaceId && (
+                  <Button asChild className="bg-[var(--saffron)] text-[var(--indigo-night)]">
+                    <Link to="/app/spaces/$spaceId" params={{ spaceId }}>
+                      <MessageSquare className="mr-2 h-4 w-4" /> Open Space
+                    </Link>
+                  </Button>
+                )}
+              </>
             ) : (
               <Button
                 onClick={handleJoin}
@@ -275,8 +295,7 @@ function ChapterWorkspace() {
             )}
             <div className="rounded-xl bg-muted/30 p-4 border border-border shadow-sm">
               <div className="flex items-center gap-2 text-sm font-semibold mb-3">
-                <Users className="h-4 w-4 text-[var(--indigo-night)]" />{" "}
-                {chapter.chapter_members?.length || 0} Members
+                <Users className="h-4 w-4 text-[var(--indigo-night)]" /> {members.length} Members
               </div>
               {leads.length > 0 && (
                 <div className="space-y-2 pt-2 border-t border-border/50">

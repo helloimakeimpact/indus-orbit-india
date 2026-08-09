@@ -77,6 +77,7 @@ import { Route as AppSkillsIndexRouteImport } from './routes/app.skills.index'
 import { Route as AppSkillsSlugRouteImport } from './routes/app.skills.$slug'
 import { Route as AppSodaIndexRouteImport } from './routes/app.soda.index'
 import { Route as AppSodaSlugRouteImport } from './routes/app.soda.$slug'
+import { Route as AppSpacesSpaceIdRouteImport } from './routes/app.spaces.$spaceId'
 import { Route as AppStoriesIndexRouteImport } from './routes/app.stories.index'
 import { Route as AppStoriesIdRouteImport } from './routes/app.stories.$id'
 import { Route as AppEducationCourseSlugIndexRouteImport } from './routes/app.education.$courseSlug.index'
@@ -422,6 +423,11 @@ const AppSodaSlugRoute = AppSodaSlugRouteImport.update({
   path: '/$slug',
   getParentRoute: () => AppSodaRoute,
 } as any)
+const AppSpacesSpaceIdRoute = AppSpacesSpaceIdRouteImport.update({
+  id: '/spaces/$spaceId',
+  path: '/spaces/$spaceId',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppStoriesIndexRoute = AppStoriesIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -507,6 +513,7 @@ export interface FileRoutesByFullPath {
   '/app/missions/$missionId': typeof AppMissionsMissionIdRoute
   '/app/skills/$slug': typeof AppSkillsSlugRoute
   '/app/soda/$slug': typeof AppSodaSlugRoute
+  '/app/spaces/$spaceId': typeof AppSpacesSpaceIdRoute
   '/app/stories/$id': typeof AppStoriesIdRoute
   '/app/admin/': typeof AppAdminIndexRoute
   '/app/chapters/': typeof AppChaptersIndexRoute
@@ -571,6 +578,7 @@ export interface FileRoutesByTo {
   '/app/missions/$missionId': typeof AppMissionsMissionIdRoute
   '/app/skills/$slug': typeof AppSkillsSlugRoute
   '/app/soda/$slug': typeof AppSodaSlugRoute
+  '/app/spaces/$spaceId': typeof AppSpacesSpaceIdRoute
   '/app/stories/$id': typeof AppStoriesIdRoute
   '/app/admin': typeof AppAdminIndexRoute
   '/app/chapters': typeof AppChaptersIndexRoute
@@ -646,6 +654,7 @@ export interface FileRoutesById {
   '/app/missions/$missionId': typeof AppMissionsMissionIdRoute
   '/app/skills/$slug': typeof AppSkillsSlugRoute
   '/app/soda/$slug': typeof AppSodaSlugRoute
+  '/app/spaces/$spaceId': typeof AppSpacesSpaceIdRoute
   '/app/stories/$id': typeof AppStoriesIdRoute
   '/app/admin/': typeof AppAdminIndexRoute
   '/app/chapters/': typeof AppChaptersIndexRoute
@@ -722,6 +731,7 @@ export interface FileRouteTypes {
     | '/app/missions/$missionId'
     | '/app/skills/$slug'
     | '/app/soda/$slug'
+    | '/app/spaces/$spaceId'
     | '/app/stories/$id'
     | '/app/admin/'
     | '/app/chapters/'
@@ -786,6 +796,7 @@ export interface FileRouteTypes {
     | '/app/missions/$missionId'
     | '/app/skills/$slug'
     | '/app/soda/$slug'
+    | '/app/spaces/$spaceId'
     | '/app/stories/$id'
     | '/app/admin'
     | '/app/chapters'
@@ -860,6 +871,7 @@ export interface FileRouteTypes {
     | '/app/missions/$missionId'
     | '/app/skills/$slug'
     | '/app/soda/$slug'
+    | '/app/spaces/$spaceId'
     | '/app/stories/$id'
     | '/app/admin/'
     | '/app/chapters/'
@@ -1373,6 +1385,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSodaSlugRouteImport
       parentRoute: typeof AppSodaRoute
     }
+    '/app/spaces/$spaceId': {
+      id: '/app/spaces/$spaceId'
+      path: '/spaces/$spaceId'
+      fullPath: '/app/spaces/$spaceId'
+      preLoaderRoute: typeof AppSpacesSpaceIdRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/stories/': {
       id: '/app/stories/'
       path: '/'
@@ -1565,6 +1584,7 @@ interface AppRouteChildren {
   AppIndexRoute: typeof AppIndexRoute
   AppChaptersChapterIdRoute: typeof AppChaptersChapterIdRoute
   AppChaptersProposeRoute: typeof AppChaptersProposeRoute
+  AppSpacesSpaceIdRoute: typeof AppSpacesSpaceIdRoute
   AppChaptersIndexRoute: typeof AppChaptersIndexRoute
 }
 
@@ -1591,6 +1611,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppIndexRoute: AppIndexRoute,
   AppChaptersChapterIdRoute: AppChaptersChapterIdRoute,
   AppChaptersProposeRoute: AppChaptersProposeRoute,
+  AppSpacesSpaceIdRoute: AppSpacesSpaceIdRoute,
   AppChaptersIndexRoute: AppChaptersIndexRoute,
 }
 

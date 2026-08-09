@@ -1,6 +1,6 @@
 # Discord-like capability plan, translated for Indus Orbit
 
-Status: detailed intended-system and implementation-gap record, 9 August 2026.
+Status: intended-system and implementation-gap record updated after the Chapter/Mission Space foundation was Verified locally, 9 August 2026.
 
 ## Product decision
 
@@ -33,35 +33,35 @@ People, agents and system notices must be visually and semantically distinct. A 
 
 ## Capability matrix: done and left
 
-| Collaboration capability        | Current Indus Orbit state                                     | What must be built                                                                                                                                                                       |
-| ------------------------------- | ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Persistent global rail          | Partial: app navigation plus I/O-specific rail preview        | Extract one Orbit rail for People, Learn, Action, Messages and I/O; live attention, keyboard navigation, responsive behavior and no duplicated shell state.                              |
-| Context sidebar                 | Partial in app/I/O layouts                                    | Make the selected Space drive rooms, recent items, search and permissions; persist useful preference without hiding inaccessible content.                                                |
-| Main workspace and inspector    | Partial I/O preview                                           | Shared responsive frame, focus restoration, loading/error/offline states and contextual inspector for profile, members, approvals, evidence or route receipt.                            |
-| One-to-one DMs                  | Partial: trusted Released RPC boundary plus working product   | Add cursor paging, common cache, explicit blocks, robust reconnect, attachments and E2E/load tests.                                                                                      |
-| Group DMs                       | Not implemented                                               | Add bounded membership, invite/leave/remove, ownership, history visibility and notification rules after DM core is secure.                                                               |
-| Spaces and membership           | Domain memberships exist separately                           | Define conversation Space projection over Chapter/Mission/I/O membership; do not duplicate authoritative domain membership; add space roles and lifecycle.                               |
-| Rooms/channels/categories       | Not implemented                                               | Add typed rooms, order/grouping, create/archive, visibility, posting policy, slow mode and permission evaluation. Start with Announcements, Conversation, Evidence and Help.             |
-| Threads                         | Not implemented                                               | Add parent link, membership/following, archive/lock, last-read cursor, notification state, permissions inherited plus explicit private-thread membership.                                |
-| Boards/forums                   | S.O.D.A./stories are separate content types                   | Add structured topic templates, tags, sorting, accepted outcome and moderation only where discussion needs long-lived discoverability; link rather than copy existing content.           |
-| Announcements                   | General notifications/content exist                           | Add read-only or role-limited rooms, following rules, acknowledgement and provenance. Avoid mass-notification abuse.                                                                     |
-| Mentions                        | Not implemented as a conversation system                      | Add user/role/thread mentions with authorization, preference, bounded fan-out, outbox delivery and abuse controls.                                                                       |
-| Reactions                       | Not implemented                                               | Add limited purposeful reactions, deduplication and permission/moderation rules; avoid engagement-pressure mechanics.                                                                    |
-| Presence and typing             | Not implemented                                               | Add opt-in, block/privacy-aware ephemeral Broadcast; use coarse states and expiry, never durable surveillance.                                                                           |
-| Read/unread                     | DM unread/read exists partially                               | Use per-member last-read pointers, deterministic reconciliation and meaningful attention states across rooms/threads/devices.                                                            |
-| Search                          | Directory/content search exists; conversation search does not | Add permission-filtered full-text search, pagination, safe snippets, retention/deletion handling and no cross-space leakage.                                                             |
-| Pins, bookmarks and saved items | Not implemented                                               | Separate room-level curated pins from private member bookmarks; record curator and provenance.                                                                                           |
-| Files and link previews         | Not implemented for conversations                             | Virus/content scanning, type/size limits, storage authorization, expiry, alt text, download audit and explicit I/O artifact sharing.                                                     |
-| Notifications                   | Notification table/surface exists                             | Add preference hierarchy by space/room/thread, mention overrides, digests, quiet hours, delivery attempts, retries and dead-letter handling.                                             |
-| Roles and permissions           | Platform roles/domain memberships exist                       | Implement resource-scoped allow/deny evaluation, role hierarchy/ownership, channel overrides, view-as-role tests and audit. Avoid reusing broad platform admin as every-space authority. |
-| Moderation and safety           | Reports/admin surfaces exist generally                        | Conversation report evidence, block/mute/timeout/remove, slow mode, spam limits, moderator queue, reasoned action, appeal and retention policy.                                          |
-| Audit log                       | General audit and I/O audit exist                             | Add safe space/role/room/moderation audit entries without copying private content into general logs.                                                                                     |
-| Events/gatherings               | Event/RSVP product exists                                     | Link rooms/gatherings to existing Events; add scheduled lifecycle, participant permissions, reminders and outcome artifacts.                                                             |
-| Voice/video/stage               | Not implemented                                               | V1 should integrate a reviewed meeting provider or external link; native realtime media is a later specialist programme with consent, recording and moderation.                          |
-| Agents and integrations         | I/O agent plan exists separately                              | Add explicit agent identity, scoped room permission, commands/actions, message provenance, human approval and kill switch. Never let a provider impersonate a person.                    |
-| Webhooks/API                    | Not implemented                                               | Add signed inbound/outbound events, scoped credentials, idempotency, replay protection, allowlists, delivery logs and rate limits.                                                       |
-| Onboarding/discovery            | Platform onboarding exists                                    | Add Space welcome, purpose, rules, role/request flow, recommended rooms and clear leave/mute controls.                                                                                   |
-| Mobile and accessibility        | Responsive components exist unevenly                          | One-pane mobile navigation, drawer focus, keyboard/screen-reader semantics, contrast, reduced motion, touch targets and realtime announcements.                                          |
+| Collaboration capability        | Current Indus Orbit state                                     | What must be built                                                                                                                                                             |
+| ------------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Persistent global rail          | Partial: app navigation plus I/O-specific rail preview        | Extract one Orbit rail for People, Learn, Action, Messages and I/O; live attention, keyboard navigation, responsive behavior and no duplicated shell state.                    |
+| Context sidebar                 | Partial: first live grouped Room sidebar exists               | Generalize it into the shared shell; add search, permission explanations, saved preference and complete mobile/keyboard behavior.                                              |
+| Main workspace and inspector    | Partial: live Space timeline/People panel and I/O preview     | Shared responsive frame, focus restoration, offline states and contextual inspectors for profiles, approvals, evidence and route receipts.                                     |
+| One-to-one DMs                  | Partial: trusted Released RPC boundary plus working product   | Add cursor paging, common cache, explicit blocks, robust reconnect, attachments and E2E/load tests.                                                                            |
+| Group DMs                       | Not implemented                                               | Add bounded membership, invite/leave/remove, ownership, history visibility and notification rules after DM core is secure.                                                     |
+| Spaces and membership           | Verified locally for Chapter and Mission projection           | Deploy/verify hosted; finish invite/request/leave/rejoin UX, effective-role explanation and later I/O Space projection.                                                        |
+| Rooms/channels/categories       | Verified schema, blueprints, access and first member UI       | Add audited create/reorder/archive/operator UI, complete override evaluation, slow mode and view-as-role tests.                                                                |
+| Threads                         | Partial: durable schema, membership and create RPC exist      | Add timeline, follow/unfollow, archive/lock, unread/notification UI and private-thread permission personas.                                                                    |
+| Boards/forums                   | S.O.D.A./stories are separate content types                   | Add structured topic templates, tags, sorting, accepted outcome and moderation only where discussion needs long-lived discoverability; link rather than copy existing content. |
+| Announcements                   | General notifications/content exist                           | Add read-only or role-limited rooms, following rules, acknowledgement and provenance. Avoid mass-notification abuse.                                                           |
+| Mentions                        | Partial: durable mention records exist                        | Add composer parsing, user/role/thread authorization, preferences, bounded fan-out, outbox delivery and abuse controls.                                                        |
+| Reactions                       | Partial: durable deduplicated records exist                   | Add limited purposeful UI, permission/moderation rules and accessibility; avoid engagement-pressure mechanics.                                                                 |
+| Presence and typing             | Not implemented                                               | Add opt-in, block/privacy-aware ephemeral Broadcast; use coarse states and expiry, never durable surveillance.                                                                 |
+| Read/unread                     | Partial: DM behavior plus Space Room read pointers/RPC        | Add Thread pointers, cross-device attention reconciliation, preference-aware counts and accessibility announcements.                                                           |
+| Search                          | Directory/content search exists; conversation search does not | Add permission-filtered full-text search, pagination, safe snippets, retention/deletion handling and no cross-space leakage.                                                   |
+| Pins, bookmarks and saved items | Partial: curated pin and private bookmark schema exists       | Add accessible Room-level/member UI, curator rules and provenance tests.                                                                                                       |
+| Files and link previews         | Partial: attachment metadata schema exists                    | Add private Storage authorization, virus/content scanning, limits, expiry, alt text, download audit and explicit I/O artifact sharing.                                         |
+| Notifications                   | Partial: preference and private outbox foundations exist      | Project Space events, add hierarchy/mention overrides, digests, quiet hours, retries/dead-letter operations and deploy the fixed-template worker.                              |
+| Roles and permissions           | Partial: Space roles and Room override schema exists          | Complete resource-scoped allow/deny evaluation, hierarchy/ownership UI, view-as-role tests and audit. Broad platform admin must not imply Space membership.                    |
+| Moderation and safety           | Partial: reports and private moderation records exist         | Build report evidence, block/mute/timeout/remove, slow mode, spam limits, moderator queue, reasoned action, appeal and retention policy.                                       |
+| Audit log                       | General audit and I/O audit exist                             | Add safe space/role/room/moderation audit entries without copying private content into general logs.                                                                           |
+| Events/gatherings               | Event/RSVP product exists                                     | Link rooms/gatherings to existing Events; add scheduled lifecycle, participant permissions, reminders and outcome artifacts.                                                   |
+| Voice/video/stage               | Not implemented                                               | V1 should integrate a reviewed meeting provider or external link; native realtime media is a later specialist programme with consent, recording and moderation.                |
+| Agents and integrations         | I/O agent plan exists separately                              | Add explicit agent identity, scoped room permission, commands/actions, message provenance, human approval and kill switch. Never let a provider impersonate a person.          |
+| Webhooks/API                    | Not implemented                                               | Add signed inbound/outbound events, scoped credentials, idempotency, replay protection, allowlists, delivery logs and rate limits.                                             |
+| Onboarding/discovery            | Platform onboarding exists                                    | Add Space welcome, purpose, rules, role/request flow, recommended rooms and clear leave/mute controls.                                                                         |
+| Mobile and accessibility        | Responsive components exist unevenly                          | One-pane mobile navigation, drawer focus, keyboard/screen-reader semantics, contrast, reduced motion, touch targets and realtime announcements.                                |
 
 ## Data architecture
 
@@ -70,10 +70,11 @@ Do not replace `direct_messages` immediately and do not dual-write. First build 
 ```text
 conversation_spaces
 conversation_space_roles
+conversation_space_memberships
 conversation_space_role_members
+conversation_context_groups
 conversation_rooms
 conversation_room_permission_overrides
-conversation_members
 conversation_threads
 conversation_thread_members
 conversation_messages
@@ -87,8 +88,7 @@ conversation_read_states
 conversation_notification_preferences
 conversation_reports
 conversation_moderation_actions
-conversation_integrations
-conversation_webhook_deliveries
+conversation_outbox
 ```
 
 Domain membership remains authoritative:
@@ -123,12 +123,12 @@ Agents appear as agents. Each agent message/action shows provider/model/route re
 
 ## Delivery phases
 
-1. **Secure DMs:** caller-bound send/read, sender idempotency, suspension/rate checks and 38 database assertions are locally Verified; deploy them, then add explicit blocks, paging and E2E/load tests.
+1. **Secure DMs:** caller-bound send/read, sender idempotency, suspension/rate checks and 38 database assertions are Released; add explicit blocks, paging and E2E/load tests.
 2. **Shared client:** one store, timeline/composer primitives, retry/offline and multi-device reconciliation.
 3. **Private realtime:** Broadcast authorization, durable backfill, presence/typing and load tests.
 4. **Shared branded shell:** Orbit rail, context sidebar, main canvas and inspector across Messages and I/O.
-5. **Spaces and rooms:** start with one Mission/Chapter pilot and typed Announcements/Conversation/Evidence rooms.
-6. **Threads and boards:** membership/read state, tags, templates, search, pins and notification preferences.
+5. **Spaces and rooms:** Chapter/Mission schema, deterministic blueprints, membership projection, mutation RPCs and first web surface are Verified locally; deploy/verify hosted and complete role/Room administration.
+6. **Threads and boards:** Thread schema/create foundation is Verified locally; build timelines, membership/read state, tags, templates, search, pins and notification preferences.
 7. **Trust and operations:** permission overrides, moderation, audit, export/delete, dashboards and support.
 8. **I/O collaboration:** safe session links, approvals, artifacts, agent identity and route receipts.
 9. **Integrations:** webhooks, commands, calendar/meeting links and reviewed connectors.

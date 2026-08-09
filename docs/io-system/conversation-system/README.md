@@ -1,6 +1,6 @@
 # Conversation and branded spatial system record
 
-Status: secure direct-message and trusted domain-notification boundaries are Released to demo; full Discord-like collaboration system remains partial, 9 August 2026.
+Status: direct messages are Released to demo; the Chapter/Mission Space foundation and first branded UI are Verified locally and await hosted migration, 9 August 2026.
 
 ## Current truth
 
@@ -19,7 +19,15 @@ Implemented:
 - atomic connection, mentorship, mission-update, vouch-request and Chapter-decision RPCs with server-derived notification recipients/content;
 - retired authenticated `send_notification` execution and no remaining browser call to the former arbitrary email dispatcher;
 - private email delivery outbox with idempotency, leases, bounded retry/dead-letter state and locally Verified fixed-template worker source;
-- a branded I/O preview with rail, context navigation, main workspace and inspector geometry.
+- a branded I/O preview with rail, context navigation, main workspace and inspector geometry;
+- locally Verified `conversation_spaces`, roles, memberships, context groups, typed Rooms, overrides, Threads, messages, revisions, mentions, reactions, attachments, pins, bookmarks, read state, preferences, reports, private moderation and outbox schema;
+- Chapter and Mission domain memberships projected into Space access without replacing the authoritative domain records;
+- deterministic seven-Room Chapter and six-Room Mission blueprints;
+- caller-bound Chapter proposal/creation/approval/lifecycle/lead and Mission creation/lifecycle/member RPC boundaries with optimistic versioning and idempotency where creation is retryable;
+- caller-bound Space join/leave/decision, Thread creation, Room message and read-state RPC boundaries;
+- direct Chapter/Mission browser writes revoked by the new migration, with explicit RLS/grants and covering foreign-key indexes;
+- a first responsive `/app/spaces/$spaceId` implementation with grouped Rooms, durable timeline/composer, People roster, Realtime message reconciliation and Chapter/Mission back-links;
+- rolling schema compatibility so the frontend can release before the hosted migration without hiding genuine authorization or validation errors.
 
 Still left:
 
@@ -27,10 +35,11 @@ Still left:
 - add an explicit block relationship and safe metadata-only audit where operationally necessary;
 - one cross-surface conversation store, cursor paging, retry/offline/reconnect and multi-device conflict handling;
 - authorized private Realtime Broadcast topics;
-- scoped group spaces, rooms, channels, announcements, threads, forums and member roles;
-- presence, typing, mentions, reactions, pins, bookmarks, attachments, search and notification controls;
-- conversation moderation, reports, retention/export/deletion and operator tools;
+- deploy and verify the three missing hosted migrations before the new Space contracts can be called Released;
+- Threads UI, Thread membership/read behavior, Boards/forums and administrative Room/role configuration;
+- presence, typing, reaction/mention UI, pins, bookmarks, attachment storage/scanning, search and notification controls;
+- conversation moderation/report UI, retention/export/deletion and redacted operator tools;
 - one reusable Indus Orbit rail/sidebar/workspace/inspector shell across product systems;
 - I/O session collaboration that never leaks prompts, terminal output, files or tools through human messaging.
 
-The complete feature comparison and phased design is in `DISCORD_LIKE_CAPABILITY_PLAN.md`. The detailed engineering plan remains in `CONVERSATION_SYSTEM_IMPLEMENTATION_PLAN.md`; the released delivery contract is in `TRUSTED_NOTIFICATION_AND_EMAIL_BOUNDARY.md`.
+The exact delivered Space slice, deployment order and owner/code split are in `CHAPTER_MISSION_SPACE_SYSTEM_PLAN.md`. The complete feature comparison is in `DISCORD_LIKE_CAPABILITY_PLAN.md`; the wider engineering plan remains in `CONVERSATION_SYSTEM_IMPLEMENTATION_PLAN.md`; the released delivery contract is in `TRUSTED_NOTIFICATION_AND_EMAIL_BOUNDARY.md`.

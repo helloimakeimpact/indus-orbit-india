@@ -1,6 +1,14 @@
 # Indus Orbit conversation and Discord-like system plan
 
-Status: active code-level plan, updated 9 August 2026. Direct-message and trusted domain-event RPC boundaries plus the private email outbox are Released to demo. Live checks prove RPC-only protected writes, retired generic notification execution, private service leasing and zero provider traffic. The fixed-template worker source is locally Verified but not deployed. Shared spatial shell, pagination, private Broadcast and group collaboration remain planned. The I/O nested shell is a branded preview, not the completed shared Discord-like system. This extends the existing conversation product; it does not authorize a Discord clone or a replacement social system.
+Status: active code-level plan, updated 9 August 2026. Direct-message boundaries are Released. Trusted domain events, email claim hardening and the new Chapter/Mission Space migration await hosted release. The Space database foundation, deterministic Room blueprints, caller-bound domain/Space mutations and first branded member surface are Verified locally by a clean 62-migration replay, 433/433 database assertions, 38 unit tests, typecheck and production build. Threads UI, pagination, private Broadcast and wider collaboration remain Partial or Planned. This extends the existing conversation product; it does not authorize a Discord clone or a replacement social system.
+
+## Current Chapter/Mission Space addendum
+
+`20260809152439_create_chapter_mission_space_foundation.sql` changes P4 from a design-only phase to a locally Verified foundation. It introduces Space roles/memberships, grouped typed Rooms, overrides, Threads, messages, revisions, mentions, reactions, attachments, pins, bookmarks, read state, preferences, reports, private moderation/outbox records and deterministic Chapter/Mission Room blueprints.
+
+The application now has a first live `/app/spaces/$spaceId` route with Room navigation, durable timeline/composer, active People roster, Realtime insert reconciliation and Room read advancement. Chapter and Mission detail routes reveal that Space only to active members. Protected Chapter/Mission/member/admin mutations prefer caller-bound RPCs. Rolling fallbacks occur only for explicit missing-schema errors so the compatible frontend can be released before the hosted migration; authorization, validation and concurrency errors never fall back.
+
+The precise delivered schema, safe hosted order and code-versus-owner split are maintained in `CHAPTER_MISSION_SPACE_SYSTEM_PLAN.md`. The current safe release order is frontend first, then migrations `20260809142000`, `20260809150000` and `20260809152439`, followed by hosted RLS/RPC/member-persona verification. Ordinary linked `db push` remains unsafe while the 26 historical timestamp aliases exist.
 
 Operational cross-reference: `../io-port-system/IO_PORT_IMPLEMENTATION_STATUS.md` records the current done/partial/not-started boundary for I/O, terminal, and conversation integration. `DISCORD_LIKE_CAPABILITY_PLAN.md` expands the full intended collaboration feature set.
 
@@ -24,19 +32,19 @@ The Discord-like work must make this system easier to navigate, more coherent ac
 
 ## 2. Evidence-backed baseline and corrections
 
-| Area                   | Current implementation                                                                                      | Required correction                                                                                                                                                                      |
-| ---------------------- | ----------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Message route          | `src/routes/app.messages.tsx` + shared conversation hooks                                                   | Now uses the shared contact/history/send/realtime hooks. Add cursor pagination before message volume grows.                                                                              |
-| Quick chat             | `src/components/app/ChatDropdown.tsx` + shared conversation hooks                                           | Now uses the same hooks and Realtime unread reconciliation; no 15-second unread polling. A cross-surface cache/store remains the next extraction.                                        |
-| Data access            | `src/server/messages.functions.ts`                                                                          | Browser reads remain RLS-scoped; send/read mutations now call caller-bound RPCs. Keep all later privileged actions in similarly narrow RPC/Edge Function contracts.                      |
-| Durable data           | `public.direct_messages`                                                                                    | Keep it as the canonical one-to-one human message source. Add no I/O prompt/tool content here.                                                                                           |
-| Realtime               | Shared Postgres Changes subscriptions, locally filtered by participants                                     | The P1 proof uses a stable `dm:<sorted-user-ids>` subscription name, durable-row deduplication and read acknowledgement. Move to authorized private Broadcast after the RLS/proof phase. |
-| Existing authorization | Client formerly checked accepted connections before insert                                                  | **Locally Verified:** the send RPC owns sender identity and enforces distinct participants, accepted relationship, suspension, length, sender idempotency and a 30-per-minute limit.     |
-| Read updates           | Recipient formerly had a broad row-update policy                                                            | **Locally Verified:** direct browser UPDATE is revoked; a caller-bound RPC marks only unread rows received by the caller from one selected member.                                       |
-| Existing query shape   | Full two-way history query; new recent-pair and recipient-unread indexes                                    | Profile the two-way predicate, then add cursor paging and only introduce a canonical conversation key if evidence shows it is needed.                                                    |
-| Migration history      | Message and trusted-event boundaries are recorded remotely; grants/functions and 20/20 hosted checks verify | Reconcile 26 historical timestamp aliases and prove a fresh 61-migration/376-test CI replay before production.                                                                           |
-| Notification table     | Owner UI plus domain-owned event writers; retired generic RPC remains only as non-executable history        | **Released:** members read own rows/update `is_read`; product actions cannot choose arbitrary recipients/content. Add operator observability and wider event categories deliberately.    |
-| Email delivery         | Private fixed-template outbox is Released; service worker source is Verified locally                        | Configure sender/provider secrets, deploy and schedule the service-only worker, then prove sandbox delivery/retry/dead-letter behavior.                                                  |
+| Area                   | Current implementation                                                                                                                      | Required correction                                                                                                                                                                      |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Message route          | `src/routes/app.messages.tsx` + shared conversation hooks                                                                                   | Now uses the shared contact/history/send/realtime hooks. Add cursor pagination before message volume grows.                                                                              |
+| Quick chat             | `src/components/app/ChatDropdown.tsx` + shared conversation hooks                                                                           | Now uses the same hooks and Realtime unread reconciliation; no 15-second unread polling. A cross-surface cache/store remains the next extraction.                                        |
+| Data access            | `src/server/messages.functions.ts`                                                                                                          | Browser reads remain RLS-scoped; send/read mutations now call caller-bound RPCs. Keep all later privileged actions in similarly narrow RPC/Edge Function contracts.                      |
+| Durable data           | `public.direct_messages`                                                                                                                    | Keep it as the canonical one-to-one human message source. Add no I/O prompt/tool content here.                                                                                           |
+| Realtime               | Shared Postgres Changes subscriptions, locally filtered by participants                                                                     | The P1 proof uses a stable `dm:<sorted-user-ids>` subscription name, durable-row deduplication and read acknowledgement. Move to authorized private Broadcast after the RLS/proof phase. |
+| Existing authorization | Client formerly checked accepted connections before insert                                                                                  | **Locally Verified:** the send RPC owns sender identity and enforces distinct participants, accepted relationship, suspension, length, sender idempotency and a 30-per-minute limit.     |
+| Read updates           | Recipient formerly had a broad row-update policy                                                                                            | **Locally Verified:** direct browser UPDATE is revoked; a caller-bound RPC marks only unread rows received by the caller from one selected member.                                       |
+| Existing query shape   | Full two-way history query; new recent-pair and recipient-unread indexes                                                                    | Profile the two-way predicate, then add cursor paging and only introduce a canonical conversation key if evidence shows it is needed.                                                    |
+| Migration history      | Direct-message boundary is hosted; the three newest forward migrations remain local-only. A clean local 62-migration replay passes 433/433. | Release the three exact forward migrations through the reconciliation path; verify hosted contracts; retain the 26-alias guardrail and add snapshot-upgrade CI.                          |
+| Notification table     | Owner UI plus domain-owned event writers; retired generic RPC remains only as non-executable history                                        | **Released:** members read own rows/update `is_read`; product actions cannot choose arbitrary recipients/content. Add operator observability and wider event categories deliberately.    |
+| Email delivery         | Private fixed-template outbox is Released; service worker source is Verified locally                                                        | Configure sender/provider secrets, deploy and schedule the service-only worker, then prove sandbox delivery/retry/dead-letter behavior.                                                  |
 
 ### 2.1 Immediate notification containment
 
@@ -217,21 +225,35 @@ On mobile, present one primary pane with context and inspector as drawers. Prese
 
 ## 8. P4 — scoped conversations for I/O, missions and Chapters
 
-After legacy DM security and shared-client work are stable, introduce a generic conversation core for group collaboration:
+The Chapter/Mission group-collaboration core is now Verified locally and deliberately remains separate from `direct_messages`:
 
 ```text
-conversations                 -- dm | io_workspace | mission | chapter | system
-conversation_members          -- role, notification preference, last-read pointer
-conversation_messages         -- author type, body, safe structured metadata, moderation state
-conversation_artifacts        -- explicitly shared safe evidence/receipt/artifact links
+conversation_spaces
+conversation_space_roles
+conversation_space_memberships
+conversation_space_role_members
+conversation_context_groups
+conversation_rooms
+conversation_room_permission_overrides
+conversation_threads
+conversation_thread_members
+conversation_messages
+conversation_message_revisions
 conversation_reactions
 conversation_mentions
-conversation_member_blocks
+conversation_attachments
+conversation_pins
+conversation_bookmarks
+conversation_read_states
+conversation_notification_preferences
+conversation_reports
+private.conversation_moderation_actions
+private.conversation_outbox
 ```
 
-Start with I/O workspace views named **Sessions**, **Evidence**, **Capacity** and **Announcements**—not copied Discord server/channel labels. Reuse I/O workspace, mission and Chapter membership for authorization; `conversation_members` adds only per-conversation role and notification state. Existing DMs render as a virtual conversation over `direct_messages` in this phase. Do not dual-write DMs. A later migration can consolidate storage only after it has a compatibility read path, a tested backfill and a rollback plan.
+Chapter and Mission memberships remain authoritative and project active access into Space memberships. The first web surface renders grouped Rooms, messages, composer, read state and active members. Existing DMs remain single-write over `direct_messages`; no migration or dual-write was introduced.
 
-`conversation_artifacts` may link to a safe I/O audit ID, route receipt, public evidence, mission work or a permitted file. It cannot become a backdoor that exposes raw terminal events, prompts, model responses, local paths or credentials.
+The next P4 slices are Threads UI, roles/overrides administration, mentions/reactions, pins/bookmarks, private attachments, moderation/reporting, search, preferences and the shared shell. An I/O artifact may later link to a safe audit ID, route receipt, public evidence, mission work or permitted file. It cannot become a backdoor that exposes raw terminal events, prompts, model responses, local paths or credentials.
 
 ## 9. P5 — I/O collaboration without leaking terminal data
 
@@ -279,11 +301,12 @@ Test with builder/student, founder/team, expert/mentor, mission/Chapter lead and
 
 1. **Done in demo:** fix message insertion authorization, update-column privilege and message length, with rolled-back RLS role tests.
 2. **Started in code:** extract shared conversation contracts/hooks and retain the current UI. The page and quick chat now share contact, history, send, Realtime and unread-count behavior.
-3. **Code/deployment complete for the database cutover:** atomic domain events, private outbox and revoked authenticated `send_notification`. Next deploy/schedule the fixed-template worker after provider/domain approval.
-4. Add a cross-surface cache/store, pagination, optimistic-idempotent sends and the RPC-backed unread/read path.
-5. Prove private Broadcast in demo and migrate after load/security checks.
-6. Introduce the shared shell around existing route content without changing data models.
-7. Introduce scope-specific generic conversations for I/O, mission and Chapter collaboration—while keeping DMs virtual and single-write.
-8. Add I/O session/handoff tables only once I/O session persistence exists.
+3. **Verified locally, hosted release pending:** trusted domain events, private outbox, email claims and the Chapter/Mission Space foundation. Release the compatible frontend first, then the three exact forward migrations.
+4. Verify hosted Chapter proposal/approval, managed Chapter, Mission, membership, Room message/read, lifecycle and outsider/admin privacy personas.
+5. Complete Threads, roles/Room administration, mentions/reactions, pins/bookmarks, preferences and moderation/reporting.
+6. Add a cross-surface cache/store, cursor pagination, optimistic-idempotent sends and complete retry/offline/reconnect behavior.
+7. Prove private Broadcast and attachment Storage in the hosted demo after security/load checks.
+8. Introduce the shared shell around existing route content and finish mobile/accessibility behavior.
+9. Add I/O session/handoff tables only once I/O session persistence exists.
 
 This order protects existing member conversations while making the navigation system and I/O collaboration genuinely shared.

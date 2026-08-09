@@ -185,9 +185,13 @@ function MissionsPage() {
           </div>
         ) : (
           visible.map((m) => {
-            const hasJoined = m.mission_members?.some((member) => member.user_id === user?.id);
+            const activeMembers =
+              m.mission_members?.filter(
+                (member) => (member.membership_state ?? "active") === "active",
+              ) ?? [];
+            const hasJoined = activeMembers.some((member) => member.user_id === user?.id);
             const segmentCounts =
-              m.mission_members?.reduce<Record<string, number>>((acc, member) => {
+              activeMembers.reduce<Record<string, number>>((acc, member) => {
                 const segment = member.profiles?.orbit_segment || "other";
                 acc[segment] = (acc[segment] || 0) + 1;
                 return acc;
@@ -282,13 +286,13 @@ function MissionsPage() {
                   </div>
                 </div>
 
-                {m.mission_members && m.mission_members.length > 0 && (
+                {activeMembers.length > 0 && (
                   <div className="border-t border-border bg-muted/25 px-4 py-3">
                     <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 flex items-center">
                       <Users className="mr-1.5 h-3.5 w-3.5" /> Recent Participants
                     </h4>
                     <div className="flex flex-wrap gap-2">
-                      {m.mission_members.slice(0, 5).map((member) => (
+                      {activeMembers.slice(0, 5).map((member) => (
                         <Badge
                           key={member.user_id}
                           variant="secondary"
@@ -306,8 +310,8 @@ function MissionsPage() {
                           )}
                         </Badge>
                       ))}
-                      {m.mission_members.length > 5 && (
-                        <Badge variant="outline">+{m.mission_members.length - 5} more</Badge>
+                      {activeMembers.length > 5 && (
+                        <Badge variant="outline">+{activeMembers.length - 5} more</Badge>
                       )}
                     </div>
                   </div>
@@ -468,7 +472,7 @@ function JoinMissionDialog({
   async function submit() {
     setBusy(true);
     try {
-      await joinMission({
+      const result = await joinMission({
         data: {
           missionId: mission.id,
           role,
@@ -476,7 +480,9 @@ function JoinMissionDialog({
           message: message.trim() || undefined,
         },
       });
-      toast.success("Successfully joined mission!");
+      toast.success(
+        result.membershipState === "active" ? "Joined Mission" : "Mission membership request sent",
+      );
       onJoined();
       onClose();
     } catch (error: unknown) {

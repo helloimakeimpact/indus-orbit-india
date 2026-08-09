@@ -3,6 +3,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { isMissingSchemaContract } from "@/integrations/supabase/schema-compat";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -37,16 +38,35 @@ function ProposeChapterPage() {
     setBusy(true);
 
     try {
-      const { error } = await supabase.from("chapter_proposals").insert({
+      const proposal = {
         proposer_id: user.id,
-        proposed_name: formData.proposedName,
-        city: formData.city,
-        country: formData.country,
-        target_audience: formData.targetAudience,
-        rationale: formData.rationale,
-        proposer_background: formData.background,
-        expected_size: parseInt(formData.expectedSize) || 0,
+        proposed_name: formData.proposedName.trim(),
+        city: formData.city.trim(),
+        country: formData.country.trim(),
+        target_audience: formData.targetAudience.trim(),
+        rationale: formData.rationale.trim(),
+        proposer_background: formData.background.trim(),
+        expected_size: Number.parseInt(formData.expectedSize, 10) || 0,
+      };
+      const { error: contractError } = await supabase.rpc("create_my_chapter_proposal", {
+        _proposed_name: proposal.proposed_name,
+        _city: proposal.city,
+        _country: proposal.country,
+        _country_code: "",
+        _target_audience: proposal.target_audience,
+        _rationale: proposal.rationale,
+        _proposer_background: proposal.proposer_background,
+        _expected_size: proposal.expected_size,
+        _join_policy: "request",
+        _visibility: "discoverable",
+        _client_request_id: crypto.randomUUID(),
       });
+
+      let error = contractError;
+      if (contractError && isMissingSchemaContract(contractError)) {
+        const fallback = await supabase.from("chapter_proposals").insert(proposal);
+        error = fallback.error;
+      }
 
       if (error) throw error;
       toast.success("Chapter proposal submitted successfully! Our team will review it shortly.");

@@ -67,8 +67,10 @@ function ChaptersPage() {
   async function handleJoin(chapterId: string) {
     if (!user) return toast.error("Please log in to join.");
     try {
-      await joinChapter({ data: { chapterId } });
-      toast.success("Joined chapter!");
+      const result = await joinChapter({ data: { chapterId } });
+      toast.success(
+        result.membershipState === "active" ? "Joined Chapter" : "Chapter membership request sent",
+      );
       load();
     } catch (error: unknown) {
       toast.error(getErrorMessage(error));
@@ -99,7 +101,10 @@ function ChaptersPage() {
             </Button>
             {allChapters.some((chapter) =>
               chapter.chapter_members?.some(
-                (member) => member.user_id === user?.id && member.role === "lead",
+                (member) =>
+                  member.user_id === user?.id &&
+                  member.role === "lead" &&
+                  (member.membership_state ?? "active") === "active",
               ),
             ) && (
               <Button
@@ -158,9 +163,13 @@ function ChaptersPage() {
           </div>
         ) : (
           visible.map((c) => {
-            const hasJoined = c.chapter_members?.some((member) => member.user_id === user?.id);
-            const memberCount = c.chapter_members?.length || 0;
-            const leads = c.chapter_members?.filter((member) => member.role === "lead") || [];
+            const activeMembers =
+              c.chapter_members?.filter(
+                (member) => (member.membership_state ?? "active") === "active",
+              ) ?? [];
+            const hasJoined = activeMembers.some((member) => member.user_id === user?.id);
+            const memberCount = activeMembers.length;
+            const leads = activeMembers.filter((member) => member.role === "lead");
 
             return (
               <div
