@@ -1,6 +1,6 @@
 # Product boundaries, global location, and conversion plan
 
-Status: Phases A and B Verified locally; Phase C foundation Partial, 8 August 2026.
+Status: Phases A and B Released to demo; Phase C foundation Partial, 9 August 2026.
 
 ## Decision
 
@@ -175,4 +175,6 @@ Before an A/B test:
 
 ## Release boundary
 
-All 58 migrations replay from zero, all 269 database assertions pass, and the `public`/`private` schema lint reports no errors on the local demo stack. The TypeScript client and 34 unit tests also pass. This total includes the later direct-message RPC boundary without changing the access/location contract. These facts are `Verified`, not `Released`: deployment still requires the same migrations and routes on the demo/production targets, remote grants/RLS checks, an existing-member backfill review, and I/O-only/community browser personas. No provider request, payment, hosted database reset, or automatic location collection is part of this phase.
+The access/location migrations are Released to the demo project. Live verification confirms 249 active countries, no invalid consent-bearing legacy rows, RLS on all seven private state tables, no direct authenticated read of private preferences, authenticated-only caller-bound RPCs, and zero segmented profiles missing completed Community state. Public generated types match the hosted schema.
+
+The prior local baseline still proves 58 migrations, 269 database assertions and public/private lint. The 59th SQL migration replayed, but a local Storage-container health failure prevented a fresh full 285-assertion run; that CI gate remains open. I/O-only/community browser personas, production deployment, consent/accessibility review and transactional lifecycle measurement also remain. No provider request, payment, hosted reset or automatic location collection occurred.

@@ -1,8 +1,11 @@
 # Indus Orbit master implementation and release plan
 
-Status: authoritative execution plan, updated 1 August 2026  
-Target: Indus Orbit Production v1, including the public site, member network, learning and action systems, administration, and I/O Port  
-Release state: not release-ready  
+Status: authoritative execution plan, updated 9 August 2026
+
+Target: Indus Orbit Production v1, including the public site, member network, learning and action systems, administration, and I/O Port
+
+Release state: not release-ready
+
 Owners: assign by role before implementation begins
 
 ## 1. Purpose and authority
@@ -16,6 +19,7 @@ Use the documents in this order:
 3. `SUPABASE_SCHEMA_RECONCILIATION.md` governs migration-history recovery;
 4. `io-system/io-port-system/IO_PORT_IMPLEMENTATION_STATUS.md` is the current operational truth for I/O Port;
 5. the remaining I/O and conversation documents provide specialist design and delivery detail.
+6. `io-system/FINALIZATION_EXECUTION_PLAN.md` records the current post-demo-release execution order, exit criteria and owner decisions.
 
 When documents disagree, verified code and deployed-state evidence take priority, followed by this plan, then the specialist plan. Update the documents in the same change that alters architecture, scope, data contracts, or release status.
 
@@ -38,32 +42,32 @@ A screen existing is not completion. Completion requires working data contracts,
 
 The following baseline was inspected against the local repository and connected demo Supabase project on 31 July 2026.
 
-| Product area                  | Current state                                                                                                                                                                                                | Production gap                                                                                                                                                 |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Public website                | Major pages and writing routes exist                                                                                                                                                                         | Content truth, real links, legal pages, consent, SEO consistency, analytics governance, and editorial workflow remain                                          |
-| Authentication and onboarding | Password, Google, reset, request-access, session context, and onboarding UI exist                                                                                                                            | Server-aware route protection, invitation enforcement, production email, abuse prevention, MFA for privileged users, recovery, and privacy lifecycle remain    |
-| App shell                     | Branded sidebar, top bar, notifications, quick chat, and I/O nested shell exist                                                                                                                              | One responsive Discord-like spatial system, common loading/error patterns, accessibility, and navigation state remain                                          |
-| People and trust              | Directory, profiles, connections, endorsements, reports, vouch, mentorship, and roles exist                                                                                                                  | Low-volume workflows are unproven; several mutations need atomic server boundaries and abuse controls                                                          |
-| Conversations                 | Direct messages, unread state, compact chat and a locally Verified caller-bound send/read RPC boundary exist                                                                                                 | Deploy/verify the RPC boundary; add shared store, cursor pagination, private outbox/realtime, explicit blocking and reliability/load tests                     |
-| Action systems                | Missions, chapters, events, stories, board, and related admin routes exist                                                                                                                                   | State machines, transactional writes, seeded acceptance flows, moderation consistency, and end-to-end proof remain                                             |
-| Learning and knowledge        | Academy, courses, lessons, quizzes, Skills, and SODA exist with seed content; the former Loops product is retired locally and preserved only as a read-only archive                                          | Deploy/verify the retirement boundary; server-side quiz grading, storage, editorial provenance, outage truth, canonical metadata, and learner analytics remain |
-| Administration                | Dashboard and specialised admin screens exist                                                                                                                                                                | Central permission contracts, MFA, audit completeness, queues, bulk-operation safety, concurrency handling, and role-matrix tests remain                       |
-| I/O Port                      | Product shell, control-plane schema, local OpenCode proof, registry-driven multi-provider router source, two initial chat adapter families, route-receipt migration, and member route controls exist locally | Migration replay/deploy, trusted onboarding, conformance, idempotency/health/budget controls, ledger, durable terminal, and full live operator UI remain       |
-| Supabase platform             | Active project, RLS-enabled public tables, two Edge Functions, and useful seed/demo data exist                                                                                                               | Local/remote migration history is not reconciled; security and performance advisors contain material findings                                                  |
-| Engineering quality           | Production build, TypeScript, formatting, repository lint, configuration unit tests and high-severity dependency audit pass locally; a GitHub quality workflow is configured                                 | Feature/integration/database test coverage and an executed CI history remain incomplete                                                                        |
-| Deployment and operations     | Cloudflare configuration and Supabase project exist                                                                                                                                                          | Environment strategy, secret lifecycle, protected deployments, observability, load testing, backups/restore drills, and incident runbooks remain               |
+| Product area                  | Current state                                                                                                                                                                | Production gap                                                                                                                                              |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Public website                | Major pages and writing routes exist                                                                                                                                         | Content truth, real links, legal pages, consent, SEO consistency, analytics governance, and editorial workflow remain                                       |
+| Authentication and onboarding | Password, Google, reset, request-access, session context, and onboarding UI exist                                                                                            | Server-aware route protection, invitation enforcement, production email, abuse prevention, MFA for privileged users, recovery, and privacy lifecycle remain |
+| App shell                     | Branded sidebar, top bar, notifications, quick chat, and I/O nested shell exist                                                                                              | One responsive Discord-like spatial system, common loading/error patterns, accessibility, and navigation state remain                                       |
+| People and trust              | Directory, profiles, connections, endorsements, reports, vouch, mentorship, and roles exist                                                                                  | Low-volume workflows are unproven; several mutations need atomic server boundaries and abuse controls                                                       |
+| Conversations                 | Direct messages, unread state, compact chat and a remotely Verified caller-bound send/read RPC boundary exist                                                                | Add shared store, cursor pagination, private outbox/realtime, explicit blocking and reliability/load tests                                                  |
+| Action systems                | Missions, chapters, events, stories, board, and related admin routes exist                                                                                                   | State machines, transactional writes, seeded acceptance flows, moderation consistency, and end-to-end proof remain                                          |
+| Learning and knowledge        | Academy, courses, lessons, quizzes, Skills and SODA exist; the former Loops product is remotely retired and preserved only as a service-role-readable archive                | Archive retention, server-side quiz grading, storage, editorial provenance, outage truth, canonical metadata and learner analytics remain                   |
+| Administration                | Dashboard and specialised admin screens exist                                                                                                                                | Central permission contracts, MFA, audit completeness, queues, bulk-operation safety, concurrency handling, and role-matrix tests remain                    |
+| I/O Port                      | Product shell, control plane, local OpenCode proof, registry-driven gateway, five staged providers, latest-evidence routing and product split are Released to demo           | Conformance, idempotency/health/budget controls, ledger, durable terminal, 15 more provider inventories and full operator UI remain                         |
+| Supabase platform             | Active demo project; eight new migrations and 17/17 live checks pass; public generated types match; anonymous privileged-function warnings are zero                          | 26 migration aliases, full 59-migration CI, managed Realtime, 40 authenticated function audits and performance-policy backlog remain                        |
+| Engineering quality           | Production build, TypeScript, formatting, repository lint, configuration unit tests and high-severity dependency audit pass locally; a GitHub quality workflow is configured | Feature/integration/database test coverage and an executed CI history remain incomplete                                                                     |
+| Deployment and operations     | Cloudflare configuration and Supabase project exist                                                                                                                          | Environment strategy, secret lifecycle, protected deployments, observability, load testing, backups/restore drills, and incident runbooks remain            |
 
 Known release blockers include:
 
-- remote migration history is ahead of checked-in history;
-- 41 authenticated or anonymous `SECURITY DEFINER` function-exposure warnings require contract-by-contract review;
+- remote history is preserved, but 26 timestamp aliases still need a durable source strategy;
+- 40 authenticated `SECURITY DEFINER` warnings require contract-by-contract review; anonymous warnings are now zero;
 - anonymous insert policies for contact and newsletter data require proper anti-abuse and data-minimisation controls;
 - leaked-password protection is disabled;
-- current advisor results include 149 RLS init-plan warnings, 84 multiple-permissive-policy warnings, 21 unindexed foreign keys, and 67 unused-index observations; the new I/O route-evidence foreign-key gaps were resolved before this count;
+- current warning-level Performance Advisor results include 112 RLS init-plan and 97 multiple-permissive-policy findings; no error-level advisor issue exists;
 - the education upload path expects an `education` storage bucket, but no storage bucket is deployed;
 - quiz correctness can currently be exposed to or evaluated by browser-facing code;
 - vouch issuance remains browser-initiated; Web Crypto reduces predictability, but authoritative server-side issuance, hashing, and rate limits are still required;
-- the production build contains a 647.86 kB minified JavaScript chunk; route/vendor splitting and measured performance budgets remain required;
+- the production build contains a 645.40 kB minified JavaScript chunk; route/vendor splitting and measured performance budgets remain required;
 - browser-facing feature data adapters are named `*.server.functions.ts`, obscuring the real trust boundary;
 - `/models` publishes hard-coded model, price, and exchange-rate facts without a versioned evidence process;
 - five provider records are staged but have no passed conformance evidence, and every runtime switch remains off, so provider keys alone do not activate routing;
@@ -204,15 +208,17 @@ Exit criteria:
 - Performance Advisor findings are resolved or documented with benchmark evidence and an owner;
 - authorization tests pass in CI and after deployment.
 
-Implementation evidence updated 8 August 2026:
+Implementation evidence updated 9 August 2026:
 
 - **Verified locally:** the full checked-in migration chain replays from an empty database after three documented historical/environment recovery corrections;
 - **Verified locally:** all 58 migrations replay and 269 pgTAP assertions cover critical schema/grants, notification owner access, caller-bound direct-message mutation/idempotency, endpoint-bound latest-conformance routing, guarded vouch/audit contracts, the read-only Loops archive, I/O/Community product separation and global-location privacy;
 - **Verified locally:** public/private schema lint and error-level Supabase security/performance advisors report no findings;
-- **Implemented, remote evidence pending:** `.github/workflows/database.yml` replays migrations, runs pgTAP and fails on database lint errors with the locked Supabase CLI dependency;
-- **Partial containment:** anonymous notification access is removed locally and direct messages no longer call the generic notification RPC; seven other browser-domain callers remain temporarily compatible and high risk;
+- **Released to demo:** eight current migrations are recorded, the read-only release contract passes 17/17, public generated types match, all provider runtime switches remain off and provider traffic evidence is zero;
+- **Security improvement:** eight anonymous privileged-function warnings were removed; 40 authenticated function warnings and leaked-password protection remain;
+- **Implemented, current CI evidence pending:** `.github/workflows/database.yml` replays migrations, runs pgTAP and fails on database lint errors; local Storage health prevented the fresh 59-migration/285-test run;
+- **Partial containment:** anonymous notification access is removed and direct messages no longer call the generic notification RPC; remaining browser-domain callers are temporarily compatible and high risk;
 - **Blocked for release:** the deployed browser-callable email dispatcher accepts arbitrary recipient/subject/HTML and must be replaced by a fixed-template, service-only outbox worker;
-- **Still required:** local/demo schema comparison, generated-type drift, managed Realtime policy verification, full SECURITY DEFINER inventory, backup/restore and environment separation.
+- **Still required:** durable migration-alias reconciliation, full schema-object comparison, managed Realtime verification, authenticated SECURITY DEFINER inventory, backup/restore and environment separation.
 
 ### W2. Engineering foundation, CI/CD, and observability
 

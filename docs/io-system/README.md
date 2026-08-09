@@ -1,6 +1,6 @@
 # Indus Orbit living system record
 
-Status: canonical documentation hub, updated 8 August 2026.
+Status: canonical documentation hub, updated 9 August 2026.
 
 This folder files the Indus Orbit product as a system: what it means, which code exists, what is operational, what remains, and how every subsystem fits the people-centred mission. Runtime source stays in its correct `src/` and `supabase/` locations; this record points to that source and distinguishes implementation from deployment.
 
@@ -14,6 +14,7 @@ This folder files the Indus Orbit product as a system: what it means, which code
 6. `admin-system/README.md` — separate admin control plane, super-admin boundary, scoped team duties and remaining domain migrations.
 7. `platform-system/README.md` — the rest of the Indus Orbit platform and cross-system work.
 8. `platform-system/PRODUCT_BOUNDARIES_LOCATION_AND_CONVERSION_PLAN.md` — the I/O/community identity split, optional global location and separate scientific conversion funnels.
+9. `FINALIZATION_EXECUTION_PLAN.md` — the whole-product execution order, exit criteria and decisions still needed from the owner.
 
 Product-wide delivery sequencing remains in `../MASTER_IMPLEMENTATION_AND_RELEASE_PLAN.md`; release decisions remain in `../RELEASE_READINESS_CHECKLIST.md`; database recovery and historical drift remain in `../SUPABASE_SCHEMA_RECONCILIATION.md`.
 
@@ -42,13 +43,13 @@ The product is not an AI router with a community attached. It is a people networ
 | System                                | State                        | Current truth                                                                                                                                                                                                                                                                                           |
 | ------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Public site and product surfaces      | Partial                      | A substantial responsive site and member application exist; content truth, live data, canonical metadata, accessibility evidence, and production release discipline remain incomplete.                                                                                                                  |
-| Identity, people, trust and community | Partial                      | One identity now separates immediate `/io` access from explicitly chosen Community onboarding. Optional global country/location consent and consent-off measurement are locally Verified; directory privacy, settings/revocation UI, critical mutations and abuse controls still need completion.       |
+| Identity, people, trust and community | Partial                      | One identity separates immediate `/io` access from explicitly chosen Community onboarding. Optional global country/location consent, private legacy import and consent-off measurement are Released to demo and remotely verified; browser personas and inherited trust/abuse work remain.              |
 | Administration and operations         | Separate app foundation      | `admin-indus-orbit` now owns the standalone admin UI; database authority remains in this platform migration history. Root admins are distinguished from six scoped duties, and I/O/team operations have checked RPCs. Legacy trust/member/content/program modules still require server-bound migration. |
 | Conversations                         | Partial                      | Durable direct messages, notifications, shared hooks, hardened demo RLS and realtime reconciliation exist. Caller-bound idempotent send/read RPCs are locally Verified; deployment, common store, cursor paging, private outbox/Broadcast, group collaboration and the shared spatial shell remain.     |
 | I/O Port                              | Partial, deployed foundation | The control plane, five-provider staged registry, dynamic selection, gateway v17, route receipts, fail-closed runtime switch and member/operator UIs exist. All five direct providers remain deliberately non-routable until conformance is approved and recorded.                                      |
 | I/O Terminal                          | Partial proof                | A safe loopback OpenCode proof exists. Durable sessions, permissions, approvals, tools, diffs, artifacts, handoffs, recovery and hosted runners remain.                                                                                                                                                 |
-| Data and Supabase                     | Partial                      | The local stack replays all 58 migrations and passes 269 database contracts plus schema lint. The demo project still needs the newest product/access/location/conversation migrations, remote verification, drift reconciliation and production separation.                                             |
-| Quality and release operations        | Partial                      | Typecheck and 34 unit tests pass; full migration replay, 269 pgTAP assertions and schema lint pass locally. Browser personas, provider conformance, telemetry, incident response, protected delivery, performance budgets and production evidence remain.                                               |
+| Data and Supabase                     | Partial                      | Eight current migrations are Released to the active demo project; 17/17 live aggregate checks pass, public generated types match, provider traffic remains zero and no error-level advisor issue exists. Timestamp reconciliation, full 59-migration CI, Realtime and production separation remain.     |
+| Quality and release operations        | Partial                      | Typecheck, 34 unit tests, production build and dependency audit pass; the prior 58-migration/269-assertion baseline and current 17/17 hosted contract are retained. Fresh 59-migration CI, browser personas, conformance, telemetry, incident response and performance evidence remain.                 |
 
 ## Evidence rules
 

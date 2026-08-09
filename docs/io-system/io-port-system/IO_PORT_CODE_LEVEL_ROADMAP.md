@@ -1,6 +1,6 @@
 # I/O Port code-level roadmap
 
-Status: active implementation roadmap, updated 8 August 2026. It distinguishes local source work from the deployed demo proof and from work required before a private or paid beta. The current operational verdict is in `IO_PORT_IMPLEMENTATION_STATUS.md`.
+Status: active implementation roadmap, updated 9 August 2026. It distinguishes local source work from the deployed demo proof and from work required before a private or paid beta. The current operational verdict is in `IO_PORT_IMPLEMENTATION_STATUS.md`.
 
 Related documents:
 

@@ -3442,15 +3442,6 @@ export type Database = {
         Returns: boolean;
       };
       redeem_vouch_code: { Args: { _code: string }; Returns: Json };
-      send_notification: {
-        Args: {
-          _link?: string;
-          _message: string;
-          _type: string;
-          _user_id: string;
-        };
-        Returns: string;
-      };
       send_my_direct_message: {
         Args: {
           _client_request_id: string;
@@ -3466,6 +3457,21 @@ export type Database = {
           recipient_id: string;
           sender_id: string;
         };
+        SetofOptions: {
+          from: "*";
+          to: "direct_messages";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      send_notification: {
+        Args: {
+          _link?: string;
+          _message: string;
+          _type: string;
+          _user_id: string;
+        };
+        Returns: string;
       };
       set_my_community_location: {
         Args: {

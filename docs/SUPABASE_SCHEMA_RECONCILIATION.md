@@ -1,10 +1,12 @@
 # Supabase schema-reconciliation record
 
-Status: empty local replay verified; demo-schema comparison and owner-scoped Realtime verification remain pending, updated 8 August 2026.
+Status: demo release deployed and remotely verified; durable timestamp-alias reconciliation, managed Realtime and production-like upgrade replay remain pending, updated 9 August 2026.
 
 ## Empty local replay evidence — 8 August 2026
 
-The locked project dependency `supabase@2.111.0` started a fresh local Supabase stack and replayed the complete checked-in migration chain from an empty Postgres database. No paid hosted branch was created and no hosted database was reset. The recovery checkpoint first applied all 51 migrations through `20260801130427_add_admin_control_plane_fk_indexes.sql`; the current phase gate applies all 58 migrations through `20260808190000_create_direct_message_rpc_boundary.sql` and passes 269/269 pgTAP assertions plus public/private schema lint. The earlier error-level Supabase security and performance advisor runs also reported no findings.
+The locked project dependency `supabase@2.111.0` started a fresh local Supabase stack and replayed the complete checked-in migration chain from an empty Postgres database. No paid hosted branch was created and no hosted database was reset. The 8 August phase gate applied all 58 migrations through `20260808190000_create_direct_message_rpc_boundary.sql` and passed 269/269 pgTAP assertions plus public/private schema lint.
+
+On 9 August, the 59th privilege-hardening migration also replayed successfully at the SQL stage. The reset command then failed because the upgraded local Storage container remained unhealthy and Postgres terminated before the complete suite could rerun. This is recorded as an environment limitation, not represented as a 285/285 pass. The hosted demo release is independently covered by the read-only 17-check contract and advisor evidence in `docs/release-evidence/demo-2026-08-09/supabase-release.md`.
 
 The first replay found three pieces of recovered or environment-specific history that could not execute on a clean CLI database. Each correction is explicitly commented in its source file; none was applied to or used to rewrite the remote migration ledger:
 
@@ -14,7 +16,7 @@ The first replay found three pieces of recovered or environment-specific history
 | `20260505084656_6d71cafe-feeb-45dc-bbef-bbc7ec24e27c.sql` | The CLI migration role does not own managed `realtime.messages` and cannot assume its owner role.                    | Applies the recovered policy only when the runner has sufficient ownership; otherwise records a notice. Environment verification remains required. |
 | `20260801121231_seed_io_direct_provider_registry.sql`     | Demo provider staging required out-of-band `indus-demo` workspace and `partner-gateway` rows.                        | Treats staging as optional demo data and exits with a notice when either prerequisite is absent.                                                   |
 
-This proves that the local chain is replayable. It does **not** yet prove full equivalence with the demo project: schema/grant/function comparison, the managed Realtime policy, generated type drift, and upgrade replay from a production-like snapshot remain open gates.
+This proves the 58-migration baseline is replayable and the 59th migration is valid SQL in that chain. It does **not** yet prove complete production equivalence: durable alias reconciliation, the managed Realtime policy, a full schema-object comparison and upgrade replay from a production-like snapshot remain open gates. Public generated types now match the hosted project exactly.
 
 ## What was verified
 
@@ -25,7 +27,33 @@ This explains two facts discovered during the I/O and conversation work:
 - the remote database has `direct_messages`, notification work, Chapters, Missions and `app_role` values not represented in the checked-in migration files;
 - several local baseline migration timestamps differ by a few seconds from the versions recorded remotely, so a local migration replay cannot yet be considered equivalent to the demo project.
 
-The remote history was inspected read-only. No historical migration was re-applied, rewritten or deleted.
+The remote history was fetched and compared without changing the ledger. No historical migration was re-applied, rewritten or deleted.
+
+## Hosted release and verification — 9 August 2026
+
+The official browser/device login authenticated the CLI, linked project `jpwvgpnbkrktipwhvqss`, and confirmed the project is `ACTIVE_HEALTHY` in `ap-south-1`. A normal dry-run correctly refused to proceed while remote-only history versions were absent from the checkout. No `migration repair` was used.
+
+`supabase migration fetch` recovered the exact hosted files into a temporary deployment view. The 26 hosted-only versions were compared with their local aliases. Most differences are timestamps and terminal semicolons; the remaining local differences are the documented clean-replay accommodations. Deployment preserved the exact hosted versions, removed duplicate local aliases only from the temporary view, excluded the unrelated content seed, and applied only approved forward migrations.
+
+The timestamp pairs are:
+
+| Local source version | Hosted ledger version | Local source version | Hosted ledger version |
+| -------------------- | --------------------- | -------------------- | --------------------- |
+| `20260420094425`     | `20260420094422`      | `20260421103755`     | `20260421103753`      |
+| `20260424075330`     | `20260424075328`      | `20260425130136`     | `20260425130133`      |
+| `20260503143359`     | `20260503143356`      | `20260504085656`     | `20260504085653`      |
+| `20260504085759`     | `20260504085756`      | `20260505071736`     | `20260505071733`      |
+| `20260505084656`     | `20260505084653`      | `20260529191533`     | `20260529191530`      |
+| `20260617100341`     | `20260617100334`      | `20260618063730`     | `20260618063728`      |
+| `20260624092812`     | `20260624092810`      | `20260625110006`     | `20260625110004`      |
+| `20260727100240`     | `20260727100243`      | `20260730155210`     | `20260730161145`      |
+| `20260730225000`     | `20260730162022`      | `20260730170917`     | `20260730171008`      |
+| `20260730171132`     | `20260730171151`      | `20260730172452`     | `20260730172609`      |
+| `20260731113000`     | `20260731144209`      | `20260731123500`     | `20260731144418`      |
+| `20260731150000`     | `20260731145408`      | `20260801123802`     | `20260801124047`      |
+| `20260801124706`     | `20260801124731`      | `20260801130427`     | `20260801130455`      |
+
+The local-only `20260628124500` content seed is not an alias and was not deployed in this release.
 
 ## Historical recovery staged on 31 July 2026
 
@@ -67,37 +95,46 @@ Recovered filenames:
 
 The local directory now contains 51 migration files. The remaining concern is not missing named history: it is the timestamp mapping for baseline files and newer migrations whose local file names differ slightly from their recorded remote apply versions.
 
-### Validation limitation
+### Validation status
 
-Supabase CLI `migration list --linked` could not complete because the CLI login role is unauthenticated (`401`). The connected Supabase project integration remains available and was used for the read-only migration-ledger recovery. Do not mistake this CLI authentication state for a database failure.
+Supabase CLI authentication and linked migration access now work. The authoritative temporary view reports every hosted version plus all eight release versions with no pending migration. The ordinary checkout still displays the 26 alias pairs above and therefore is not yet safe for a normal linked push without the reconciliation procedure.
 
 ## Additive changes now deployed to the demo project
 
-| Versioned local file                                        | Remote migration                         | Purpose                                                                                      | Verification                                                                                                   |
-| ----------------------------------------------------------- | ---------------------------------------- | -------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `20260730155210_create_io_port_control_plane.sql`           | `create_io_port_control_plane`           | I/O workspace boundary, membership, capacity, policy, key-metadata and audit schema.         | RLS-protected web proof and gateway deployment verified.                                                       |
-| `20260730225000_add_io_control_plane_fk_indexes.sql`        | `add_io_control_plane_fk_indexes`        | Covers I/O foreign-key access paths.                                                         | Deployed before UI integration.                                                                                |
-| `20260730170917_harden_direct_messages.sql`                 | `harden_direct_messages`                 | Connection-gated direct-message insertion, read-only receipt updates, 4,000-character limit. | RLS role simulation: connected send passes; unconnected send fails; read receipt passes; content update fails. |
-| `20260730171132_validate_direct_message_content_length.sql` | `validate_direct_message_content_length` | Validates the length constraint after confirming zero legacy violations.                     | Remote constraint is validated.                                                                                |
-| `20260730172452_create_io_workspace_rpc.sql`                | `create_io_workspace_rpc`                | Atomic, idempotent personal I/O workspace + owner membership + safe audit event RPC.         | Authenticated-role creation and recovery paths passed inside rolled-back transactions; counts unchanged.       |
-| `20260731113000_create_io_provider_registry.sql`            | `create_io_provider_registry`            | Public evidence/price catalogue plus private endpoint/conformance metadata.                  | Deployed with explicit RLS/grants; provider secrets remain external.                                           |
-| `20260731123500_add_io_provider_registry_fk_indexes.sql`    | `add_io_provider_registry_fk_indexes`    | Covers provider-registry foreign-key paths used by policy/operator queries.                  | Performance Advisor covering-index check.                                                                      |
-| `20260731150000_add_io_dynamic_model_selection.sql`         | `add_io_dynamic_model_selection`         | Reviewed model release dates and automatic route tiers.                                      | Local deterministic selection tests pass.                                                                      |
-| `20260801120115_io_route_receipts_and_registry_router.sql`  | `io_route_receipts_and_registry_router`  | Service-only ready resolver plus append-only route/attempt evidence.                         | Ready resolver returns zero; receipt/attempt counts remain zero before live traffic.                           |
-| `20260801121231_seed_io_direct_provider_registry.sql`       | `seed_io_direct_provider_registry`       | Stages five direct providers with unique secret references and reviewed inventory metadata.  | Five testing connections, five draft capability versions and no paid conformance call.                         |
-| `20260801122329_add_io_route_evidence_fk_indexes.sql`       | `add_io_route_evidence_fk_indexes`       | Covers route-evidence provider/model/endpoint/capacity foreign keys.                         | Advisor reports no remaining unindexed foreign key in the new evidence tables.                                 |
-| `20260801123802_create_admin_control_plane.sql`             | `create_admin_control_plane`             | Scoped admin-team authority, I/O operator snapshot and fail-closed provider runtime switch.  | Super-admin projection verified; five controls disabled; zero ready routes and zero scoped assignments.        |
-| `20260801124706_harden_super_admin_role_management.sql`     | `harden_super_admin_role_management`     | Removes authenticated browser DML from root platform roles.                                  | `authenticated`: SELECT true; INSERT/UPDATE/DELETE false on `public.user_roles`.                               |
-| `20260801130427_add_admin_control_plane_fk_indexes.sql`     | `add_admin_control_plane_fk_indexes`     | Covers assignment, audit-actor and provider-control foreign-key paths.                       | All nine foreign keys across the four affected private tables are index-backed; no missing path remains.       |
+| Versioned local file                                          | Remote migration                         | Purpose                                                                                      | Verification                                                                                                   |
+| ------------------------------------------------------------- | ---------------------------------------- | -------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `20260730155210_create_io_port_control_plane.sql`             | `create_io_port_control_plane`           | I/O workspace boundary, membership, capacity, policy, key-metadata and audit schema.         | RLS-protected web proof and gateway deployment verified.                                                       |
+| `20260730225000_add_io_control_plane_fk_indexes.sql`          | `add_io_control_plane_fk_indexes`        | Covers I/O foreign-key access paths.                                                         | Deployed before UI integration.                                                                                |
+| `20260730170917_harden_direct_messages.sql`                   | `harden_direct_messages`                 | Connection-gated direct-message insertion, read-only receipt updates, 4,000-character limit. | RLS role simulation: connected send passes; unconnected send fails; read receipt passes; content update fails. |
+| `20260730171132_validate_direct_message_content_length.sql`   | `validate_direct_message_content_length` | Validates the length constraint after confirming zero legacy violations.                     | Remote constraint is validated.                                                                                |
+| `20260730172452_create_io_workspace_rpc.sql`                  | `create_io_workspace_rpc`                | Atomic, idempotent personal I/O workspace + owner membership + safe audit event RPC.         | Authenticated-role creation and recovery paths passed inside rolled-back transactions; counts unchanged.       |
+| `20260731113000_create_io_provider_registry.sql`              | `create_io_provider_registry`            | Public evidence/price catalogue plus private endpoint/conformance metadata.                  | Deployed with explicit RLS/grants; provider secrets remain external.                                           |
+| `20260731123500_add_io_provider_registry_fk_indexes.sql`      | `add_io_provider_registry_fk_indexes`    | Covers provider-registry foreign-key paths used by policy/operator queries.                  | Performance Advisor covering-index check.                                                                      |
+| `20260731150000_add_io_dynamic_model_selection.sql`           | `add_io_dynamic_model_selection`         | Reviewed model release dates and automatic route tiers.                                      | Local deterministic selection tests pass.                                                                      |
+| `20260801120115_io_route_receipts_and_registry_router.sql`    | `io_route_receipts_and_registry_router`  | Service-only ready resolver plus append-only route/attempt evidence.                         | Ready resolver returns zero; receipt/attempt counts remain zero before live traffic.                           |
+| `20260801121231_seed_io_direct_provider_registry.sql`         | `seed_io_direct_provider_registry`       | Stages five direct providers with unique secret references and reviewed inventory metadata.  | Five testing connections, five draft capability versions and no paid conformance call.                         |
+| `20260801122329_add_io_route_evidence_fk_indexes.sql`         | `add_io_route_evidence_fk_indexes`       | Covers route-evidence provider/model/endpoint/capacity foreign keys.                         | Advisor reports no remaining unindexed foreign key in the new evidence tables.                                 |
+| `20260801123802_create_admin_control_plane.sql`               | `create_admin_control_plane`             | Scoped admin-team authority, I/O operator snapshot and fail-closed provider runtime switch.  | Super-admin projection verified; five controls disabled; zero ready routes and zero scoped assignments.        |
+| `20260801124706_harden_super_admin_role_management.sql`       | `harden_super_admin_role_management`     | Removes authenticated browser DML from root platform roles.                                  | `authenticated`: SELECT true; INSERT/UPDATE/DELETE false on `public.user_roles`.                               |
+| `20260801130427_add_admin_control_plane_fk_indexes.sql`       | `add_admin_control_plane_fk_indexes`     | Covers assignment, audit-actor and provider-control foreign-key paths.                       | All nine foreign keys across the four affected private tables are index-backed; no missing path remains.       |
+| `20260801152819_enforce_latest_endpoint_conformance.sql`      | same version                             | Makes current endpoint capability plus current bound conformance the only route eligibility. | Live release contract passes; all five provider runtime switches remain disabled.                              |
+| `20260801152820_contain_notification_privileges.sql`          | same version                             | Restricts browser notification access to owner read and `is_read` update.                    | Live grant checks pass; generic compatibility RPC remains a documented blocker.                                |
+| `20260801153734_fix_vouch_audit_contracts.sql`                | same version                             | Serialises vouch mutations and repairs UUID audit targets.                                   | Migration recorded; existing focused local contracts remain green from the 8 August baseline.                  |
+| `20260801155642_retire_loops_product_surface.sql`             | same version                             | Removes browser Loops access while preserving a read-only service archive.                   | Anonymous/authenticated read false; service-role read true.                                                    |
+| `20260801195033_separate_io_and_community_product_access.sql` | same version                             | Separates immediate authenticated I/O access from explicit Community completion.             | Nine caller-bound product/location functions exist; existing-member backfill has zero missing rows.            |
+| `20260801195108_create_global_location_foundation.sql`        | same version                             | Adds private consent-aware location and explicit share projection.                           | 249 active countries; seven private tables use RLS; legacy rows remain unconsented.                            |
+| `20260808190000_create_direct_message_rpc_boundary.sql`       | same version                             | Moves direct sends/read acknowledgement behind caller-bound RPCs.                            | Direct browser writes false; zero write policies; authenticated RPC execution true.                            |
+| `20260809132035_revoke_anonymous_security_definer_access.sql` | same version                             | Revokes anonymous execution from eight privileged inherited functions.                       | Live contract passes and Security Advisor anonymous-definer warnings fall from eight to zero.                  |
 
 These are additive hardening migrations. They do not modify or delete existing message rows.
 
 ## Safe recovery sequence for the remaining history
 
-1. Make a version mapping for the locally present baseline files whose timestamps differ from remote by a few seconds. Do not rename or rewrite deployed migration history in place.
-2. The empty local replay now passes. Compare schema, grants, policies, functions, triggers, extensions and enum values with the demo project; separately verify the owner-scoped `realtime.messages` policy.
-3. Generate fresh `src/integrations/supabase/types.ts` from the reconciled database and run application type checks.
-4. Only after the comparison is clean, make local history the source of truth for future migrations and add CI migration-replay checks.
+1. Choose and review a durable baseline/alias strategy for the 26 mapped versions. Do not rename, delete or mark hosted history as reverted merely to make the lists look equal.
+2. Repair the local Storage bootstrap and rerun all 59 migrations, 285 pgTAP assertions and public/private lint in CI.
+3. Compare grants, policies, functions, triggers, extensions and enum values with the demo project; separately verify the owner-scoped `realtime.messages` policy.
+4. Public generated types already match the hosted project; add a repeatable drift gate so they remain equal.
+5. Prove a production-like snapshot upgrade before making the reconciled chain the only supported deployment path.
 
 ## Guardrails
 

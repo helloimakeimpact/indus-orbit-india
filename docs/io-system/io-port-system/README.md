@@ -1,6 +1,6 @@
 # I/O Port system record
 
-Status: deployed provider foundation; top-level product boundary Verified locally, updated 8 August 2026.
+Status: deployed provider foundation and top-level product boundary, updated 9 August 2026.
 
 ## Current operational truth
 
@@ -9,7 +9,7 @@ I/O Port has a real web surface, Supabase control plane, registry-driven gateway
 | Layer                      | Current state                                                                                                  |
 | -------------------------- | -------------------------------------------------------------------------------------------------------------- |
 | Public `/io-port`          | Implemented; private-beta language rather than a public-capacity claim.                                        |
-| Product `/io`              | Verified locally; any authenticated identity can enter without Community onboarding. `/app/io` redirects here. |
+| Product `/io`              | Released to demo; any authenticated identity can enter without Community onboarding. `/app/io` redirects here. |
 | Supabase control plane     | Deployed to demo.                                                                                              |
 | Provider registry          | Five direct providers/models/endpoints/prices staged.                                                          |
 | Provider secrets           | Present in Edge Function secret storage by unique provider name; values are not in registry or Git.            |
