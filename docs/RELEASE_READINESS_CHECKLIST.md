@@ -38,7 +38,7 @@ External CI, design, issue, and monitoring links may be used when access and ret
 | GitHub database workflow          | Configured; no remote run recorded yet | Empty replay, pgTAP, public/private schema lint and guaranteed local-stack cleanup are defined                                         |
 | Repository lint                   | Pass — 0 errors                        | Local semantic lint gate passes; CI evidence and broader product/integration coverage remain incomplete                                |
 | Automated product/router tests    | Core selection coverage only           | New registry router/UI source is browser-build checked but still needs Deno, SQL/RLS and conformance tests                             |
-| Database contract tests           | Clean local pass — 433/433             | All 62 migrations and eleven pgTAP files pass; retained remote CI and production-like snapshot upgrade remain                          |
+| Database contract tests           | Clean local pass — 446/446             | All 64 migrations and eleven pgTAP files pass; retained remote CI and production-like snapshot upgrade remain                          |
 | Provider conformance records      | Zero                                   | No provider is production-certified                                                                                                    |
 | Supabase missing-history recovery | Hosted ledger preserved                | 26 timestamp aliases are mapped; current forward set deployed without history repair or reset                                          |
 | Supabase migration equivalence    | Partial                                | Hosted Space contract, local types and clean replay pass; durable aliases, full object diff and snapshot upgrade remain                |
@@ -63,7 +63,7 @@ External CI, design, issue, and monitoring links may be used when access and ret
 | B-013 | Production build has a 645.31 kB minified JavaScript chunk; route/vendor splitting and measured performance budgets are not complete                                                              | Unassigned | Open   | —                                                                               |
 | B-014 | I/O gateway is deployed to demo but lacks activation-grade conformance, budget reservation, idempotency and health/circuit controls                                                               | Unassigned | Open   | —                                                                               |
 | B-015 | Database notification/email injection is closed and the legacy dispatcher is a 410 tombstone; fixed-template worker deployment, sender-domain proof, scheduling and dead-letter operations remain | Unassigned | Open   | `docs/io-system/conversation-system/TRUSTED_NOTIFICATION_AND_EMAIL_BOUNDARY.md` |
-| B-016 | The clean 62-migration chain passes 433/433, but a production-like snapshot upgrade and retained remote CI run are missing                                                                        | Unassigned | Open   | `docs/release-evidence/demo-2026-08-09/supabase-release.md`                     |
+| B-016 | The clean 64-migration chain passes 446/446, but a production-like snapshot upgrade and retained remote CI run are missing                                                                        | Unassigned | Open   | `docs/release-evidence/demo-2026-08-09/supabase-release.md`                     |
 
 ## G0 — Scope, ownership, and control
 
@@ -93,10 +93,10 @@ Decision: Not passed
 
 - [ ] Missing remote migration history is recovered and reviewed without rewriting deployed history. Evidence: hosted ledger fetched/preserved and eight migrations released without repair; platform-owner review pending.
 - [ ] Local filename-to-remote-version mapping is documented. Evidence: all 26 alias pairs are recorded in `docs/SUPABASE_SCHEMA_RECONCILIATION.md`; owner approval and durable mechanism pending.
-- [x] Empty-database migration replay passes. Evidence: all 62 migrations and 433/433 assertions pass locally; retained remote CI evidence remains a separate unchecked gate.
+- [x] Empty-database migration replay passes. Evidence: all 64 migrations and 446/446 assertions pass locally; retained remote CI evidence remains a separate unchecked gate.
 - [ ] Upgrade from a production-like snapshot passes. Evidence: —
 - [ ] Resettable non-production schema matches the intended production schema, grants, RLS, functions, triggers, enums, extensions, and storage policies. Evidence: —
-- [ ] Generated Supabase TypeScript types match the approved schema. Evidence: declarations were regenerated from the clean 62-migration schema; automated hosted byte-for-byte drift gate and schema approval remain.
+- [ ] Generated Supabase TypeScript types match the approved schema. Evidence: declarations were regenerated from the clean 64-migration schema; automated hosted byte-for-byte drift gate and schema approval remain.
 - [ ] Local setup produces a functioning application from documented commands. Evidence: —
 - [ ] Node/package manager/dependency versions are pinned and deterministic. Evidence: —
 - [ ] Pull-request CI runs format, lint, typecheck, unit, database, and build checks. Evidence: quality and database workflow source exists; first GitHub run and branch-protection evidence pending.

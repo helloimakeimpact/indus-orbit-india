@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
 
-select plan(30);
+select plan(43);
 
 -- Fixed IDs keep failures readable and make the conformance tie-break test
 -- deterministic. The transaction is rolled back at the end of the suite.
@@ -292,6 +292,152 @@ insert into private.io_provider_conformance_runs (
     '10000000-0000-4000-8000-000000000001'
   );
 
+insert into public.io_workspaces (
+  id,
+  slug,
+  name,
+  created_by
+) values (
+  '90000000-0000-4000-8000-000000000001',
+  'eligibility-evidence',
+  'Eligibility evidence workspace',
+  '10000000-0000-4000-8000-000000000002'
+);
+
+insert into public.io_workspace_members (
+  workspace_id,
+  user_id,
+  role,
+  status
+) values (
+  '90000000-0000-4000-8000-000000000001',
+  '10000000-0000-4000-8000-000000000002',
+  'owner',
+  'active'
+);
+
+insert into public.io_workspace_capacity_grants (
+  id,
+  workspace_id,
+  capacity_source_id,
+  grant_kind,
+  status,
+  quota_amount,
+  quota_unit,
+  created_by
+) values (
+  '90000000-0000-4000-8000-000000000002',
+  '90000000-0000-4000-8000-000000000001',
+  '20000000-0000-4000-8000-000000000001',
+  'commercial_entitlement',
+  'active',
+  100000,
+  'input_tokens',
+  '10000000-0000-4000-8000-000000000001'
+);
+
+insert into public.io_route_receipts (
+  id,
+  workspace_id,
+  request_id,
+  actor_user_id,
+  route_strategy,
+  result_state,
+  selected_provider_id,
+  selected_model_id,
+  selected_endpoint_id,
+  selected_capacity_source_id,
+  selected_provider_key,
+  selected_model_key,
+  selected_capacity_mode,
+  selected_region_code,
+  selected_residency_country_code,
+  selected_retention_class,
+  selected_currency_code,
+  capability_version,
+  price_version,
+  candidate_count,
+  fallback_count,
+  estimated_cost_nanos,
+  input_tokens,
+  output_tokens,
+  created_at,
+  completed_at
+) values (
+  '90000000-0000-4000-8000-000000000003',
+  '90000000-0000-4000-8000-000000000001',
+  '90000000-0000-4000-8000-000000000004',
+  '10000000-0000-4000-8000-000000000002',
+  'latest_affordable',
+  'completed',
+  '30000000-0000-4000-8000-000000000001',
+  '40000000-0000-4000-8000-000000000001',
+  '50000000-0000-4000-8000-000000000001',
+  '20000000-0000-4000-8000-000000000001',
+  'eligibility-test',
+  'eligibility-model-a',
+  'direct_api',
+  'in-test-1',
+  'IN',
+  'contractual_no_training',
+  'USD',
+  1,
+  1,
+  2,
+  1,
+  120000000,
+  120,
+  48,
+  timestamptz '2026-01-01 01:00:00+00',
+  timestamptz '2026-01-01 01:00:02+00'
+);
+
+insert into public.io_provider_attempts (
+  id,
+  receipt_id,
+  attempt_index,
+  provider_id,
+  model_id,
+  endpoint_id,
+  attempt_state,
+  error_code,
+  upstream_status,
+  started_at,
+  completed_at,
+  input_tokens,
+  output_tokens
+) values
+  (
+    '90000000-0000-4000-8000-000000000005',
+    '90000000-0000-4000-8000-000000000003',
+    1,
+    '30000000-0000-4000-8000-000000000001',
+    '40000000-0000-4000-8000-000000000002',
+    '50000000-0000-4000-8000-000000000002',
+    'failed',
+    'upstream_timeout',
+    504,
+    timestamptz '2026-01-01 01:00:00+00',
+    timestamptz '2026-01-01 01:00:01+00',
+    null,
+    null
+  ),
+  (
+    '90000000-0000-4000-8000-000000000006',
+    '90000000-0000-4000-8000-000000000003',
+    2,
+    '30000000-0000-4000-8000-000000000001',
+    '40000000-0000-4000-8000-000000000001',
+    '50000000-0000-4000-8000-000000000001',
+    'completed',
+    null,
+    200,
+    timestamptz '2026-01-01 01:00:01+00',
+    timestamptz '2026-01-01 01:00:02+00',
+    120,
+    48
+  );
+
 select ok(
   not has_function_privilege(
     'authenticated',
@@ -328,6 +474,42 @@ select ok(
   'service role can execute the service resolver'
 );
 
+select ok(
+  not has_function_privilege(
+    'anon',
+    'public.admin_io_evidence_summary()',
+    'execute'
+  ),
+  'anon cannot execute the admin I/O evidence summary'
+);
+
+select ok(
+  not has_function_privilege(
+    'anon',
+    'public.admin_io_recent_route_receipts(timestamptz,uuid,integer)',
+    'execute'
+  ),
+  'anon cannot execute the admin I/O receipt feed'
+);
+
+select ok(
+  has_function_privilege(
+    'authenticated',
+    'public.admin_io_evidence_summary()',
+    'execute'
+  ),
+  'authenticated callers can reach the capability-checked evidence summary'
+);
+
+select ok(
+  has_function_privilege(
+    'authenticated',
+    'public.admin_io_recent_route_receipts(timestamptz,uuid,integer)',
+    'execute'
+  ),
+  'authenticated callers can reach the capability-checked receipt feed'
+);
+
 select is(
   (select eligible from private.io_endpoint_latest_evidence(
     '50000000-0000-4000-8000-000000000001'
@@ -357,6 +539,65 @@ select results_eq(
   $$,
   array[2::bigint],
   'admin snapshot reports both endpoints eligible'
+);
+
+select is(
+  (public.admin_io_evidence_summary() ->> 'routeReceiptCount')::bigint,
+  1::bigint,
+  'admin evidence summary counts redacted route receipts'
+);
+
+select is(
+  (public.admin_io_evidence_summary() ->> 'providerAttemptCount')::bigint,
+  2::bigint,
+  'admin evidence summary counts provider attempts'
+);
+
+select is(
+  public.admin_io_evidence_summary() -> 'estimatedCostByCurrency' ->> 'USD',
+  '120000000',
+  'admin evidence summary groups exact cost nanos by currency'
+);
+
+select is(
+  (
+    select provider_key
+    from public.admin_io_recent_route_receipts(_limit => 1)
+  ),
+  'eligibility-test',
+  'admin receipt feed returns the selected provider key'
+);
+
+select is(
+  (
+    select attempt_count
+    from public.admin_io_recent_route_receipts(_limit => 1)
+  ),
+  2::bigint,
+  'admin receipt feed includes aggregate attempt count'
+);
+
+select is(
+  (
+    select failed_attempt_count
+    from public.admin_io_recent_route_receipts(_limit => 1)
+  ),
+  1::bigint,
+  'admin receipt feed includes aggregate failed-attempt count'
+);
+
+select throws_ok(
+  $$
+    select *
+    from public.admin_io_recent_route_receipts(
+      _before_created_at => timestamptz '2026-01-01 01:00:00+00',
+      _before_id => null,
+      _limit => 25
+    )
+  $$,
+  'P0001',
+  'Receipt cursor requires both created_at and id',
+  'admin receipt feed rejects incomplete cursors'
 );
 
 select is(
@@ -755,6 +996,20 @@ select throws_ok(
   '42501',
   'I/O operations access required',
   'a regular member cannot read the operator snapshot'
+);
+
+select throws_ok(
+  $$select public.admin_io_evidence_summary()$$,
+  '42501',
+  'I/O operations access required',
+  'a regular member cannot read the admin I/O evidence summary'
+);
+
+select throws_ok(
+  $$select * from public.admin_io_recent_route_receipts(_limit => 1)$$,
+  '42501',
+  'I/O operations access required',
+  'a regular member cannot read the admin route receipt feed'
 );
 
 select throws_ok(

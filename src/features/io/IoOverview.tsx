@@ -35,6 +35,7 @@ import {
   createMyIoWorkspace,
   getIoAuditEvents,
   getIoCapacitySources,
+  getIoRouteReceipts,
   getIoRouteCatalog,
   getMyIoWorkspaces,
   recordLocalOpenCodeSession,
@@ -42,6 +43,7 @@ import {
   type IoAuditEvent,
   type IoCapacitySource,
   type IoRouteCatalog,
+  type IoRouteReceipt,
   type IoRouteStrategy,
   type IoWorkspace,
   type PartnerRunResult,
@@ -65,6 +67,7 @@ export function IoOverview() {
   const workspaceLoadSequence = useRef(0);
   const [sources, setSources] = useState<IoCapacitySource[]>([]);
   const [events, setEvents] = useState<IoAuditEvent[]>([]);
+  const [receipts, setReceipts] = useState<IoRouteReceipt[]>([]);
   const [routeCatalog, setRouteCatalog] = useState<IoRouteCatalog | null>(null);
   const [routeCatalogError, setRouteCatalogError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -99,22 +102,28 @@ export function IoOverview() {
       if (!nextWorkspace) {
         setSources([]);
         setEvents([]);
+        setReceipts([]);
         setRouteCatalog(null);
         setRouteCatalogError(null);
         setRequestedModelId("");
         return;
       }
       setCatalogLoading(true);
-      const [sourcesResult, eventsResult, catalogResult] = await Promise.allSettled([
-        getIoCapacitySources(nextWorkspace.id),
-        getIoAuditEvents(nextWorkspace.id),
-        getIoRouteCatalog(nextWorkspace.id),
-      ]);
+      const [sourcesResult, eventsResult, receiptsResult, catalogResult] = await Promise.allSettled(
+        [
+          getIoCapacitySources(nextWorkspace.id),
+          getIoAuditEvents(nextWorkspace.id),
+          getIoRouteReceipts(nextWorkspace.id),
+          getIoRouteCatalog(nextWorkspace.id),
+        ],
+      );
       if (loadSequence !== workspaceLoadSequence.current) return;
       if (sourcesResult.status === "rejected") throw sourcesResult.reason;
       if (eventsResult.status === "rejected") throw eventsResult.reason;
+      if (receiptsResult.status === "rejected") throw receiptsResult.reason;
       setSources(sourcesResult.value);
       setEvents(eventsResult.value);
+      setReceipts(receiptsResult.value);
       if (catalogResult.status === "fulfilled") {
         setRouteCatalog(catalogResult.value);
         setRouteCatalogError(null);
@@ -190,6 +199,7 @@ export function IoOverview() {
           requestedModelId: routeStrategy === "explicit_model" ? requestedModelId : undefined,
         });
         setPartnerResult(result);
+        await loadWorkspace(workspace.id);
         toast.success(`Routed through ${result.provider}.`);
       } else {
         const result = await runOpenCodeSession({
@@ -229,7 +239,10 @@ export function IoOverview() {
 
   return (
     <div className="min-w-0 space-y-4 p-3 sm:p-4 lg:p-5">
-      <section className="overflow-hidden rounded-2xl bg-[var(--indigo-night)] text-[var(--parchment)] shadow-[var(--app-shadow)]">
+      <section
+        id="io-overview"
+        className="scroll-mt-24 overflow-hidden rounded-2xl bg-[var(--indigo-night)] text-[var(--parchment)] shadow-[var(--app-shadow)]"
+      >
         <div className="relative p-4 sm:p-5">
           <div
             className="pointer-events-none absolute -right-16 -top-24 h-56 w-56 rounded-full border border-[var(--saffron)]/20"
@@ -287,7 +300,7 @@ export function IoOverview() {
         </section>
       ) : null}
 
-      <section className="app-glass rounded-2xl p-3 sm:p-4">
+      <section id="io-sessions" className="app-glass scroll-mt-24 rounded-2xl p-3 sm:p-4">
         <div className="flex flex-col gap-3 border-b border-border/60 pb-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="flex items-center gap-2">
@@ -353,7 +366,7 @@ export function IoOverview() {
 
         <div className="mt-3 grid gap-3 xl:grid-cols-[minmax(0,1fr)_15rem]">
           <div className="space-y-3">
-            <div className="grid gap-2 sm:grid-cols-2">
+            <div id="io-terminal" className="grid scroll-mt-24 gap-2 sm:grid-cols-2">
               <PathButton
                 active={path === "terminal"}
                 icon={<TerminalSquare className="h-4 w-4" />}
@@ -387,7 +400,10 @@ export function IoOverview() {
                 />
               </div>
             ) : (
-              <div className="space-y-2 rounded-xl border border-sky-200 bg-sky-50 p-3 text-sky-950">
+              <div
+                id="io-model-routes"
+                className="scroll-mt-24 space-y-2 rounded-xl border border-sky-200 bg-sky-50 p-3 text-sky-950"
+              >
                 <p className="text-[11px] leading-4">
                   Partner calls are routed only through the I/O gateway. Browser code never receives
                   a provider credential. A configured partner source and entitlement are required.
@@ -519,7 +535,7 @@ export function IoOverview() {
         <RunResult partner={partnerResult} terminal={terminalResult} />
       </section>
 
-      <section>
+      <section id="io-capacity" className="scroll-mt-24">
         <div className="mb-2.5 flex flex-wrap items-end justify-between gap-2 px-0.5">
           <div>
             <p className="app-workspace-kicker">Capacity commons</p>
@@ -556,6 +572,42 @@ export function IoOverview() {
             own device; partner and sponsored pools need an approved workspace grant.
           </div>
         )}
+      </section>
+
+      <section id="io-evidence" className="app-glass scroll-mt-24 overflow-hidden rounded-2xl">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 px-4 py-3">
+          <div>
+            <p className="app-workspace-kicker">Route evidence</p>
+            <h2 className="mt-1 text-base font-semibold text-[var(--indigo-night)]">
+              Provider receipts and usage ledger
+            </h2>
+          </div>
+          <Badge variant="outline" className="text-[9px]">
+            REDACTED BY DESIGN
+          </Badge>
+        </div>
+        <div id="io-usage-ledger" className="scroll-mt-24">
+          {loading ? (
+            <div className="h-32 animate-pulse bg-muted/30" />
+          ) : receipts.length ? (
+            <div className="divide-y divide-border/55">
+              {receipts.map((receipt) => (
+                <RouteReceiptRow key={receipt.id} receipt={receipt} />
+              ))}
+            </div>
+          ) : (
+            <div className="flex min-h-36 flex-col items-center justify-center p-6 text-center">
+              <FileCheck2 className="h-7 w-7 text-muted-foreground/35" />
+              <p className="mt-2 text-sm font-medium text-muted-foreground">
+                No provider route receipts yet
+              </p>
+              <p className="mt-1 max-w-md text-xs leading-5 text-muted-foreground">
+                Successful and failed partner routes will record model, capacity, fallback, token
+                and estimated-cost facts. Prompt and response bodies are never stored here.
+              </p>
+            </div>
+          )}
+        </div>
       </section>
 
       <div className="grid gap-4 2xl:grid-cols-[minmax(0,1.45fr)_minmax(17rem,0.55fr)]">
@@ -651,7 +703,10 @@ export function IoOverview() {
             />
           </div>
 
-          <div className="mt-3 flex items-start gap-2 rounded-xl bg-[var(--saffron)]/10 p-3">
+          <div
+            id="io-safety"
+            className="mt-3 flex scroll-mt-24 items-start gap-2 rounded-xl bg-[var(--saffron)]/10 p-3"
+          >
             <CircleAlert className="mt-0.5 h-4 w-4 shrink-0 text-[var(--saffron)]" />
             <p className="text-[10px] leading-4 text-[var(--indigo-night)]/80">
               Partner credentials are server secrets. OpenCode passwords remain in this page only
@@ -738,6 +793,64 @@ function CapacityCard({ source }: { source: IoCapacitySource }) {
         <span className="text-muted-foreground">{formatQuota(source)}</span>
       </div>
     </article>
+  );
+}
+
+function RouteReceiptRow({ receipt }: { receipt: IoRouteReceipt }) {
+  const routeLabel = [receipt.providerKey, receipt.modelKey].filter(Boolean).join(" · ");
+  const location = receipt.residencyCountryCode ?? receipt.regionCode ?? "Not declared";
+  return (
+    <article className="grid gap-3 px-4 py-3 lg:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(7rem,0.6fr))] lg:items-center">
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge
+            variant="outline"
+            className={cn(
+              "text-[9px] capitalize",
+              receipt.resultState === "completed"
+                ? "border-emerald-300 text-emerald-800"
+                : "border-red-300 text-red-800",
+            )}
+          >
+            {receipt.resultState}
+          </Badge>
+          <p className="truncate text-xs font-semibold text-foreground">
+            {routeLabel || "No route selected"}
+          </p>
+        </div>
+        <p className="mt-1 truncate font-mono text-[9px] text-muted-foreground" title={receipt.id}>
+          Receipt {receipt.id}
+        </p>
+        <p className="mt-1 text-[9px] text-muted-foreground">
+          {new Date(receipt.createdAt).toLocaleString()} · {humanizeEvent(receipt.routeStrategy)}
+        </p>
+      </div>
+      <ReceiptFact
+        label="Capacity"
+        value={`${receipt.capacityMode ?? "Not selected"} · ${location}`}
+      />
+      <ReceiptFact
+        label="Attempts"
+        value={`${receipt.attemptCount} total · ${receipt.failedAttemptCount} failed · ${receipt.fallbackCount} fallbacks`}
+      />
+      <ReceiptFact
+        label="Usage / estimate"
+        value={`${formatTokens(receipt.inputTokens, receipt.outputTokens)} · ${formatNanos(receipt.estimatedCostNanos, receipt.currencyCode)}`}
+      />
+    </article>
+  );
+}
+
+function ReceiptFact({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0">
+      <p className="text-[9px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
+        {label}
+      </p>
+      <p className="mt-0.5 truncate text-[10px] font-medium text-foreground" title={value}>
+        {value}
+      </p>
+    </div>
   );
 }
 
@@ -837,6 +950,20 @@ function OrbitLink({
 function formatQuota(source: IoCapacitySource) {
   if (source.quotaAmount == null || !source.quotaUnit) return source.country ?? "Policy controlled";
   return `${source.quotaAmount.toLocaleString()} ${source.quotaUnit.replace(/_/g, " ")}`;
+}
+
+function formatTokens(inputTokens: number | null, outputTokens: number | null) {
+  if (inputTokens == null && outputTokens == null) return "Tokens unavailable";
+  return `${(inputTokens ?? 0).toLocaleString()} in / ${(outputTokens ?? 0).toLocaleString()} out`;
+}
+
+function formatNanos(nanos: number | null, currencyCode: string | null) {
+  if (nanos == null || !currencyCode) return "Estimate unavailable";
+  return new Intl.NumberFormat(undefined, {
+    style: "currency",
+    currency: currencyCode,
+    maximumFractionDigits: 6,
+  }).format(nanos / 1_000_000_000);
 }
 
 function humanizeEvent(value: string) {

@@ -13,7 +13,7 @@ Related documents:
 
 ## 1. Current implemented proof
 
-The demo project has an RLS-protected I/O control plane, three clearly labelled demo capacity sources and a verified-JWT `io-gateway` Edge Function. Local Verified web source moves the authenticated product to `/io`; it uses its own shell and does not require Community onboarding.
+The demo project has an RLS-protected I/O control plane, three clearly labelled demo capacity sources and active verified-JWT `io-gateway` version 18. Verified web source moves the authenticated product to `/io`; it uses its own shell and does not require Community onboarding.
 
 The existing people-messaging system is also now hardened in the demo project: only accepted, non-suspended connections can insert a direct message, recipients can update only `read_at`, and new messages are capped at 4,000 characters.
 
@@ -21,12 +21,12 @@ The first shared-message client extraction is now in the web app as well: `src/f
 
 | Concern                  | Current code                                                          | Truthful status                                                                                                            |
 | ------------------------ | --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| Web control room         | `src/features/io/IoOverview.tsx`                                      | Member-facing UI with local/OpenCode, safe provider catalogue, route strategy/model selection and completed receipt facts. |
+| Web control room         | `src/features/io/IoOverview.tsx`                                      | Member-facing UI with local/OpenCode, safe provider catalogue, route/model selection and RLS-scoped receipt/usage history. |
 | Local terminal connector | `src/features/io/opencode.ts`                                         | Loopback-only health → session → prompt proof. It is not yet a resumable terminal timeline.                                |
 | Provider gateway         | `supabase/functions/io-gateway/index.ts`                              | Deployed demo gateway contains registry-driven selection and receipts; routes remain activation-gated.                     |
 | Browser data access      | `src/features/io/io.client.ts`                                        | Browser-facing I/O data access, explicitly separated from privileged Edge/RPC work.                                        |
 | Control-plane schema     | `supabase/migrations/20260730155210_create_io_port_control_plane.sql` | Workspaces, memberships, sources, grants, policy records, key metadata and safe audit events.                              |
-| I/O nested shell         | `src/features/io/IoWorkspaceShell.tsx`                                | Layout proof only. Static workspace, health, counts and activity are explicitly labelled preview, not live operator data.  |
+| I/O nested shell         | `src/features/io/IoWorkspaceShell.tsx`                                | Working in-page context navigation and evidence guide; preview-only workspace/health/activity claims are removed.          |
 
 ## 2. Non-negotiable boundaries
 
@@ -70,7 +70,7 @@ supabase/functions/_shared/io/
 supabase/functions/io-gateway/index.ts  thin HTTP/CORS/action handler
 ```
 
-The boundary validates request shape, workspace UUIDs, modes, route strategy/model IDs, message limits, local loopback origin/session data and typed public errors before dispatch. It performs membership and entitlement checks separately, audits every requested/completed provider route and writes a safe failure audit without retaining prompt/response text. It validates normalized OpenAI-compatible and Gemini response shapes before returning them. The gateway is deployed to the demo; empty-database replay equivalence remains open.
+The boundary validates request shape, workspace UUIDs, modes, route strategy/model IDs, message limits, local loopback origin/session data and typed public errors before dispatch. It performs membership and entitlement checks separately, audits every requested/completed provider route and writes a safe failure audit without retaining prompt/response text. It validates normalized OpenAI-compatible and Gemini response shapes before returning them. Gateway version 18 and its currency-aware receipt writer are deployed to the demo; all 64 source migrations replay from zero locally.
 
 Still required before any broad provider rollout: client idempotency keys, formal route-policy versions, health/circuit controls, cancellation semantics, detailed timeout classification, streaming/SSE, SQL/RLS tests and provider-conformance tests. The current adapter is intentionally non-streaming and supports only the reviewed OpenAI-compatible and Gemini-native chat surfaces.
 
@@ -91,7 +91,7 @@ supabase/migrations/*_io_workspace_creation_rpc.sql
 
 ### 4.3 Remove false live state
 
-Connect `IoWorkspaceShell` to real workspace/capacity/audit data. Static health/activity/count fixtures are now labelled preview; disabled navigation becomes a route only when its data and authorization model exist.
+**Implemented:** the shell has working anchors for the member-owned sections, and preview workspace/health/activity claims were replaced by a stable evidence guide. Real workspace, capacity, safe audit and RLS-scoped route-receipt data load in the working surface. Future dedicated routes still require their own data and authorization contracts.
 
 ## 5. P1 — provider registry and policy router
 
@@ -112,7 +112,7 @@ io_provider_attempts
 
 **Implemented in the demo project:** `supabase/migrations/20260731113000_create_io_provider_registry.sql` establishes the provider, model, endpoint, versioned capability and versioned price-card records. It keeps endpoint URLs, secret-manager references and conformance-run details in the non-exposed `private` schema; public tables contain only member-appropriate catalogue/evidence data and use RLS plus explicit Data API grants. `20260731123500_add_io_provider_registry_fk_indexes.sql` completes the foreign-key indexes identified by the post-deployment Performance Advisor. `20260731150000_add_io_dynamic_model_selection.sql` adds the reviewed release date and automatic-routing tier needed to select a model dynamically rather than bake a model ID into an Edge Function secret. Five providers are staged in testing/conformance with runtime routing disabled; no provider is certified for traffic.
 
-**Implemented locally, awaiting replay/deploy:** `20260801003835_io_route_receipts_and_registry_router.sql` adds a service-role-only resolver for ready private connection rows plus append-only `io_route_receipts` and `io_provider_attempts`. The gateway considers active/listed/non-deprecated, entitled candidates with verified chat capability and a current member-visible price card; automatic routes are limited to a configured tier, freshness window and affordability multiple. It supports `latest_affordable`, `lowest_cost` and a reviewed explicit model. Cross-currency automatic comparison fails closed pending reviewed FX data. Candidate selection is deterministic, response handling supports OpenAI-compatible and Gemini-native chat, safe upstream/rate-limit failures can fall back in order, and a receipt ID reaches the web UI. Secret lookup accepts only operator-approved references matching `IO_PROVIDER_[A-Z0-9_]+_API_KEY`.
+**Implemented and Released to demo:** `20260801003835_io_route_receipts_and_registry_router.sql` adds a service-role-only resolver for ready private connection rows plus append-only `io_route_receipts` and `io_provider_attempts`. The gateway considers active/listed/non-deprecated, entitled candidates with verified chat capability and a current member-visible price card; automatic routes are limited to a configured tier, freshness window and affordability multiple. It supports `latest_affordable`, `lowest_cost` and a reviewed explicit model. Cross-currency automatic comparison fails closed pending reviewed FX data. Candidate selection is deterministic, response handling supports OpenAI-compatible and Gemini-native chat, safe upstream/rate-limit failures can fall back in order, and a receipt ID reaches the web UI. Secret lookup accepts only operator-approved references matching `IO_PROVIDER_[A-Z0-9_]+_API_KEY`.
 
 This replaces the legacy `IO_PARTNER_*` contract. The migration and Edge Function are now deployed to the demo, with five reviewed inventory records staged in testing/conformance. No provider is routable until its paid conformance evidence is approved and its connection/capability/endpoint/provider states are deliberately activated.
 
@@ -170,7 +170,9 @@ src/routes/app.admin.io.retention.tsx
 src/features/io/operator/
 ```
 
-The console manages provider/endpoint readiness, secret-reference state, capacity source lifecycle, sponsorship terms, grants/quotas/expiry, policy review, route activation, emergency stop, failed requests, reconciliation, adjustments, retention jobs and audit export.
+**Current Released slice:** the separate `admin-indus-orbit` app manages the fail-closed provider runtime switch, renders per-endpoint readiness gates, and reads capability-checked aggregate plus keyset-paginated redacted route evidence. Currency estimates remain separated, and browser data excludes prompts, responses, secrets, URLs, workspace/user IDs and raw provider errors.
+
+Still required: provider conformance execution/approval, secret-reference state workflows, capacity lifecycle and grants, policy review, budget/health/circuit controls, reconciliation/ledger, retention jobs and export.
 
 Hiding a route through `useAuth().isAdmin` is only presentation. RLS and Edge/RPC checks must authorize every mutation.
 
@@ -244,7 +246,7 @@ Build P0 in this order:
 1. **Implemented and deployed:** introduce I/O contracts and pure gateway modules;
 2. **Implemented:** rename the browser I/O data module and add active-workspace context/switching;
 3. **Implemented in demo:** create and test atomic workspace creation;
-4. **Implemented locally:** move the product to `/io`, redirect `/app/io`, and keep preview-only shell values visibly labelled;
+4. **Implemented and Released:** move the product to `/io`, redirect `/app/io`, replace preview shell claims and add member/admin route evidence;
 5. add the conversation security and shared-query work from the companion plan.
 
 This creates the foundation for provider onboarding without making provider credentials or paid traffic a dependency.

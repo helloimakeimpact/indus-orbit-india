@@ -18,7 +18,7 @@ Completed in the demo environment:
 - removal of anonymous access to eight privileged functions;
 - caller-bound domain mutations, retirement of generic notification execution and a private service-leased email outbox;
 - Chapter/Mission Space schema, deterministic Room blueprints, membership projection and caller-bound lifecycle/message/read operations;
-- clean 62-migration replay with 433/433 assertions plus hosted schema/RLS/RPC/Realtime contract and public lint;
+- clean 64-migration replay with 446/446 assertions plus hosted schema/RLS/RPC/Realtime and I/O evidence contracts;
 - five-provider/model/endpoint inventory with three capacity sources/grants, while route receipts and provider attempts remain zero.
 
 The product is still a release candidate foundation, not a finished production system.
@@ -29,8 +29,8 @@ Deliverables:
 
 1. Preserve the hosted ledger and document or baseline the 26 timestamp aliases so ordinary `supabase db push` works without a temporary migration view.
 2. Decide whether the separate builder/course/S.O.D.A. seed belongs in demo only; never mix that decision into schema deployment.
-3. **Verified:** all 62 migrations replay from an empty database.
-4. **Verified locally:** all 433 pgTAP assertions and public/private lint pass; keep these and the GitHub database workflow required in CI.
+3. **Verified:** all 64 migrations replay from an empty database.
+4. **Verified locally:** all 446 pgTAP assertions and public/private lint pass; keep these and the GitHub database workflow required in CI.
 5. Add an automated generated-public-types drift gate.
 6. Verify the owner-scoped managed `realtime.messages` policy in its real owner environment.
 7. Prove an upgrade from a production-like snapshot, not only an empty reset.

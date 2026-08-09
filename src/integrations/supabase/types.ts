@@ -1,6 +1,31 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type Database = {
+  graphql_public: {
+    Tables: {
+      [_ in never]: never;
+    };
+    Views: {
+      [_ in never]: never;
+    };
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json;
+          operationName?: string;
+          query?: string;
+          variables?: Json;
+        };
+        Returns: Json;
+      };
+    };
+    Enums: {
+      [_ in never]: never;
+    };
+    CompositeTypes: {
+      [_ in never]: never;
+    };
+  };
   public: {
     Tables: {
       asks_offers: {
@@ -2647,6 +2672,7 @@ export type Database = {
           route_strategy: string;
           selected_capacity_mode: string | null;
           selected_capacity_source_id: string | null;
+          selected_currency_code: string | null;
           selected_endpoint_id: string | null;
           selected_model_id: string | null;
           selected_model_key: string | null;
@@ -2676,6 +2702,7 @@ export type Database = {
           route_strategy: string;
           selected_capacity_mode?: string | null;
           selected_capacity_source_id?: string | null;
+          selected_currency_code?: string | null;
           selected_endpoint_id?: string | null;
           selected_model_id?: string | null;
           selected_model_key?: string | null;
@@ -2705,6 +2732,7 @@ export type Database = {
           route_strategy?: string;
           selected_capacity_mode?: string | null;
           selected_capacity_source_id?: string | null;
+          selected_currency_code?: string | null;
           selected_endpoint_id?: string | null;
           selected_model_id?: string | null;
           selected_model_key?: string | null;
@@ -4554,6 +4582,7 @@ export type Database = {
       };
     };
     Functions: {
+      admin_io_evidence_summary: { Args: never; Returns: Json };
       admin_io_operational_snapshot: {
         Args: never;
         Returns: {
@@ -4577,6 +4606,35 @@ export type Database = {
           routing_enabled: boolean;
           supports_chat: boolean;
           updated_at: string;
+        }[];
+      };
+      admin_io_recent_route_receipts: {
+        Args: {
+          _before_created_at?: string;
+          _before_id?: string;
+          _limit?: number;
+        };
+        Returns: {
+          attempt_count: number;
+          candidate_count: number;
+          capacity_mode: string;
+          completed_at: string;
+          created_at: string;
+          currency_code: string;
+          estimated_cost_nanos: string;
+          failed_attempt_count: number;
+          fallback_count: number;
+          input_tokens: number;
+          model_key: string;
+          output_tokens: number;
+          provider_key: string;
+          receipt_id: string;
+          region_code: string;
+          request_id: string;
+          residency_country_code: string;
+          result_state: string;
+          retention_class: string;
+          route_strategy: string;
         }[];
       };
       admin_io_set_provider_routing: {
@@ -5483,6 +5541,9 @@ export type CompositeTypes<
     : never;
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       app_role: ["admin", "member", "chapter_lead", "editor"],

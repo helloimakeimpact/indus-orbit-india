@@ -27,7 +27,7 @@ import { cn } from "@/lib/utils";
 type IoNavItem = {
   label: string;
   icon: typeof CircleGauge;
-  active?: boolean;
+  href: string;
   count?: string;
 };
 
@@ -40,54 +40,55 @@ const navGroups: IoNavGroup[] = [
   {
     label: "Workspace",
     items: [
-      { label: "Overview", icon: CircleGauge, active: true },
-      { label: "Sessions", icon: MessageSquareText },
-      { label: "Terminal", icon: TerminalSquare },
+      { label: "Overview", icon: CircleGauge, href: "#io-overview" },
+      { label: "Sessions", icon: MessageSquareText, href: "#io-sessions" },
+      { label: "Terminal", icon: TerminalSquare, href: "#io-terminal" },
     ],
   },
   {
     label: "Intelligence",
     items: [
-      { label: "Model routes", icon: Route },
-      { label: "Capacity", icon: Cpu },
-      { label: "Evidence", icon: FileSearch },
+      { label: "Model routes", icon: Route, href: "#io-sessions" },
+      { label: "Capacity", icon: Cpu, href: "#io-capacity" },
+      { label: "Evidence", icon: FileSearch, href: "#io-evidence" },
     ],
   },
   {
     label: "Stewardship",
     items: [
-      { label: "Usage ledger", icon: IndianRupee },
-      { label: "Safety", icon: ShieldCheck },
+      { label: "Usage ledger", icon: IndianRupee, href: "#io-usage-ledger" },
+      { label: "Safety", icon: ShieldCheck, href: "#io-safety" },
     ],
   },
 ];
 
-const previewActivityItems = [
+const evidenceGuideItems = [
   {
-    time: "PREVIEW",
-    title: "Route receipts will appear here",
-    detail: "Live route evidence is connected in the provider registry slice.",
+    time: "LIVE",
+    title: "Route receipts",
+    detail: "Provider, model, capacity, fallback, usage and cost facts are recorded after a route.",
     icon: Route,
     tone: "bg-sky-100 text-sky-800",
   },
   {
-    time: "PREVIEW",
-    title: "Capacity state will appear here",
-    detail: "Only activated capacity sources will report health and availability.",
+    time: "LIVE",
+    title: "Capacity entitlements",
+    detail: "Only workspace grants and their public provenance are visible to members.",
     icon: RadioTower,
     tone: "bg-sky-100 text-sky-800",
   },
   {
-    time: "PREVIEW",
-    title: "Approved session evidence will appear here",
-    detail: "Terminal events stay private unless an authorised artifact is shared.",
+    time: "LIVE",
+    title: "Safe terminal audit",
+    detail:
+      "Local session identifiers can be recorded; passwords, prompts and output stay private.",
     icon: FileSearch,
     tone: "bg-violet-100 text-violet-800",
   },
   {
-    time: "PREVIEW",
-    title: "Sponsored capacity will appear here",
-    detail: "Sponsor terms, grant eligibility and quota will be explicit before activation.",
+    time: "POLICY",
+    title: "Sponsored capacity",
+    detail: "Sponsor identity, public terms, eligibility and quota are explicit before activation.",
     icon: HeartHandshake,
     tone: "bg-amber-100 text-amber-900",
   },
@@ -136,7 +137,7 @@ export function IoWorkspaceShell({ children }: IoWorkspaceShellProps) {
             <div className="flex items-center gap-2">
               <p className="truncate text-sm font-semibold text-[var(--indigo-night)]">I/O Port</p>
               <Badge className="border-[var(--saffron)]/35 bg-[var(--saffron)]/12 text-[10px] text-[var(--indigo-night)] hover:bg-[var(--saffron)]/12">
-                PREVIEW
+                BETA
               </Badge>
             </div>
             <p className="hidden truncate text-[11px] text-muted-foreground sm:block">
@@ -147,7 +148,7 @@ export function IoWorkspaceShell({ children }: IoWorkspaceShellProps) {
 
         <div className="hidden items-center gap-2 lg:flex">
           <div className="flex items-center gap-1.5 rounded-full border border-border/70 bg-background/50 px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
-            Preview layout — no live health claim
+            Authenticated workspace evidence
           </div>
         </div>
 
@@ -229,7 +230,7 @@ export function IoContextNav({
               I/O workspace
             </span>
             <span className="block text-[10px] text-muted-foreground">
-              Preview context · no live workspace selected
+              Live data is scoped to the signed-in member
             </span>
           </span>
           <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
@@ -247,18 +248,11 @@ export function IoContextNav({
                 {group.items.map((item) => {
                   const Icon = item.icon;
                   return (
-                    <button
+                    <a
                       key={item.label}
-                      type="button"
-                      disabled={!item.active}
-                      title={
-                        item.active ? "I/O overview" : `${item.label} is coming in a later slice`
-                      }
+                      href={item.href}
                       onClick={onSelect}
-                      className={cn(
-                        "flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs font-medium text-muted-foreground transition hover:bg-muted/60 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-70",
-                        item.active && "bg-[var(--saffron)]/12 text-[var(--indigo-night)]",
-                      )}
+                      className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs font-medium text-muted-foreground transition hover:bg-muted/60 hover:text-foreground"
                     >
                       <Icon className="h-3.5 w-3.5" />
                       <span className="min-w-0 flex-1 truncate">{item.label}</span>
@@ -267,7 +261,7 @@ export function IoContextNav({
                           {item.count}
                         </span>
                       ) : null}
-                    </button>
+                    </a>
                   );
                 })}
               </div>
@@ -293,10 +287,10 @@ export function IoContextNav({
           </span>
           <div className="min-w-0 flex-1">
             <p className="truncate text-[11px] font-semibold">Commons network</p>
-            <p className="truncate text-[9px] text-muted-foreground">Preview context</p>
+            <p className="truncate text-[9px] text-muted-foreground">Workspace-scoped</p>
           </div>
           <Badge variant="outline" className="text-[8px] font-semibold">
-            PREVIEW
+            RLS
           </Badge>
         </div>
       </div>
@@ -316,7 +310,7 @@ export function IoActivityInspector({
       <div className="flex h-14 items-center justify-between border-b border-border/60 px-4">
         <div>
           <p className="text-xs font-semibold text-[var(--indigo-night)]">Evidence & activity</p>
-          <p className="text-[10px] text-muted-foreground">Preview workspace signals</p>
+          <p className="text-[10px] text-muted-foreground">What the live workspace records</p>
         </div>
         <Button type="button" variant="ghost" size="icon" className="xl:hidden" onClick={onClose}>
           <X />
@@ -329,14 +323,14 @@ export function IoActivityInspector({
           <section>
             <div className="mb-3 flex items-center justify-between">
               <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
-                Preview trail
+                Evidence guide
               </p>
               <Badge variant="outline" className="text-[9px] font-semibold">
-                PREVIEW
+                LIVE
               </Badge>
             </div>
             <div className="space-y-3">
-              {previewActivityItems.map((item) => {
+              {evidenceGuideItems.map((item) => {
                 const Icon = item.icon;
                 return (
                   <article key={`${item.time}-${item.title}`} className="flex gap-2.5">
@@ -371,8 +365,8 @@ export function IoActivityInspector({
               <p className="text-[11px] font-semibold text-[var(--indigo-night)]">Route evidence</p>
             </div>
             <p className="mt-2 text-[10px] leading-4 text-muted-foreground">
-              Calculated confidence appears after provider registry, health samples and route
-              receipts are live.
+              Provider readiness is fail-closed. Member receipts expose route facts without exposing
+              credentials, prompts, generated content or raw upstream errors.
             </p>
           </section>
 
@@ -382,7 +376,8 @@ export function IoActivityInspector({
               <p className="text-[11px] font-semibold">Inspectable by design</p>
             </div>
             <p className="mt-2 text-[10px] leading-4 text-[var(--parchment)]/70">
-              Every route will disclose model, capacity source, policy decisions and actual cost.
+              Every completed provider route records model, capacity, policy version, usage and an
+              estimated cost. Provider billing remains the settlement source of truth.
             </p>
           </section>
         </div>

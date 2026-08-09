@@ -1,6 +1,6 @@
 # Demo Supabase release evidence — 9 August 2026
 
-Status: eleven-migration demo release set and Chapter/Mission Space addendum remotely verified; production approval is not claimed.
+Status: thirteen-migration demo release set with Chapter/Mission Space and I/O evidence addenda remotely verified; production approval is not claimed.
 
 ## Scope and target
 
@@ -27,6 +27,8 @@ The following versions are recorded in the hosted migration ledger:
 20260809142000_create_trusted_product_event_rpcs.sql
 20260809150000_harden_email_delivery_claims.sql
 20260809152439_create_chapter_mission_space_foundation.sql
+20260809174030_create_admin_io_evidence_rpcs.sql
+20260809182509_add_io_conformance_composite_index.sql
 ```
 
 `20260628124500_seed_builder_courses_and_soda_ideas.sql` was deliberately excluded. It is a separate content seed, not a prerequisite for this release.
@@ -35,7 +37,7 @@ The historical hosted ledger was preserved. No migration-history repair, deletio
 
 ## Live release contract
 
-`supabase/verification/demo_release_contract.sql` is the current aggregate read-only gate and passes 20/20 after adding the eleventh migration version. `supabase/verification/chapter_mission_space_release_contract.sql` is the detailed current Space/provider addendum.
+`supabase/verification/demo_release_contract.sql` is the aggregate read-only gate and now contains 21 checks for all thirteen release versions. `supabase/verification/chapter_mission_space_release_contract.sql` and `supabase/verification/io_evidence_release_contract.sql` are the focused read-only addenda.
 
 The Chapter/Mission Space contract passes:
 
@@ -49,9 +51,20 @@ The Chapter/Mission Space contract passes:
 - capacity source/workspace grant counts are 3 each;
 - route receipts and provider attempts remain zero.
 
+The I/O evidence addendum confirms:
+
+- `20260809174030` is recorded in the hosted ledger;
+- `20260809182509` is recorded in the hosted ledger;
+- `selected_currency_code` and `io_route_receipts_global_time_idx` exist;
+- `io_provider_conformance_runs_endpoint_capability_idx` covers the provider-conformance composite relationship identified by the Performance Advisor;
+- `admin_io_evidence_summary()` and `admin_io_recent_route_receipts(timestamptz, uuid, integer)` exist;
+- anonymous execution is false for both functions;
+- authenticated execution is true, with authority re-checked by `io.read` inside each function;
+- route receipt and provider attempt counts remain zero, so no provider traffic or spend was created by this release.
+
 The aggregate product contract establishes:
 
-- 11/11 release versions are recorded;
+- 13/13 release versions are recorded;
 - 11/11 release relations and 17/17 caller-bound functions exist;
 - 249 active ISO country records exist;
 - zero existing segmented profiles are missing completed Community state;
@@ -75,13 +88,13 @@ The current Security Advisor reports 79 inherited notices: 61 warnings and 18 in
 
 Authenticated definer and GraphQL exposure warnings require function/table classification. Caller-bound product, location, messaging and scoped admin RPCs are intentionally authenticated and tested, but inherited functions must not be granted a blanket waiver. Leaked-password protection is not reported by the current database advisor output; its hosted Auth setting still requires separate configuration evidence.
 
-The current Performance Advisor reports 345 inherited notices: 166 warnings and 179 information notices. These counts changed as the schema evolved and should be re-read rather than treated as a fixed waiver.
+The current Performance Advisor reports an inherited product-wide backlog whose counts change as the schema evolves and must be re-read rather than treated as a fixed waiver. The missing composite I/O conformance index identified during this release was remediated by `20260809182509` and independently verified on the hosted project.
 
 These are a product-wide optimization backlog, not evidence that the release has failed. Each affected policy still requires authorization review and representative query profiling before it is rewritten.
 
 ## Generated types and application gates
 
-Public declarations were regenerated from the clean 62-migration schema and include the Space tables/functions. A repeatable hosted byte-for-byte generated-type drift gate remains release work; the vouch-target function argument intentionally permits `null` in the application declaration.
+Public declarations were regenerated from the clean 64-migration schema and include the Space plus I/O evidence tables/functions. A repeatable hosted byte-for-byte generated-type drift gate remains release work; the vouch-target function argument intentionally permits `null` in the application declaration.
 
 Current application checks:
 
@@ -98,14 +111,14 @@ The production build still reports a 645.31 kB minified JavaScript chunk. Bundle
 
 ## Local verification
 
-The current local stack replays all 62 checked-in migrations from zero and passes 433/433 assertions across 11 pgTAP files. TypeScript types were generated from that clean schema. This supersedes the earlier 58/269 and upgraded 61/376 local evidence while leaving a production-like snapshot upgrade as a separate requirement.
+The current local stack replays all 64 checked-in migrations from zero and passes 446/446 assertions across 11 pgTAP files. TypeScript types were generated from that clean schema. This supersedes the earlier 58/269, 61/376 and 62/433 evidence while leaving a production-like snapshot upgrade as a separate requirement.
 
-The fixed-template email worker source and three template tests are present, but the worker is not deployed and made no email-provider request. The former browser-composed `resend-email-dispatcher` was replaced in place by fail-closed version 14, which returns `410 Gone`; `io-gateway` remains version 17.
+The fixed-template email worker source and three template tests are present, but the worker is not deployed and made no email-provider request. The former browser-composed `resend-email-dispatcher` was replaced in place by fail-closed version 14, which returns `410 Gone`; the currency-aware receipt writer is deployed as active `io-gateway` version 18 with JWT verification enabled.
 
 ## Immediate follow-up gates
 
 1. Reconcile the 26 local/hosted timestamp aliases into a durable source strategy without rewriting the hosted ledger.
-2. Keep the fresh 62-migration/433-assertion replay and public/private lint required in CI; add a production-like snapshot upgrade.
+2. Keep the fresh 64-migration/446-assertion replay and public/private lint required in CI; add a production-like snapshot upgrade.
 3. Complete the authenticated `SECURITY DEFINER` function authorization matrix.
 4. Verify leaked-password protection and enable it if disabled; record Auth configuration evidence.
 5. Work down the RLS advisor backlog with tests and query measurements.

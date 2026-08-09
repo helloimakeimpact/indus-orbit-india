@@ -31,6 +31,29 @@ export type IoAuditEvent = {
   payload: Record<string, unknown>;
 };
 
+export type IoRouteReceipt = {
+  id: string;
+  requestId: string;
+  resultState: "completed" | "failed";
+  routeStrategy: string;
+  providerKey: string | null;
+  modelKey: string | null;
+  capacityMode: string | null;
+  regionCode: string | null;
+  residencyCountryCode: string | null;
+  retentionClass: string | null;
+  currencyCode: string | null;
+  candidateCount: number;
+  fallbackCount: number;
+  estimatedCostNanos: number | null;
+  inputTokens: number | null;
+  outputTokens: number | null;
+  createdAt: string;
+  completedAt: string;
+  attemptCount: number;
+  failedAttemptCount: number;
+};
+
 export type PartnerRunResult = {
   requestId: string;
   receiptId: string;
@@ -349,6 +372,49 @@ export async function getIoAuditEvents(workspaceId: string): Promise<IoAuditEven
         ? event.payload
         : {},
   }));
+}
+
+export async function getIoRouteReceipts(workspaceId: string): Promise<IoRouteReceipt[]> {
+  const { data, error } = await supabase
+    .from("io_route_receipts")
+    .select(
+      "id, request_id, result_state, route_strategy, selected_provider_key, selected_model_key, selected_capacity_mode, selected_region_code, selected_residency_country_code, selected_retention_class, selected_currency_code, candidate_count, fallback_count, estimated_cost_nanos, input_tokens, output_tokens, created_at, completed_at, io_provider_attempts(attempt_state)",
+    )
+    .eq("workspace_id", workspaceId)
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false })
+    .limit(12);
+
+  if (error) throw new Error(error.message);
+
+  return (data ?? []).flatMap((receipt) => {
+    if (receipt.result_state !== "completed" && receipt.result_state !== "failed") return [];
+    const attempts = receipt.io_provider_attempts ?? [];
+    return [
+      {
+        id: receipt.id,
+        requestId: receipt.request_id,
+        resultState: receipt.result_state,
+        routeStrategy: receipt.route_strategy,
+        providerKey: receipt.selected_provider_key,
+        modelKey: receipt.selected_model_key,
+        capacityMode: receipt.selected_capacity_mode,
+        regionCode: receipt.selected_region_code,
+        residencyCountryCode: receipt.selected_residency_country_code,
+        retentionClass: receipt.selected_retention_class,
+        currencyCode: receipt.selected_currency_code,
+        candidateCount: receipt.candidate_count,
+        fallbackCount: receipt.fallback_count,
+        estimatedCostNanos: receipt.estimated_cost_nanos,
+        inputTokens: receipt.input_tokens,
+        outputTokens: receipt.output_tokens,
+        createdAt: receipt.created_at,
+        completedAt: receipt.completed_at,
+        attemptCount: attempts.length,
+        failedAttemptCount: attempts.filter((attempt) => attempt.attempt_state === "failed").length,
+      },
+    ];
+  });
 }
 
 export async function runPartnerRoute(input: {

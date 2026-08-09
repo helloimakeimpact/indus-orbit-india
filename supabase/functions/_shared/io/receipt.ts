@@ -44,6 +44,7 @@ export async function writeRouteReceipt(admin: SupabaseClient, input: RouteRecei
       selected_region_code: selected?.regionCode ?? null,
       selected_residency_country_code: selected?.residencyCountryCode ?? null,
       selected_retention_class: selected?.retentionClass ?? null,
+      selected_currency_code: selected?.currencyCode ?? null,
       capability_version: selected?.capabilityVersion ?? null,
       price_version: selected?.priceVersion ?? null,
       candidate_count: input.selection?.candidateCount ?? 0,

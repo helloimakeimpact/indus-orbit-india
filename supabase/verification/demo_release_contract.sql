@@ -18,13 +18,15 @@ with release_versions(version) as (
     ('20260809132035'),
     ('20260809142000'),
     ('20260809150000'),
-    ('20260809152439')
+    ('20260809152439'),
+    ('20260809174030'),
+    ('20260809182509')
 ),
 checks(check_name, passed, detail) as (
   select
     'release migrations recorded',
-    count(*) = 11,
-    format('%s of 11 versions present', count(*))
+    count(*) = 13,
+    format('%s of 13 versions present', count(*))
   from supabase_migrations.schema_migrations as migration
   join release_versions as expected on expected.version = migration.version
 
@@ -141,15 +143,25 @@ checks(check_name, passed, detail) as (
         'anon',
         'public.reject_chapter_proposal(uuid)',
         'EXECUTE'
+      )
+      and not has_function_privilege(
+        'anon',
+        'public.admin_io_evidence_summary()',
+        'EXECUTE'
+      )
+      and not has_function_privilege(
+        'anon',
+        'public.admin_io_recent_route_receipts(timestamptz,uuid,integer)',
+        'EXECUTE'
       ),
-    '16 privileged functions deny anonymous execution'
+    '18 privileged functions deny anonymous execution'
 
   union all
 
   select
     'caller-bound RPCs exist',
     bool_and(function_name is not null),
-    format('%s of 17 functions present', count(function_name))
+    format('%s of 19 functions present', count(function_name))
   from (
     values
       (to_regprocedure('public.get_my_product_access()')),
@@ -168,8 +180,37 @@ checks(check_name, passed, detail) as (
       (to_regprocedure('public.post_my_mission_update(uuid,text,uuid)')),
       (to_regprocedure('public.request_my_vouch(text,uuid,uuid)')),
       (to_regprocedure('public.approve_chapter_proposal(uuid)')),
-      (to_regprocedure('public.reject_chapter_proposal(uuid)'))
+      (to_regprocedure('public.reject_chapter_proposal(uuid)')),
+      (to_regprocedure('public.admin_io_evidence_summary()')),
+      (to_regprocedure('public.admin_io_recent_route_receipts(timestamptz,uuid,integer)'))
   ) as functions(function_name)
+
+  union all
+
+  select
+    'I/O evidence schema released',
+    exists (
+      select 1
+      from information_schema.columns
+      where table_schema = 'public'
+        and table_name = 'io_route_receipts'
+        and column_name = 'selected_currency_code'
+    )
+      and to_regclass('public.io_route_receipts_global_time_idx') is not null
+      and to_regclass(
+        'private.io_provider_conformance_runs_endpoint_capability_idx'
+      ) is not null
+      and has_function_privilege(
+        'authenticated',
+        'public.admin_io_evidence_summary()',
+        'EXECUTE'
+      )
+      and has_function_privilege(
+        'authenticated',
+        'public.admin_io_recent_route_receipts(timestamptz,uuid,integer)',
+        'EXECUTE'
+      ),
+    'currency/receipt/conformance indexes present; authenticated capability-checked RPC execution=true'
 
   union all
 
