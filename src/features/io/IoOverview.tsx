@@ -33,31 +33,29 @@ import { cn } from "@/lib/utils";
 import { runOpenCodeSession, type OpenCodeRunResult } from "@/features/io/opencode";
 import {
   createMyIoWorkspace,
+  createMyIoTerminalSession,
+  completeMyIoTerminalSession,
   getIoAuditEvents,
+  getMyIoBudgetStatus,
   getIoCapacitySources,
   getIoRouteReceipts,
   getIoRouteCatalog,
   getMyIoWorkspaces,
-  recordLocalOpenCodeSession,
+  listMyIoTerminalSessions,
   runPartnerRoute,
   type IoAuditEvent,
   type IoCapacitySource,
+  type IoBudgetStatus,
   type IoRouteCatalog,
   type IoRouteReceipt,
   type IoRouteStrategy,
+  type IoTerminalSession,
   type IoWorkspace,
   type PartnerRunResult,
 } from "@/features/io/io.client";
 
 type SessionMode = "observe" | "plan" | "build" | "run";
 type ExecutionPath = "partner" | "terminal";
-
-const routeSignals = [
-  { label: "Residency rule", value: "Not enforced yet", icon: Globe2 },
-  { label: "Registry evidence", value: "Required", icon: FileCheck2 },
-  { label: "Budget reservation", value: "Not implemented", icon: IndianRupee },
-  { label: "Retention filter", value: "Not enforced yet", icon: ShieldCheck },
-];
 
 export function IoOverview() {
   const [workspace, setWorkspace] = useState<IoWorkspace | null>(null);
@@ -68,7 +66,9 @@ export function IoOverview() {
   const [sources, setSources] = useState<IoCapacitySource[]>([]);
   const [events, setEvents] = useState<IoAuditEvent[]>([]);
   const [receipts, setReceipts] = useState<IoRouteReceipt[]>([]);
+  const [budgets, setBudgets] = useState<IoBudgetStatus[]>([]);
   const [routeCatalog, setRouteCatalog] = useState<IoRouteCatalog | null>(null);
+  const [terminalSessions, setTerminalSessions] = useState<IoTerminalSession[]>([]);
   const [routeCatalogError, setRouteCatalogError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [catalogLoading, setCatalogLoading] = useState(false);
@@ -103,27 +103,40 @@ export function IoOverview() {
         setSources([]);
         setEvents([]);
         setReceipts([]);
+        setBudgets([]);
         setRouteCatalog(null);
+        setTerminalSessions([]);
         setRouteCatalogError(null);
         setRequestedModelId("");
         return;
       }
       setCatalogLoading(true);
-      const [sourcesResult, eventsResult, receiptsResult, catalogResult] = await Promise.allSettled(
-        [
-          getIoCapacitySources(nextWorkspace.id),
-          getIoAuditEvents(nextWorkspace.id),
-          getIoRouteReceipts(nextWorkspace.id),
-          getIoRouteCatalog(nextWorkspace.id),
-        ],
-      );
+      const [
+        sourcesResult,
+        eventsResult,
+        receiptsResult,
+        budgetResult,
+        terminalSessionsResult,
+        catalogResult,
+      ] = await Promise.allSettled([
+        getIoCapacitySources(nextWorkspace.id),
+        getIoAuditEvents(nextWorkspace.id),
+        getIoRouteReceipts(nextWorkspace.id),
+        getMyIoBudgetStatus(nextWorkspace.id),
+        listMyIoTerminalSessions(nextWorkspace.id),
+        getIoRouteCatalog(nextWorkspace.id),
+      ]);
       if (loadSequence !== workspaceLoadSequence.current) return;
       if (sourcesResult.status === "rejected") throw sourcesResult.reason;
       if (eventsResult.status === "rejected") throw eventsResult.reason;
       if (receiptsResult.status === "rejected") throw receiptsResult.reason;
+      if (budgetResult.status === "rejected") throw budgetResult.reason;
+      if (terminalSessionsResult.status === "rejected") throw terminalSessionsResult.reason;
       setSources(sourcesResult.value);
       setEvents(eventsResult.value);
       setReceipts(receiptsResult.value);
+      setBudgets(budgetResult.value);
+      setTerminalSessions(terminalSessionsResult.value);
       if (catalogResult.status === "fulfilled") {
         setRouteCatalog(catalogResult.value);
         setRouteCatalogError(null);
@@ -202,24 +215,44 @@ export function IoOverview() {
         await loadWorkspace(workspace.id);
         toast.success(`Routed through ${result.provider}.`);
       } else {
+        let durableSessionId: string | null = null;
+        let durableMetadataFailed = false;
         const result = await runOpenCodeSession({
           serverUrl: openCodeUrl,
           password: openCodePassword,
           title: `I/O ${mode} session`,
           prompt: prompt.trim(),
+          onSessionCreated: async (session) => {
+            try {
+              const durable = await createMyIoTerminalSession({
+                workspaceId: workspace.id,
+                title: `I/O ${mode} session`,
+                mode,
+                connectorOrigin: session.connectorOrigin,
+                runtimeReference: session.sessionId,
+                runtimeVersion: session.serverVersion,
+              });
+              durableSessionId = durable.id;
+            } catch {
+              durableMetadataFailed = true;
+            }
+          },
+          onSessionSettled: async (_session, state) => {
+            if (!durableSessionId) return;
+            try {
+              await completeMyIoTerminalSession(durableSessionId, state);
+            } catch {
+              durableMetadataFailed = true;
+            }
+          },
         });
         setTerminalResult(result);
-        try {
-          await recordLocalOpenCodeSession({
-            workspaceId: workspace.id,
-            connectorOrigin: result.connectorOrigin,
-            sessionId: result.sessionId,
-          });
-          await loadWorkspace(workspace.id);
-          toast.success("OpenCode session completed and its safe audit was recorded.");
-        } catch {
+        await loadWorkspace(workspace.id);
+        if (!durableMetadataFailed) {
+          toast.success("OpenCode session completed and its durable safe metadata was recorded.");
+        } else {
           toast.warning(
-            "OpenCode completed locally, but I/O Port could not record the safe session audit.",
+            "OpenCode completed locally, but its durable metadata could not be fully recorded.",
           );
         }
       }
@@ -234,8 +267,19 @@ export function IoOverview() {
   const hasRoutableModels = Boolean(routeCatalog?.models.length);
   const canRunPartner =
     hasRoutableModels &&
+    budgets.length > 0 &&
     !catalogLoading &&
     (routeStrategy !== "explicit_model" || Boolean(requestedModelId));
+  const routeSignals = [
+    { label: "Registry evidence", value: "Enforced", icon: FileCheck2 },
+    {
+      label: "Budget reservation",
+      value: budgets.length ? "Hard limit" : "Needs operator limit",
+      icon: IndianRupee,
+    },
+    { label: "Endpoint health", value: "Circuit protected", icon: Globe2 },
+    { label: "Retention evidence", value: "Receipt bound", icon: ShieldCheck },
+  ];
 
   return (
     <div className="min-w-0 space-y-4 p-3 sm:p-4 lg:p-5">
@@ -529,10 +573,93 @@ export function IoOverview() {
                 );
               })}
             </div>
+            {budgets.length ? (
+              <div className="mt-3 border-t border-border/60 pt-2.5">
+                {budgets.map((budget) => (
+                  <div key={budget.budgetLimitId} className="space-y-1.5">
+                    <div className="flex items-center justify-between gap-2 text-[10px]">
+                      <span className="text-muted-foreground">Available this period</span>
+                      <span className="font-semibold text-foreground">
+                        {formatMinor(budget.remainingMinor, budget.currencyCode)}
+                      </span>
+                    </div>
+                    <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                      <div
+                        className="h-full rounded-full bg-[var(--saffron)]"
+                        style={{
+                          width: `${Math.min(100, ((budget.spentMinor + budget.reservedMinor) / Math.max(1, budget.hardLimitMinor)) * 100)}%`,
+                        }}
+                      />
+                    </div>
+                    <p className="text-[9px] text-muted-foreground">
+                      {formatMinor(budget.spentMinor, budget.currencyCode)} settled ·{" "}
+                      {formatMinor(budget.reservedMinor, budget.currencyCode)} reserved
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-3 border-t border-border/60 pt-2.5 text-[9px] leading-4 text-amber-800">
+                Partner calls stay blocked until an operator assigns a workspace budget.
+              </p>
+            )}
           </div>
         </div>
 
         <RunResult partner={partnerResult} terminal={terminalResult} />
+      </section>
+
+      <section className="app-glass overflow-hidden rounded-2xl">
+        <div className="flex items-center justify-between gap-3 border-b border-border/60 px-4 py-3">
+          <div>
+            <p className="app-workspace-kicker">Local terminal continuity</p>
+            <h2 className="mt-1 text-base font-semibold text-[var(--indigo-night)]">
+              Durable session metadata
+            </h2>
+          </div>
+          <Badge variant="outline" className="text-[9px]">
+            CONTENT STAYS LOCAL
+          </Badge>
+        </div>
+        {terminalSessions.length ? (
+          <div className="divide-y divide-border/55">
+            {terminalSessions.map((session) => (
+              <article
+                key={session.id}
+                className="grid gap-2 px-4 py-3 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-xs font-semibold text-foreground">{session.title}</p>
+                  <p className="mt-1 text-[9px] text-muted-foreground">
+                    {new Date(session.startedAt).toLocaleString()} · OpenCode{" "}
+                    {session.runtimeVersion ?? "version unknown"}
+                  </p>
+                </div>
+                <Badge variant="outline" className="w-fit text-[9px] capitalize">
+                  {session.mode}
+                </Badge>
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    "w-fit text-[9px] capitalize",
+                    session.state === "completed"
+                      ? "border-emerald-300 text-emerald-800"
+                      : session.state === "running"
+                        ? "border-sky-300 text-sky-800"
+                        : "border-amber-300 text-amber-800",
+                  )}
+                >
+                  {session.state}
+                </Badge>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <p className="p-5 text-xs leading-5 text-muted-foreground">
+            No durable local terminal sessions yet. New runs store only lifecycle metadata and
+            hashes—not prompts, responses, code, paths, shell output or passwords.
+          </p>
+        )}
       </section>
 
       <section id="io-capacity" className="scroll-mt-24">
@@ -876,7 +1003,7 @@ function RunResult({
         {partner?.content ?? terminal?.content}
       </p>
       {partner ? (
-        <div className="mt-3 grid gap-2 border-t border-emerald-200/80 pt-2.5 text-[10px] text-emerald-950/80 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-3 grid gap-2 border-t border-emerald-200/80 pt-2.5 text-[10px] text-emerald-950/80 sm:grid-cols-2 lg:grid-cols-5">
           <RouteFact label="Receipt" value={partner.receiptId} />
           <RouteFact
             label="Selection"
@@ -893,6 +1020,10 @@ function RunResult({
             value={`${partner.route.capacityMode}${partner.route.regionCode ? ` · ${partner.route.regionCode}` : ""}`}
           />
           <RouteFact label="Fallbacks" value={String(partner.route.fallbackCount)} />
+          <RouteFact
+            label="Settled cost"
+            value={`${formatMinor(partner.route.settledMinor, partner.route.currencyCode)} · ${partner.route.costBasis === "provider_usage" ? "provider usage" : "estimated usage"}`}
+          />
         </div>
       ) : null}
     </section>
@@ -964,6 +1095,12 @@ function formatNanos(nanos: number | null, currencyCode: string | null) {
     currency: currencyCode,
     maximumFractionDigits: 6,
   }).format(nanos / 1_000_000_000);
+}
+
+function formatMinor(minor: number, currencyCode: string) {
+  const formatter = new Intl.NumberFormat(undefined, { style: "currency", currency: currencyCode });
+  const digits = formatter.resolvedOptions().maximumFractionDigits ?? 2;
+  return formatter.format(minor / 10 ** digits);
 }
 
 function humanizeEvent(value: string) {

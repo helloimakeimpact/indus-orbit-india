@@ -21,6 +21,7 @@ describe("runOpenCodeSession", { concurrency: false }, () => {
   it("validates responses and encodes the returned session identifier", async () => {
     const originalFetch = globalThis.fetch;
     const urls: string[] = [];
+    const lifecycle: string[] = [];
     globalThis.fetch = async (input) => {
       const url = String(input);
       urls.push(url);
@@ -34,11 +35,80 @@ describe("runOpenCodeSession", { concurrency: false }, () => {
         password: "",
         title: "I/O test",
         prompt: "Plan safely",
+        onSessionCreated: async (session) => {
+          lifecycle.push(`created:${session.sessionId}`);
+        },
+        onSessionSettled: async (session, state) => {
+          lifecycle.push(`${state}:${session.sessionId}`);
+        },
       });
       assert.equal(urls[2], "http://localhost:4096/session/session%2Fone/message");
       assert.equal(result.connectorOrigin, "http://localhost:4096");
       assert.equal(result.content, "Completed");
       assert.equal(result.serverVersion, "1.2.3");
+      assert.deepEqual(lifecycle, ["created:session/one", "completed:session/one"]);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it("reports a failed durable lifecycle after local prompt rejection", async () => {
+    const originalFetch = globalThis.fetch;
+    const lifecycle: string[] = [];
+    globalThis.fetch = async (input) => {
+      const url = String(input);
+      if (url.endsWith("/global/health")) return Response.json({ version: "1" });
+      if (url.endsWith("/session")) return Response.json({ id: "session-failed" });
+      return new Response("Rejected", { status: 500 });
+    };
+    try {
+      await assert.rejects(
+        runOpenCodeSession({
+          serverUrl: "http://127.0.0.1:4096",
+          password: "",
+          title: "I/O test",
+          prompt: "Plan safely",
+          onSessionCreated: async () => {
+            lifecycle.push("created");
+          },
+          onSessionSettled: async (_session, state) => {
+            lifecycle.push(state);
+          },
+        }),
+        /Rejected/,
+      );
+      assert.deepEqual(lifecycle, ["created", "failed"]);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it("reports a failed durable lifecycle when the prompt response is malformed", async () => {
+    const originalFetch = globalThis.fetch;
+    const lifecycle: string[] = [];
+    globalThis.fetch = async (input) => {
+      const url = String(input);
+      if (url.endsWith("/global/health")) return Response.json({ version: "1" });
+      if (url.endsWith("/session")) return Response.json({ id: "session-malformed" });
+      return Response.json({ unexpected: true });
+    };
+    try {
+      await assert.rejects(
+        runOpenCodeSession({
+          serverUrl: "http://127.0.0.1:4096",
+          password: "",
+          title: "I/O test",
+          prompt: "Plan safely",
+          onSessionCreated: async () => {
+            lifecycle.push("created");
+          },
+          onSessionSettled: async (_session, state) => {
+            lifecycle.push(state);
+          },
+        }),
+        /invalid message payload/,
+      );
+      assert.deepEqual(lifecycle, ["created", "failed"]);
     } finally {
       globalThis.fetch = originalFetch;
     }

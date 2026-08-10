@@ -4,6 +4,8 @@ import { selectProviderRoute, type RouteInput } from "./routing.ts";
 import type { GatewayMessage, PartnerResult, ProviderConnection } from "./types.ts";
 
 const supportedTiers = new Set(["economy", "balanced", "premium"]);
+const supportedHealthStates = new Set(["healthy", "degraded", "unavailable", "unknown"]);
+const supportedCircuitStates = new Set(["closed", "open", "half_open"]);
 const secretReferencePattern = /^IO_PROVIDER_[A-Z0-9_]+_API_KEY$/;
 const defaultOutputTokenAllowance = 1_024;
 
@@ -77,6 +79,8 @@ function readConnection(row: RegistryRow): ProviderConnection | null {
   const priceVersion = readNumber(row, "price_version");
   const maxContextTokens =
     row.max_context_tokens === null ? null : readNumber(row, "max_context_tokens");
+  const healthState = readString(row, "health_state");
+  const circuitState = readString(row, "circuit_state");
 
   if (
     (integrationStyle !== "openai_compatible" && integrationStyle !== "native_adapter") ||
@@ -91,7 +95,11 @@ function readConnection(row: RegistryRow): ProviderConnection | null {
     outputPriceNanos === null ||
     capabilityVersion === null ||
     priceVersion === null ||
-    maxContextTokens === undefined
+    maxContextTokens === undefined ||
+    !healthState ||
+    !supportedHealthStates.has(healthState) ||
+    !circuitState ||
+    !supportedCircuitStates.has(circuitState)
   ) {
     return null;
   }
@@ -145,6 +153,8 @@ function readConnection(row: RegistryRow): ProviderConnection | null {
     unitQuantity,
     inputPriceNanos,
     outputPriceNanos,
+    healthState: healthState as ProviderConnection["healthState"],
+    circuitState: circuitState as ProviderConnection["circuitState"],
   };
 }
 
@@ -166,7 +176,7 @@ function resolveSecret(reference: string) {
 export async function loadReadyProviderConnections(
   admin: SupabaseClient,
 ): Promise<ProviderConnection[]> {
-  const { data, error } = await admin.rpc("io_get_ready_endpoint_connections");
+  const { data, error } = await admin.rpc("io_get_routable_endpoint_connections_v2");
   if (error) throw error;
 
   return (Array.isArray(data) ? data : [])

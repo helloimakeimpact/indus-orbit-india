@@ -6,6 +6,13 @@ export type OpenCodeRunResult = {
   serverVersion: string | null;
 };
 
+export type OpenCodeSessionReference = {
+  connectorOrigin: string;
+  sessionId: string;
+  title: string;
+  serverVersion: string | null;
+};
+
 type OpenCodeMessagePart = {
   type?: string;
   text?: string;
@@ -59,6 +66,11 @@ export async function runOpenCodeSession(input: {
   password: string;
   title: string;
   prompt: string;
+  onSessionCreated?: (session: OpenCodeSessionReference) => Promise<void>;
+  onSessionSettled?: (
+    session: OpenCodeSessionReference,
+    state: "completed" | "failed",
+  ) => Promise<void>;
 }): Promise<OpenCodeRunResult> {
   const baseUrl = normalizeOpenCodeOrigin(input.serverUrl);
   const healthResponse = await fetch(`${baseUrl}/global/health`, {
@@ -78,37 +90,48 @@ export async function runOpenCodeSession(input: {
   if (typeof sessionId !== "string" || !sessionId.trim() || sessionId.length > 512) {
     throw new Error("OpenCode returned an invalid session identifier.");
   }
-
-  const promptResponse = await fetch(
-    `${baseUrl}/session/${encodeURIComponent(sessionId)}/message`,
-    {
-      method: "POST",
-      headers: headers(input.password),
-      body: JSON.stringify({ parts: [{ type: "text", text: input.prompt }] }),
-    },
-  );
-  const message = await parseResponse(promptResponse);
-  const messageRecord = asRecord(message)!;
-  if (!Array.isArray(messageRecord.parts)) {
-    throw new Error("OpenCode returned an invalid message payload.");
-  }
-  const content = messageRecord.parts
-    .filter(
-      (part): part is OpenCodeMessagePart =>
-        Boolean(asRecord(part)) &&
-        (part as OpenCodeMessagePart).type === "text" &&
-        typeof (part as OpenCodeMessagePart).text === "string",
-    )
-    .map((part) => part.text!.trim())
-    .filter(Boolean)
-    .join("\n\n");
-
-  return {
+  const reference: OpenCodeSessionReference = {
     connectorOrigin: baseUrl,
     sessionId,
     title: typeof sessionRecord.title === "string" ? sessionRecord.title : input.title,
+    serverVersion: typeof healthRecord.version === "string" ? healthRecord.version : null,
+  };
+  await input.onSessionCreated?.(reference);
+
+  let content: string;
+  try {
+    const promptResponse = await fetch(
+      `${baseUrl}/session/${encodeURIComponent(sessionId)}/message`,
+      {
+        method: "POST",
+        headers: headers(input.password),
+        body: JSON.stringify({ parts: [{ type: "text", text: input.prompt }] }),
+      },
+    );
+    const message = await parseResponse(promptResponse);
+    const messageRecord = asRecord(message)!;
+    if (!Array.isArray(messageRecord.parts)) {
+      throw new Error("OpenCode returned an invalid message payload.");
+    }
+    content = messageRecord.parts
+      .filter(
+        (part): part is OpenCodeMessagePart =>
+          Boolean(asRecord(part)) &&
+          (part as OpenCodeMessagePart).type === "text" &&
+          typeof (part as OpenCodeMessagePart).text === "string",
+      )
+      .map((part) => part.text!.trim())
+      .filter(Boolean)
+      .join("\n\n");
+  } catch (error) {
+    await input.onSessionSettled?.(reference, "failed");
+    throw error;
+  }
+  await input.onSessionSettled?.(reference, "completed");
+
+  return {
+    ...reference,
     content:
       content || "OpenCode completed the request. Open its session to inspect the full tool trail.",
-    serverVersion: typeof healthRecord.version === "string" ? healthRecord.version : null,
   };
 }

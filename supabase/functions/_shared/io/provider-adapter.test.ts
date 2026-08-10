@@ -34,6 +34,8 @@ function connection(overrides: Partial<ProviderConnection>): ProviderConnection 
     unitQuantity: 1_000_000,
     inputPriceNanos: 1,
     outputPriceNanos: 1,
+    healthState: "unknown",
+    circuitState: "closed",
     ...overrides,
   };
 }

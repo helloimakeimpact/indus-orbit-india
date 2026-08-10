@@ -6,6 +6,13 @@ import {
   requireWorkspaceMembership,
 } from "../_shared/io/auth.ts";
 import { asGatewayError, GatewayError } from "../_shared/io/errors.ts";
+import {
+  beginRouteRequest,
+  calculateReservationMinor,
+  calculateSettlement,
+  fingerprintRouteRequest,
+  recordEndpointOutcome,
+} from "../_shared/io/operations.ts";
 import { getActiveCapacityEntitlements } from "../_shared/io/policy.ts";
 import {
   loadReadyProviderConnections,
@@ -117,22 +124,6 @@ Deno.serve(async (request) => {
       });
     }
 
-    if (body.action === "record_local_opencode") {
-      await writeIoAuditEvent(admin, {
-        workspaceId: body.workspaceId,
-        actorKind: "user",
-        actorUserId: actor.id,
-        eventType: "io.terminal.opencode.completed",
-        requestId: requestId(),
-        payload: {
-          connector: "opencode",
-          connector_origin: body.connectorOrigin!,
-          session_id: body.sessionId!,
-        },
-      });
-      return json(request, { ok: true });
-    }
-
     const id = requestId();
     const messages = body.messages!;
     const mode = body.mode ?? "plan";
@@ -141,6 +132,48 @@ Deno.serve(async (request) => {
       requestedModelId: body.requestedModelId,
       entitledCapacitySourceIds: entitledSourceIds,
     });
+    const routeAttempts = selectRouteAttempts(
+      selection.routeCandidates,
+      Deno.env.get("IO_PROVIDER_MAX_ATTEMPTS"),
+    );
+    const reserveMinor = calculateReservationMinor(routeAttempts, messages);
+    const fingerprint = await fingerprintRouteRequest({
+      workspaceId: body.workspaceId,
+      mode,
+      messages,
+      routeStrategy: body.routeStrategy,
+      requestedModelId: body.requestedModelId,
+    });
+    const reservation = await beginRouteRequest(admin, {
+      workspaceId: body.workspaceId,
+      actorUserId: actor.id,
+      idempotencyKey: body.idempotencyKey!,
+      requestFingerprint: fingerprint,
+      requestId: id,
+      endpointId: selection.connection.endpointId,
+      currencyCode: selection.connection.currencyCode,
+      reserveMinor,
+    });
+
+    if (reservation.replayed) {
+      return json(
+        request,
+        {
+          ok: false,
+          code: "idempotent_replay",
+          error:
+            reservation.state === "reserved"
+              ? "This request is already in progress."
+              : reservation.state === "expired"
+                ? "The earlier reservation expired safely; retry with a new idempotency key."
+                : "This request was already finalized; use its existing route receipt.",
+          requestId: reservation.requestId,
+          receiptId: reservation.receiptId,
+          state: reservation.state,
+        },
+        409,
+      );
+    }
 
     await writeIoAuditEvent(admin, {
       workspaceId: body.workspaceId,
@@ -157,6 +190,7 @@ Deno.serve(async (request) => {
         model_release_date: selection.connection.modelReleaseDate,
         model_candidate_count: selection.candidateCount,
         estimated_cost_nanos: selection.estimatedCostNanos,
+        reserved_minor: reservation.reservedMinor,
         price_currency: selection.connection.currencyCode,
         mode,
         message_count: messages.length,
@@ -169,12 +203,9 @@ Deno.serve(async (request) => {
     let selectedRoute: RouteSelection | null = null;
     let lastError: GatewayError | null = null;
 
-    const routeAttempts = selectRouteAttempts(
-      selection.routeCandidates,
-      Deno.env.get("IO_PROVIDER_MAX_ATTEMPTS"),
-    );
     for (const candidate of routeAttempts) {
       const startedAt = new Date().toISOString();
+      const startedAtMonotonic = performance.now();
       try {
         const candidateResult = await sendProviderChat(candidate.connection, messages);
         attempts.push({
@@ -192,6 +223,11 @@ Deno.serve(async (request) => {
           connection: candidate.connection,
           estimatedCostNanos: candidate.estimatedCostNanos,
         };
+        await recordEndpointOutcome(admin, {
+          endpointId: candidate.connection.endpointId,
+          succeeded: true,
+          latencyMs: performance.now() - startedAtMonotonic,
+        });
         break;
       } catch (error) {
         const gatewayError = asGatewayError(error);
@@ -202,6 +238,12 @@ Deno.serve(async (request) => {
           state: "failed",
           errorCode: gatewayError.code,
           upstreamStatus: gatewayError.upstreamStatus,
+        });
+        await recordEndpointOutcome(admin, {
+          endpointId: candidate.connection.endpointId,
+          succeeded: false,
+          latencyMs: performance.now() - startedAtMonotonic,
+          errorCode: gatewayError.code,
         });
         lastError = gatewayError;
         if (
@@ -217,44 +259,44 @@ Deno.serve(async (request) => {
     if (!result || !selectedRoute) {
       const failure =
         lastError ?? new GatewayError("upstream_failure", 502, "No provider route completed.");
-      try {
-        const receiptId = await writeRouteReceipt(admin, {
-          workspaceId: body.workspaceId,
-          requestId: id,
-          actorUserId: actor.id,
-          selection,
-          resultState: "failed",
-          attempts,
-        });
-        await writeIoAuditEvent(admin, {
-          workspaceId: body.workspaceId,
-          actorKind: "provider",
-          eventType: "io.partner.failed",
-          requestId: id,
-          payload: {
-            receipt_id: receiptId,
-            attempted_count: attempts.length,
-            code: failure.code,
-            status: failure.status,
-          },
-        });
-      } catch (receiptError) {
-        console.error(
-          "io-gateway failed receipt",
-          receiptError instanceof Error ? receiptError.message : "unknown",
-        );
-      }
+      const finalization = await writeRouteReceipt(admin, {
+        requestId: id,
+        selection,
+        resultState: "failed",
+        actualCostMinor: 0,
+        costBasis: "released_failure",
+        attempts,
+      });
+      await writeIoAuditEvent(admin, {
+        workspaceId: body.workspaceId,
+        actorKind: "provider",
+        eventType: "io.partner.failed",
+        requestId: id,
+        payload: {
+          receipt_id: finalization.receiptId,
+          attempted_count: attempts.length,
+          released_minor: finalization.releasedMinor,
+          currency: finalization.currencyCode,
+          code: failure.code,
+          status: failure.status,
+        },
+      });
       throw failure;
     }
 
-    const receiptId = await writeRouteReceipt(admin, {
-      workspaceId: body.workspaceId,
+    const settlement = calculateSettlement({
+      selection: selectedRoute,
+      inputTokens: result.usage.inputTokens,
+      outputTokens: result.usage.outputTokens,
+    });
+    const finalization = await writeRouteReceipt(admin, {
       requestId: id,
-      actorUserId: actor.id,
       selection: selectedRoute,
       resultState: "completed",
       inputTokens: result.usage.inputTokens,
       outputTokens: result.usage.outputTokens,
+      actualCostMinor: settlement.actualCostMinor,
+      costBasis: settlement.costBasis,
       attempts,
     });
     await writeIoAuditEvent(admin, {
@@ -263,7 +305,7 @@ Deno.serve(async (request) => {
       eventType: "io.partner.completed",
       requestId: id,
       payload: {
-        receipt_id: receiptId,
+        receipt_id: finalization.receiptId,
         capacity_source_id: selectedRoute.connection.capacitySourceId,
         provider_key: selectedRoute.connection.providerKey,
         model: selectedRoute.connection.providerModelId,
@@ -271,13 +313,17 @@ Deno.serve(async (request) => {
         fallback_count: Math.max(0, attempts.length - 1),
         input_tokens: result.usage.inputTokens ?? null,
         output_tokens: result.usage.outputTokens ?? null,
+        settled_minor: finalization.settledMinor,
+        released_minor: finalization.releasedMinor,
+        currency: finalization.currencyCode,
+        cost_basis: settlement.costBasis,
       },
     });
 
     return json(request, {
       ok: true,
       requestId: id,
-      receiptId,
+      receiptId: finalization.receiptId,
       provider: selectedRoute.connection.providerDisplayName,
       model: selectedRoute.connection.providerModelId,
       modelSelection: selectedRoute.strategy,
@@ -297,6 +343,9 @@ Deno.serve(async (request) => {
         retentionClass: selectedRoute.connection.retentionClass,
         estimatedCostNanos: selectedRoute.estimatedCostNanos,
         currencyCode: selectedRoute.connection.currencyCode,
+        settledMinor: finalization.settledMinor,
+        releasedMinor: finalization.releasedMinor,
+        costBasis: settlement.costBasis,
         fallbackCount: Math.max(0, attempts.length - 1),
       },
     });

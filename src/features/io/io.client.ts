@@ -66,6 +66,28 @@ export type PartnerRunResult = {
   route: IoRouteDisclosure;
 };
 
+export type IoBudgetStatus = {
+  budgetLimitId: string;
+  currencyCode: string;
+  hardLimitMinor: number;
+  reservedMinor: number;
+  spentMinor: number;
+  remainingMinor: number;
+  periodStart: string;
+  periodEnd: string;
+};
+
+export type IoTerminalSession = {
+  id: string;
+  title: string;
+  mode: "observe" | "plan" | "build" | "run";
+  state: "running" | "completed" | "failed" | "stopped" | "archived";
+  runtimeVersion: string | null;
+  lastEventSequence: number;
+  startedAt: string;
+  completedAt: string | null;
+};
+
 export type IoRouteStrategy = "latest_affordable" | "lowest_cost" | "explicit_model";
 
 export type IoRoutableModel = {
@@ -99,6 +121,9 @@ export type IoRouteDisclosure = {
   retentionClass: string;
   estimatedCostNanos: number;
   currencyCode: string;
+  settledMinor: number;
+  releasedMinor: number;
+  costBasis: "provider_usage" | "route_estimate_missing_usage";
   fallbackCount: number;
 };
 
@@ -130,6 +155,13 @@ function readNonNegativeInteger(value: UnknownRecord, key: string): number | nul
   return typeof candidate === "number" && Number.isSafeInteger(candidate) && candidate >= 0
     ? candidate
     : null;
+}
+
+function readNonNegativeIntegerString(value: UnknownRecord, key: string): number | null {
+  const candidate = value[key];
+  if (typeof candidate !== "string" || !/^\d+$/.test(candidate)) return null;
+  const parsed = Number(candidate);
+  return Number.isSafeInteger(parsed) ? parsed : null;
 }
 
 function responseError(value: unknown, fallback: string) {
@@ -200,12 +232,18 @@ function parseRouteDisclosure(value: unknown): IoRouteDisclosure | null {
   ].map((key) => readString(route, key));
   const estimatedCostNanos = readNonNegativeInteger(route, "estimatedCostNanos");
   const fallbackCount = readNonNegativeInteger(route, "fallbackCount");
+  const settledMinor = readNonNegativeInteger(route, "settledMinor");
+  const releasedMinor = readNonNegativeInteger(route, "releasedMinor");
+  const costBasis = readString(route, "costBasis");
   const regionCode = readNullableString(route, "regionCode");
   const residencyCountryCode = readNullableString(route, "residencyCountryCode");
   if (
     required.some((item) => !item) ||
     estimatedCostNanos === null ||
     fallbackCount === null ||
+    settledMinor === null ||
+    releasedMinor === null ||
+    (costBasis !== "provider_usage" && costBasis !== "route_estimate_missing_usage") ||
     (regionCode === null && route.regionCode !== null) ||
     (residencyCountryCode === null && route.residencyCountryCode !== null)
   ) {
@@ -221,6 +259,9 @@ function parseRouteDisclosure(value: unknown): IoRouteDisclosure | null {
     retentionClass: required[4]!,
     currencyCode: required[5]!,
     estimatedCostNanos,
+    settledMinor,
+    releasedMinor,
+    costBasis,
     fallbackCount,
   };
 }
@@ -423,11 +464,13 @@ export async function runPartnerRoute(input: {
   mode: "observe" | "plan" | "build" | "run";
   routeStrategy: IoRouteStrategy;
   requestedModelId?: string;
+  idempotencyKey?: string;
 }): Promise<PartnerRunResult> {
   const { data, error } = await supabase.functions.invoke("io-gateway", {
     body: {
       action: "partner_chat",
       workspace_id: input.workspaceId,
+      idempotency_key: input.idempotencyKey ?? crypto.randomUUID(),
       mode: input.mode,
       messages: [{ role: "user", content: input.prompt }],
       route_strategy: input.routeStrategy,
@@ -441,6 +484,129 @@ export async function runPartnerRoute(input: {
   return parsePartnerRunResult(data);
 }
 
+export async function getMyIoBudgetStatus(workspaceId: string): Promise<IoBudgetStatus[]> {
+  const { data, error } = await supabase.rpc("get_my_io_budget_status", {
+    _workspace_id: workspaceId,
+  });
+  if (error) throw new Error(error.message);
+  if (!Array.isArray(data)) throw new Error("The I/O budget projection is invalid.");
+
+  return data.flatMap((value) => {
+    const budget = asRecord(value);
+    if (!budget) return [];
+    const budgetLimitId = readString(budget, "budgetLimitId");
+    const currencyCode = readString(budget, "currencyCode");
+    const periodStart = readString(budget, "periodStart");
+    const periodEnd = readString(budget, "periodEnd");
+    const hardLimitMinor = readNonNegativeIntegerString(budget, "hardLimitMinor");
+    const reservedMinor = readNonNegativeIntegerString(budget, "reservedMinor");
+    const spentMinor = readNonNegativeIntegerString(budget, "spentMinor");
+    const remainingMinor = readNonNegativeIntegerString(budget, "remainingMinor");
+    if (
+      !budgetLimitId ||
+      !currencyCode ||
+      !periodStart ||
+      !periodEnd ||
+      hardLimitMinor === null ||
+      reservedMinor === null ||
+      spentMinor === null ||
+      remainingMinor === null
+    ) {
+      return [];
+    }
+    return [
+      {
+        budgetLimitId,
+        currencyCode,
+        hardLimitMinor,
+        reservedMinor,
+        spentMinor,
+        remainingMinor,
+        periodStart,
+        periodEnd,
+      },
+    ];
+  });
+}
+
+function parseTerminalSession(value: unknown, idKey = "id"): IoTerminalSession | null {
+  const session = asRecord(value);
+  if (!session) return null;
+  const id = readString(session, idKey);
+  const title = readString(session, "title");
+  const mode = readString(session, "mode");
+  const state = readString(session, "state");
+  const startedAt = readString(session, "started_at");
+  const lastEventSequence = readNonNegativeInteger(session, "last_event_sequence");
+  if (
+    !id ||
+    !title ||
+    !startedAt ||
+    !["observe", "plan", "build", "run"].includes(mode ?? "") ||
+    !["running", "completed", "failed", "stopped", "archived"].includes(state ?? "") ||
+    lastEventSequence === null
+  ) {
+    return null;
+  }
+  return {
+    id,
+    title,
+    mode: mode as IoTerminalSession["mode"],
+    state: state as IoTerminalSession["state"],
+    runtimeVersion: readNullableString(session, "runtime_version"),
+    lastEventSequence,
+    startedAt,
+    completedAt: readNullableString(session, "completed_at"),
+  };
+}
+
+export async function createMyIoTerminalSession(input: {
+  workspaceId: string;
+  title: string;
+  mode: IoTerminalSession["mode"];
+  connectorOrigin: string;
+  runtimeReference: string;
+  runtimeVersion: string | null;
+}): Promise<IoTerminalSession> {
+  const { data, error } = await supabase.rpc("create_my_io_terminal_session", {
+    _workspace_id: input.workspaceId,
+    _title: input.title,
+    _mode: input.mode,
+    _connector_origin: input.connectorOrigin,
+    _runtime_reference: input.runtimeReference,
+    _runtime_version: input.runtimeVersion,
+  });
+  if (error) throw new Error(error.message);
+  const session = parseTerminalSession(data);
+  if (!session) throw new Error("The terminal session record is invalid.");
+  return session;
+}
+
+export async function completeMyIoTerminalSession(
+  sessionId: string,
+  state: "completed" | "failed" | "stopped",
+): Promise<IoTerminalSession> {
+  const { data, error } = await supabase.rpc("complete_my_io_terminal_session", {
+    _session_id: sessionId,
+    _state: state,
+  });
+  if (error) throw new Error(error.message);
+  const session = parseTerminalSession(data);
+  if (!session) throw new Error("The terminal session completion record is invalid.");
+  return session;
+}
+
+export async function listMyIoTerminalSessions(workspaceId: string): Promise<IoTerminalSession[]> {
+  const { data, error } = await supabase.rpc("list_my_io_terminal_sessions", {
+    _workspace_id: workspaceId,
+  });
+  if (error) throw new Error(error.message);
+  return (data ?? []).flatMap((value) => {
+    const parsed = parseTerminalSession(value, "session_id");
+    return parsed ? [parsed] : [];
+  });
+}
+
 export async function getIoRouteCatalog(workspaceId: string): Promise<IoRouteCatalog> {
   const { data, error } = await supabase.functions.invoke("io-gateway", {
     body: { action: "catalog", workspace_id: workspaceId },
@@ -448,21 +614,4 @@ export async function getIoRouteCatalog(workspaceId: string): Promise<IoRouteCat
 
   if (error) throw new Error(error.message);
   return parseRouteCatalog(data);
-}
-
-export async function recordLocalOpenCodeSession(input: {
-  workspaceId: string;
-  connectorOrigin: string;
-  sessionId: string;
-}): Promise<void> {
-  const { error } = await supabase.functions.invoke("io-gateway", {
-    body: {
-      action: "record_local_opencode",
-      workspace_id: input.workspaceId,
-      connector_origin: input.connectorOrigin,
-      session_id: input.sessionId,
-    },
-  });
-
-  if (error) throw new Error(error.message);
 }

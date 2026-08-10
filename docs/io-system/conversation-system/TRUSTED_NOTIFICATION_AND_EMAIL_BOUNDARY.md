@@ -59,7 +59,7 @@ IO_EMAIL_FROM=Indus Orbit <notifications@approved-domain>
 ## Verification evidence
 
 - The trusted-product-event and email-claim pgTAP assertions pass within the current suite.
-- The complete clean local 64-migration database suite passes 446/446 assertions.
+- The complete clean local 66-migration database suite passes 516/516 assertions; the trusted notification/email boundary remains covered within it.
 - Thirty notification ACL assertions pass after retirement of generic authenticated execution.
 - The current hosted release contract finds no missing forward migration or expected caller-bound function.
 - Hosted public-schema lint reports no error; Advisor backlog remains tracked separately.

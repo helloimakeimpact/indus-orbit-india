@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { GatewayError } from "./errors.ts";
-import { parseGatewayRequest, requireLocalOpenCodeOrigin, requireMessages } from "./validation.ts";
+import { parseGatewayRequest, requireMessages } from "./validation.ts";
 
 const workspaceId = "018f7f5b-9c4c-4f1f-8b48-7b15108f1234";
 
@@ -10,6 +10,7 @@ describe("gateway request validation", () => {
     const result = parseGatewayRequest({
       action: "partner_chat",
       workspace_id: workspaceId,
+      idempotency_key: "request:test-1234",
       mode: "plan",
       messages: [{ role: "user", content: "  Plan safely.  " }],
     });
@@ -24,6 +25,7 @@ describe("gateway request validation", () => {
       {
         action: "partner_chat",
         workspace_id: workspaceId,
+        idempotency_key: "request:test-1234",
         route_strategy: "explicit_model",
         messages: [{ role: "user", content: "x" }],
       },
@@ -33,6 +35,16 @@ describe("gateway request validation", () => {
         (error: unknown) => error instanceof GatewayError && error.code === "bad_request",
       );
     }
+
+    assert.throws(
+      () =>
+        parseGatewayRequest({
+          action: "partner_chat",
+          workspace_id: workspaceId,
+          messages: [{ role: "user", content: "x" }],
+        }),
+      /idempotency key/,
+    );
   });
 
   it("enforces message count, per-message and total limits", () => {
@@ -51,18 +63,5 @@ describe("gateway request validation", () => {
         ]),
       /24,000 character/,
     );
-  });
-
-  it("accepts only credential-free loopback root origins", () => {
-    assert.equal(requireLocalOpenCodeOrigin("http://[::1]:4096/"), "http://[::1]:4096");
-    for (const value of [
-      "https://localhost:4096",
-      "http://user@localhost:4096",
-      "http://localhost:4096/session",
-      "http://localhost:4096/?secret=x",
-      "http://example.com:4096",
-    ]) {
-      assert.throws(() => requireLocalOpenCodeOrigin(value), /credential-free loopback/);
-    }
   });
 });

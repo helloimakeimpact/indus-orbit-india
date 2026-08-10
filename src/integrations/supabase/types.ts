@@ -4871,6 +4871,39 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      create_my_io_terminal_session: {
+        Args: {
+          _workspace_id: string;
+          _title: string;
+          _mode: string;
+          _connector_origin: string;
+          _runtime_reference: string;
+          _runtime_version?: string | null;
+        };
+        Returns: {
+          id: string;
+          title: string;
+          mode: string;
+          state: string;
+          runtime_version: string | null;
+          last_event_sequence: number;
+          started_at: string;
+          completed_at: string | null;
+        };
+      };
+      complete_my_io_terminal_session: {
+        Args: { _session_id: string; _state: string };
+        Returns: {
+          id: string;
+          title: string;
+          mode: string;
+          state: string;
+          runtime_version: string | null;
+          last_event_sequence: number;
+          started_at: string;
+          completed_at: string | null;
+        };
+      };
       create_my_mission: {
         Args: {
           _chapter_id: string;
@@ -4935,6 +4968,23 @@ export type Database = {
         Returns: string;
       };
       get_my_admin_access: { Args: never; Returns: Json };
+      get_my_io_budget_status: {
+        Args: { _workspace_id: string };
+        Returns: Json;
+      };
+      list_my_io_terminal_sessions: {
+        Args: { _workspace_id: string };
+        Returns: {
+          session_id: string;
+          title: string;
+          mode: string;
+          state: string;
+          runtime_version: string | null;
+          last_event_sequence: number;
+          started_at: string;
+          completed_at: string | null;
+        }[];
+      };
       get_my_location_preferences: { Args: never; Returns: Json };
       get_my_product_access: {
         Args: never;

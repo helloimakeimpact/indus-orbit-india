@@ -101,9 +101,9 @@ Chapter and Mission detail pages resolve their associated Space and expose **Ope
 ### Verification evidence
 
 - clean local replay of all 62 checked-in migrations;
-- 446/446 pgTAP assertions across 11 database test files;
+- 516/516 pgTAP assertions across 13 database test files;
 - Chapter/Mission/Space test coverage for schema, grants, RLS, blueprints, joins, messages, read state, privacy, Realtime publication and positive/negative function behavior;
-- 38/38 TypeScript unit tests;
+- 43/43 TypeScript unit tests;
 - TypeScript check passes;
 - production application build passes;
 - generated Supabase TypeScript declarations match the clean local schema;

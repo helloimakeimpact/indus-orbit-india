@@ -7,12 +7,7 @@ import type {
   RouteStrategy,
 } from "./types.ts";
 
-const actions = new Set<GatewayAction>([
-  "partner_chat",
-  "catalog",
-  "record_local_opencode",
-  "status",
-]);
+const actions = new Set<GatewayAction>(["partner_chat", "catalog", "status"]);
 const modes = new Set<GatewayMode>(["observe", "plan", "build", "run"]);
 const routeStrategies = new Set<RouteStrategy>([
   "latest_affordable",
@@ -22,6 +17,7 @@ const routeStrategies = new Set<RouteStrategy>([
 const messageRoles = new Set<GatewayMessage["role"]>(["system", "user", "assistant"]);
 const workspaceIdPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const idempotencyKeyPattern = /^[A-Za-z0-9][A-Za-z0-9_.:-]{7,127}$/;
 
 function asRecord(value: unknown) {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
@@ -65,6 +61,17 @@ function readRequestedModelId(value: unknown) {
   return value;
 }
 
+export function requireIdempotencyKey(value: unknown) {
+  if (typeof value !== "string" || !idempotencyKeyPattern.test(value)) {
+    throw new GatewayError(
+      "bad_request",
+      400,
+      "A valid idempotency key between 8 and 128 characters is required.",
+    );
+  }
+  return value;
+}
+
 export function requireMessages(value: unknown): GatewayMessage[] {
   if (!Array.isArray(value) || value.length < 1 || value.length > 24) {
     throw new GatewayError("bad_request", 400, "Provide between 1 and 24 messages.");
@@ -103,45 +110,6 @@ export function requireMessages(value: unknown): GatewayMessage[] {
   return messages;
 }
 
-export function requireLocalOpenCodeOrigin(value: unknown) {
-  if (typeof value !== "string") {
-    throw new GatewayError("bad_request", 400, "A local OpenCode connector URL is required.");
-  }
-
-  let url: URL;
-  try {
-    url = new URL(value);
-  } catch {
-    throw new GatewayError("bad_request", 400, "A valid local OpenCode connector URL is required.");
-  }
-
-  const localHosts = new Set(["localhost", "127.0.0.1", "::1", "[::1]"]);
-  if (
-    url.protocol !== "http:" ||
-    !localHosts.has(url.hostname) ||
-    url.username ||
-    url.password ||
-    (url.pathname !== "/" && url.pathname !== "") ||
-    url.search ||
-    url.hash
-  ) {
-    throw new GatewayError(
-      "bad_request",
-      400,
-      "Only a credential-free loopback connector is allowed.",
-    );
-  }
-
-  return url.origin;
-}
-
-export function requireSessionId(value: unknown) {
-  if (typeof value !== "string" || !value.trim() || value.length > 512) {
-    throw new GatewayError("bad_request", 400, "A local OpenCode session ID is required.");
-  }
-  return value.trim();
-}
-
 export function parseGatewayRequest(value: unknown): GatewayRequest {
   const body = asRecord(value);
   if (typeof body.action !== "string" || !actions.has(body.action as GatewayAction)) {
@@ -158,6 +126,7 @@ export function parseGatewayRequest(value: unknown): GatewayRequest {
   };
 
   if (action === "partner_chat") {
+    request.idempotencyKey = requireIdempotencyKey(body.idempotency_key);
     request.messages = requireMessages(body.messages);
     if (request.routeStrategy === "explicit_model" && !request.requestedModelId) {
       throw new GatewayError(
@@ -174,10 +143,5 @@ export function parseGatewayRequest(value: unknown): GatewayRequest {
       );
     }
   }
-  if (action === "record_local_opencode") {
-    request.connectorOrigin = requireLocalOpenCodeOrigin(body.connector_origin);
-    request.sessionId = requireSessionId(body.session_id);
-  }
-
   return request;
 }

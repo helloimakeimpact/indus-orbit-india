@@ -1,4 +1,4 @@
-export type GatewayAction = "partner_chat" | "catalog" | "record_local_opencode" | "status";
+export type GatewayAction = "partner_chat" | "catalog" | "status";
 export type GatewayMode = "observe" | "plan" | "build" | "run";
 export type RouteStrategy = "latest_affordable" | "lowest_cost" | "explicit_model";
 
@@ -10,12 +10,11 @@ export type GatewayMessage = {
 export type GatewayRequest = {
   action: GatewayAction;
   workspaceId: string;
+  idempotencyKey?: string;
   mode?: GatewayMode;
   messages?: GatewayMessage[];
   routeStrategy?: RouteStrategy;
   requestedModelId?: string;
-  connectorOrigin?: string;
-  sessionId?: string;
 };
 
 export type GatewayActor = {
@@ -49,6 +48,8 @@ export type ProviderConnection = {
   unitQuantity: number;
   inputPriceNanos: number;
   outputPriceNanos: number;
+  healthState: "healthy" | "degraded" | "unavailable" | "unknown";
+  circuitState: "closed" | "open" | "half_open";
 };
 
 export type RouteSelection = {

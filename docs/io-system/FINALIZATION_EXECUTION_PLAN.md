@@ -4,11 +4,13 @@ Status: active, evidence-gated plan updated 9 August 2026. Demo database release
 
 This plan covers the whole product: public brand site, identity, Community, conversation, I/O Port, terminal/OpenCode, admin, data, operations and commercial readiness. “Done” means code, authorization, data migration, browser behavior, deployment and operating evidence all agree. A source file or attractive UI alone is not completion.
 
+Execution update, 10 August 2026: I/O request idempotency, hard budgets, reserve/settle ledger, endpoint health/circuits, member budget UI, admin budget/circuit UI and safe durable terminal metadata are **Verified locally**. They are not **Released** until migrations `20260810002754` and `20260810010415` plus the updated gateway are applied and verified in hosted project `jpwvgpnbkrktipwhvqss`. Hosted release is **Blocked** only by missing Supabase CLI authentication in the current environment.
+
 ## Current release checkpoint
 
 Completed in the demo environment:
 
-- provider registry/control-plane foundation and `io-gateway` v17;
+- provider registry/control-plane foundation and Released `io-gateway` v18;
 - latest endpoint-bound eligibility enforcement;
 - notification table containment and vouch contract repairs;
 - complete Loops browser retirement with service-only archive access;
@@ -18,7 +20,7 @@ Completed in the demo environment:
 - removal of anonymous access to eight privileged functions;
 - caller-bound domain mutations, retirement of generic notification execution and a private service-leased email outbox;
 - Chapter/Mission Space schema, deterministic Room blueprints, membership projection and caller-bound lifecycle/message/read operations;
-- clean 64-migration replay with 446/446 assertions plus hosted schema/RLS/RPC/Realtime and I/O evidence contracts;
+- clean 66-migration replay with 516/516 assertions plus the previously verified hosted schema/RLS/RPC/Realtime and I/O evidence contracts;
 - five-provider/model/endpoint inventory with three capacity sources/grants, while route receipts and provider attempts remain zero.
 
 The product is still a release candidate foundation, not a finished production system.
@@ -110,7 +112,7 @@ User input needed: approve the first group-collaboration scope and moderation/re
 Deliverables:
 
 1. Build the operator conformance runner and evidence UI; validate chat, streaming, tools, structured output, usage, errors, cancellation and safety one provider at a time.
-2. Add request idempotency, hard workspace budgets, reserve/settle accounting, retry budgets, circuit breakers, health/latency sampling and kill-switch drills.
+2. **Verified locally:** request idempotency, hard workspace budgets, reserve/settle accounting, retry-cost reservation, circuit breakers and outcome sampling. Still required: hosted release, scheduled health/latency probes, distributed retry/rate budgets and kill-switch drills.
 3. Complete dynamic model refresh with evidence timestamps, region/residency labels that are never inferred, price versions and approved FX snapshots.
 4. Validate and expand the live five-provider registry toward the reviewed 20-provider inventory using partnership, owned/rented and donated-capacity adapters.
 5. Add OpenAI-compatible partner and local endpoints while preserving provider-specific adapters where semantics differ.
@@ -131,7 +133,7 @@ User input needed: provider partnership terms, permitted regions, spend ceiling,
 
 Deliverables:
 
-1. Create durable sessions, members, events, approvals, tool calls, artifacts and handoffs.
+1. **Verified locally:** safe creator-only sessions, member/event/approval schema foundations and create/complete/list lifecycle. Still required: ordered runtime event ingestion, executable approval/tool contracts, artifacts and handoffs.
 2. Add resumable streaming timelines, task trees, commands, diffs/revert, abort/recovery and explicit approval states.
 3. Authenticate the local daemon with short-lived pairing, origin binding and revocation instead of an in-memory password alone.
 4. Package the local client and define compatibility/version negotiation with OpenCode.
@@ -155,7 +157,7 @@ Deliverables:
 2. Add privileged MFA/re-auth, session review/revocation and two-person root-role changes.
 3. Replace legacy direct-table member/content/program mutations with capability-checked transactional RPCs.
 4. Add redacted cursor-paginated audit, queue assignment, reasons, confirmations and safe bulk-operation limits.
-5. Add provider evidence review, conformance, runtime, budget, receipt and incident controls without exposing provider secrets.
+5. Provider runtime/receipt evidence is Released; budget and manual circuit controls are Verified locally. Still add hosted release, evidence/conformance approval, scheduled health, reconciliation and incident workflows without exposing provider secrets.
 6. Remove or redirect obsolete member-app admin surfaces after parity and role-negative tests pass.
 
 Exit criteria:

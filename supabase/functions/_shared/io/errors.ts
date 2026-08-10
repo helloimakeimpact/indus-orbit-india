@@ -7,6 +7,9 @@ export class GatewayError extends Error {
       | "not_configured"
       | "upstream_failure"
       | "rate_limited"
+      | "budget_exceeded"
+      | "idempotency_conflict"
+      | "request_in_progress"
       | "internal_error",
     readonly status: number,
     message: string,
