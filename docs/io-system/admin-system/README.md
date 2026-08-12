@@ -1,6 +1,6 @@
 # Indus Orbit admin system
 
-Status: separate application foundation; provider/evidence controls Released to demo and budget/circuit controls Verified locally, 10 August 2026.
+Status: separate application foundation; provider/evidence/budget/circuit database controls Released to demo, 12 August 2026.
 
 ## Ownership boundary
 
@@ -47,9 +47,9 @@ The locally Verified operational-core migration and admin build additionally pro
 - immutable integer-minor-unit budget-version creation with an operator reason;
 - endpoint health/circuit snapshots;
 - reasoned manual circuit open/close controls;
-- 11 passing browser contract tests and the shared 516-assertion database replay.
+- 11 passing browser contract tests and the shared 541-assertion database replay.
 
-This slice is not Released until migration `20260810002754_create_io_operational_core.sql` is applied to the hosted project. Do not deploy the matching admin build before the schema is present.
+This shared schema slice is Released through migration `20260810002754_create_io_operational_core.sql`. The separate admin browser application remains local-source verified until it is built and hosted against the shared project.
 
 ## Code complete versus left
 
@@ -70,7 +70,7 @@ Left before production:
 3. replace legacy trust/report, member, content and programme direct-table mutations with transactional capability-checked RPCs;
 4. add optimistic concurrency, mandatory decision reasons, immutable/redacted events, appeals and negative role-matrix tests;
 5. add paginated audit search/export with retention and redaction policy;
-6. release the locally Verified budget/circuit slice, then add I/O conformance approval, scheduled health and ledger reconciliation before paid traffic;
+6. add I/O conformance approval, scheduled health and ledger reconciliation before paid traffic;
 7. create staging/production separation, SLOs, alerts, incident response and rollback proof.
 
 ## Security-advisor interpretation

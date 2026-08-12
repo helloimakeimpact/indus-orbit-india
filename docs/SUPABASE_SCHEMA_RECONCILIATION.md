@@ -1,6 +1,6 @@
 # Supabase schema-reconciliation record
 
-Status: hosted project link and all 64 migrations are verified; the clean local suite passes 446/446 and the Chapter/Mission Space plus I/O evidence hosted contracts pass. Historical timestamp aliases remain unreconciled, updated 9 August 2026.
+Status: all 67 migrations are applied to the linked hosted Indus Orbit demo through an alias-safe release helper; the clean local suite passes 541/541 and hosted Space, I/O evidence and I/O operational/terminal contracts pass. Historical timestamp aliases remain unreconciled, updated 12 August 2026.
 
 ## Current addendum — exact hosted/local boundary
 
@@ -12,12 +12,15 @@ The following source migrations were Released through the alias-safe temporary d
 - `20260809150000_harden_email_delivery_claims.sql`;
 - `20260809152439_create_chapter_mission_space_foundation.sql`.
 - `20260809174030_create_admin_io_evidence_rpcs.sql`.
+- `20260810002754_create_io_operational_core.sql`.
+- `20260810010415_create_io_terminal_session_foundation.sql`.
+- `20260812000100_add_io_terminal_timeline_and_approval_rpcs.sql`.
 
-The clean local database replays all 64 migrations and passes all 446 assertions across 11 pgTAP files. Generated TypeScript types reflect that schema. The I/O evidence migrations add covered global receipt-time and provider-conformance query paths. Hosted verification confirms no missing Space or I/O evidence contract; all 19 public Space tables have RLS; protected direct Chapter/Mission writes are revoked; Space messages belong to the Realtime publication; and the two capability-checked admin I/O evidence functions deny anonymous execution.
+The clean local database replays all 67 migrations and passes all 541 assertions across 14 pgTAP files. The hosted public/browser type generation contains all five terminal RPCs; the checked-in file remains deliberately stable across generator-version formatting/nullability differences. The I/O evidence migrations add covered global receipt-time and provider-conformance query paths. Hosted verification confirms no missing Space, I/O evidence or I/O operational/terminal contract; all 19 public Space tables have RLS; protected direct Chapter/Mission writes are revoked; Space messages belong to the Realtime publication; and the two capability-checked admin I/O evidence functions deny anonymous execution.
 
 The hosted I/O inventory is not empty. The latest read-only inventory has 5 providers, 5 models, 5 endpoints, 5 endpoint capability versions, 5 price versions, 5 runtime controls, 5 endpoint connections, 3 capacity sources and 3 workspace capacity grants. It has 0 route receipts and 0 provider attempts. Inventory or stored secret-reference names are not proof of provider conformance or permission to create paid traffic.
 
-Because 26 historical versions use different local/hosted timestamps, ordinary linked `db push` from the repository remains unsafe. Each release uses an isolated view containing the exact fetched hosted ledger plus only approved forward migrations. The I/O evidence dry run listed only `20260809174030_create_admin_io_evidence_rpcs.sql` before it was applied. No seed, role file, repair, reset or historical replay ran. Do not use migration repair to manufacture equality.
+Because 26 historical versions use different local/hosted timestamps, ordinary linked `db push` from the repository remains unsafe. Each release uses an isolated view containing the exact fetched hosted ledger plus only approved forward migrations. `scripts/supabase/prepare-alias-safe-io-release.sh` created that view, dry-ran exactly the three new I/O migrations and applied them. No seed, role file, repair, reset or historical replay ran. Do not use migration repair to manufacture equality.
 
 ### Hosted post-release evidence
 
@@ -34,6 +37,9 @@ The read-only `chapter_mission_space_release_contract.sql` result is:
 - capacity sources/workspace grants: `3` each;
 - route receipts/provider attempts: `0 / 0`.
 - I/O evidence release: migration/column/index/two functions present; anonymous execution false and authenticated execution true.
+- I/O operational/terminal release: the three migrations are present; all fourteen expected new I/O tables have RLS; direct authenticated writes to terminal events/reservations are false; anonymous execution of terminal RPCs is false; authenticated execution is true; private ledger/idempotency tables are not browser-readable; expected indexes are present; usage/session/event/approval counts are `0`.
+
+The matching `io-gateway` Edge Function is active at version `19` with JWT verification. An unauthenticated HTTP check returns `401`. No provider key was read and no provider traffic was created during this release.
 
 Hosted `supabase db lint --level warning --schema public` reports no schema errors. Security Advisor reports 79 inherited notices (61 warnings, 18 information) and Performance Advisor reports 345 inherited notices (166 warnings, 179 information); neither contains a warning attached to a new `conversation_*` object. Advisor remediation remains tracked through the [Supabase database linter](https://supabase.com/docs/guides/database/database-advisors).
 

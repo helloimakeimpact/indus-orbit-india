@@ -35,6 +35,7 @@ import {
   createMyIoWorkspace,
   createMyIoTerminalSession,
   completeMyIoTerminalSession,
+  appendMyIoTerminalEvent,
   getIoAuditEvents,
   getMyIoBudgetStatus,
   getIoCapacitySources,
@@ -42,6 +43,7 @@ import {
   getIoRouteCatalog,
   getMyIoWorkspaces,
   listMyIoTerminalSessions,
+  listMyIoTerminalEvents,
   runPartnerRoute,
   type IoAuditEvent,
   type IoCapacitySource,
@@ -50,6 +52,7 @@ import {
   type IoRouteReceipt,
   type IoRouteStrategy,
   type IoTerminalSession,
+  type IoTerminalEvent,
   type IoWorkspace,
   type PartnerRunResult,
 } from "@/features/io/io.client";
@@ -69,6 +72,9 @@ export function IoOverview() {
   const [budgets, setBudgets] = useState<IoBudgetStatus[]>([]);
   const [routeCatalog, setRouteCatalog] = useState<IoRouteCatalog | null>(null);
   const [terminalSessions, setTerminalSessions] = useState<IoTerminalSession[]>([]);
+  const [terminalTimeline, setTerminalTimeline] = useState<IoTerminalEvent[]>([]);
+  const [selectedTerminalSessionId, setSelectedTerminalSessionId] = useState<string | null>(null);
+  const [terminalTimelineLoading, setTerminalTimelineLoading] = useState(false);
   const [routeCatalogError, setRouteCatalogError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [catalogLoading, setCatalogLoading] = useState(false);
@@ -106,6 +112,8 @@ export function IoOverview() {
         setBudgets([]);
         setRouteCatalog(null);
         setTerminalSessions([]);
+        setTerminalTimeline([]);
+        setSelectedTerminalSessionId(null);
         setRouteCatalogError(null);
         setRequestedModelId("");
         return;
@@ -137,6 +145,8 @@ export function IoOverview() {
       setReceipts(receiptsResult.value);
       setBudgets(budgetResult.value);
       setTerminalSessions(terminalSessionsResult.value);
+      setTerminalTimeline([]);
+      setSelectedTerminalSessionId(null);
       if (catalogResult.status === "fulfilled") {
         setRouteCatalog(catalogResult.value);
         setRouteCatalogError(null);
@@ -178,6 +188,24 @@ export function IoOverview() {
     setSelectedWorkspaceId(workspaceId);
     selectedWorkspaceIdRef.current = workspaceId;
     void loadWorkspace(workspaceId);
+  }
+
+  async function toggleTerminalTimeline(sessionId: string) {
+    if (selectedTerminalSessionId === sessionId) {
+      setSelectedTerminalSessionId(null);
+      setTerminalTimeline([]);
+      return;
+    }
+    setSelectedTerminalSessionId(sessionId);
+    setTerminalTimelineLoading(true);
+    try {
+      setTerminalTimeline(await listMyIoTerminalEvents(sessionId));
+    } catch (error) {
+      setTerminalTimeline([]);
+      toast.error(error instanceof Error ? error.message : "Could not load terminal metadata.");
+    } finally {
+      setTerminalTimelineLoading(false);
+    }
   }
 
   async function createWorkspace() {
@@ -233,6 +261,18 @@ export function IoOverview() {
                 runtimeVersion: session.serverVersion,
               });
               durableSessionId = durable.id;
+            } catch {
+              durableMetadataFailed = true;
+            }
+          },
+          onMetadataEvent: async (_session, event) => {
+            if (!durableSessionId) return;
+            try {
+              await appendMyIoTerminalEvent({
+                sessionId: durableSessionId,
+                type: event.type,
+                payload: event.payload,
+              });
             } catch {
               durableMetadataFailed = true;
             }
@@ -626,7 +666,7 @@ export function IoOverview() {
             {terminalSessions.map((session) => (
               <article
                 key={session.id}
-                className="grid gap-2 px-4 py-3 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center"
+                className="grid gap-2 px-4 py-3 sm:grid-cols-[minmax(0,1fr)_auto_auto_auto] sm:items-center"
               >
                 <div className="min-w-0">
                   <p className="truncate text-xs font-semibold text-foreground">{session.title}</p>
@@ -651,6 +691,50 @@ export function IoOverview() {
                 >
                   {session.state}
                 </Badge>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-[10px]"
+                  aria-expanded={selectedTerminalSessionId === session.id}
+                  onClick={() => void toggleTerminalTimeline(session.id)}
+                >
+                  {selectedTerminalSessionId === session.id ? "Hide timeline" : "Timeline"}
+                </Button>
+                {selectedTerminalSessionId === session.id ? (
+                  <div className="sm:col-span-4 rounded-lg border border-border/60 bg-muted/25 px-3 py-2">
+                    <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                      Safe metadata timeline · content remains local
+                    </p>
+                    {terminalTimelineLoading ? (
+                      <p className="mt-1 text-[10px] text-muted-foreground">Loading timeline…</p>
+                    ) : terminalTimeline.length ? (
+                      <ol className="mt-1.5 space-y-1.5">
+                        {terminalTimeline
+                          .slice()
+                          .reverse()
+                          .map((event) => (
+                            <li
+                              key={event.id}
+                              className="flex flex-wrap items-center justify-between gap-1 text-[10px]"
+                            >
+                              <span className="font-medium text-foreground">
+                                {event.sequence}. {event.type.replace(".", " ")}
+                              </span>
+                              <span className="text-muted-foreground">
+                                {new Date(event.occurredAt).toLocaleString()} ·{" "}
+                                {event.contentClassification.replace("_", " ")}
+                              </span>
+                            </li>
+                          ))}
+                      </ol>
+                    ) : (
+                      <p className="mt-1 text-[10px] text-muted-foreground">
+                        No cloud timeline events were recorded for this session.
+                      </p>
+                    )}
+                  </div>
+                ) : null}
               </article>
             ))}
           </div>

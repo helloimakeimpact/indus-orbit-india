@@ -1,17 +1,17 @@
 # I/O Port operating guide
 
-Operational truth, updated 10 August 2026: the registry-driven multi-provider foundation, latest-evidence resolver, `io-gateway` v18 and top-level `/io` boundary are Released to demo. The last hosted verification found five provider/model/endpoint/capability/price/runtime-control/connection records, three capacity sources/grants and zero receipts/attempts. The new budget/idempotency/ledger/health/circuit and terminal-metadata migrations are Verified locally but not Released. Secrets and inventory alone do not prove conformance or activate routing. Read `IO_PORT_IMPLEMENTATION_STATUS.md` before any inventory or traffic change.
+Operational truth, updated 12 August 2026: the registry-driven multi-provider foundation, latest-evidence resolver, `io-gateway` v19, top-level `/io` boundary, budget/idempotency/ledger/health/circuit controls, terminal metadata and safe-timeline/approval boundary are Released to the demo. The hosted release contract confirms RLS/grants/containment; the last inventory has five provider/model/endpoint/capability/price/runtime-control/connection records, three capacity sources/grants and zero receipts/attempts. Secrets and inventory alone do not prove conformance or activate routing. Read `IO_PORT_IMPLEMENTATION_STATUS.md` before any inventory or traffic change.
 
 ## What is live in the demo project
 
 I/O Port is one web workspace with two execution boundaries:
 
 1. **Provider partnership route** — the browser calls the authenticated `io-gateway` Edge Function. The gateway verifies workspace membership and an active capacity grant, resolves only fully approved registry connections, selects an entitled candidate, and can call OpenAI-compatible or Gemini-native APIs. It writes a redacted route receipt/attempt trail that excludes prompt and response text. No current provider passes all activation gates, so no external request is sent.
-2. **I/O Terminal route** — the browser talks directly to a member's own OpenCode server running on loopback. OpenCode keeps the agent session, tool permissions, filesystem, terminal and Git state on that device. The new local code records only safe lifecycle metadata; the connector origin and OpenCode session ID are stored only as SHA-256 hashes. Prompt, output, code, paths and credentials are excluded.
+2. **I/O Terminal route** — the browser talks directly to a member's own OpenCode server running on loopback. OpenCode keeps the agent session, tool permissions, filesystem, terminal and Git state on that device. The new local code records only safe lifecycle and constrained timeline metadata; the connector origin and OpenCode session ID are stored only as SHA-256 hashes. Prompt, output, code, commands, paths and credentials are excluded. A stored approval decision is audit state, never permission to execute.
 
 The canonical web surface is `/io`, with a distinct I/O Port shell and shared Indus Orbit identity. It does not require a Community segment, profile journey, location choice, vouch or verification. `/app/io` is compatibility-only and redirects before the Community gate. Shared visual primitives and product switching preserve the Indus Orbit system without collapsing I/O into the Community application.
 
-The nested I/O shell uses working anchors and authorized workspace/capacity/audit/receipt facts. The new local UI also reads real budget state and durable session lifecycle. Preflight route explanations, detailed live health, credits/invoices and advanced terminal timelines remain incomplete and must not be represented as live.
+The nested I/O shell uses working anchors and authorized workspace/capacity/audit/receipt facts. The new local UI also reads real budget state and displays a durable safe terminal timeline. Preflight route explanations, detailed live health, credits/invoices, realtime terminal delivery and executable approval controls remain incomplete and must not be represented as live.
 
 ## Data and control flow
 
@@ -35,8 +35,8 @@ The capacity tables maintain the distinction between partner, rented/owned, dona
 - Selecting **I/O Terminal** allows only `localhost`, `127.0.0.1`, or `::1` over HTTP. The password field is in-memory only and never stored in Supabase.
 - Selecting **Provider partnership** disables direct browser-provider access. The web UI loads only a safe entitled model catalogue, offers latest-affordable, lowest-cost or explicit-model selection, and disables execution until an approved route is present.
 - Route evidence stores provider/model/capacity/token/cost metadata and excludes prompts, responses, keys and raw provider errors. Terminal metadata stores hashed runtime references and lifecycle only.
-- The locally Verified gateway update requires an idempotency key, reserves the maximum allowed attempt cost before dispatch, records endpoint outcomes and atomically settles actual use or releases the hold. Its public errors remain structured; internal/provider details and credentials are never returned.
-- The member UI displays authoritative remaining/reserved/settled budget in integer minor units, disables provider execution without usable budget and lists safe terminal lifecycle records. Deploy it only after the two matching migrations and gateway are Released.
+- The Released gateway requires an idempotency key, reserves the total worst-case cost across every allowed attempt before dispatch, records endpoint outcomes and atomically settles actual use or releases the hold. Its public errors remain structured; internal/provider details and credentials are never returned.
+- The member UI displays authoritative remaining/reserved/settled budget in integer minor units, disables provider execution without usable budget and lists safe terminal lifecycle records. Its web build still needs hosting deployment and authenticated browser personas.
 
 ## Start a local OpenCode terminal
 
@@ -78,7 +78,7 @@ Optional server-only selector controls have safe defaults:
 
 For each request, I/O considers only models whose provider is active; model is listed, release-dated and not deprecated; endpoint is active/member-visible; capacity source is actively entitled; latest capability certificate verifies chat; and a published price card is effective. The local resolver also excludes open circuits. `latest_affordable` uses tier, freshness and affordability bands; `lowest_cost` selects the least costly eligible candidate; an explicit model must be in the reviewed catalogue. Mixed currencies fail closed until FX data is reviewed.
 
-The local operational core computes a conservative byte-based upper-bound when provider usage is not yet known, reserves the maximum allowed cost across configured attempts before any dispatch, and settles provider-reported usage when complete or explicitly labelled estimated usage otherwise. Every settle/release transaction balances in integer minor units. This is an activation-grade route-cost core, not a complete invoicing/tax/payment system.
+The local operational core computes a conservative byte-based upper-bound when provider usage is not yet known, reserves the summed worst-case cost of all configured attempts before any dispatch, and settles provider-reported usage when complete or explicitly labelled estimated usage otherwise. Every settle/release transaction balances in integer minor units. This is an activation-grade route-cost core, not a complete invoicing/tax/payment system.
 
 The deployed registry contains one staged record set for OpenAI, SpaceXAI/xAI, Gemini, DeepSeek and Groq. Before any route is activated, run and review provider conformance, verify current data/region terms, confirm the price card and model revision, then transition connection, capability, endpoint and provider states through an audited admin workflow. The gateway refuses to route while any condition is unmet.
 

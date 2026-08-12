@@ -1,6 +1,6 @@
 # I/O Port implementation status and multi-provider readiness
 
-Status: local code, UI, database, admin and hosted-release assessment, updated 10 August 2026.
+Status: local code, UI, database, admin and hosted-release assessment, updated 12 August 2026.
 
 This is the operational source of truth for the current I/O Port implementation. It separates what exists from what is only represented in a plan or preview. Cross-product dependencies and release gates are governed by `../../MASTER_IMPLEMENTATION_AND_RELEASE_PLAN.md` and `../../RELEASE_READINESS_CHECKLIST.md`. Product direction remains in `IO_PORT_IMPLEMENTATION_PLAN.md`; the detailed delivery sequence remains in `IO_PORT_CODE_LEVEL_ROADMAP.md`; the OpenRouter comparison is in `OPENROUTER_CAPABILITY_AND_CAPACITY_PLAN.md`.
 
@@ -12,7 +12,7 @@ I/O Port is **not operationally routing external provider traffic yet**. Its fir
 
 The deployed gateway resolves approved registry connections through a service-role-only resolver, allows only approved `IO_PROVIDER_*_API_KEY` secret references, evaluates entitled candidates across providers, supports provider-aware OpenAI-compatible and Gemini-native request adapters, performs bounded fallback for safe upstream failures, and writes redacted receipts/attempts. The browser can request latest-affordable, lowest-cost or an approved explicit model and display RLS-scoped receipt history.
 
-The next activation-grade slice is **Verified locally but not Released**. Migration `20260810002754_create_io_operational_core.sql` and the matching gateway code add fingerprinted idempotency, hard budget reservation before dispatch, balanced double-entry settlement/release, stale-hold expiry, endpoint health samples, circuit state/events, circuit-aware resolution and member/admin budget/health controls. Migration `20260810010415_create_io_terminal_session_foundation.sql` adds creator-only durable terminal metadata and lifecycle RPCs. Hosted deployment is currently **Blocked** because this environment has no authenticated Supabase CLI profile/access token.
+The activation-grade control-plane slice is **Released to the hosted demo**. Migration `20260810002754_create_io_operational_core.sql` and gateway v19 add fingerprinted idempotency, hard budget reservation before dispatch, balanced double-entry settlement/release, stale-hold expiry, endpoint health samples, circuit state/events, circuit-aware resolution and member/admin budget/health controls. Migrations `20260810010415_create_io_terminal_session_foundation.sql` and `20260812000100_add_io_terminal_timeline_and_approval_rpcs.sql` add creator-only durable terminal metadata, replay-safe safe-metadata timelines and non-executable approval RPCs. The read-only hosted release contract passes; provider routing is still disabled.
 
 Provider API keys by themselves do not make a provider routable. The verified deployed cohort counts are:
 
@@ -32,7 +32,7 @@ Provider API keys by themselves do not make a provider routable. The verified de
 | capacity sources                       |     3 |
 | workspace capacity grants              |     3 |
 
-The demo deployment contains metadata and secret references, not key values. No provider completion or billable conformance call was made. The remaining critical work is hosted release/verification, trusted provider conformance and approval, one deliberately bounded live test, individual activation, scheduled health/operations, commercial accounting extensions, OpenRouter/other capacity partnerships and a fuller control room.
+The demo deployment contains metadata and secret references, not key values. No provider completion or billable conformance call was made. The remaining critical work is trusted provider conformance and approval, one deliberately bounded live test, individual activation, scheduled health/operations, commercial accounting extensions, OpenRouter/other capacity partnerships and a fuller control room.
 
 ## 2. What “I/O Port” must mean
 
@@ -98,7 +98,7 @@ The member must be able to understand which model, provider, serving region, dat
 - The deployed forward-only migrations introduce append-only `io_route_receipts` and `io_provider_attempts`. They exclude prompts, generated text, credentials, headers and raw upstream errors; selected currency is retained for valid aggregation.
 - A follow-up migration covers every receipt/attempt provider, model, endpoint and capacity foreign key used for operator history and reconciliation; the Performance Advisor reports no remaining unindexed foreign key in the new I/O evidence tables.
 - `20260809182509_add_io_conformance_composite_index.sql` additionally covers the private endpoint/capability conformance relationship; the hosted migration record and index are independently verified.
-- The locally Verified gateway now requires an idempotency key, computes a stable request fingerprint, reserves the conservative maximum cost across allowed attempts before dispatch, records every endpoint outcome, atomically settles actual use or releases the reservation and returns settled/released minor units plus cost-basis evidence.
+- The locally Verified gateway now requires an idempotency key, computes a stable request fingerprint, reserves the conservative summed worst-case cost across all allowed attempts before dispatch, records every endpoint outcome, atomically settles actual use or releases the reservation and returns settled/released minor units plus cost-basis evidence.
 - Fallback finalization records the endpoint actually used. Duplicate keys with a different request fail closed; completed keys return replay-safe stored results; stale open reservations expire into balanced release ledger entries.
 - When a provider returns complete token usage, settlement uses it. Otherwise the receipt explicitly labels the conservative byte-based estimate; it never presents an estimate as provider-billed truth.
 
@@ -107,29 +107,30 @@ The member must be able to understand which model, provider, serving region, dat
 - The browser can connect only to a credential-free root loopback OpenCode origin over HTTP; paths, query strings, fragments and embedded URL credentials are rejected, while an optional OpenCode password is held in memory.
 - The proof validates OpenCode health/session/message objects, encodes the returned session ID, performs prompt delivery, and reports safe-audit failure separately from local execution success.
 - `20260810010415_create_io_terminal_session_foundation.sql` is locally Verified. It adds creator-only sessions, members, events and approval foundations plus caller-bound create/complete/list RPCs.
-- Runtime origin and OpenCode session references are stored only as SHA-256 hashes. Prompt, output, code, file paths and password remain outside Supabase. The connector now records created/completed/failed lifecycle state.
+- `20260812000100_add_io_terminal_timeline_and_approval_rpcs.sql` is locally Verified. It adds ordered replay-safe metadata timeline RPCs plus bounded approval request and owner-decision RPCs that cannot execute a command.
+- Runtime origin and OpenCode session references are stored only as SHA-256 hashes. Prompt, output, code, commands, file paths and password remain outside Supabase. The connector now records created/completed/failed lifecycle and safe runtime/prompt metadata events.
 - Existing direct messages remain the human conversation source. I/O prompts and terminal work are not inserted into `direct_messages`.
 - Direct-message RLS/read permissions were hardened, and both the full Messages surface and compact chat now reuse shared hooks and event-driven unread reconciliation.
 
 ### 3.5 Repository verification
 
-| Check                                  | Result          | Interpretation                                                                                                                                             |
-| -------------------------------------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `npm run build`                        | Pass            | The current web application produces a production bundle.                                                                                                  |
-| `npm run typecheck`                    | Pass            | Current browser/server TypeScript compiles.                                                                                                                |
-| `npm run format:check`                 | Pass            | Mechanical formatting drift has been removed.                                                                                                              |
-| `npm run test:unit`                    | Pass — 43/43    | Auth/product/location, schema compatibility, conversations, OpenCode lifecycle, gateway operations/adapters/routing and fixed email templates are covered. |
-| `npm run audit:high`                   | Pass            | No critical, high or moderate dependency advisory remains.                                                                                                 |
-| I/O-focused ESLint run                 | Pass            | `src/features/io` and I/O routes pass current lint rules.                                                                                                  |
-| Repository-wide `npm run lint --quiet` | Pass — 0 errors | The local semantic lint gate now passes across the repository.                                                                                             |
-| Automated gateway/router unit tests    | Pass            | Validation, idempotency/budget-operation decoding, selection/attempt bounds and provider request/error fixtures pass.                                      |
-| Empty Supabase migration replay        | 66/66 pass      | Every checked-in migration replays from zero on the local stack.                                                                                           |
-| Database provider/ACL/schema contracts | 516/516 pass    | Includes 46 operational-core and 24 terminal-foundation assertions plus the earlier product/RLS contracts.                                                 |
-| Supabase schema lint                   | Pass            | The local `public` and `private` schemas report no lint errors.                                                                                            |
-| Hosted Space release contract          | Pass            | No missing migration/table/function; 19/19 Space tables use RLS; direct protected writes are false; Realtime publication is true.                          |
-| Hosted public generated types          | Partial         | Checked-in types match clean local schema; repeatable hosted drift automation remains.                                                                     |
-| Provider conformance tests             | None recorded   | No provider is operationally certified.                                                                                                                    |
-| Hosted migrations 65–66 / gateway      | Blocked         | Correct project ref is linked; a Supabase CLI access token/profile is not available in this environment.                                                   |
+| Check                                  | Result          | Interpretation                                                                                                                                               |
+| -------------------------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `npm run build`                        | Pass            | The current web application produces a production bundle.                                                                                                    |
+| `npm run typecheck`                    | Pass            | Current browser/server TypeScript compiles.                                                                                                                  |
+| `npm run format:check`                 | Pass            | Mechanical formatting drift has been removed.                                                                                                                |
+| `npm run test:unit`                    | Pass — 43/43    | Auth/product/location, schema compatibility, conversations, OpenCode lifecycle, gateway operations/adapters/routing and fixed email templates are covered.   |
+| `npm run audit:high`                   | Pass            | No critical, high or moderate dependency advisory remains.                                                                                                   |
+| I/O-focused ESLint run                 | Pass            | `src/features/io` and I/O routes pass current lint rules.                                                                                                    |
+| Repository-wide `npm run lint --quiet` | Pass — 0 errors | The local semantic lint gate now passes across the repository.                                                                                               |
+| Automated gateway/router unit tests    | Pass            | Validation, idempotency/budget-operation decoding, selection/attempt bounds and provider request/error fixtures pass.                                        |
+| Empty Supabase migration replay        | 67/67 pass      | Every checked-in migration replays from zero on the local stack.                                                                                             |
+| Database provider/ACL/schema contracts | 541/541 pass    | Includes 46 operational-core and 49 terminal-foundation assertions plus the earlier product/RLS contracts.                                                   |
+| Supabase schema lint                   | Pass            | The local `public` and `private` schemas report no lint errors.                                                                                              |
+| Hosted Space release contract          | Pass            | No missing migration/table/function; 19/19 Space tables use RLS; direct protected writes are false; Realtime publication is true.                            |
+| Hosted public generated types          | Partial         | Checked-in types match clean local schema; repeatable hosted drift automation remains.                                                                       |
+| Provider conformance tests             | None recorded   | No provider is operationally certified.                                                                                                                      |
+| Hosted migrations 65–67 / gateway      | Released        | Applied through the exact-ledger alias-safe release helper; hosted I/O RLS/grant/containment contract passes and `io-gateway` v19 returns 401 without a JWT. |
 
 ## 4. Implemented, but requires improvement
 
@@ -146,7 +147,7 @@ The member must be able to understand which model, provider, serving region, dat
 | Capacity truth            | Three labelled demo sources and grants                                                                                                                      | The generic partner/sponsored demo records currently carry `IN` region/residency metadata without provider-specific evidence      | Change unknown facts to unknown; attach India claims only to a certified endpoint and evidence version    |
 | Auth runtime              | JWT check with legacy anon/service-role environment variables                                                                                               | It works, but newer publishable/secret key rotation and narrower privileged access should be planned                              | Move to current Supabase key conventions and keep admin client use inside the smallest possible functions |
 | Web control room          | Workspace, terminal, route/model selection, receipt history, real budget state, settled/released cost, durable terminal history, capacity and safe audit    | No pre-run candidate explanation, credit/invoice view, detailed health or richer receipt paging/filtering                         | Add authorized policy, health and commercial APIs before paid beta                                        |
-| Local OpenCode            | Browser-local run plus safe durable created/completed/failed metadata                                                                                       | No event timeline, resume, tool/approval enforcement, diff, artifacts, task tree, sharing, detach or recovery                     | Add ordered event/resume first, then trusted approvals and explicit sharing                               |
+| Local OpenCode            | Browser-local run plus durable lifecycle, safe ordered metadata timeline and non-executable approval request/decision boundary                              | No realtime timeline delivery, resume, tool/approval enforcement, diff, artifacts, task tree, sharing, detach or recovery         | Add reconnect/resume, approval enforcement and explicit sharing                                           |
 | Conversation client       | Shared hooks and better DM RLS                                                                                                                              | Separate hook instances, no cursor paging, no common store, no private Broadcast, no I/O workspace conversations                  | Complete the shared store/RPC/realtime plan before adding group collaboration                             |
 | Operational documentation | Plans and provider inventory exist                                                                                                                          | Earlier secret guidance could be read as multi-provider activation, which is incorrect                                            | Treat this document and the corrected operating guide as the current source of truth                      |
 
@@ -156,7 +157,7 @@ The member must be able to understand which model, provider, serving region, dat
 
 The local operational core now implements the central reserve/dispatch/finalize transaction. The following parts remain before the complete production router exists:
 
-1. release and concurrency-test the local idempotency/reservation/finalization path in the hosted project;
+1. concurrency-test the released idempotency/reservation/finalization path with explicitly approved bounded provider traffic;
 2. complete policy filters for capacity class, model origin, serving region, retention/training, BYOK and fallback constraints;
 3. snapshot the exact route-policy, registry, capability, health and price versions on each receipt;
 4. add scheduled health probes, queue/latency scoring, cancellation and distributed request/provider rate limits;
@@ -193,7 +194,7 @@ io_invoice_lines
 io_payment_events
 ```
 
-Durable terminal session/member/event/approval foundations are locally Verified. Artifacts, tasks, handoffs, retention, ordered runtime event ingestion and trusted approval decisions remain. Long-running agent execution must not be placed inside a Supabase Edge Function.
+Durable terminal session/member/event/approval foundations are locally Verified, including bounded replay-safe event ingestion and non-executable owner decisions. Realtime delivery, artifacts, tasks, handoffs, retention and daemon-side approval enforcement remain. Long-running agent execution must not be placed inside a Supabase Edge Function.
 
 ### 5.3 Missing operational surfaces
 
@@ -371,7 +372,7 @@ Exit: no paid or sponsored dispatch can occur without a reservation, settlement,
 
 ### Phase F — terminal, conversations, and beta operations
 
-1. Release the locally Verified durable terminal metadata; then add resume/attach, ordered tool/approval timeline, diff/artifact/task views and explicit sharing.
+1. Build on the Released durable terminal, timeline and approval-boundary migrations with resume/attach, realtime delivery, daemon-enforced tools/approvals, diff/artifact/task views and explicit sharing.
 2. Complete the shared conversation store, cursor paging, RPC send/read boundary, and private Realtime Broadcast.
 3. Add I/O workspace conversations and session handoffs without copying private terminal content into human messages.
 4. Add automated unit, integration, RLS, adapter-contract, router-failure, ledger-property, load, and end-to-end tests.
@@ -381,19 +382,17 @@ Exit: a capped private cohort can operate under measured reliability, spend, pri
 
 ## 10. Immediate next code slice
 
-The highest-leverage next slice is **release the Verified operational core, then finish provider conformance without enabling general traffic**:
+The highest-leverage next slice is **finish provider conformance without enabling general traffic**:
 
-1. authenticate the Supabase CLI, inspect linked drift and apply migrations 65–66;
-2. deploy the updated verified-JWT `io-gateway`, regenerate types and run hosted RLS/RPC contracts;
-3. deploy member/admin apps only after the hosted schema and gateway pass;
+1. deploy member/admin apps and run authenticated browser personas now that the hosted schema and gateway pass;
+2. build provider evidence/conformance plus two-person activation review;
+3. run only explicitly approved, bounded conformance calls and store sanitized results;
 4. run I/O-only, Community opt-in, existing-member, location-consent and admin browser personas;
-5. build provider evidence/conformance plus two-person activation review;
-6. run only explicitly approved, bounded conformance calls and store sanitized results;
-7. activate one provider route at a time and reconcile receipt, usage, reservation and ledger evidence.
+5. activate one provider route at a time and reconcile receipt, usage, reservation and ledger evidence.
 
 ## 11. Verification basis and limits
 
-This assessment uses local source, a clean 66-migration/516-assertion replay, current member/admin build/type/format/lint/unit checks and the previously filed hosted Chapter/Mission Space and I/O evidence contracts. Production approval is not claimed. No new hosted verification is claimed on 10 August because the Supabase CLI authentication profile is missing.
+This assessment uses local source, a clean 67-migration/541-assertion replay, current member/admin build/type/format/lint/unit checks and hosted Chapter/Mission Space plus I/O operational/terminal evidence contracts. Production approval is not claimed. The three additive I/O migrations were released through an exact-ledger alias-safe deployment view; timestamp aliases still mean ordinary linked pushes remain unsafe.
 
 The connected Supabase tools do not expose Edge Function secret names or values. Consequently this audit confirms what names the code reads and what provider records exist, but it cannot confirm which provider-specific secrets the operator added. No secret should be copied into an issue, chat, document, log, table, or repository to overcome that limitation.
 

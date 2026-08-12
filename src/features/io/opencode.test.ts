@@ -22,6 +22,7 @@ describe("runOpenCodeSession", { concurrency: false }, () => {
     const originalFetch = globalThis.fetch;
     const urls: string[] = [];
     const lifecycle: string[] = [];
+    const metadata: string[] = [];
     globalThis.fetch = async (input) => {
       const url = String(input);
       urls.push(url);
@@ -41,12 +42,16 @@ describe("runOpenCodeSession", { concurrency: false }, () => {
         onSessionSettled: async (session, state) => {
           lifecycle.push(`${state}:${session.sessionId}`);
         },
+        onMetadataEvent: async (_session, event) => {
+          metadata.push(event.type);
+        },
       });
       assert.equal(urls[2], "http://localhost:4096/session/session%2Fone/message");
       assert.equal(result.connectorOrigin, "http://localhost:4096");
       assert.equal(result.content, "Completed");
       assert.equal(result.serverVersion, "1.2.3");
       assert.deepEqual(lifecycle, ["created:session/one", "completed:session/one"]);
+      assert.deepEqual(metadata, ["runtime.connected", "prompt.accepted"]);
     } finally {
       globalThis.fetch = originalFetch;
     }

@@ -13,6 +13,16 @@ export type OpenCodeSessionReference = {
   serverVersion: string | null;
 };
 
+export type OpenCodeMetadataEvent =
+  | {
+      type: "runtime.connected";
+      payload: { runtimeVersionKnown: boolean };
+    }
+  | {
+      type: "prompt.accepted";
+      payload: Record<string, never>;
+    };
+
 type OpenCodeMessagePart = {
   type?: string;
   text?: string;
@@ -71,6 +81,10 @@ export async function runOpenCodeSession(input: {
     session: OpenCodeSessionReference,
     state: "completed" | "failed",
   ) => Promise<void>;
+  onMetadataEvent?: (
+    session: OpenCodeSessionReference,
+    event: OpenCodeMetadataEvent,
+  ) => Promise<void>;
 }): Promise<OpenCodeRunResult> {
   const baseUrl = normalizeOpenCodeOrigin(input.serverUrl);
   const healthResponse = await fetch(`${baseUrl}/global/health`, {
@@ -97,6 +111,10 @@ export async function runOpenCodeSession(input: {
     serverVersion: typeof healthRecord.version === "string" ? healthRecord.version : null,
   };
   await input.onSessionCreated?.(reference);
+  await input.onMetadataEvent?.(reference, {
+    type: "runtime.connected",
+    payload: { runtimeVersionKnown: reference.serverVersion !== null },
+  });
 
   let content: string;
   try {
@@ -123,6 +141,10 @@ export async function runOpenCodeSession(input: {
       .map((part) => part.text!.trim())
       .filter(Boolean)
       .join("\n\n");
+    await input.onMetadataEvent?.(reference, {
+      type: "prompt.accepted",
+      payload: {},
+    });
   } catch (error) {
     await input.onSessionSettled?.(reference, "failed");
     throw error;

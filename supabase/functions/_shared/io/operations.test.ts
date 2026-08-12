@@ -63,7 +63,7 @@ describe("I/O operational calculations", () => {
     assert.equal(nanosToMinorUnits(1_000_000_000, "JPY"), 1);
   });
 
-  it("reserves the most expensive fallback using a conservative input bound", () => {
+  it("reserves the total worst-case cost across every allowed attempt", () => {
     const messages = [{ role: "user" as const, content: "hello" }];
     assert.equal(conservativeInputTokenBound(messages), 149);
     assert.equal(
@@ -74,8 +74,9 @@ describe("I/O operational calculations", () => {
         ],
         messages,
       ),
-      9,
+      10,
     );
+    assert.throws(() => calculateReservationMinor([], messages), /No provider attempt/);
   });
 
   it("settles from complete provider usage and labels missing usage estimates", () => {

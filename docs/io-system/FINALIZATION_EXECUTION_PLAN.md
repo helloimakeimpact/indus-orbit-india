@@ -1,16 +1,16 @@
 # Indus Orbit full finalization execution plan
 
-Status: active, evidence-gated plan updated 9 August 2026. Demo database release is complete; production readiness is not.
+Status: active, evidence-gated plan updated 12 August 2026. Demo database release is complete; production readiness is not.
 
 This plan covers the whole product: public brand site, identity, Community, conversation, I/O Port, terminal/OpenCode, admin, data, operations and commercial readiness. “Done” means code, authorization, data migration, browser behavior, deployment and operating evidence all agree. A source file or attractive UI alone is not completion.
 
-Execution update, 10 August 2026: I/O request idempotency, hard budgets, reserve/settle ledger, endpoint health/circuits, member budget UI, admin budget/circuit UI and safe durable terminal metadata are **Verified locally**. They are not **Released** until migrations `20260810002754` and `20260810010415` plus the updated gateway are applied and verified in hosted project `jpwvgpnbkrktipwhvqss`. Hosted release is **Blocked** only by missing Supabase CLI authentication in the current environment.
+Execution update, 12 August 2026: I/O request idempotency, hard budgets, reserve/settle ledger, endpoint health/circuits, member budget UI, admin budget/circuit UI, safe durable terminal metadata, ordered metadata timeline and non-executable approval boundary are **Released to the hosted demo**. Migrations `20260810002754`, `20260810010415` and `20260812000100` were applied through the isolated exact-ledger alias-safe release helper; `io-gateway` v19 is active with JWT verification and the hosted release contract passes. Provider routing remains disabled: this is a safe control-plane release, not provider activation.
 
 ## Current release checkpoint
 
 Completed in the demo environment:
 
-- provider registry/control-plane foundation and Released `io-gateway` v18;
+- provider registry/control-plane foundation and Released `io-gateway` v19;
 - latest endpoint-bound eligibility enforcement;
 - notification table containment and vouch contract repairs;
 - complete Loops browser retirement with service-only archive access;
@@ -20,7 +20,7 @@ Completed in the demo environment:
 - removal of anonymous access to eight privileged functions;
 - caller-bound domain mutations, retirement of generic notification execution and a private service-leased email outbox;
 - Chapter/Mission Space schema, deterministic Room blueprints, membership projection and caller-bound lifecycle/message/read operations;
-- clean 66-migration replay with 516/516 assertions plus the previously verified hosted schema/RLS/RPC/Realtime and I/O evidence contracts;
+- clean 67-migration replay with 541/541 assertions plus the previously verified hosted schema/RLS/RPC/Realtime and I/O evidence contracts;
 - five-provider/model/endpoint inventory with three capacity sources/grants, while route receipts and provider attempts remain zero.
 
 The product is still a release candidate foundation, not a finished production system.
@@ -29,11 +29,11 @@ The product is still a release candidate foundation, not a finished production s
 
 Deliverables:
 
-1. Preserve the hosted ledger and document or baseline the 26 timestamp aliases so ordinary `supabase db push` works without a temporary migration view.
+1. Preserve the hosted ledger and document or baseline the 26 timestamp aliases. Until a separately reviewed reconciliation, continue to use the exact-ledger temporary release view rather than ordinary linked `supabase db push`.
 2. Decide whether the separate builder/course/S.O.D.A. seed belongs in demo only; never mix that decision into schema deployment.
-3. **Verified:** all 64 migrations replay from an empty database.
-4. **Verified locally:** all 446 pgTAP assertions and public/private lint pass; keep these and the GitHub database workflow required in CI.
-5. Add an automated generated-public-types drift gate.
+3. **Verified:** all 67 migrations replay from an empty database.
+4. **Verified locally:** all 541 pgTAP assertions and public/private lint pass; keep these and the GitHub database workflow required in CI.
+5. Add an automated generated-public-types drift gate. The current hosted generation confirms the I/O terminal RPC contract; its file-wide generator-version diff is not yet an automated CI check.
 6. Verify the owner-scoped managed `realtime.messages` policy in its real owner environment.
 7. Prove an upgrade from a production-like snapshot, not only an empty reset.
 
@@ -112,7 +112,7 @@ User input needed: approve the first group-collaboration scope and moderation/re
 Deliverables:
 
 1. Build the operator conformance runner and evidence UI; validate chat, streaming, tools, structured output, usage, errors, cancellation and safety one provider at a time.
-2. **Verified locally:** request idempotency, hard workspace budgets, reserve/settle accounting, retry-cost reservation, circuit breakers and outcome sampling. Still required: hosted release, scheduled health/latency probes, distributed retry/rate budgets and kill-switch drills.
+2. **Released to demo:** request idempotency, hard workspace budgets, reserve/settle accounting, retry-cost reservation, circuit breakers and outcome sampling. Still required: controlled hosted concurrency evidence, scheduled health/latency probes, distributed retry/rate budgets and kill-switch drills.
 3. Complete dynamic model refresh with evidence timestamps, region/residency labels that are never inferred, price versions and approved FX snapshots.
 4. Validate and expand the live five-provider registry toward the reviewed 20-provider inventory using partnership, owned/rented and donated-capacity adapters.
 5. Add OpenAI-compatible partner and local endpoints while preserving provider-specific adapters where semantics differ.
@@ -133,8 +133,8 @@ User input needed: provider partnership terms, permitted regions, spend ceiling,
 
 Deliverables:
 
-1. **Verified locally:** safe creator-only sessions, member/event/approval schema foundations and create/complete/list lifecycle. Still required: ordered runtime event ingestion, executable approval/tool contracts, artifacts and handoffs.
-2. Add resumable streaming timelines, task trees, commands, diffs/revert, abort/recovery and explicit approval states.
+1. **Released to demo:** safe creator-only sessions, lifecycle, replay-safe ordered metadata events and non-executable request/owner-decision boundaries. Still required: realtime delivery, executable approval/tool contracts, artifacts and handoffs.
+2. Add resumable streaming timelines, task trees, commands, diffs/revert, abort/recovery and daemon-enforced approval states.
 3. Authenticate the local daemon with short-lived pairing, origin binding and revocation instead of an in-memory password alone.
 4. Package the local client and define compatibility/version negotiation with OpenCode.
 5. Keep local execution local; the hosted service stores only deliberate, permissioned session metadata/artifacts.
@@ -157,7 +157,7 @@ Deliverables:
 2. Add privileged MFA/re-auth, session review/revocation and two-person root-role changes.
 3. Replace legacy direct-table member/content/program mutations with capability-checked transactional RPCs.
 4. Add redacted cursor-paginated audit, queue assignment, reasons, confirmations and safe bulk-operation limits.
-5. Provider runtime/receipt evidence is Released; budget and manual circuit controls are Verified locally. Still add hosted release, evidence/conformance approval, scheduled health, reconciliation and incident workflows without exposing provider secrets.
+5. Provider runtime/receipt/budget/circuit database controls are Released; still add evidence/conformance approval, scheduled health, reconciliation and incident workflows without exposing provider secrets. The separate admin browser app still needs hosting deployment.
 6. Remove or redirect obsolete member-app admin surfaces after parity and role-negative tests pass.
 
 Exit criteria:

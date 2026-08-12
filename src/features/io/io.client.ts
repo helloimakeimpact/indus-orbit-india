@@ -88,6 +88,27 @@ export type IoTerminalSession = {
   completedAt: string | null;
 };
 
+export type IoTerminalEvent = {
+  id: number;
+  sequence: number;
+  type:
+    | "session.created"
+    | "runtime.connected"
+    | "runtime.disconnected"
+    | "prompt.accepted"
+    | "approval.requested"
+    | "approval.approved"
+    | "approval.rejected"
+    | "approval.expired"
+    | "session.completed"
+    | "session.failed"
+    | "session.stopped"
+    | "session.archived";
+  contentClassification: "metadata_only" | "redacted_summary";
+  syncPolicy: "cloud_metadata" | "explicit_share";
+  occurredAt: string;
+};
+
 export type IoRouteStrategy = "latest_affordable" | "lowest_cost" | "explicit_model";
 
 export type IoRoutableModel = {
@@ -560,6 +581,52 @@ function parseTerminalSession(value: unknown, idKey = "id"): IoTerminalSession |
   };
 }
 
+const terminalEventTypes: ReadonlySet<IoTerminalEvent["type"]> = new Set([
+  "session.created",
+  "runtime.connected",
+  "runtime.disconnected",
+  "prompt.accepted",
+  "approval.requested",
+  "approval.approved",
+  "approval.rejected",
+  "approval.expired",
+  "session.completed",
+  "session.failed",
+  "session.stopped",
+  "session.archived",
+]);
+
+function parseTerminalEvent(value: unknown): IoTerminalEvent | null {
+  const event = asRecord(value);
+  if (!event) return null;
+  const id = readNonNegativeInteger(event, "event_id");
+  const sequence = readNonNegativeInteger(event, "sequence");
+  const type = readString(event, "event_type");
+  const contentClassification = readString(event, "content_classification");
+  const syncPolicy = readString(event, "sync_policy");
+  const occurredAt = readString(event, "occurred_at");
+  if (
+    id === null ||
+    sequence === null ||
+    sequence < 1 ||
+    !type ||
+    !terminalEventTypes.has(type as IoTerminalEvent["type"]) ||
+    (contentClassification !== "metadata_only" && contentClassification !== "redacted_summary") ||
+    (syncPolicy !== "cloud_metadata" && syncPolicy !== "explicit_share") ||
+    !occurredAt
+  ) {
+    return null;
+  }
+  return {
+    id,
+    sequence,
+    type: type as IoTerminalEvent["type"],
+    contentClassification,
+    syncPolicy,
+    occurredAt,
+  };
+}
+
 export async function createMyIoTerminalSession(input: {
   workspaceId: string;
   title: string;
@@ -594,6 +661,40 @@ export async function completeMyIoTerminalSession(
   const session = parseTerminalSession(data);
   if (!session) throw new Error("The terminal session completion record is invalid.");
   return session;
+}
+
+export async function appendMyIoTerminalEvent(input: {
+  sessionId: string;
+  type: "runtime.connected" | "runtime.disconnected" | "prompt.accepted";
+  eventKey?: string;
+  payload?: { runtimeVersionKnown: boolean } | { reasonCode: string } | Record<string, never>;
+}) {
+  const { data, error } = await supabase.rpc("append_my_io_terminal_event", {
+    _session_id: input.sessionId,
+    _event_type: input.type,
+    _event_key: input.eventKey ?? crypto.randomUUID(),
+    _payload: input.payload ?? {},
+  });
+  if (error) throw new Error(error.message);
+  const event = Array.isArray(data) ? data[0] : data;
+  const record = asRecord(event);
+  const sequence = record ? readNonNegativeInteger(record, "sequence") : null;
+  const eventType = record ? readString(record, "event_type") : null;
+  if (sequence === null || sequence < 1 || eventType !== input.type) {
+    throw new Error("The terminal event record is invalid.");
+  }
+  return { sequence, replayed: record?.replayed === true };
+}
+
+export async function listMyIoTerminalEvents(sessionId: string): Promise<IoTerminalEvent[]> {
+  const { data, error } = await supabase.rpc("list_my_io_terminal_events", {
+    _session_id: sessionId,
+  });
+  if (error) throw new Error(error.message);
+  return (data ?? []).flatMap((value) => {
+    const parsed = parseTerminalEvent(value);
+    return parsed ? [parsed] : [];
+  });
 }
 
 export async function listMyIoTerminalSessions(workspaceId: string): Promise<IoTerminalSession[]> {

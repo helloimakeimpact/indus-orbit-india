@@ -4904,6 +4904,21 @@ export type Database = {
           completed_at: string | null;
         };
       };
+      append_my_io_terminal_event: {
+        Args: {
+          _session_id: string;
+          _event_type: string;
+          _event_key: string;
+          _payload?: Json;
+        };
+        Returns: {
+          event_id: number;
+          sequence: number;
+          event_type: string;
+          occurred_at: string;
+          replayed: boolean;
+        }[];
+      };
       create_my_mission: {
         Args: {
           _chapter_id: string;
@@ -4984,6 +4999,36 @@ export type Database = {
           started_at: string;
           completed_at: string | null;
         }[];
+      };
+      list_my_io_terminal_events: {
+        Args: {
+          _session_id: string;
+          _before_sequence?: number | null;
+          _limit?: number | null;
+        };
+        Returns: {
+          event_id: number;
+          sequence: number;
+          event_type: string;
+          content_classification: string;
+          sync_policy: string;
+          occurred_at: string;
+        }[];
+      };
+      request_my_io_terminal_approval: {
+        Args: {
+          _session_id: string;
+          _permission_kind: string;
+          _risk_class: string;
+          _decision_scope: string;
+          _reason: string;
+          _expires_at: string;
+        };
+        Returns: Json;
+      };
+      decide_my_io_terminal_approval: {
+        Args: { _request_id: string; _decision: string; _reason: string };
+        Returns: Json;
       };
       get_my_location_preferences: { Args: never; Returns: Json };
       get_my_product_access: {

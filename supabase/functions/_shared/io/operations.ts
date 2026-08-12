@@ -101,15 +101,22 @@ export function calculateReservationMinor(
   messages: GatewayMessage[],
   outputTokenLimit = 1_024,
 ) {
+  if (attempts.length === 0) {
+    throw new GatewayError("not_configured", 503, "No provider attempt is available to reserve.");
+  }
   const inputTokenBound = conservativeInputTokenBound(messages);
-  return Math.max(
-    ...attempts.map(({ connection }) =>
-      nanosToMinorUnits(
-        calculateCostNanos(connection, inputTokenBound, outputTokenLimit),
-        connection.currencyCode,
+  const totalWorstCaseMinor = attempts.reduce(
+    (total, { connection }) =>
+      total +
+      BigInt(
+        nanosToMinorUnits(
+          calculateCostNanos(connection, inputTokenBound, outputTokenLimit),
+          connection.currencyCode,
+        ),
       ),
-    ),
+    0n,
   );
+  return safeNumber(totalWorstCaseMinor, "Worst-case attempt reservation");
 }
 
 export function calculateSettlement(input: {
