@@ -8,6 +8,7 @@ const supportedHealthStates = new Set(["healthy", "degraded", "unavailable", "un
 const supportedCircuitStates = new Set(["closed", "open", "half_open"]);
 const secretReferencePattern = /^IO_PROVIDER_[A-Z0-9_]+_API_KEY$/;
 const defaultOutputTokenAllowance = 1_024;
+const maximumProviderResponseBytes = 2 * 1_024 * 1_024;
 
 type RegistryRow = Record<string, unknown>;
 
@@ -267,6 +268,62 @@ function providerRequestId(response: Response) {
   return id && id.length <= 256 ? id : undefined;
 }
 
+async function readProviderJson(response: Response): Promise<unknown> {
+  const declaredLength = Number(response.headers.get("content-length"));
+  if (Number.isFinite(declaredLength) && declaredLength > maximumProviderResponseBytes) {
+    throw new GatewayError(
+      "upstream_failure",
+      502,
+      "The provider response exceeded the gateway safety limit.",
+      response.status,
+    );
+  }
+  if (!response.body) {
+    throw new GatewayError(
+      "upstream_failure",
+      502,
+      "The provider returned no response body.",
+      response.status,
+    );
+  }
+
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let received = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    received += value.byteLength;
+    if (received > maximumProviderResponseBytes) {
+      await reader.cancel();
+      throw new GatewayError(
+        "upstream_failure",
+        502,
+        "The provider response exceeded the gateway safety limit.",
+        response.status,
+      );
+    }
+    chunks.push(value);
+  }
+
+  const combined = new Uint8Array(received);
+  let offset = 0;
+  for (const chunk of chunks) {
+    combined.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  try {
+    return JSON.parse(new TextDecoder().decode(combined));
+  } catch {
+    throw new GatewayError(
+      "upstream_failure",
+      502,
+      "The provider returned invalid JSON.",
+      response.status,
+    );
+  }
+}
+
 function toGeminiRequest(messages: GatewayMessage[]) {
   const systemText = messages
     .filter((message) => message.role === "system")
@@ -344,7 +401,6 @@ export async function sendProviderChat(
     throw new GatewayError("upstream_failure", 502, "The provider could not be reached.");
   }
 
-  const parsedBody: unknown = await upstream.json().catch(() => null);
   if (!upstream.ok) {
     throw new GatewayError(
       upstream.status === 429 ? "rate_limited" : "upstream_failure",
@@ -356,6 +412,7 @@ export async function sendProviderChat(
     );
   }
 
+  const parsedBody = await readProviderJson(upstream);
   const result = isGemini ? readGeminiResult(parsedBody) : readOpenAiResult(parsedBody);
   return { ...result, providerRequestId: providerRequestId(upstream) };
 }

@@ -1,16 +1,16 @@
 # Indus Orbit full finalization execution plan
 
-Status: active, evidence-gated plan updated 12 August 2026. Demo database release is complete; production readiness is not.
+Status: active, evidence-gated plan audited 19 August 2026. The first 67 migrations are Released; migration 68 is Verified locally and not yet hosted. Production readiness is not claimed.
 
 This plan covers the whole product: public brand site, identity, Community, conversation, I/O Port, terminal/OpenCode, admin, data, operations and commercial readiness. “Done” means code, authorization, data migration, browser behavior, deployment and operating evidence all agree. A source file or attractive UI alone is not completion.
 
-Execution update, 12 August 2026: I/O request idempotency, hard budgets, reserve/settle ledger, endpoint health/circuits, member budget UI, admin budget/circuit UI, safe durable terminal metadata, ordered metadata timeline and non-executable approval boundary are **Released to the hosted demo**. Migrations `20260810002754`, `20260810010415` and `20260812000100` were applied through the isolated exact-ledger alias-safe release helper; `io-gateway` v19 is active with JWT verification and the hosted release contract passes. Provider routing remains disabled: this is a safe control-plane release, not provider activation.
+Execution update, 19 August 2026: the Released I/O controls remain unchanged. Direct-history keyset pagination, terminal cancellation/time/size bounds, gateway response caps and strict admin route matching are **Verified locally**. A clean replay now passes 68 migrations and 550 assertions; member/admin checks and dependency audits pass. The alias-safe migration-68 dry run made no hosted change because direct database transport failed on the current IPv6 network. Provider routing remains disabled.
 
 ## Current release checkpoint
 
 Completed in the demo environment:
 
-- provider registry/control-plane foundation and Released `io-gateway` v19;
+- provider registry/control-plane foundation and Released `io-gateway` v20;
 - latest endpoint-bound eligibility enforcement;
 - notification table containment and vouch contract repairs;
 - complete Loops browser retirement with service-only archive access;
@@ -20,7 +20,7 @@ Completed in the demo environment:
 - removal of anonymous access to eight privileged functions;
 - caller-bound domain mutations, retirement of generic notification execution and a private service-leased email outbox;
 - Chapter/Mission Space schema, deterministic Room blueprints, membership projection and caller-bound lifecycle/message/read operations;
-- clean 67-migration replay with 541/541 assertions plus the previously verified hosted schema/RLS/RPC/Realtime and I/O evidence contracts;
+- clean 68-migration replay with 550/550 assertions; the hosted project remains at 67 migrations with its previously verified schema/RLS/RPC/Realtime and I/O evidence contracts;
 - five-provider/model/endpoint inventory with three capacity sources/grants, while route receipts and provider attempts remain zero.
 
 The product is still a release candidate foundation, not a finished production system.
@@ -31,8 +31,8 @@ Deliverables:
 
 1. Preserve the hosted ledger and document or baseline the 26 timestamp aliases. Until a separately reviewed reconciliation, continue to use the exact-ledger temporary release view rather than ordinary linked `supabase db push`.
 2. Decide whether the separate builder/course/S.O.D.A. seed belongs in demo only; never mix that decision into schema deployment.
-3. **Verified:** all 67 migrations replay from an empty database.
-4. **Verified locally:** all 541 pgTAP assertions and public/private lint pass; keep these and the GitHub database workflow required in CI.
+3. **Verified:** all 68 migrations replay from an empty database.
+4. **Verified locally:** all 550 pgTAP assertions and public/private lint pass; keep these and the GitHub database workflow required in CI.
 5. Add an automated generated-public-types drift gate. The current hosted generation confirms the I/O terminal RPC contract; its file-wide generator-version diff is not yet an automated CI check.
 6. Verify the owner-scoped managed `realtime.messages` policy in its real owner environment.
 7. Prove an upgrade from a production-like snapshot, not only an empty reset.

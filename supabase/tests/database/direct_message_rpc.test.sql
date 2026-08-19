@@ -2,7 +2,7 @@ BEGIN;
 
 SET LOCAL search_path = public, extensions;
 
-SELECT plan(38);
+SELECT plan(47);
 
 SELECT ok(
   (
@@ -45,6 +45,12 @@ SELECT has_function(
   ARRAY['uuid'],
   'caller-bound read receipt RPC exists'
 );
+SELECT has_function(
+  'public',
+  'list_my_direct_conversation',
+  ARRAY['uuid', 'timestamptz', 'uuid', 'integer'],
+  'caller-bound paginated direct-conversation RPC exists'
+);
 
 SELECT ok(
   (
@@ -52,7 +58,8 @@ SELECT ok(
     FROM pg_catalog.pg_proc AS proc
     WHERE proc.oid IN (
       'public.send_my_direct_message(uuid,text,uuid)'::regprocedure,
-      'public.mark_my_direct_conversation_read(uuid)'::regprocedure
+      'public.mark_my_direct_conversation_read(uuid)'::regprocedure,
+      'public.list_my_direct_conversation(uuid,timestamptz,uuid,integer)'::regprocedure
     )
   ),
   'direct-message RPCs use definer execution'
@@ -60,7 +67,7 @@ SELECT ok(
 
 SELECT ok(
   (
-    SELECT pg_catalog.count(*) = 2
+    SELECT pg_catalog.count(*) = 3
       AND pg_catalog.bool_and(
         pg_catalog.replace(pg_catalog.split_part(setting, '=', 2), '"', '') = ''
       )
@@ -68,7 +75,8 @@ SELECT ok(
     CROSS JOIN LATERAL pg_catalog.unnest(proc.proconfig) AS setting
     WHERE proc.oid IN (
       'public.send_my_direct_message(uuid,text,uuid)'::regprocedure,
-      'public.mark_my_direct_conversation_read(uuid)'::regprocedure
+      'public.mark_my_direct_conversation_read(uuid)'::regprocedure,
+      'public.list_my_direct_conversation(uuid,timestamptz,uuid,integer)'::regprocedure
     )
       AND pg_catalog.split_part(setting, '=', 1) = 'search_path'
   ),
@@ -92,6 +100,14 @@ SELECT ok(
   'authenticated members can call the read RPC'
 );
 SELECT ok(
+  has_function_privilege(
+    'authenticated',
+    'public.list_my_direct_conversation(uuid,timestamptz,uuid,integer)',
+    'EXECUTE'
+  ),
+  'authenticated members can call the paginated history RPC'
+);
+SELECT ok(
   NOT has_function_privilege(
     'anon',
     'public.send_my_direct_message(uuid,text,uuid)',
@@ -106,6 +122,14 @@ SELECT ok(
     'EXECUTE'
   ),
   'anonymous clients cannot call the read RPC'
+);
+SELECT ok(
+  NOT has_function_privilege(
+    'anon',
+    'public.list_my_direct_conversation(uuid,timestamptz,uuid,integer)',
+    'EXECUTE'
+  ),
+  'anonymous clients cannot call the paginated history RPC'
 );
 
 SELECT ok(
@@ -270,6 +294,139 @@ SELECT results_eq(
 );
 
 RESET ROLE;
+
+INSERT INTO public.direct_messages (
+  id,
+  sender_id,
+  recipient_id,
+  content,
+  created_at,
+  read_at
+)
+VALUES
+  (
+    '34000000-0000-4000-8000-000000000001'::uuid,
+    '31000000-0000-4000-8000-000000000001'::uuid,
+    '31000000-0000-4000-8000-000000000002'::uuid,
+    'Older page fixture',
+    '2099-01-01 00:00:00+00'::timestamptz,
+    '2099-01-01 00:02:00+00'::timestamptz
+  ),
+  (
+    '34000000-0000-4000-8000-000000000002'::uuid,
+    '31000000-0000-4000-8000-000000000002'::uuid,
+    '31000000-0000-4000-8000-000000000001'::uuid,
+    'Cursor tie fixture A',
+    '2099-01-01 00:01:00+00'::timestamptz,
+    '2099-01-01 00:02:00+00'::timestamptz
+  ),
+  (
+    '34000000-0000-4000-8000-000000000003'::uuid,
+    '31000000-0000-4000-8000-000000000001'::uuid,
+    '31000000-0000-4000-8000-000000000002'::uuid,
+    'Cursor tie fixture B',
+    '2099-01-01 00:01:00+00'::timestamptz,
+    '2099-01-01 00:02:00+00'::timestamptz
+  );
+
+SET LOCAL ROLE authenticated;
+SET LOCAL "request.jwt.claim.sub" = '31000000-0000-4000-8000-000000000001';
+SET LOCAL "request.jwt.claim.role" = 'authenticated';
+
+SELECT throws_ok(
+  $$
+    SELECT *
+    FROM public.list_my_direct_conversation(
+      '31000000-0000-4000-8000-000000000002'::uuid,
+      NULL,
+      NULL,
+      101
+    )
+  $$,
+  '22023',
+  'Conversation page limit must be between 1 and 100',
+  'conversation history rejects an excessive page limit'
+);
+
+SELECT throws_ok(
+  $$
+    SELECT *
+    FROM public.list_my_direct_conversation(
+      '31000000-0000-4000-8000-000000000002'::uuid,
+      '2099-01-01 00:01:00+00'::timestamptz,
+      NULL,
+      2
+    )
+  $$,
+  '22023',
+  'Conversation cursor must include timestamp and message ID',
+  'conversation history rejects a partial cursor'
+);
+
+SELECT results_eq(
+  $$
+    SELECT message_id
+    FROM public.list_my_direct_conversation(
+      '31000000-0000-4000-8000-000000000002'::uuid,
+      NULL,
+      NULL,
+      2
+    )
+    LIMIT 2
+  $$,
+  $$
+    VALUES
+      ('34000000-0000-4000-8000-000000000003'::uuid),
+      ('34000000-0000-4000-8000-000000000002'::uuid)
+  $$,
+  'first conversation page is newest-first with an ID tie-break'
+);
+
+SELECT results_eq(
+  $$
+    SELECT count(*)::bigint
+    FROM public.list_my_direct_conversation(
+      '31000000-0000-4000-8000-000000000002'::uuid,
+      NULL,
+      NULL,
+      2
+    )
+  $$,
+  ARRAY[3::bigint],
+  'conversation page returns one look-ahead row'
+);
+
+SELECT results_eq(
+  $$
+    SELECT message_id
+    FROM public.list_my_direct_conversation(
+      '31000000-0000-4000-8000-000000000002'::uuid,
+      '2099-01-01 00:01:00+00'::timestamptz,
+      '34000000-0000-4000-8000-000000000002'::uuid,
+      1
+    )
+    LIMIT 1
+  $$,
+  ARRAY['34000000-0000-4000-8000-000000000001'::uuid],
+  'conversation cursor continues strictly before its timestamp and ID'
+);
+
+SELECT results_eq(
+  $$
+    SELECT count(*)::bigint
+    FROM public.list_my_direct_conversation(
+      '31000000-0000-4000-8000-000000000003'::uuid,
+      NULL,
+      NULL,
+      50
+    )
+  $$,
+  ARRAY[0::bigint],
+  'conversation history does not expose another member pair'
+);
+
+RESET ROLE;
+
 SELECT results_eq(
   $$
     SELECT count(*)::bigint

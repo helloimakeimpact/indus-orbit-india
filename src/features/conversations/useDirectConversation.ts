@@ -1,6 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { getConversation, markConversationRead, sendMessage } from "@/server/messages.functions";
+import {
+  getConversation,
+  markConversationRead,
+  sendMessage,
+  type DirectConversationCursor,
+} from "@/server/messages.functions";
 import type { DirectMessage } from "@/features/conversations/types";
 import {
   isConversationMessage,
@@ -16,26 +21,37 @@ export function useDirectConversation(userId: string | undefined, otherUserId: s
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+  const [loadingEarlier, setLoadingEarlier] = useState(false);
+  const [nextCursor, setNextCursor] = useState<DirectConversationCursor | null>(null);
+  const conversationRequestSequence = useRef(0);
 
   const topic = useMemo(() => {
     if (!userId || !otherUserId) return null;
     return `dm:${[userId, otherUserId].sort().join(":")}`;
   }, [otherUserId, userId]);
+  const activeTopic = useRef(topic);
+  useEffect(() => {
+    activeTopic.current = topic;
+  }, [topic]);
 
   const refresh = useCallback(async () => {
-    if (!otherUserId) return;
+    if (!otherUserId || !topic) return;
+    const requestedTopic = topic;
     setLoading(true);
     setError(null);
     try {
-      const loaded = (await getConversation(otherUserId)) as DirectMessage[];
-      setMessages((current) => mergeConversationMessages(current, loaded));
+      const page = await getConversation(otherUserId);
+      if (activeTopic.current !== requestedTopic) return;
+      setMessages((current) => mergeConversationMessages(current, page.messages));
+      setNextCursor((current) => current ?? page.nextCursor);
     } catch (cause) {
+      if (activeTopic.current !== requestedTopic) return;
       setMessages([]);
       setError(cause instanceof Error ? cause.message : "Could not load this conversation.");
     } finally {
-      setLoading(false);
+      if (activeTopic.current === requestedTopic) setLoading(false);
     }
-  }, [otherUserId]);
+  }, [otherUserId, topic]);
 
   useEffect(() => {
     let active = true;
@@ -44,14 +60,20 @@ export function useDirectConversation(userId: string | undefined, otherUserId: s
     void Promise.resolve().then(() => {
       if (!active) return;
 
+      conversationRequestSequence.current += 1;
+      setLoadingEarlier(false);
+      setSending(false);
+
       if (!userId || !otherUserId || !topic) {
         setMessages([]);
+        setNextCursor(null);
         setError(null);
         setLoading(false);
         return;
       }
 
       setMessages([]);
+      setNextCursor(null);
       setLoading(true);
       setError(null);
       channel = supabase
@@ -72,9 +94,10 @@ export function useDirectConversation(userId: string | undefined, otherUserId: s
         .subscribe();
 
       void getConversation(otherUserId)
-        .then((loaded) => {
+        .then((page) => {
           if (!active) return;
-          setMessages((current) => mergeConversationMessages(current, loaded as DirectMessage[]));
+          setMessages((current) => mergeConversationMessages(current, page.messages));
+          setNextCursor(page.nextCursor);
           void markConversationRead(otherUserId).catch(() => undefined);
         })
         .catch((cause) => {
@@ -95,18 +118,65 @@ export function useDirectConversation(userId: string | undefined, otherUserId: s
 
   const send = useCallback(
     async (content: string) => {
-      if (!otherUserId) throw new Error("Select a conversation first.");
+      if (!otherUserId || !topic) throw new Error("Select a conversation first.");
+      const requestedTopic = topic;
       setSending(true);
       try {
         const message = (await sendMessage(otherUserId, content)) as DirectMessage;
-        setMessages((current) => mergeMessage(current, message));
+        if (activeTopic.current === requestedTopic) {
+          setMessages((current) => mergeMessage(current, message));
+        }
         return message;
       } finally {
-        setSending(false);
+        if (activeTopic.current === requestedTopic) setSending(false);
       }
     },
-    [otherUserId],
+    [otherUserId, topic],
   );
 
-  return { messages, loading, error, sending, refresh, send };
+  const loadEarlier = useCallback(async () => {
+    if (!otherUserId || !topic || !nextCursor || loadingEarlier) return;
+    const requestedTopic = topic;
+    const requestSequence = ++conversationRequestSequence.current;
+    setLoadingEarlier(true);
+    setError(null);
+    try {
+      const page = await getConversation(otherUserId, nextCursor);
+      if (
+        activeTopic.current !== requestedTopic ||
+        conversationRequestSequence.current !== requestSequence
+      ) {
+        return;
+      }
+      setMessages((current) => mergeConversationMessages(current, page.messages));
+      setNextCursor(page.nextCursor);
+    } catch (cause) {
+      if (
+        activeTopic.current !== requestedTopic ||
+        conversationRequestSequence.current !== requestSequence
+      ) {
+        return;
+      }
+      setError(cause instanceof Error ? cause.message : "Could not load earlier messages.");
+    } finally {
+      if (
+        activeTopic.current === requestedTopic &&
+        conversationRequestSequence.current === requestSequence
+      ) {
+        setLoadingEarlier(false);
+      }
+    }
+  }, [loadingEarlier, nextCursor, otherUserId, topic]);
+
+  return {
+    messages,
+    loading,
+    error,
+    sending,
+    hasEarlier: nextCursor !== null,
+    loadingEarlier,
+    refresh,
+    loadEarlier,
+    send,
+  };
 }

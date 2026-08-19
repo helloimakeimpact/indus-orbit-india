@@ -26,22 +26,37 @@ export async function getConnections() {
   return profiles ?? [];
 }
 
-// Get all messages in a conversation between current user and another user
-export async function getConversation(otherUserId: string) {
-  const { data: userData } = await supabase.auth.getUser();
-  if (!userData.user) throw new Error("Unauthorized");
-  const userId = userData.user.id;
+export type DirectConversationCursor = { createdAt: string; id: string };
 
-  const { data, error } = await supabase
-    .from("direct_messages")
-    .select("*")
-    .or(
-      `and(sender_id.eq.${userId},recipient_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},recipient_id.eq.${userId})`,
-    )
-    .order("created_at", { ascending: true });
+const conversationPageSize = 50;
 
+// Fetch a bounded caller-owned page. The RPC returns one look-ahead row so the
+// browser can offer an earlier page without a count or OFFSET scan.
+export async function getConversation(otherUserId: string, before?: DirectConversationCursor) {
+  const { data, error } = await supabase.rpc("list_my_direct_conversation", {
+    _other_user_id: otherUserId,
+    _before_created_at: before?.createdAt ?? null,
+    _before_id: before?.id ?? null,
+    _limit: conversationPageSize,
+  });
   if (error) throw new Error(error.message);
-  return data ?? [];
+  const page = (data ?? []).slice(0, conversationPageSize).map((message) => ({
+    id: message.message_id,
+    sender_id: message.sender_id,
+    recipient_id: message.recipient_id,
+    content: message.content,
+    client_request_id: message.client_request_id,
+    created_at: message.created_at,
+    read_at: message.read_at,
+  }));
+  const oldest = page.at(-1);
+  return {
+    messages: page,
+    nextCursor:
+      data && data.length > conversationPageSize && oldest
+        ? { createdAt: oldest.created_at, id: oldest.id }
+        : null,
+  };
 }
 
 // Send a message

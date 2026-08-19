@@ -1,6 +1,6 @@
 # I/O Terminal and OpenCode system record
 
-Status: durable metadata, safe timeline and approval-boundary foundations are **Released to the hosted demo**; advanced terminal operations remain open, 12 August 2026.
+Status: durable metadata, safe timeline and approval foundations are **Released**; cancellation, timeout and size bounds are **Verified locally**; advanced terminal operations remain open, audited 19 August 2026.
 
 ## Product boundary
 
@@ -14,9 +14,10 @@ The application does not embed a full fork of OpenCode. It uses a reviewed brows
 
 - accepts only credential-free HTTP loopback origins;
 - keeps the optional OpenCode password in memory;
-- checks server health, creates a runtime session and sends one prompt;
+- checks server health, creates a runtime session and sends one prompt with a 45-second default request timeout;
 - validates returned health, session and message shapes;
-- emits `created`, `completed` and `failed` lifecycle callbacks plus safe `runtime.connected` and `prompt.accepted` metadata events;
+- bounds prompt/title/password/server metadata, streams responses through a 1 MiB limit and composes caller cancellation with its timeout;
+- emits `created`, `completed`, `failed` and `stopped` lifecycle callbacks plus safe `runtime.connected` and `prompt.accepted` metadata events;
 - keeps I/O modes—Observe, Plan, Build and Run—inside the Indus Orbit UI;
 - does not insert prompts or terminal output into `direct_messages` or safe audit metadata.
 
@@ -39,8 +40,8 @@ The same migration adds caller-bound approval request and owner-decision RPCs wi
 
 ### Evidence
 
-- OpenCode lifecycle and validation unit tests pass as part of the 43-test member suite.
-- The two terminal SQL contracts contribute 49 passing assertions to the 541-assertion fresh database replay.
+- OpenCode lifecycle, cancellation, timeout and validation unit tests pass as part of the 46-test member suite.
+- The two terminal SQL contracts contribute 49 passing assertions to the 550-assertion fresh database replay.
 - Database lint reports no `public` or `private` schema errors.
 - Member typecheck, production build and formatting pass.
 
@@ -51,7 +52,7 @@ These facts are **Released** to hosted project `jpwvgpnbkrktipwhvqss`: the three
 The following capabilities are still **Planned** or **Partial**:
 
 1. realtime/SSE timeline delivery, runtime reconnect and bounded retention/compaction of the existing ordered metadata timeline;
-2. resume, reconnect, abort, fork, child sessions and task tree;
+2. resume, reconnect, daemon-confirmed abort, fork, child sessions and task tree; the current Stop action cancels the browser request and records `stopped`, but does not prove daemon process termination;
 3. command, tool, MCP, LSP, formatter and repository-context UI;
 4. step-up, approval UI, daemon-side execution enforcement and revoke/expiry handling for the existing approval request/decision boundary;
 5. diff, review, revert, artifact and safe download flows;

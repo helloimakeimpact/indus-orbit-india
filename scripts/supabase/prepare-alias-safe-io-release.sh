@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Build an ephemeral Supabase migration view from the hosted ledger, then layer
-# only the reviewed forward I/O migrations on top. This avoids changing the
+# only explicitly named, reviewed forward migrations on top. This avoids changing the
 # historic local/hosted timestamp aliases that are documented in
 # docs/SUPABASE_SCHEMA_RECONCILIATION.md.
 #
@@ -19,18 +19,21 @@ release_tmp_dir=""
 apply_release=false
 keep_release_view=false
 
-forward_migrations=(
+default_forward_migrations=(
   "20260810002754_create_io_operational_core.sql"
   "20260810010415_create_io_terminal_session_foundation.sql"
   "20260812000100_add_io_terminal_timeline_and_approval_rpcs.sql"
 )
+forward_migrations=()
 
 usage() {
   cat <<'USAGE'
-Usage: scripts/supabase/prepare-alias-safe-io-release.sh [--apply] [--keep]
+Usage: scripts/supabase/prepare-alias-safe-io-release.sh [--apply] [--keep] [migration.sql ...]
 
 Creates a temporary migration directory by fetching the exact hosted ledger,
-adds only the three reviewed forward I/O migrations, and prints a dry-run plan.
+adds only the explicitly named reviewed forward migrations, and prints a
+dry-run plan. When no migration is named, the original three I/O migrations
+remain the default compatibility set.
 
   --apply  Apply the exact reviewed temporary view after a successful dry run.
   --keep   Keep the temporary view and print its path for manual inspection.
@@ -58,13 +61,20 @@ while [[ $# -gt 0 ]]; do
       exit 0
       ;;
     *)
-      printf 'Unknown option: %s\n' "$1" >&2
-      usage >&2
-      exit 2
+      if [[ "$1" == -* || "$1" == */* || ! "$1" =~ ^[0-9]{14}_[A-Za-z0-9_]+\.sql$ ]]; then
+        printf 'Invalid migration filename: %s\n' "$1" >&2
+        usage >&2
+        exit 2
+      fi
+      forward_migrations+=("$1")
       ;;
   esac
   shift
 done
+
+if [[ ${#forward_migrations[@]} -eq 0 ]]; then
+  forward_migrations=("${default_forward_migrations[@]}")
+fi
 
 if [[ ! -x "$supabase_bin" ]]; then
   printf 'Supabase CLI is not installed at %s\n' "$supabase_bin" >&2
@@ -94,7 +104,8 @@ for migration_name in "${forward_migrations[@]}"; do
     "$release_tmp_dir/supabase/migrations/$migration_name"
 done
 
-printf '\nDry-run: only these three forward I/O migrations may appear below:\n'
+printf '\nDry-run: only the explicitly reviewed forward migrations may appear below:\n'
+printf '  %s\n' "${forward_migrations[@]}"
 SUPABASE_TELEMETRY_DISABLED=1 "$supabase_bin" db push --linked --dry-run \
   --workdir "$release_tmp_dir" --agent no
 

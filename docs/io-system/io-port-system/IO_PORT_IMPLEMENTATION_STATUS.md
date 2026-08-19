@@ -1,6 +1,6 @@
 # I/O Port implementation status and multi-provider readiness
 
-Status: local code, UI, database, admin and hosted-release assessment, updated 12 August 2026.
+Status: local code, UI, database, admin and hosted-release assessment, audited 19 August 2026.
 
 This is the operational source of truth for the current I/O Port implementation. It separates what exists from what is only represented in a plan or preview. Cross-product dependencies and release gates are governed by `../../MASTER_IMPLEMENTATION_AND_RELEASE_PLAN.md` and `../../RELEASE_READINESS_CHECKLIST.md`. Product direction remains in `IO_PORT_IMPLEMENTATION_PLAN.md`; the detailed delivery sequence remains in `IO_PORT_CODE_LEVEL_ROADMAP.md`; the OpenRouter comparison is in `OPENROUTER_CAPABILITY_AND_CAPACITY_PLAN.md`.
 
@@ -12,7 +12,7 @@ I/O Port is **not operationally routing external provider traffic yet**. Its fir
 
 The deployed gateway resolves approved registry connections through a service-role-only resolver, allows only approved `IO_PROVIDER_*_API_KEY` secret references, evaluates entitled candidates across providers, supports provider-aware OpenAI-compatible and Gemini-native request adapters, performs bounded fallback for safe upstream failures, and writes redacted receipts/attempts. The browser can request latest-affordable, lowest-cost or an approved explicit model and display RLS-scoped receipt history.
 
-The activation-grade control-plane slice is **Released to the hosted demo**. Migration `20260810002754_create_io_operational_core.sql` and gateway v19 add fingerprinted idempotency, hard budget reservation before dispatch, balanced double-entry settlement/release, stale-hold expiry, endpoint health samples, circuit state/events, circuit-aware resolution and member/admin budget/health controls. Migrations `20260810010415_create_io_terminal_session_foundation.sql` and `20260812000100_add_io_terminal_timeline_and_approval_rpcs.sql` add creator-only durable terminal metadata, replay-safe safe-metadata timelines and non-executable approval RPCs. The read-only hosted release contract passes; provider routing is still disabled.
+The activation-grade control-plane slice is **Released to the hosted demo**. Migration `20260810002754_create_io_operational_core.sql` and gateway v20 provide fingerprinted idempotency, hard budget reservation before dispatch, balanced settlement/release, health/circuits and bounded validated provider responses. The terminal migrations add creator-only safe metadata and non-executable approval RPCs. The read-only hosted release contract passes; provider routing is still disabled.
 
 Provider API keys by themselves do not make a provider routable. The verified deployed cohort counts are:
 
@@ -87,13 +87,13 @@ The member must be able to understand which model, provider, serving region, dat
 
 ### 3.3 Gateway foundation
 
-- Active `io-gateway` version 18 verifies a user token, active workspace membership, active capacity entitlement, request shape, message limits, and CORS origin.
+- Active `io-gateway` version 20 verifies a user token, active workspace membership, active capacity entitlement, request shape, message limits, and CORS origin.
 - Provider credentials remain server-side.
 - Requests and outcomes write redacted audit metadata without prompt or response text.
 - The selector fails closed unless an entitled provider, model, endpoint, verified chat capability, active capacity source, and effective member-visible price card are eligible.
 - It supports `latest_affordable`, `lowest_cost`, and an explicit reviewed model. Automatic selection has a configurable tier, freshness window and affordability band; mixed currencies fail closed until reviewed FX conversion exists.
 - An approved connection can resolve only an allowlisted `IO_PROVIDER_*_API_KEY` secret name. The browser receives neither endpoint URL nor credential.
-- The adapter currently normalizes non-streaming OpenAI-compatible Chat Completions and Gemini native `generateContent`; it validates response shapes and normalizes token use and a safe provider request ID.
+- The adapter normalizes non-streaming OpenAI-compatible Chat Completions and Gemini native `generateContent`; local audited code streams successful bodies through a 2 MiB cap, requires valid JSON, validates shapes and normalizes token use and a safe request ID. Provider error bodies are not parsed or returned.
 - Dispatch defaults to one provider attempt. Operator-enabled fallback is capped at three through `IO_PROVIDER_MAX_ATTEMPTS` and remains unsuitable for paid traffic until idempotency, reservation and policy controls exist.
 - The deployed forward-only migrations introduce append-only `io_route_receipts` and `io_provider_attempts`. They exclude prompts, generated text, credentials, headers and raw upstream errors; selected currency is retained for valid aggregation.
 - A follow-up migration covers every receipt/attempt provider, model, endpoint and capacity foreign key used for operator history and reconciliation; the Performance Advisor reports no remaining unindexed foreign key in the new I/O evidence tables.
@@ -105,32 +105,32 @@ The member must be able to understand which model, provider, serving region, dat
 ### 3.4 Local terminal and conversation foundation
 
 - The browser can connect only to a credential-free root loopback OpenCode origin over HTTP; paths, query strings, fragments and embedded URL credentials are rejected, while an optional OpenCode password is held in memory.
-- The proof validates OpenCode health/session/message objects, encodes the returned session ID, performs prompt delivery, and reports safe-audit failure separately from local execution success.
+- The proof validates OpenCode health/session/message objects, encodes the session ID, performs bounded prompt delivery, and reports safe-audit failure separately. Calls support cancellation, default to 45 seconds and cap response data at 1 MiB.
 - `20260810010415_create_io_terminal_session_foundation.sql` is locally Verified. It adds creator-only sessions, members, events and approval foundations plus caller-bound create/complete/list RPCs.
 - `20260812000100_add_io_terminal_timeline_and_approval_rpcs.sql` is locally Verified. It adds ordered replay-safe metadata timeline RPCs plus bounded approval request and owner-decision RPCs that cannot execute a command.
-- Runtime origin and OpenCode session references are stored only as SHA-256 hashes. Prompt, output, code, commands, file paths and password remain outside Supabase. The connector now records created/completed/failed lifecycle and safe runtime/prompt metadata events.
+- Runtime origin and OpenCode session references are stored only as SHA-256 hashes. Prompt, output, code, commands, file paths and password remain outside Supabase. The connector records created/completed/failed/stopped lifecycle and safe runtime/prompt metadata events. Browser Stop does not yet prove daemon process termination.
 - Existing direct messages remain the human conversation source. I/O prompts and terminal work are not inserted into `direct_messages`.
-- Direct-message RLS/read permissions were hardened, and both the full Messages surface and compact chat now reuse shared hooks and event-driven unread reconciliation.
+- Direct-message RLS/read permissions were hardened. Both message surfaces reuse shared hooks, event-driven unread reconciliation and a Verified caller-bound 50-row keyset history RPC; migration 68 still needs hosted release.
 
 ### 3.5 Repository verification
 
-| Check                                  | Result          | Interpretation                                                                                                                                               |
-| -------------------------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `npm run build`                        | Pass            | The current web application produces a production bundle.                                                                                                    |
-| `npm run typecheck`                    | Pass            | Current browser/server TypeScript compiles.                                                                                                                  |
-| `npm run format:check`                 | Pass            | Mechanical formatting drift has been removed.                                                                                                                |
-| `npm run test:unit`                    | Pass — 43/43    | Auth/product/location, schema compatibility, conversations, OpenCode lifecycle, gateway operations/adapters/routing and fixed email templates are covered.   |
-| `npm run audit:high`                   | Pass            | No critical, high or moderate dependency advisory remains.                                                                                                   |
-| I/O-focused ESLint run                 | Pass            | `src/features/io` and I/O routes pass current lint rules.                                                                                                    |
-| Repository-wide `npm run lint --quiet` | Pass — 0 errors | The local semantic lint gate now passes across the repository.                                                                                               |
-| Automated gateway/router unit tests    | Pass            | Validation, idempotency/budget-operation decoding, selection/attempt bounds and provider request/error fixtures pass.                                        |
-| Empty Supabase migration replay        | 67/67 pass      | Every checked-in migration replays from zero on the local stack.                                                                                             |
-| Database provider/ACL/schema contracts | 541/541 pass    | Includes 46 operational-core and 49 terminal-foundation assertions plus the earlier product/RLS contracts.                                                   |
-| Supabase schema lint                   | Pass            | The local `public` and `private` schemas report no lint errors.                                                                                              |
-| Hosted Space release contract          | Pass            | No missing migration/table/function; 19/19 Space tables use RLS; direct protected writes are false; Realtime publication is true.                            |
-| Hosted public generated types          | Partial         | Checked-in types match clean local schema; repeatable hosted drift automation remains.                                                                       |
-| Provider conformance tests             | None recorded   | No provider is operationally certified.                                                                                                                      |
-| Hosted migrations 65–67 / gateway      | Released        | Applied through the exact-ledger alias-safe release helper; hosted I/O RLS/grant/containment contract passes and `io-gateway` v19 returns 401 without a JWT. |
+| Check                                  | Result          | Interpretation                                                                                                                                 |
+| -------------------------------------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run build`                        | Pass            | The current web application produces a production bundle.                                                                                      |
+| `npm run typecheck`                    | Pass            | Current browser/server TypeScript compiles.                                                                                                    |
+| `npm run format:check`                 | Pass            | Mechanical formatting drift has been removed.                                                                                                  |
+| `npm run test:unit`                    | Pass — 46/46    | Auth/product/location, conversations, OpenCode cancellation/bounds, gateway operations/adapters/routing and fixed email templates are covered. |
+| `npm run audit:high`                   | Pass            | No critical, high or moderate dependency advisory remains.                                                                                     |
+| I/O-focused ESLint run                 | Pass            | `src/features/io` and I/O routes pass current lint rules.                                                                                      |
+| Repository-wide `npm run lint --quiet` | Pass — 0 errors | The local semantic lint gate now passes across the repository.                                                                                 |
+| Automated gateway/router unit tests    | Pass            | Validation, idempotency/budget-operation decoding, selection/attempt bounds and provider request/error fixtures pass.                          |
+| Empty Supabase migration replay        | 68/68 pass      | Every checked-in migration replays from zero on the local stack.                                                                               |
+| Database provider/ACL/schema contracts | 550/550 pass    | Includes 46 operational-core, 49 terminal-foundation and nine direct-history pagination assertions.                                            |
+| Supabase schema lint                   | Pass            | The local `public` and `private` schemas report no lint errors.                                                                                |
+| Hosted Space release contract          | Pass            | No missing migration/table/function; 19/19 Space tables use RLS; direct protected writes are false; Realtime publication is true.              |
+| Hosted public generated types          | Partial         | Checked-in types match clean local schema; repeatable hosted drift automation remains.                                                         |
+| Provider conformance tests             | None recorded   | No provider is operationally certified.                                                                                                        |
+| Hosted migrations 65–67 / gateway      | Released        | Migrations used the exact-ledger helper; hosted I/O contracts pass and `io-gateway` v20 preserves a `401` unauthenticated boundary.            |
 
 ## 4. Implemented, but requires improvement
 
@@ -139,7 +139,7 @@ The member must be able to understand which model, provider, serving region, dat
 | Provider connection       | Five deployed private connection records use distinct provider-specific secret references                                                                   | All remain testing and no conformance result exists                                                                               | Add audited conformance workflow, then activate one approved connection at a time                         |
 | Dynamic model selection   | Local source compares entitled, priced, healthy, non-open-circuit candidates across connections                                                             | It does not yet apply formal route-policy snapshots, recent-latency scoring, FX, cached pricing or the complete member policy     | Add hard policy filters and versioned scoring inputs before activation                                    |
 | Provider registry         | Sound public/private schema split with five provider/model/endpoint/price/connection records                                                                | Records remain unproven until secret references, evidence and conformance are reviewed                                            | Add operator onboarding, evidence refresh, deprecation and lifecycle workflows                            |
-| Provider adapter          | Local source has OpenAI-compatible and Gemini-native non-streaming adapters                                                                                 | No streaming, tools, structured output, multimodal, cancellation, or conformance matrix                                           | Add tested adapter capabilities one provider at a time                                                    |
+| Provider adapter          | Local source has OpenAI-compatible and Gemini-native non-streaming adapters with bounded, valid-JSON response handling                                      | No request streaming, tools, structured output, multimodal, cancellation propagation or conformance matrix                        | Deploy the audited cap, then add tested adapter capabilities one provider at a time                       |
 | Request validation        | Strict request and normalized response validation                                                                                                           | Streaming frames and provider-specific error schemas are not versioned                                                            | Add schemas and contract tests for each supported feature                                                 |
 | Reliability               | Local code requires idempotency, reserves retry cost, samples outcomes and excludes open circuits; timeout/rate-limit classification and attempt cap remain | No cancellation, scheduled probes, latency/queue scoring, automated half-open recovery or distributed rate-limit layer            | Release hosted and add those controls before broad traffic                                                |
 | Audit                     | Immutable receipts/attempts and capability-checked evidence are Released; local finalization also binds reservation, usage and ledger atomically            | No conformance route has exercised the hosted path; full policy/price/health snapshots and provider-invoice reconciliation remain | With spend approval, verify one bounded route and reconcile its complete evidence chain                   |
@@ -148,7 +148,7 @@ The member must be able to understand which model, provider, serving region, dat
 | Auth runtime              | JWT check with legacy anon/service-role environment variables                                                                                               | It works, but newer publishable/secret key rotation and narrower privileged access should be planned                              | Move to current Supabase key conventions and keep admin client use inside the smallest possible functions |
 | Web control room          | Workspace, terminal, route/model selection, receipt history, real budget state, settled/released cost, durable terminal history, capacity and safe audit    | No pre-run candidate explanation, credit/invoice view, detailed health or richer receipt paging/filtering                         | Add authorized policy, health and commercial APIs before paid beta                                        |
 | Local OpenCode            | Browser-local run plus durable lifecycle, safe ordered metadata timeline and non-executable approval request/decision boundary                              | No realtime timeline delivery, resume, tool/approval enforcement, diff, artifacts, task tree, sharing, detach or recovery         | Add reconnect/resume, approval enforcement and explicit sharing                                           |
-| Conversation client       | Shared hooks and better DM RLS                                                                                                                              | Separate hook instances, no cursor paging, no common store, no private Broadcast, no I/O workspace conversations                  | Complete the shared store/RPC/realtime plan before adding group collaboration                             |
+| Conversation client       | Shared hooks, better DM RLS and locally Verified caller-bound keyset history                                                                                | Migration 68 is not hosted; hook instances are separate and no common store/private Broadcast exists                              | Release migration 68, then complete the shared store/realtime plan before group collaboration             |
 | Operational documentation | Plans and provider inventory exist                                                                                                                          | Earlier secret guidance could be read as multi-provider activation, which is incorrect                                            | Treat this document and the corrected operating guide as the current source of truth                      |
 
 ## 5. Remaining implementation boundary
@@ -392,7 +392,7 @@ The highest-leverage next slice is **finish provider conformance without enablin
 
 ## 11. Verification basis and limits
 
-This assessment uses local source, a clean 67-migration/541-assertion replay, current member/admin build/type/format/lint/unit checks and hosted Chapter/Mission Space plus I/O operational/terminal evidence contracts. Production approval is not claimed. The three additive I/O migrations were released through an exact-ledger alias-safe deployment view; timestamp aliases still mean ordinary linked pushes remain unsafe.
+This assessment uses local source, a clean 68-migration/550-assertion replay, current member/admin checks and hosted Chapter/Mission Space plus I/O operational/terminal contracts. Production approval is not claimed. The earlier three additive I/O migrations were Released through an exact-ledger view; migration 68 is only Verified because the current network cannot establish the direct hosted database path. Timestamp aliases still make ordinary linked pushes unsafe.
 
 The connected Supabase tools do not expose Edge Function secret names or values. Consequently this audit confirms what names the code reads and what provider records exist, but it cannot confirm which provider-specific secrets the operator added. No secret should be copied into an issue, chat, document, log, table, or repository to overcome that limitation.
 

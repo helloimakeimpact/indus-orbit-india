@@ -194,4 +194,25 @@ describe("sendProviderChat request contracts", { concurrency: false }, () => {
       );
     }
   });
+
+  it("rejects oversized or invalid successful provider responses", async () => {
+    for (const responseFactory of [
+      () =>
+        new Response("{}", {
+          status: 200,
+          headers: { "content-length": String(2 * 1_024 * 1_024 + 1) },
+        }),
+      () => new Response("not-json", { status: 200 }),
+    ]) {
+      await captureProviderRequests(async () => {
+        await assert.rejects(
+          sendProviderChat(connection({}), messages),
+          (error: unknown) =>
+            error instanceof GatewayError &&
+            error.code === "upstream_failure" &&
+            (/safety limit/.test(error.message) || /invalid JSON/.test(error.message)),
+        );
+      }, responseFactory);
+    }
+  });
 });

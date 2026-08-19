@@ -19,6 +19,7 @@ import {
   Server,
   ShieldCheck,
   Sparkles,
+  Square,
   TerminalSquare,
   UsersRound,
   Workflow,
@@ -30,7 +31,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { runOpenCodeSession, type OpenCodeRunResult } from "@/features/io/opencode";
+import {
+  OpenCodeStoppedError,
+  runOpenCodeSession,
+  type OpenCodeRunResult,
+} from "@/features/io/opencode";
 import {
   createMyIoWorkspace,
   createMyIoTerminalSession,
@@ -66,6 +71,7 @@ export function IoOverview() {
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string | null>(null);
   const selectedWorkspaceIdRef = useRef<string | null>(null);
   const workspaceLoadSequence = useRef(0);
+  const terminalAbortController = useRef<AbortController | null>(null);
   const [sources, setSources] = useState<IoCapacitySource[]>([]);
   const [events, setEvents] = useState<IoAuditEvent[]>([]);
   const [receipts, setReceipts] = useState<IoRouteReceipt[]>([]);
@@ -89,6 +95,13 @@ export function IoOverview() {
   const [openCodePassword, setOpenCodePassword] = useState("");
   const [partnerResult, setPartnerResult] = useState<PartnerRunResult | null>(null);
   const [terminalResult, setTerminalResult] = useState<OpenCodeRunResult | null>(null);
+
+  useEffect(
+    () => () => {
+      terminalAbortController.current?.abort();
+    },
+    [],
+  );
 
   const loadWorkspace = useCallback(async (requestedWorkspaceId?: string) => {
     const loadSequence = ++workspaceLoadSequence.current;
@@ -230,6 +243,9 @@ export function IoOverview() {
     setPartnerResult(null);
     setTerminalResult(null);
 
+    const localAbortController = path === "terminal" ? new AbortController() : null;
+    if (localAbortController) terminalAbortController.current = localAbortController;
+
     try {
       if (path === "partner") {
         const result = await runPartnerRoute({
@@ -250,6 +266,7 @@ export function IoOverview() {
           password: openCodePassword,
           title: `I/O ${mode} session`,
           prompt: prompt.trim(),
+          signal: localAbortController?.signal,
           onSessionCreated: async (session) => {
             try {
               const durable = await createMyIoTerminalSession({
@@ -297,10 +314,21 @@ export function IoOverview() {
         }
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "The session could not run.");
+      if (error instanceof OpenCodeStoppedError) {
+        toast.info("The local OpenCode request was stopped. Its safe lifecycle was recorded.");
+      } else {
+        toast.error(error instanceof Error ? error.message : "The session could not run.");
+      }
     } finally {
+      if (terminalAbortController.current === localAbortController) {
+        terminalAbortController.current = null;
+      }
       setRunning(false);
     }
+  }
+
+  function stopTerminalSession() {
+    terminalAbortController.current?.abort();
   }
 
   const readySources = sources.filter((source) => source.status === "active");
@@ -456,6 +484,7 @@ export function IoOverview() {
                 icon={<TerminalSquare className="h-4 w-4" />}
                 title="I/O Terminal · this device"
                 detail="OpenCode session, tools, Git and permissions stay local."
+                disabled={running}
                 onClick={() => setPath("terminal")}
               />
               <PathButton
@@ -463,6 +492,7 @@ export function IoOverview() {
                 icon={<CloudCog className="h-4 w-4" />}
                 title="Provider partnership"
                 detail="Server-gated model route with a recorded capacity source."
+                disabled={running}
                 onClick={() => setPath("partner")}
               />
             </div>
@@ -581,15 +611,31 @@ export function IoOverview() {
                   type="button"
                   size="sm"
                   disabled={
-                    !workspace ||
-                    !prompt.trim() ||
-                    running ||
-                    (path === "partner" && !canRunPartner)
+                    running
+                      ? path !== "terminal"
+                      : !workspace ||
+                        !prompt.trim() ||
+                        prompt.trim().length > 24_000 ||
+                        (path === "partner" && !canRunPartner)
                   }
-                  onClick={runSession}
+                  onClick={running && path === "terminal" ? stopTerminalSession : runSession}
                 >
-                  {running ? <LoaderCircle className="animate-spin" /> : <Send />}
-                  {path === "terminal" ? "Run local" : "Route request"}
+                  {running ? (
+                    path === "terminal" ? (
+                      <Square />
+                    ) : (
+                      <LoaderCircle className="animate-spin" />
+                    )
+                  ) : (
+                    <Send />
+                  )}
+                  {running
+                    ? path === "terminal"
+                      ? "Stop local"
+                      : "Routing…"
+                    : path === "terminal"
+                      ? "Run local"
+                      : "Route request"}
                 </Button>
               </div>
             </div>
@@ -935,21 +981,24 @@ function PathButton({
   icon,
   title,
   detail,
+  disabled,
   onClick,
 }: {
   active: boolean;
   icon: ReactNode;
   title: string;
   detail: string;
+  disabled?: boolean;
   onClick: () => void;
 }) {
   return (
     <button
       type="button"
       aria-pressed={active}
+      disabled={disabled}
       onClick={onClick}
       className={cn(
-        "rounded-xl border p-3 text-left transition",
+        "rounded-xl border p-3 text-left transition disabled:cursor-not-allowed disabled:opacity-60",
         active
           ? "border-[var(--saffron)]/60 bg-[var(--saffron)]/10 shadow-sm"
           : "border-border/70 bg-background/40 hover:border-[var(--saffron)]/35",

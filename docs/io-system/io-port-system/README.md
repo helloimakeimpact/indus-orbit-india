@@ -13,7 +13,7 @@ I/O Port has a real web surface, Supabase control plane and registry-driven gate
 | Supabase control plane     | Deployed to demo.                                                                                                                                             |
 | Provider registry          | Five direct providers/models/endpoints/prices staged.                                                                                                         |
 | Provider secrets           | Present in Edge Function secret storage by unique provider name; values are not in registry or Git.                                                           |
-| Gateway                    | `io-gateway` v19 Released with idempotent reserve/settle/circuit control; it is JWT-protected and provider traffic remains disabled.                          |
+| Gateway                    | `io-gateway` v20 Released with idempotent reserve/settle/circuit control and bounded validated provider responses; JWT-protected, traffic disabled.           |
 | Member route evidence      | Latest twelve RLS-scoped receipts show route, capacity, attempt/fallback, token and currency-labelled estimate facts.                                         |
 | Admin route evidence       | Capability-checked aggregate plus keyset-paginated redacted receipt feed in the separate admin app.                                                           |
 | Ready providers            | Zero. All five connections are testing; capability proofs are draft; providers/endpoints are conformance-only.                                                |

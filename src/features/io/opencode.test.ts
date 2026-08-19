@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { normalizeOpenCodeOrigin, runOpenCodeSession } from "./opencode";
+import { normalizeOpenCodeOrigin, OpenCodeStoppedError, runOpenCodeSession } from "./opencode";
 
 describe("normalizeOpenCodeOrigin", () => {
   it("accepts only credential-free loopback root origins", () => {
@@ -134,6 +134,127 @@ describe("runOpenCodeSession", { concurrency: false }, () => {
           prompt: "Plan safely",
         }),
         /invalid session identifier/,
+      );
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it("records a stopped lifecycle when the member cancels an in-flight prompt", async () => {
+    const originalFetch = globalThis.fetch;
+    const controller = new AbortController();
+    const lifecycle: string[] = [];
+    let promptStarted!: () => void;
+    const promptRequestStarted = new Promise<void>((resolve) => {
+      promptStarted = resolve;
+    });
+    globalThis.fetch = async (input, init) => {
+      const url = String(input);
+      if (url.endsWith("/global/health")) return Response.json({ version: "1" });
+      if (url.endsWith("/session")) return Response.json({ id: "session-stopped" });
+      promptStarted();
+      return new Promise<Response>((_resolve, reject) => {
+        init?.signal?.addEventListener(
+          "abort",
+          () => reject(new DOMException("Stopped", "AbortError")),
+          { once: true },
+        );
+      });
+    };
+    try {
+      const run = runOpenCodeSession({
+        serverUrl: "http://127.0.0.1:4096",
+        password: "",
+        title: "I/O test",
+        prompt: "Plan safely",
+        signal: controller.signal,
+        onSessionCreated: async () => {
+          lifecycle.push("created");
+        },
+        onSessionSettled: async (_session, state) => {
+          lifecycle.push(state);
+        },
+      });
+      await promptRequestStarted;
+      controller.abort();
+      await assert.rejects(run, OpenCodeStoppedError);
+      assert.deepEqual(lifecycle, ["created", "stopped"]);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it("bounds local response size, input size, and request duration", async () => {
+    const originalFetch = globalThis.fetch;
+    let fetchCount = 0;
+    globalThis.fetch = async (_input, init) => {
+      fetchCount += 1;
+      return new Promise<Response>((_resolve, reject) => {
+        init?.signal?.addEventListener(
+          "abort",
+          () => reject(new DOMException("Timed out", "AbortError")),
+          { once: true },
+        );
+      });
+    };
+    try {
+      await assert.rejects(
+        runOpenCodeSession({
+          serverUrl: "http://127.0.0.1:4096",
+          password: "",
+          title: "I/O test",
+          prompt: "Plan safely",
+          requestTimeoutMs: 5,
+        }),
+        /safety timeout/,
+      );
+
+      globalThis.fetch = async (_input, init) => {
+        fetchCount += 1;
+        return new Response(
+          new ReadableStream({
+            start(controller) {
+              init?.signal?.addEventListener(
+                "abort",
+                () => controller.error(new DOMException("Timed out", "AbortError")),
+                { once: true },
+              );
+            },
+          }),
+        );
+      };
+      await assert.rejects(
+        runOpenCodeSession({
+          serverUrl: "http://127.0.0.1:4096",
+          password: "",
+          title: "I/O test",
+          prompt: "Plan safely",
+          requestTimeoutMs: 5,
+        }),
+        /safety timeout/,
+      );
+
+      await assert.rejects(
+        runOpenCodeSession({
+          serverUrl: "http://127.0.0.1:4096",
+          password: "",
+          title: "I/O test",
+          prompt: "x".repeat(24_001),
+        }),
+        /24,000 characters/,
+      );
+      assert.equal(fetchCount, 2);
+
+      globalThis.fetch = async () =>
+        new Response("{}", { headers: { "content-length": "1048577" } });
+      await assert.rejects(
+        runOpenCodeSession({
+          serverUrl: "http://127.0.0.1:4096",
+          password: "",
+          title: "I/O test",
+          prompt: "Plan safely",
+        }),
+        /1 MB safety limit/,
       );
     } finally {
       globalThis.fetch = originalFetch;

@@ -5133,6 +5133,23 @@ export type Database = {
         Args: { _other_user_id: string };
         Returns: number;
       };
+      list_my_direct_conversation: {
+        Args: {
+          _other_user_id: string;
+          _before_created_at?: string | null;
+          _before_id?: string | null;
+          _limit?: number | null;
+        };
+        Returns: {
+          message_id: string;
+          sender_id: string;
+          recipient_id: string;
+          content: string;
+          client_request_id: string | null;
+          created_at: string;
+          read_at: string | null;
+        }[];
+      };
       my_lead_summary: { Args: never; Returns: Json };
       post_my_mission_update: {
         Args: {

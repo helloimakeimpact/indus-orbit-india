@@ -1,6 +1,6 @@
 # I/O Port operating guide
 
-Operational truth, updated 12 August 2026: the registry-driven multi-provider foundation, latest-evidence resolver, `io-gateway` v19, top-level `/io` boundary, budget/idempotency/ledger/health/circuit controls, terminal metadata and safe-timeline/approval boundary are Released to the demo. The hosted release contract confirms RLS/grants/containment; the last inventory has five provider/model/endpoint/capability/price/runtime-control/connection records, three capacity sources/grants and zero receipts/attempts. Secrets and inventory alone do not prove conformance or activate routing. Read `IO_PORT_IMPLEMENTATION_STATUS.md` before any inventory or traffic change.
+Operational truth, updated 19 August 2026: the registry-driven multi-provider foundation, latest-evidence resolver, `io-gateway` v20, top-level `/io` boundary, budget/idempotency/ledger/health/circuit controls, terminal metadata and safe-timeline/approval boundary are Released to the demo. Gateway v20 bounds and validates provider success bodies. The hosted release contract confirms RLS/grants/containment; the last inventory has five provider/model/endpoint/capability/price/runtime-control/connection records, three capacity sources/grants and zero receipts/attempts. Secrets and inventory alone do not prove conformance or activate routing. Read `IO_PORT_IMPLEMENTATION_STATUS.md` before any inventory or traffic change.
 
 ## What is live in the demo project
 

@@ -41,8 +41,12 @@ function MessagesPage() {
     loading: loadingMsgs,
     error: messagesError,
     sending,
+    hasEarlier,
+    loadingEarlier,
+    loadEarlier,
     send,
   } = useDirectConversation(user?.id, activeContact?.user_id);
+  const lastMessageId = messages.at(-1)?.id;
 
   // Auto-select contact from URL param
   useEffect(() => {
@@ -68,7 +72,7 @@ function MessagesPage() {
   // Scroll to bottom on new messages
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [lastMessageId]);
 
   async function handleSend() {
     if (!activeContact || !newMessage.trim()) return;
@@ -175,6 +179,19 @@ function MessagesPage() {
 
           {/* Messages */}
           <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+            {hasEarlier ? (
+              <div className="text-center">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  disabled={loadingEarlier}
+                  onClick={() => void loadEarlier()}
+                >
+                  {loadingEarlier ? "Loading…" : "Load earlier messages"}
+                </Button>
+              </div>
+            ) : null}
             {loadingMsgs ? (
               <p className="text-center text-sm text-muted-foreground py-8">
                 Loading conversation…

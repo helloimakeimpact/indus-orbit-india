@@ -1,6 +1,6 @@
 # I/O Port code-level roadmap
 
-Status: active implementation roadmap, updated 12 August 2026. It distinguishes local source work from the deployed demo proof and from work required before a private or paid beta. The current operational verdict is in `IO_PORT_IMPLEMENTATION_STATUS.md`.
+Status: active implementation roadmap, audited 19 August 2026. It distinguishes local source work from the deployed demo proof and from work required before a private or paid beta. The current operational verdict is in `IO_PORT_IMPLEMENTATION_STATUS.md`.
 
 Related documents:
 
@@ -13,20 +13,20 @@ Related documents:
 
 ## 1. Current implemented proof
 
-The demo project has an RLS-protected I/O control plane, three clearly labelled demo capacity sources and active verified-JWT `io-gateway` version 19. Released web source moves the authenticated product to `/io`; it uses its own shell and does not require Community onboarding. The activation-grade budget/idempotency/ledger/health/circuit, terminal-metadata, safe-timeline and approval-boundary slices described below are Released to the demo project. Provider traffic remains off.
+The demo project has an RLS-protected I/O control plane, three clearly labelled demo capacity sources and active verified-JWT `io-gateway` version 20. Released web source moves the authenticated product to `/io`; it uses its own shell and does not require Community onboarding. The activation-grade budget/idempotency/ledger/health/circuit, terminal-metadata, safe-timeline and approval-boundary slices described below are Released. Provider traffic remains off.
 
 The existing people-messaging system is also now hardened in the demo project: only accepted, non-suspended connections can insert a direct message, recipients can update only `read_at`, and new messages are capped at 4,000 characters.
 
-The first shared-message client extraction is now in the web app as well: `src/features/conversations/` provides shared contacts, direct-conversation and event-driven unread hooks for both the full Messages route and compact quick chat. A common cache/store, cursor pagination and private Broadcast remain deliberate follow-on work in the companion plan.
+The shared-message client extraction in `src/features/conversations/` provides contacts, caller-bound cursor-paginated direct history and event-driven unread hooks for the full Messages route and quick chat. A common cache/store and private Broadcast remain deliberate follow-on work.
 
-| Concern                  | Current code                                                          | Truthful status                                                                                                                                 |
-| ------------------------ | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| Web control room         | `src/features/io/IoOverview.tsx`                                      | Member UI with local/OpenCode, provider catalogue, route/model selection, budget status, settled cost and safe session/receipt history.         |
-| Local terminal connector | `src/features/io/opencode.ts`                                         | Loopback-only health → session → prompt with durable lifecycle callbacks and content-free timeline events. It is not yet resumable or realtime. |
-| Provider gateway         | `supabase/functions/io-gateway/index.ts`                              | Demo v19 is Released with hard reservation, idempotency, outcomes/circuits and atomic finalization.                                             |
-| Browser data access      | `src/features/io/io.client.ts`                                        | Browser-facing I/O data access, explicitly separated from privileged Edge/RPC work.                                                             |
-| Control-plane schema     | `supabase/migrations/20260730155210_create_io_port_control_plane.sql` | Workspaces, memberships, sources, grants, policy records, key metadata and safe audit events.                                                   |
-| I/O nested shell         | `src/features/io/IoWorkspaceShell.tsx`                                | Working in-page context navigation and evidence guide; preview-only workspace/health/activity claims are removed.                               |
+| Concern                  | Current code                                                          | Truthful status                                                                                                                                             |
+| ------------------------ | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Web control room         | `src/features/io/IoOverview.tsx`                                      | Member UI with local/OpenCode, provider catalogue, route/model selection, budget status, settled cost and safe session/receipt history.                     |
+| Local terminal connector | `src/features/io/opencode.ts`                                         | Loopback-only health → session → prompt with durable lifecycle, cancellation, time/input/1 MiB response bounds. Daemon-confirmed abort and Realtime remain. |
+| Provider gateway         | `supabase/functions/io-gateway/index.ts`                              | Demo v20 is Released with the streamed 2 MiB success-body cap and strict JSON validation.                                                                   |
+| Browser data access      | `src/features/io/io.client.ts`                                        | Browser-facing I/O data access, explicitly separated from privileged Edge/RPC work.                                                                         |
+| Control-plane schema     | `supabase/migrations/20260730155210_create_io_port_control_plane.sql` | Workspaces, memberships, sources, grants, policy records, key metadata and safe audit events.                                                               |
+| I/O nested shell         | `src/features/io/IoWorkspaceShell.tsx`                                | Working in-page context navigation and evidence guide; preview-only workspace/health/activity claims are removed.                                           |
 
 ## 2. Non-negotiable boundaries
 
