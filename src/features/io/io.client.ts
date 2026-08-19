@@ -148,6 +148,20 @@ export type IoRouteDisclosure = {
   fallbackCount: number;
 };
 
+export type IoApiKeyMetadata = {
+  id: string;
+  name: string;
+  keyPrefix: string;
+  lastFour: string;
+  scopes: string[];
+  status: "active" | "revoked" | "expired";
+  expiresAt: string | null;
+  lastUsedAt: string | null;
+  createdAt: string;
+};
+
+export type IoCreatedApiKey = IoApiKeyMetadata & { rawKey: string };
+
 type UnknownRecord = Record<string, unknown>;
 
 const routeStrategies: ReadonlySet<IoRouteStrategy> = new Set([
@@ -413,6 +427,99 @@ export async function getIoCapacitySources(workspaceId: string): Promise<IoCapac
       },
     ];
   });
+}
+
+export async function listMyIoApiKeys(workspaceId: string): Promise<IoApiKeyMetadata[]> {
+  const { data, error } = await supabase
+    .from("io_api_key_metadata")
+    .select("id, name, key_prefix, last_four, scopes, status, expires_at, last_used_at, created_at")
+    .eq("workspace_id", workspaceId)
+    .order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data ?? []).flatMap((value) => {
+    if (
+      !value.id ||
+      !value.name ||
+      !value.key_prefix ||
+      !value.last_four ||
+      !value.scopes ||
+      !value.created_at ||
+      !["active", "revoked", "expired"].includes(value.status ?? "")
+    ) {
+      return [];
+    }
+    return [
+      {
+        id: value.id,
+        name: value.name,
+        keyPrefix: value.key_prefix,
+        lastFour: value.last_four,
+        scopes: value.scopes,
+        status: value.status as IoApiKeyMetadata["status"],
+        expiresAt: value.expires_at,
+        lastUsedAt: value.last_used_at,
+        createdAt: value.created_at,
+      },
+    ];
+  });
+}
+
+export async function createMyIoTestApiKey(
+  workspaceId: string,
+  name: string,
+): Promise<IoCreatedApiKey> {
+  const { data, error } = await supabase.rpc("create_my_io_test_api_key", {
+    _workspace_id: workspaceId,
+    _name: name,
+  });
+  if (error) throw new Error(error.message);
+  const key = asRecord(data);
+  if (!key) throw new Error("API key creation returned no key.");
+  const id = readString(key, "id");
+  const keyName = readString(key, "name");
+  const keyPrefix = readString(key, "keyPrefix");
+  const lastFour = readString(key, "lastFour");
+  const status = readString(key, "status");
+  const expiresAt = readString(key, "expiresAt");
+  const createdAt = readString(key, "createdAt");
+  const rawKey = readString(key, "rawKey");
+  const scopes = Array.isArray(key.scopes)
+    ? key.scopes.filter((scope): scope is string => typeof scope === "string")
+    : [];
+  if (
+    !id ||
+    !keyName ||
+    !keyPrefix ||
+    !lastFour ||
+    status !== "active" ||
+    !expiresAt ||
+    !createdAt ||
+    !rawKey ||
+    scopes.length === 0
+  ) {
+    throw new Error("API key creation returned an invalid result.");
+  }
+  return {
+    id,
+    name: keyName,
+    keyPrefix,
+    lastFour,
+    scopes,
+    status,
+    expiresAt,
+    lastUsedAt: null,
+    createdAt,
+    rawKey,
+  };
+}
+
+export async function revokeMyIoApiKey(keyId: string) {
+  const { data, error } = await supabase.rpc("revoke_my_io_api_key", { _key_id: keyId });
+  if (error) throw new Error(error.message);
+  const result = asRecord(data);
+  if (!result || readString(result, "id") !== keyId || readString(result, "status") !== "revoked") {
+    throw new Error("API key revocation returned an invalid result.");
+  }
 }
 
 export async function getIoAuditEvents(workspaceId: string): Promise<IoAuditEvent[]> {

@@ -34,7 +34,7 @@ Still left:
 
 - configure an approved sender domain, deploy/schedule the fixed-template email worker and add redacted operator/dead-letter controls;
 - add an explicit block relationship and safe metadata-only audit where operationally necessary;
-- release `20260819141915_add_direct_message_pagination_rpc.sql`, then add one cross-surface conversation store, retry/offline/reconnect and multi-device conflict handling;
+- retain the Released `20260819225550_add_direct_message_pagination_rpc.sql`, then add one cross-surface conversation store, retry/offline/reconnect and multi-device conflict handling;
 - authorized private Realtime Broadcast topics;
 - run hosted authenticated browser personas across proposal/approval, Chapter/Mission lifecycle, membership, Room send/read and outsider privacy;
 - Threads UI, Thread membership/read behavior, Boards/forums and administrative Room/role configuration;

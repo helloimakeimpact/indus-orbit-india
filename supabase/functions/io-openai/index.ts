@@ -1,0 +1,254 @@
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
+import { createGatewayAdminClient } from "../_shared/io/auth.ts";
+import { asGatewayError, GatewayError } from "../_shared/io/errors.ts";
+import {
+  parseOpenAiChatRequest,
+  requireApiKeyAuthorization,
+  requireClientIdempotencyKey,
+  sha256Hex,
+} from "../_shared/io/openai-api.ts";
+import { getActiveCapacityEntitlements } from "../_shared/io/policy.ts";
+import { loadReadyProviderConnections } from "../_shared/io/provider-adapter.ts";
+import { executePartnerRoute } from "../_shared/io/route-execution.ts";
+import type { ProviderConnection, RouteStrategy } from "../_shared/io/types.ts";
+
+type ApiKeyActor = {
+  apiKeyId: string;
+  workspaceId: string;
+  actorUserId: string;
+  remaining: number;
+  limit: number;
+  resetAt: string;
+};
+
+function json(body: unknown, status = 200, headers: Record<string, string> = {}) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json", ...headers },
+  });
+}
+
+function openAiError(error: GatewayError, headers: Record<string, string> = {}) {
+  const type =
+    error.code === "unauthorized"
+      ? "authentication_error"
+      : error.code === "rate_limited"
+        ? "rate_limit_error"
+        : error.status >= 500
+          ? "api_error"
+          : "invalid_request_error";
+  return json({ error: { message: error.message, type, code: error.code } }, error.status, headers);
+}
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value !== null && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function requestLimit() {
+  const raw = Deno.env.get("IO_API_KEY_REQUESTS_PER_MINUTE") ?? "60";
+  const parsed = Number(raw);
+  if (!Number.isInteger(parsed) || parsed < 1 || parsed > 600) {
+    throw new GatewayError("internal_error", 500, "The I/O API key request limit is invalid.");
+  }
+  return parsed;
+}
+
+async function authenticateApiKey(
+  admin: SupabaseClient,
+  request: Request,
+  requiredScope: "models:read" | "inference:invoke",
+): Promise<ApiKeyActor> {
+  const rawKey = requireApiKeyAuthorization(request.headers.get("Authorization"));
+  const { data, error } = await admin.rpc("io_consume_api_key_request", {
+    _key_hash_hex: await sha256Hex(rawKey),
+    _required_scope: requiredScope,
+    _limit: requestLimit(),
+  });
+  if (error) {
+    throw new GatewayError("internal_error", 500, "I/O API key authentication failed.");
+  }
+  const result = asRecord(data);
+  if (!result || result.authenticated !== true) {
+    throw new GatewayError("unauthorized", 401, "The I/O API key is invalid or inactive.");
+  }
+  if (result.allowed !== true) {
+    const retryAfter = typeof result.retryAfterSeconds === "number" ? result.retryAfterSeconds : 60;
+    throw new GatewayError(
+      "rate_limited",
+      429,
+      `The I/O API key rate limit was reached. Retry in ${retryAfter} seconds.`,
+      retryAfter,
+    );
+  }
+  const apiKeyId = typeof result.apiKeyId === "string" ? result.apiKeyId : null;
+  const workspaceId = typeof result.workspaceId === "string" ? result.workspaceId : null;
+  const actorUserId = typeof result.actorUserId === "string" ? result.actorUserId : null;
+  const resetAt = typeof result.resetAt === "string" ? result.resetAt : null;
+  if (!apiKeyId || !workspaceId || !actorUserId || !resetAt) {
+    throw new GatewayError("internal_error", 500, "I/O API key authentication was incomplete.");
+  }
+  return {
+    apiKeyId,
+    workspaceId,
+    actorUserId,
+    remaining: typeof result.remaining === "number" ? result.remaining : 0,
+    limit: typeof result.limit === "number" ? result.limit : requestLimit(),
+    resetAt,
+  };
+}
+
+function rateHeaders(actor: ApiKeyActor) {
+  return {
+    "x-ratelimit-limit-requests": String(actor.limit),
+    "x-ratelimit-remaining-requests": String(actor.remaining),
+    "x-ratelimit-reset-requests": actor.resetAt,
+  };
+}
+
+async function entitledConnections(admin: SupabaseClient, workspaceId: string) {
+  const entitlements = await getActiveCapacityEntitlements(admin, workspaceId);
+  const sourceIds = new Set(entitlements.map((entitlement) => entitlement.sourceId));
+  return (await loadReadyProviderConnections(admin)).filter((connection) =>
+    sourceIds.has(connection.capacitySourceId),
+  );
+}
+
+function publicModelId(connection: ProviderConnection) {
+  return `${connection.providerKey}/${connection.providerModelId}`;
+}
+
+function resolveModel(
+  connections: ProviderConnection[],
+  model: string,
+): {
+  routeStrategy: RouteStrategy;
+  requestedModelId?: string;
+} {
+  if (model === "io/latest-affordable") return { routeStrategy: "latest_affordable" };
+  if (model === "io/lowest-cost") return { routeStrategy: "lowest_cost" };
+  const connection = connections.find((candidate) => publicModelId(candidate) === model);
+  if (!connection) {
+    throw new GatewayError(
+      "bad_request",
+      400,
+      `The model '${model}' is not available to this key.`,
+    );
+  }
+  return { routeStrategy: "explicit_model", requestedModelId: connection.modelId };
+}
+
+async function parseJson(request: Request) {
+  try {
+    return await request.json();
+  } catch {
+    throw new GatewayError("bad_request", 400, "Request body must be valid JSON.");
+  }
+}
+
+Deno.serve(async (request) => {
+  const pathname = new URL(request.url).pathname.replace(/\/+$/, "");
+  try {
+    const admin = createGatewayAdminClient();
+    if (request.method === "GET" && pathname.endsWith("/v1/models")) {
+      const actor = await authenticateApiKey(admin, request, "models:read");
+      const connections = await entitledConnections(admin, actor.workspaceId);
+      const uniqueModels = new Map<string, ProviderConnection>();
+      for (const connection of connections) {
+        uniqueModels.set(publicModelId(connection), connection);
+      }
+      const created = Math.floor(Date.now() / 1000);
+      return json(
+        {
+          object: "list",
+          data: [
+            ...(connections.length
+              ? [
+                  { id: "io/latest-affordable", object: "model", created, owned_by: "indus-orbit" },
+                  { id: "io/lowest-cost", object: "model", created, owned_by: "indus-orbit" },
+                ]
+              : []),
+            ...Array.from(uniqueModels, ([id, connection]) => ({
+              id,
+              object: "model",
+              created: Math.floor(new Date(connection.modelReleaseDate).getTime() / 1000),
+              owned_by: connection.providerKey,
+            })),
+          ],
+        },
+        200,
+        rateHeaders(actor),
+      );
+    }
+
+    if (request.method === "POST" && pathname.endsWith("/v1/chat/completions")) {
+      const actor = await authenticateApiKey(admin, request, "inference:invoke");
+      const body = parseOpenAiChatRequest(await parseJson(request));
+      const connections = await entitledConnections(admin, actor.workspaceId);
+      const modelRoute = resolveModel(connections, body.model);
+      const clientIdempotencyKey = requireClientIdempotencyKey(
+        request.headers.get("Idempotency-Key"),
+      );
+      const result = await executePartnerRoute(admin, {
+        workspaceId: actor.workspaceId,
+        actorUserId: actor.actorUserId,
+        actorKind: "api_key",
+        apiKeyId: actor.apiKeyId,
+        idempotencyKey: `api_${await sha256Hex(`${actor.apiKeyId}:${clientIdempotencyKey}`)}`,
+        messages: body.messages,
+        mode: "run",
+        ...modelRoute,
+      });
+      if (result.replayed) {
+        throw new GatewayError(
+          "request_in_progress",
+          409,
+          result.state === "reserved"
+            ? "This idempotent request is already in progress."
+            : "This idempotent request was already finalized; use a new Idempotency-Key.",
+        );
+      }
+      const promptTokens = result.usage.inputTokens ?? 0;
+      const completionTokens = result.usage.outputTokens ?? 0;
+      return json(
+        {
+          id: `chatcmpl-${result.requestId.replaceAll("-", "")}`,
+          object: "chat.completion",
+          created: Math.floor(Date.now() / 1000),
+          model: body.model,
+          choices: [
+            {
+              index: 0,
+              message: { role: "assistant", content: result.content },
+              finish_reason: "stop",
+            },
+          ],
+          usage: {
+            prompt_tokens: promptTokens,
+            completion_tokens: completionTokens,
+            total_tokens: promptTokens + completionTokens,
+          },
+        },
+        200,
+        {
+          ...rateHeaders(actor),
+          "x-io-request-id": result.requestId,
+          "x-io-receipt-id": result.receiptId,
+          "x-io-provider": result.route.providerKey,
+          "x-io-capacity-source": result.capacitySource,
+        },
+      );
+    }
+
+    return openAiError(new GatewayError("bad_request", 404, "I/O API endpoint not found."));
+  } catch (error) {
+    const gatewayError = asGatewayError(error);
+    console.error("io-openai failure", gatewayError.code, gatewayError.message);
+    const retryHeaders =
+      gatewayError.code === "rate_limited" && gatewayError.upstreamStatus
+        ? { "Retry-After": String(gatewayError.upstreamStatus) }
+        : {};
+    return openAiError(gatewayError, retryHeaders);
+  }
+});

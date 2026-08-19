@@ -22,6 +22,19 @@ export function createGatewayClients(authorization: string) {
   };
 }
 
+export function createGatewayAdminClient() {
+  const projectUrl = Deno.env.get("SUPABASE_URL");
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!projectUrl || !serviceRoleKey) {
+    throw new GatewayError(
+      "internal_error",
+      500,
+      "The I/O gateway is missing Supabase runtime configuration.",
+    );
+  }
+  return createClient(projectUrl, serviceRoleKey, { auth: { persistSession: false } });
+}
+
 export async function authenticateGatewayActor(authClient: SupabaseClient): Promise<GatewayActor> {
   const { data, error } = await authClient.auth.getUser();
   if (error || !data.user) {

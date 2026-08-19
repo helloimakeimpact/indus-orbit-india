@@ -1,6 +1,6 @@
 # Indus Orbit full finalization execution plan
 
-Status: active, evidence-gated plan audited 19 August 2026. The first 67 migrations are Released; migration 68 is Verified locally and not yet hosted. Production readiness is not claimed.
+Status: active, evidence-gated plan updated 20 August 2026. All 69 source migrations, `io-gateway` v21 and the bounded `io-openai` v2 foundation are Released to the demo. Production readiness is not claimed.
 
 This plan covers the whole product: public brand site, identity, Community, conversation, I/O Port, terminal/OpenCode, admin, data, operations and commercial readiness. “Done” means code, authorization, data migration, browser behavior, deployment and operating evidence all agree. A source file or attractive UI alone is not completion.
 
@@ -20,7 +20,7 @@ Completed in the demo environment:
 - removal of anonymous access to eight privileged functions;
 - caller-bound domain mutations, retirement of generic notification execution and a private service-leased email outbox;
 - Chapter/Mission Space schema, deterministic Room blueprints, membership projection and caller-bound lifecycle/message/read operations;
-- clean 68-migration replay with 550/550 assertions; the hosted project remains at 67 migrations with its previously verified schema/RLS/RPC/Realtime and I/O evidence contracts;
+- last clean local 68-migration replay with 550/550 assertions; the hosted project has 69 migrations with direct-pagination and I/O API-key contracts, while the local 69-migration rerun awaits Docker repair;
 - five-provider/model/endpoint inventory with three capacity sources/grants, while route receipts and provider attempts remain zero.
 
 The product is still a release candidate foundation, not a finished production system.

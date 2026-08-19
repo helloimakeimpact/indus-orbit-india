@@ -1,27 +1,13 @@
 import { corsHeaders as supabaseCorsHeaders } from "npm:@supabase/supabase-js@2/cors";
-import { writeIoAuditEvent } from "../_shared/io/audit.ts";
 import {
   authenticateGatewayActor,
   createGatewayClients,
   requireWorkspaceMembership,
 } from "../_shared/io/auth.ts";
 import { asGatewayError, GatewayError } from "../_shared/io/errors.ts";
-import {
-  beginRouteRequest,
-  calculateReservationMinor,
-  calculateSettlement,
-  fingerprintRouteRequest,
-  recordEndpointOutcome,
-} from "../_shared/io/operations.ts";
 import { getActiveCapacityEntitlements } from "../_shared/io/policy.ts";
-import {
-  loadReadyProviderConnections,
-  resolveProviderRoute,
-  sendProviderChat,
-} from "../_shared/io/provider-adapter.ts";
-import { writeRouteReceipt, type ProviderAttempt } from "../_shared/io/receipt.ts";
-import { selectRouteAttempts } from "../_shared/io/routing.ts";
-import type { PartnerResult, RouteSelection } from "../_shared/io/types.ts";
+import { loadReadyProviderConnections } from "../_shared/io/provider-adapter.ts";
+import { executePartnerRoute } from "../_shared/io/route-execution.ts";
 import { parseGatewayRequest } from "../_shared/io/validation.ts";
 
 const allowedOrigins = new Set([
@@ -57,10 +43,6 @@ async function parseRequestBody(request: Request) {
     if (error instanceof GatewayError) throw error;
     throw new GatewayError("bad_request", 400, "Request body must be valid JSON.");
   }
-}
-
-function requestId() {
-  return crypto.randomUUID();
 }
 
 Deno.serve(async (request) => {
@@ -124,230 +106,48 @@ Deno.serve(async (request) => {
       });
     }
 
-    const id = requestId();
-    const messages = body.messages!;
-    const mode = body.mode ?? "plan";
-    const selection = await resolveProviderRoute(admin, messages, {
-      strategy: body.routeStrategy,
-      requestedModelId: body.requestedModelId,
-      entitledCapacitySourceIds: entitledSourceIds,
-    });
-    const routeAttempts = selectRouteAttempts(
-      selection.routeCandidates,
-      Deno.env.get("IO_PROVIDER_MAX_ATTEMPTS"),
-    );
-    const reserveMinor = calculateReservationMinor(routeAttempts, messages);
-    const fingerprint = await fingerprintRouteRequest({
+    const result = await executePartnerRoute(admin, {
       workspaceId: body.workspaceId,
-      mode,
-      messages,
+      actorUserId: actor.id,
+      actorKind: "user",
+      idempotencyKey: body.idempotencyKey!,
+      messages: body.messages!,
+      mode: body.mode,
       routeStrategy: body.routeStrategy,
       requestedModelId: body.requestedModelId,
     });
-    const reservation = await beginRouteRequest(admin, {
-      workspaceId: body.workspaceId,
-      actorUserId: actor.id,
-      idempotencyKey: body.idempotencyKey!,
-      requestFingerprint: fingerprint,
-      requestId: id,
-      endpointId: selection.connection.endpointId,
-      currencyCode: selection.connection.currencyCode,
-      reserveMinor,
-    });
 
-    if (reservation.replayed) {
+    if (result.replayed) {
       return json(
         request,
         {
           ok: false,
           code: "idempotent_replay",
           error:
-            reservation.state === "reserved"
+            result.state === "reserved"
               ? "This request is already in progress."
-              : reservation.state === "expired"
+              : result.state === "expired"
                 ? "The earlier reservation expired safely; retry with a new idempotency key."
                 : "This request was already finalized; use its existing route receipt.",
-          requestId: reservation.requestId,
-          receiptId: reservation.receiptId,
-          state: reservation.state,
+          requestId: result.requestId,
+          receiptId: result.receiptId,
+          state: result.state,
         },
         409,
       );
     }
 
-    await writeIoAuditEvent(admin, {
-      workspaceId: body.workspaceId,
-      actorKind: "user",
-      actorUserId: actor.id,
-      eventType: "io.partner.requested",
-      requestId: id,
-      payload: {
-        capacity_source_id: selection.connection.capacitySourceId,
-        provider_key: selection.connection.providerKey,
-        model: selection.connection.providerModelId,
-        model_selection: selection.strategy,
-        model_tier: selection.tier,
-        model_release_date: selection.connection.modelReleaseDate,
-        model_candidate_count: selection.candidateCount,
-        estimated_cost_nanos: selection.estimatedCostNanos,
-        reserved_minor: reservation.reservedMinor,
-        price_currency: selection.connection.currencyCode,
-        mode,
-        message_count: messages.length,
-        character_count: messages.reduce((sum, message) => sum + message.content.length, 0),
-      },
-    });
-
-    const attempts: ProviderAttempt[] = [];
-    let result: PartnerResult | null = null;
-    let selectedRoute: RouteSelection | null = null;
-    let lastError: GatewayError | null = null;
-
-    for (const candidate of routeAttempts) {
-      const startedAt = new Date().toISOString();
-      const startedAtMonotonic = performance.now();
-      try {
-        const candidateResult = await sendProviderChat(candidate.connection, messages);
-        attempts.push({
-          connection: candidate.connection,
-          startedAt,
-          completedAt: new Date().toISOString(),
-          state: "completed",
-          providerRequestId: candidateResult.providerRequestId,
-          inputTokens: candidateResult.usage.inputTokens,
-          outputTokens: candidateResult.usage.outputTokens,
-        });
-        result = candidateResult;
-        selectedRoute = {
-          ...selection,
-          connection: candidate.connection,
-          estimatedCostNanos: candidate.estimatedCostNanos,
-        };
-        await recordEndpointOutcome(admin, {
-          endpointId: candidate.connection.endpointId,
-          succeeded: true,
-          latencyMs: performance.now() - startedAtMonotonic,
-        });
-        break;
-      } catch (error) {
-        const gatewayError = asGatewayError(error);
-        attempts.push({
-          connection: candidate.connection,
-          startedAt,
-          completedAt: new Date().toISOString(),
-          state: "failed",
-          errorCode: gatewayError.code,
-          upstreamStatus: gatewayError.upstreamStatus,
-        });
-        await recordEndpointOutcome(admin, {
-          endpointId: candidate.connection.endpointId,
-          succeeded: false,
-          latencyMs: performance.now() - startedAtMonotonic,
-          errorCode: gatewayError.code,
-        });
-        lastError = gatewayError;
-        if (
-          gatewayError.code !== "upstream_failure" &&
-          gatewayError.code !== "rate_limited" &&
-          gatewayError.code !== "not_configured"
-        ) {
-          break;
-        }
-      }
-    }
-
-    if (!result || !selectedRoute) {
-      const failure =
-        lastError ?? new GatewayError("upstream_failure", 502, "No provider route completed.");
-      const finalization = await writeRouteReceipt(admin, {
-        requestId: id,
-        selection,
-        resultState: "failed",
-        actualCostMinor: 0,
-        costBasis: "released_failure",
-        attempts,
-      });
-      await writeIoAuditEvent(admin, {
-        workspaceId: body.workspaceId,
-        actorKind: "provider",
-        eventType: "io.partner.failed",
-        requestId: id,
-        payload: {
-          receipt_id: finalization.receiptId,
-          attempted_count: attempts.length,
-          released_minor: finalization.releasedMinor,
-          currency: finalization.currencyCode,
-          code: failure.code,
-          status: failure.status,
-        },
-      });
-      throw failure;
-    }
-
-    const settlement = calculateSettlement({
-      selection: selectedRoute,
-      inputTokens: result.usage.inputTokens,
-      outputTokens: result.usage.outputTokens,
-    });
-    const finalization = await writeRouteReceipt(admin, {
-      requestId: id,
-      selection: selectedRoute,
-      resultState: "completed",
-      inputTokens: result.usage.inputTokens,
-      outputTokens: result.usage.outputTokens,
-      actualCostMinor: settlement.actualCostMinor,
-      costBasis: settlement.costBasis,
-      attempts,
-    });
-    await writeIoAuditEvent(admin, {
-      workspaceId: body.workspaceId,
-      actorKind: "provider",
-      eventType: "io.partner.completed",
-      requestId: id,
-      payload: {
-        receipt_id: finalization.receiptId,
-        capacity_source_id: selectedRoute.connection.capacitySourceId,
-        provider_key: selectedRoute.connection.providerKey,
-        model: selectedRoute.connection.providerModelId,
-        model_selection: selectedRoute.strategy,
-        fallback_count: Math.max(0, attempts.length - 1),
-        input_tokens: result.usage.inputTokens ?? null,
-        output_tokens: result.usage.outputTokens ?? null,
-        settled_minor: finalization.settledMinor,
-        released_minor: finalization.releasedMinor,
-        currency: finalization.currencyCode,
-        cost_basis: settlement.costBasis,
-      },
-    });
-
     return json(request, {
       ok: true,
-      requestId: id,
-      receiptId: finalization.receiptId,
-      provider: selectedRoute.connection.providerDisplayName,
-      model: selectedRoute.connection.providerModelId,
-      modelSelection: selectedRoute.strategy,
+      requestId: result.requestId,
+      receiptId: result.receiptId,
+      provider: result.provider,
+      model: result.model,
+      modelSelection: result.modelSelection,
       content: result.content,
       usage: result.usage,
-      capacitySource:
-        entitlements.find(
-          (entitlement) => entitlement.sourceId === selectedRoute.connection.capacitySourceId,
-        )?.sourceKey ?? "unknown",
-      route: {
-        providerKey: selectedRoute.connection.providerKey,
-        modelId: selectedRoute.connection.modelId,
-        endpointKey: selectedRoute.connection.endpointKey,
-        capacityMode: selectedRoute.connection.capacityMode,
-        regionCode: selectedRoute.connection.regionCode,
-        residencyCountryCode: selectedRoute.connection.residencyCountryCode,
-        retentionClass: selectedRoute.connection.retentionClass,
-        estimatedCostNanos: selectedRoute.estimatedCostNanos,
-        currencyCode: selectedRoute.connection.currencyCode,
-        settledMinor: finalization.settledMinor,
-        releasedMinor: finalization.releasedMinor,
-        costBasis: settlement.costBasis,
-        fallbackCount: Math.max(0, attempts.length - 1),
-      },
+      capacitySource: result.capacitySource,
+      route: result.route,
     });
   } catch (error) {
     const gatewayError = asGatewayError(error);

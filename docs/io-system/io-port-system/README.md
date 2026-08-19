@@ -1,6 +1,6 @@
 # I/O Port system record
 
-Status: deployed provider foundation, operational core and terminal safety boundary, updated 12 August 2026.
+Status: deployed provider foundation, operational core, terminal safety boundary and bounded OpenAI-compatible API foundation, updated 20 August 2026.
 
 ## Current operational truth
 
@@ -13,7 +13,8 @@ I/O Port has a real web surface, Supabase control plane and registry-driven gate
 | Supabase control plane     | Deployed to demo.                                                                                                                                             |
 | Provider registry          | Five direct providers/models/endpoints/prices staged.                                                                                                         |
 | Provider secrets           | Present in Edge Function secret storage by unique provider name; values are not in registry or Git.                                                           |
-| Gateway                    | `io-gateway` v20 Released with idempotent reserve/settle/circuit control and bounded validated provider responses; JWT-protected, traffic disabled.           |
+| Gateway                    | `io-gateway` v21 Released with a shared idempotent reserve/settle/circuit/receipt core; JWT-protected, provider traffic disabled.                             |
+| OpenAI-compatible API      | `io-openai` v2 Released: expiring scoped test keys, atomic rate limit, `/v1/models` and non-streaming `/v1/chat/completions`; valid empty catalogue verified. |
 | Member route evidence      | Latest twelve RLS-scoped receipts show route, capacity, attempt/fallback, token and currency-labelled estimate facts.                                         |
 | Admin route evidence       | Capability-checked aggregate plus keyset-paginated redacted receipt feed in the separate admin app.                                                           |
 | Ready providers            | Zero. All five connections are testing; capability proofs are draft; providers/endpoints are conformance-only.                                                |
@@ -30,6 +31,7 @@ I/O and the Community share one identity but not one onboarding gate. The Commun
 ## Documents
 
 - `IO_PORT_IMPLEMENTATION_STATUS.md` — detailed done/partial/left and verified deployment state.
+- `OPENAI_COMPATIBLE_API_STATUS.md` — released API/key contract, evidence, limitations and next work.
 - `OPENROUTER_CAPABILITY_AND_CAPACITY_PLAN.md` — feature-by-feature OpenRouter comparison and capacity adoption plan.
 - `IO_PORT_IMPLEMENTATION_PLAN.md` — product and platform target.
 - `IO_PORT_CODE_LEVEL_ROADMAP.md` — engineering sequence.

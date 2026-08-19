@@ -4871,6 +4871,19 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      create_my_io_test_api_key: {
+        Args: {
+          _workspace_id: string;
+          _name: string;
+          _scopes?: string[];
+          _expires_at?: string;
+        };
+        Returns: Json;
+      };
+      revoke_my_io_api_key: {
+        Args: { _key_id: string };
+        Returns: Json;
+      };
       create_my_io_terminal_session: {
         Args: {
           _workspace_id: string;

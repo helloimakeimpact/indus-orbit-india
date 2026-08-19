@@ -5,10 +5,12 @@ import {
   ChevronRight,
   CircleAlert,
   CloudCog,
+  Copy,
   FileCheck2,
   Globe2,
   HandHeart,
   IndianRupee,
+  KeyRound,
   Lightbulb,
   LoaderCircle,
   Orbit,
@@ -21,6 +23,7 @@ import {
   Sparkles,
   Square,
   TerminalSquare,
+  Trash2,
   UsersRound,
   Workflow,
 } from "lucide-react";
@@ -38,6 +41,7 @@ import {
 } from "@/features/io/opencode";
 import {
   createMyIoWorkspace,
+  createMyIoTestApiKey,
   createMyIoTerminalSession,
   completeMyIoTerminalSession,
   appendMyIoTerminalEvent,
@@ -47,9 +51,12 @@ import {
   getIoRouteReceipts,
   getIoRouteCatalog,
   getMyIoWorkspaces,
+  listMyIoApiKeys,
   listMyIoTerminalSessions,
   listMyIoTerminalEvents,
   runPartnerRoute,
+  revokeMyIoApiKey,
+  type IoApiKeyMetadata,
   type IoAuditEvent,
   type IoCapacitySource,
   type IoBudgetStatus,
@@ -76,6 +83,10 @@ export function IoOverview() {
   const [events, setEvents] = useState<IoAuditEvent[]>([]);
   const [receipts, setReceipts] = useState<IoRouteReceipt[]>([]);
   const [budgets, setBudgets] = useState<IoBudgetStatus[]>([]);
+  const [apiKeys, setApiKeys] = useState<IoApiKeyMetadata[]>([]);
+  const [apiKeyName, setApiKeyName] = useState("My development key");
+  const [newRawApiKey, setNewRawApiKey] = useState<string | null>(null);
+  const [apiKeyBusy, setApiKeyBusy] = useState<string | null>(null);
   const [routeCatalog, setRouteCatalog] = useState<IoRouteCatalog | null>(null);
   const [terminalSessions, setTerminalSessions] = useState<IoTerminalSession[]>([]);
   const [terminalTimeline, setTerminalTimeline] = useState<IoTerminalEvent[]>([]);
@@ -123,6 +134,8 @@ export function IoOverview() {
         setEvents([]);
         setReceipts([]);
         setBudgets([]);
+        setApiKeys([]);
+        setNewRawApiKey(null);
         setRouteCatalog(null);
         setTerminalSessions([]);
         setTerminalTimeline([]);
@@ -137,6 +150,7 @@ export function IoOverview() {
         eventsResult,
         receiptsResult,
         budgetResult,
+        apiKeysResult,
         terminalSessionsResult,
         catalogResult,
       ] = await Promise.allSettled([
@@ -144,6 +158,7 @@ export function IoOverview() {
         getIoAuditEvents(nextWorkspace.id),
         getIoRouteReceipts(nextWorkspace.id),
         getMyIoBudgetStatus(nextWorkspace.id),
+        listMyIoApiKeys(nextWorkspace.id),
         listMyIoTerminalSessions(nextWorkspace.id),
         getIoRouteCatalog(nextWorkspace.id),
       ]);
@@ -152,11 +167,14 @@ export function IoOverview() {
       if (eventsResult.status === "rejected") throw eventsResult.reason;
       if (receiptsResult.status === "rejected") throw receiptsResult.reason;
       if (budgetResult.status === "rejected") throw budgetResult.reason;
+      if (apiKeysResult.status === "rejected") throw apiKeysResult.reason;
       if (terminalSessionsResult.status === "rejected") throw terminalSessionsResult.reason;
       setSources(sourcesResult.value);
       setEvents(eventsResult.value);
       setReceipts(receiptsResult.value);
       setBudgets(budgetResult.value);
+      setApiKeys(apiKeysResult.value);
+      setNewRawApiKey(null);
       setTerminalSessions(terminalSessionsResult.value);
       setTerminalTimeline([]);
       setSelectedTerminalSessionId(null);
@@ -234,6 +252,49 @@ export function IoOverview() {
       toast.error(error instanceof Error ? error.message : "Could not create the workspace.");
     } finally {
       setCreating(false);
+    }
+  }
+
+  async function createApiKey() {
+    if (!workspace || apiKeyName.trim().length < 2) return;
+    setApiKeyBusy("create");
+    try {
+      const created = await createMyIoTestApiKey(workspace.id, apiKeyName.trim());
+      setApiKeys((current) => [created, ...current.filter((key) => key.id !== created.id)]);
+      setNewRawApiKey(created.rawKey);
+      toast.success("Test API key created. Copy it now; it will not be shown again.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not create the API key.");
+    } finally {
+      setApiKeyBusy(null);
+    }
+  }
+
+  async function revokeApiKey(keyId: string) {
+    setApiKeyBusy(keyId);
+    try {
+      await revokeMyIoApiKey(keyId);
+      setApiKeys((current) =>
+        current.map((key) =>
+          key.id === keyId
+            ? { ...key, status: "revoked" as const, lastUsedAt: key.lastUsedAt }
+            : key,
+        ),
+      );
+      toast.success("API key revoked.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not revoke the API key.");
+    } finally {
+      setApiKeyBusy(null);
+    }
+  }
+
+  async function copyApiValue(value: string, label: string) {
+    try {
+      await navigator.clipboard.writeText(value);
+      toast.success(`${label} copied.`);
+    } catch {
+      toast.error(`Could not copy ${label.toLowerCase()}.`);
     }
   }
 
@@ -348,6 +409,7 @@ export function IoOverview() {
     { label: "Endpoint health", value: "Circuit protected", icon: Globe2 },
     { label: "Retention evidence", value: "Receipt bound", icon: ShieldCheck },
   ];
+  const ioApiBaseUrl = `${(import.meta.env.VITE_SUPABASE_URL ?? "").replace(/\/$/, "")}/functions/v1/io-openai/v1`;
 
   return (
     <div className="min-w-0 space-y-4 p-3 sm:p-4 lg:p-5">
@@ -693,6 +755,155 @@ export function IoOverview() {
         </div>
 
         <RunResult partner={partnerResult} terminal={terminalResult} />
+      </section>
+
+      <section id="io-api-keys" className="app-glass scroll-mt-24 overflow-hidden rounded-2xl">
+        <div className="flex flex-col gap-3 border-b border-border/60 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <KeyRound className="h-4 w-4 text-[var(--saffron)]" />
+              <h2 className="text-base font-semibold text-[var(--indigo-night)]">I/O API keys</h2>
+            </div>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              OpenAI-compatible, workspace-scoped test access. Provider secrets never leave I/O.
+            </p>
+          </div>
+          <Badge variant="outline" className="w-fit text-[9px]">
+            {apiKeys.filter((key) => key.status === "active").length} ACTIVE
+          </Badge>
+        </div>
+
+        <div className="grid gap-4 p-4 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,0.8fr)]">
+          <div className="space-y-3">
+            <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
+              <Input
+                value={apiKeyName}
+                maxLength={120}
+                disabled={!workspace || apiKeyBusy !== null}
+                onChange={(event) => setApiKeyName(event.target.value)}
+                aria-label="New API key name"
+                placeholder="My development key"
+              />
+              <Button
+                type="button"
+                disabled={!workspace || apiKeyBusy !== null || apiKeyName.trim().length < 2}
+                onClick={() => void createApiKey()}
+              >
+                {apiKeyBusy === "create" ? <LoaderCircle className="animate-spin" /> : <KeyRound />}
+                Create 30-day test key
+              </Button>
+            </div>
+            <p className="text-[10px] leading-4 text-muted-foreground">
+              Workspace owners and admins can create keys. New keys receive model-list and inference
+              scopes, expire automatically, and are limited per minute at the server boundary.
+            </p>
+
+            {newRawApiKey ? (
+              <div className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-amber-950">
+                <p className="text-[10px] font-bold uppercase tracking-[0.12em]">
+                  Copy now · shown once
+                </p>
+                <div className="mt-2 flex items-center gap-2">
+                  <code className="min-w-0 flex-1 overflow-x-auto rounded-lg bg-white/70 px-2 py-2 text-[10px]">
+                    {newRawApiKey}
+                  </code>
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="outline"
+                    aria-label="Copy new API key"
+                    onClick={() => void copyApiValue(newRawApiKey, "API key")}
+                  >
+                    <Copy />
+                  </Button>
+                </div>
+                <button
+                  type="button"
+                  className="mt-2 text-[10px] font-semibold underline underline-offset-2"
+                  onClick={() => setNewRawApiKey(null)}
+                >
+                  I have stored it securely
+                </button>
+              </div>
+            ) : null}
+
+            <div className="divide-y divide-border/55 rounded-xl border border-border/65">
+              {apiKeys.length ? (
+                apiKeys.map((key) => (
+                  <article
+                    key={key.id}
+                    className="grid gap-2 px-3 py-3 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-xs font-semibold text-foreground">{key.name}</p>
+                      <p className="mt-1 truncate font-mono text-[9px] text-muted-foreground">
+                        {key.keyPrefix}…{key.lastFour} · expires{" "}
+                        {key.expiresAt ? new Date(key.expiresAt).toLocaleDateString() : "never"}
+                      </p>
+                    </div>
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        "w-fit text-[9px] uppercase",
+                        key.status === "active"
+                          ? "border-emerald-300 text-emerald-800"
+                          : "border-border text-muted-foreground",
+                      )}
+                    >
+                      {key.status}
+                    </Badge>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 w-fit px-2 text-[10px] text-destructive"
+                      disabled={key.status !== "active" || apiKeyBusy !== null}
+                      onClick={() => void revokeApiKey(key.id)}
+                    >
+                      {apiKeyBusy === key.id ? (
+                        <LoaderCircle className="animate-spin" />
+                      ) : (
+                        <Trash2 />
+                      )}
+                      Revoke
+                    </Button>
+                  </article>
+                ))
+              ) : (
+                <p className="px-3 py-4 text-[11px] text-muted-foreground">
+                  No API keys exist for this workspace.
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-border/65 bg-[var(--indigo-night)] p-3 text-[var(--parchment)]">
+            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--saffron)]">
+              OpenAI-compatible base URL
+            </p>
+            <div className="mt-2 flex items-center gap-2">
+              <code className="min-w-0 flex-1 overflow-x-auto text-[10px]">{ioApiBaseUrl}</code>
+              <Button
+                type="button"
+                size="icon"
+                variant="outline"
+                className="border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white"
+                aria-label="Copy I/O API base URL"
+                onClick={() => void copyApiValue(ioApiBaseUrl, "Base URL")}
+              >
+                <Copy />
+              </Button>
+            </div>
+            <div className="mt-3 space-y-1.5 text-[10px] leading-4 text-[var(--parchment)]/70">
+              <p>GET /models lists only routes entitled to this workspace.</p>
+              <p>POST /chat/completions supports non-streaming text chat.</p>
+              <p>
+                Default model: io/latest-affordable. Cost, fallback and capacity evidence remain
+                receipted.
+              </p>
+            </div>
+          </div>
+        </div>
       </section>
 
       <section className="app-glass overflow-hidden rounded-2xl">

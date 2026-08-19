@@ -1,4 +1,6 @@
 -- Bound direct-conversation reads behind a caller-owned keyset cursor.
+-- The timestamp matches the hosted migration ledger created through the
+-- connected Supabase project API.
 -- Direct table SELECT remains for the current Postgres Changes proof channel;
 -- the application history path uses this RPC so it never downloads an
 -- unbounded conversation.

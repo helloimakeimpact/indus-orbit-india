@@ -6,7 +6,7 @@ select jsonb_build_object(
   'migration_present', exists (
     select 1
     from supabase_migrations.schema_migrations
-    where version = '20260819141915'
+    where version = '20260819225550'
   ),
   'function_present', to_regprocedure(
     'public.list_my_direct_conversation(uuid,timestamptz,uuid,integer)'

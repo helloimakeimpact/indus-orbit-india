@@ -1,6 +1,6 @@
 # I/O Port implementation status and multi-provider readiness
 
-Status: local code, UI, database, admin and hosted-release assessment, audited 19 August 2026.
+Status: local code, UI, database, admin and hosted-release assessment, updated 20 August 2026.
 
 This is the operational source of truth for the current I/O Port implementation. It separates what exists from what is only represented in a plan or preview. Cross-product dependencies and release gates are governed by `../../MASTER_IMPLEMENTATION_AND_RELEASE_PLAN.md` and `../../RELEASE_READINESS_CHECKLIST.md`. Product direction remains in `IO_PORT_IMPLEMENTATION_PLAN.md`; the detailed delivery sequence remains in `IO_PORT_CODE_LEVEL_ROADMAP.md`; the OpenRouter comparison is in `OPENROUTER_CAPABILITY_AND_CAPACITY_PLAN.md`.
 
@@ -12,7 +12,9 @@ I/O Port is **not operationally routing external provider traffic yet**. Its fir
 
 The deployed gateway resolves approved registry connections through a service-role-only resolver, allows only approved `IO_PROVIDER_*_API_KEY` secret references, evaluates entitled candidates across providers, supports provider-aware OpenAI-compatible and Gemini-native request adapters, performs bounded fallback for safe upstream failures, and writes redacted receipts/attempts. The browser can request latest-affordable, lowest-cost or an approved explicit model and display RLS-scoped receipt history.
 
-The activation-grade control-plane slice is **Released to the hosted demo**. Migration `20260810002754_create_io_operational_core.sql` and gateway v20 provide fingerprinted idempotency, hard budget reservation before dispatch, balanced settlement/release, health/circuits and bounded validated provider responses. The terminal migrations add creator-only safe metadata and non-executable approval RPCs. The read-only hosted release contract passes; provider routing is still disabled.
+The activation-grade control-plane slice is **Released to the hosted demo**. Migration `20260810002754_create_io_operational_core.sql` and gateway v21 provide fingerprinted idempotency, hard budget reservation before dispatch, balanced settlement/release, health/circuits and bounded validated provider responses. Gateway v21 extracts that transaction into a shared execution core used by the browser and `io-openai` v2. The terminal migrations add creator-only safe metadata and non-executable approval RPCs. Hosted release contracts pass; provider routing is still disabled.
+
+The bounded OpenAI-compatible API foundation is also Released. Migration `20260819232624_add_io_openai_api_foundation.sql`, the member key-management UI and `io-openai` v2 provide one-time 30-day test keys, SHA-256-only storage, scopes/revocation, membership revalidation, atomic per-key rate limiting, entitlement-filtered `/v1/models` and strict non-streaming `/v1/chat/completions`. See `OPENAI_COMPATIBLE_API_STATUS.md`. This is a usable compatibility subset, not the complete OpenRouter capability set.
 
 Provider API keys by themselves do not make a provider routable. The verified deployed cohort counts are:
 
@@ -130,7 +132,7 @@ The member must be able to understand which model, provider, serving region, dat
 | Hosted Space release contract          | Pass            | No missing migration/table/function; 19/19 Space tables use RLS; direct protected writes are false; Realtime publication is true.              |
 | Hosted public generated types          | Partial         | Checked-in types match clean local schema; repeatable hosted drift automation remains.                                                         |
 | Provider conformance tests             | None recorded   | No provider is operationally certified.                                                                                                        |
-| Hosted migrations 65–67 / gateway      | Released        | Migrations used the exact-ledger helper; hosted I/O contracts pass and `io-gateway` v20 preserves a `401` unauthenticated boundary.            |
+| Hosted migrations 65–69 / functions    | Released        | Hosted I/O contracts pass; `io-gateway` v21 preserves JWT protection and `io-openai` v2 enforces the custom-key boundary.                      |
 
 ## 4. Implemented, but requires improvement
 
@@ -205,9 +207,14 @@ Durable terminal session/member/event/approval foundations are locally Verified,
 - pre-run estimate and candidate explanation; post-run route receipts are already present;
 - usage, credits, invoice, export, and reconciliation views;
 - on-call dashboards, alerts, SLOs, incident playbooks and key rotation (the first provider kill switch is now implemented);
-- API/CLI contracts, versioning, rate limits, API key issuance, and SDK documentation.
+- streaming/Responses compatibility, SDK/CLI examples, production key plans/quotas and compatibility/load evidence; the bounded v1 key/models/non-streaming-chat contract is Released.
 
-## 6. The API keys already added
+## 6. Provider secrets and member I/O API keys
+
+Two credential classes are now intentionally separate:
+
+- **member I/O API keys** authenticate `io-openai`; owners/admins issue expiring test keys, the raw value is shown once, and only its SHA-256 hash is stored;
+- **provider secrets** let the trusted router call an approved upstream only after registry, entitlement, conformance, health and budget gates pass.
 
 Do not paste or commit any key. Keep each provider under a unique Supabase Edge Function secret name.
 
@@ -349,13 +356,13 @@ Exit: one request can deterministically choose among at least three providers, s
 
 ### Phase D — member web UI and API
 
-**Local source progress:** items 1 and the completed-route part of item 3 are implemented; they depend on the new gateway/catalogue to become live.
+**Released progress:** items 1 and 5's bounded key/models/non-streaming-chat subset, plus the completed-route part of item 3, are implemented. The provider catalogue correctly remains empty until one route is approved.
 
 1. Replace the generic Provider partnership button with policy-first Auto route plus explicit model/provider choices.
 2. Show model origin, provider, serving region, retention, capacity class, capability, current price version, health, and estimated range before execution.
 3. Show selected route, attempts/fallbacks, actual usage, and receipt after execution.
 4. Connect the context sidebar and inspector to live authorized data; remove preview fixtures as their real counterparts land.
-5. Publish a versioned OpenAI-compatible I/O API only after the same policy and receipt path is used by the web UI.
+5. Extend the Released OpenAI-compatible subset with SSE, Responses and SDK conformance while preserving the shared policy/budget/receipt path.
 
 Exit: a member can make an informed choice and inspect the result without operator/database access.
 

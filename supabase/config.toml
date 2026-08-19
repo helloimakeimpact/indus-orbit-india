@@ -5,3 +5,8 @@ verify_jwt = false
 
 [functions.resend-email-dispatcher]
 verify_jwt = true
+
+# Custom I/O API keys are authenticated, scoped, and rate-limited inside the
+# function; Supabase JWT verification must not intercept those Bearer tokens.
+[functions.io-openai]
+verify_jwt = false
