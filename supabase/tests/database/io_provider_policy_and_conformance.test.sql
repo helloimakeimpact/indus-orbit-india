@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
 
-select plan(43);
+select plan(44);
 
 select has_table('public', 'io_workspace_provider_policies', 'workspace provider policy exists');
 select has_column('public', 'io_workspace_provider_policies', 'allow_china_hosted', 'CN hosting consent is explicit');
@@ -57,6 +57,15 @@ select ok(
 select ok(
   has_function_privilege('service_role', 'public.io_consume_api_key_request(text,text)', 'execute'),
   'API service can enforce the immutable key policy'
+);
+select is(
+  (
+    select proargnames
+    from pg_proc
+    where oid = 'public.io_consume_api_key_request(text,text,integer)'::regprocedure
+  ),
+  array['_key_hash_hex', '_required_scope', '_limit']::text[],
+  'the deployed compatibility overload preserves its existing parameter names'
 );
 select ok(
   has_function_privilege(
