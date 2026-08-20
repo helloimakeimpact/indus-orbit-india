@@ -438,7 +438,10 @@ begin
 end;
 $function$;
 
-create or replace function public.io_consume_api_key_request(
+-- Keep the deployed public RPC signature unchanged. The new enforcement lives
+-- in a private helper so both existing two-argument (defaulted) and explicit
+-- three-argument callers continue to resolve to the same public function.
+create or replace function private.io_consume_api_key_request_v2(
   _key_hash_hex text,
   _required_scope text
 )
@@ -587,25 +590,25 @@ end;
 $function$;
 
 -- Retain the old signature for deployed callers, but never let an environment
--- variable widen the immutable per-key policy snapshot.
+-- variable widen the immutable per-key policy snapshot. Its argument names and
+-- default remain byte-for-byte compatible with the deployed contract.
 create or replace function public.io_consume_api_key_request(
   _key_hash_hex text,
   _required_scope text,
-  _limit integer
+  _limit integer default 60
 )
 returns jsonb
 language sql
 security definer
 set search_path = ''
 as $function$
-  select public.io_consume_api_key_request(_key_hash_hex, _required_scope);
+  select private.io_consume_api_key_request_v2(_key_hash_hex, _required_scope);
 $function$;
 
-revoke all on function public.io_consume_api_key_request(text, text)
-  from public, anon, authenticated;
+revoke all on function private.io_consume_api_key_request_v2(text, text)
+  from public, anon, authenticated, service_role;
 revoke all on function public.io_consume_api_key_request(text, text, integer)
   from public, anon, authenticated;
-grant execute on function public.io_consume_api_key_request(text, text) to service_role;
 grant execute on function public.io_consume_api_key_request(text, text, integer) to service_role;
 
 create or replace function private.io_expire_api_key_spend_reservations(_api_key_id uuid)

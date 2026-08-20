@@ -1,20 +1,20 @@
 # I/O production API, commercial and provider policy
 
-Status: **Partial**. The code and hosted database controls described as Released below are live on the Indus Orbit demo project as of 20 August 2026. The workspace-residency, API-key quota/spend and bounded-conformance additions described as Verified are complete in source and local tests but are not Released: the connected migration write was rejected by the Codex approval service's usage limit. No external provider is commercially approved or routing production traffic.
+Status: **Partial**. The code and hosted database controls described below are live on the Indus Orbit demo project as of 20 August 2026, including workspace residency, API-key quota/spend and bounded conformance. No external provider is commercially approved or routing production traffic.
 
 This is the decision record for the first I/O production lane: OpenAI and DeepSeek, an OpenAI-compatible Indus Orbit API, a transparent 5.5% I/O service fee, and a separate admin control plane. Public provider documentation establishes technical and data-handling facts; it does not by itself establish permission to resell raw API access.
 
 ## 1. Production address map
 
-| Address                         | Purpose                                                                   | State                                                                |
-| ------------------------------- | ------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| `https://indusorbit.com/`       | Public, people-centred Indus Orbit brand                                  | Existing hosting/DNS must be reconciled before production cutover    |
-| `https://indusorbit.com/io`     | Signed-in I/O web workspace using the member's Supabase session           | Released in the member application                                   |
-| `https://indusorbit.com/app`    | Community product; onboarding begins only after explicit Community opt-in | Released foundation                                                  |
-| `https://api.indusorbit.com/v1` | Public OpenAI-compatible API for servers, CLIs and local agents           | Target production hostname; DNS/TLS/proxy are not yet provisioned    |
-| `https://admin.indusorbit.com`  | Separate admin-team application                                           | Code exists locally; hosting and GitHub connection remain owner work |
-| `https://docs.indusorbit.com`   | API, model, policy and SDK documentation                                  | Planned                                                              |
-| `https://status.indusorbit.com` | Provider/API incident and availability status                             | Planned                                                              |
+| Address                         | Purpose                                                                   | State                                                             |
+| ------------------------------- | ------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `https://indusorbit.com/`       | Public, people-centred Indus Orbit brand                                  | Existing hosting/DNS must be reconciled before production cutover |
+| `https://indusorbit.com/io`     | Signed-in I/O web workspace using the member's Supabase session           | Released in the member application                                |
+| `https://indusorbit.com/app`    | Community product; onboarding begins only after explicit Community opt-in | Released foundation                                               |
+| `https://api.indusorbit.com/v1` | Public OpenAI-compatible API for servers, CLIs and local agents           | Target production hostname; DNS/TLS/proxy are not yet provisioned |
+| `https://admin.indusorbit.com`  | Separate admin-team application                                           | Code is published to private GitHub `main`; hosting remains       |
+| `https://docs.indusorbit.com`   | API, model, policy and SDK documentation                                  | Planned                                                           |
+| `https://status.indusorbit.com` | Provider/API incident and availability status                             | Planned                                                           |
 
 `www.indusorbit.com` should permanently redirect to the apex. I/O and Community remain separate products on the same member origin so they can share one safe sign-in session without making Community onboarding a condition of I/O. The API and admin control plane use separate origins because their authentication, exposure and operating duties differ.
 
@@ -51,7 +51,7 @@ I/O will not copy that behavior into persistent keys. A later browser-direct API
 
 That mode is **Planned**, not part of the released API. Sources: [OpenRouter OAuth PKCE](https://openrouter.ai/docs/guides/overview/auth/oauth), [OpenRouter API-key creation](https://openrouter.ai/docs/api/api-reference/api-keys/create-keys), [OpenRouter attribution](https://openrouter.ai/docs/app-attribution), [OpenAI authentication guidance](https://developers.openai.com/api/reference/overview#authentication), [DeepSeek Open Platform Terms](https://cdn.deepseek.com/policies/en-US/deepseek-open-platform-terms-of-service.html).
 
-### Verified API-key beta policy awaiting hosted release
+### Released API-key beta policy
 
 Migration `20260820140000_harden_io_workspace_and_api_key_policy.sql` snapshots conservative limits onto every key and enforces them in Postgres. A server environment variable can no longer widen a key after issuance.
 
@@ -170,7 +170,7 @@ The runtime must fail closed when evidence expires, a region becomes ineligible,
 
 ## 8. Ordered completion plan
 
-### Code and hosted controls — Released before this hardening candidate
+### Code and hosted controls — Released
 
 - reject persistent I/O API keys from browser-origin requests;
 - keep provider credentials server-only;
@@ -181,9 +181,9 @@ The runtime must fail closed when evidence expires, a region becomes ineligible,
 - expose capability-checked commercial evidence to the separate admin app;
 - show provider cost, service fee and customer total in I/O receipts/results;
 - update OpenAI Luna price evidence and DeepSeek CN disclosure;
-- deploy `io-gateway` v22 and `io-openai` v3.
+- deploy `io-gateway` v23 and `io-openai` v4.
 
-### Verified locally; hosted release still required
+### Hardening released on 20 August 2026
 
 - explicit workspace opt-in before any CN-resident endpoint enters catalogues or routing;
 - versioned 20/minute, 200/day and 2,000/month request limits on each beta key;
@@ -193,17 +193,17 @@ The runtime must fail closed when evidence expires, a region becomes ineligible,
 - only a passing run seals the endpoint's tested draft chat/model-listing/usage declaration as Verified; a failed run leaves it unroutable;
 - member/admin UI for residency consent, visible key limits and capped conformance approval;
 - 54 member and 13 admin tests pass locally.
+- hosted migrations `20260820191501`, `20260820191544` and `20260820191815`, plus `io-provider-conformance` v1; routes/approvals/runs remain zero.
 
 ### Next code slices
 
 1. Add upstream cached/cache-write token parsing and dimension-complete settlement tests.
-2. Release the two new migrations and deploy `io-gateway`, `io-openai` and `io-provider-conformance`; do not execute the paid test during deployment.
-3. Add provider model/price sync as reviewed drafts; never auto-publish external changes.
-4. Add anomaly suspension, rotation reminders and a separately approved production live-key lifecycle.
-5. Add streaming cancellation/settlement, then a tested Responses subset.
-6. Build contract-expiry, price-staleness and incident controls in admin.
-7. Add invoice/credit/FX/tax/refund/reconciliation journals and operator evidence.
-8. Provision `api.indusorbit.com`, docs/status surfaces, monitoring, WAF/rate controls and redacted logs.
+2. Add provider model/price sync as reviewed drafts; never auto-publish external changes.
+3. Add anomaly suspension, rotation reminders and a separately approved production live-key lifecycle.
+4. Add streaming cancellation/settlement, then a tested Responses subset.
+5. Build contract-expiry, price-staleness and incident controls in admin.
+6. Add invoice/credit/FX/tax/refund/reconciliation journals and operator evidence.
+7. Provision `api.indusorbit.com`, docs/status surfaces, monitoring, WAF/rate controls and redacted logs.
 
 ### Owner/legal/operations actions
 
@@ -212,6 +212,6 @@ The runtime must fail closed when evidence expires, a region becomes ineligible,
 3. Use the coded USD 0.01 single-run conformance ceiling unless a later reviewed suite deliberately changes it.
 4. Use the coded conservative beta key defaults above; approve a new policy version before any increase.
 5. Nominate privacy, security, billing, provider-operations and incident owners.
-6. Provision DNS/TLS/proxy/hosting and connect/deploy the separate admin repository.
+6. Provision DNS/TLS/proxy/hosting and deploy the connected separate admin repository.
 
 No live provider traffic should be enabled merely because these actions have begun. Activation requires recorded evidence plus a passing conformance result.

@@ -1,6 +1,11 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.5";
+  };
   graphql_public: {
     Tables: {
       [_ in never]: never;
@@ -295,6 +300,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "geo_places";
             referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "chapter_proposals_proposer_id_fkey";
+            columns: ["proposer_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["user_id"];
           },
           {
             foreignKeyName: "chapter_proposals_region_id_fkey";
@@ -2009,6 +2021,59 @@ export type Database = {
           },
         ];
       };
+      io_budget_limits: {
+        Row: {
+          created_at: string;
+          created_by: string;
+          currency_code: string;
+          hard_limit_minor: number;
+          id: string;
+          period_end: string;
+          period_start: string;
+          reason: string;
+          status: string;
+          updated_at: string;
+          updated_by: string;
+          workspace_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          created_by: string;
+          currency_code: string;
+          hard_limit_minor: number;
+          id?: string;
+          period_end: string;
+          period_start: string;
+          reason: string;
+          status?: string;
+          updated_at?: string;
+          updated_by: string;
+          workspace_id: string;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string;
+          currency_code?: string;
+          hard_limit_minor?: number;
+          id?: string;
+          period_end?: string;
+          period_start?: string;
+          reason?: string;
+          status?: string;
+          updated_at?: string;
+          updated_by?: string;
+          workspace_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "io_budget_limits_workspace_id_fkey";
+            columns: ["workspace_id"];
+            isOneToOne: false;
+            referencedRelation: "io_workspaces";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       io_capacity_sources: {
         Row: {
           access_mode: string;
@@ -2825,6 +2890,435 @@ export type Database = {
           },
           {
             foreignKeyName: "io_route_receipts_workspace_id_fkey";
+            columns: ["workspace_id"];
+            isOneToOne: false;
+            referencedRelation: "io_workspaces";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      io_terminal_approval_decisions: {
+        Row: {
+          decided_at: string;
+          decided_by: string;
+          decision: string;
+          decision_scope: string;
+          id: string;
+          reason: string;
+          request_id: string;
+        };
+        Insert: {
+          decided_at?: string;
+          decided_by: string;
+          decision: string;
+          decision_scope: string;
+          id?: string;
+          reason: string;
+          request_id: string;
+        };
+        Update: {
+          decided_at?: string;
+          decided_by?: string;
+          decision?: string;
+          decision_scope?: string;
+          id?: string;
+          reason?: string;
+          request_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "io_terminal_approval_decisions_request_id_fkey";
+            columns: ["request_id"];
+            isOneToOne: true;
+            referencedRelation: "io_terminal_approval_requests";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      io_terminal_approval_requests: {
+        Row: {
+          created_at: string;
+          decision_scope: string;
+          expires_at: string;
+          id: string;
+          permission_kind: string;
+          reason: string;
+          requested_by: string;
+          risk_class: string;
+          session_id: string;
+          state: string;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          decision_scope: string;
+          expires_at: string;
+          id?: string;
+          permission_kind: string;
+          reason: string;
+          requested_by: string;
+          risk_class: string;
+          session_id: string;
+          state?: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          decision_scope?: string;
+          expires_at?: string;
+          id?: string;
+          permission_kind?: string;
+          reason?: string;
+          requested_by?: string;
+          risk_class?: string;
+          session_id?: string;
+          state?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "io_terminal_approval_requests_session_id_fkey";
+            columns: ["session_id"];
+            isOneToOne: false;
+            referencedRelation: "io_terminal_sessions";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      io_terminal_session_events: {
+        Row: {
+          actor_user_id: string | null;
+          content_classification: string;
+          created_at: string;
+          event_key: string | null;
+          event_type: string;
+          id: number;
+          occurred_at: string;
+          redacted_payload: Json;
+          sequence: number;
+          session_id: string;
+          sync_policy: string;
+        };
+        Insert: {
+          actor_user_id?: string | null;
+          content_classification?: string;
+          created_at?: string;
+          event_key?: string | null;
+          event_type: string;
+          id?: never;
+          occurred_at?: string;
+          redacted_payload?: Json;
+          sequence: number;
+          session_id: string;
+          sync_policy?: string;
+        };
+        Update: {
+          actor_user_id?: string | null;
+          content_classification?: string;
+          created_at?: string;
+          event_key?: string | null;
+          event_type?: string;
+          id?: never;
+          occurred_at?: string;
+          redacted_payload?: Json;
+          sequence?: number;
+          session_id?: string;
+          sync_policy?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "io_terminal_session_events_session_id_fkey";
+            columns: ["session_id"];
+            isOneToOne: false;
+            referencedRelation: "io_terminal_sessions";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      io_terminal_session_members: {
+        Row: {
+          accepted_at: string | null;
+          created_at: string;
+          expires_at: string | null;
+          invited_by: string | null;
+          revoked_at: string | null;
+          role: string;
+          session_id: string;
+          status: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          accepted_at?: string | null;
+          created_at?: string;
+          expires_at?: string | null;
+          invited_by?: string | null;
+          revoked_at?: string | null;
+          role: string;
+          session_id: string;
+          status?: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          accepted_at?: string | null;
+          created_at?: string;
+          expires_at?: string | null;
+          invited_by?: string | null;
+          revoked_at?: string | null;
+          role?: string;
+          session_id?: string;
+          status?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "io_terminal_session_members_session_id_fkey";
+            columns: ["session_id"];
+            isOneToOne: false;
+            referencedRelation: "io_terminal_sessions";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      io_terminal_sessions: {
+        Row: {
+          completed_at: string | null;
+          connector_kind: string;
+          connector_origin_hash: string;
+          created_at: string;
+          created_by: string;
+          execution_location: string;
+          id: string;
+          last_event_sequence: number;
+          mode: string;
+          parent_session_id: string | null;
+          runtime_reference_hash: string;
+          runtime_version: string | null;
+          started_at: string;
+          state: string;
+          title: string;
+          updated_at: string;
+          workspace_id: string;
+        };
+        Insert: {
+          completed_at?: string | null;
+          connector_kind?: string;
+          connector_origin_hash: string;
+          created_at?: string;
+          created_by: string;
+          execution_location?: string;
+          id?: string;
+          last_event_sequence?: number;
+          mode: string;
+          parent_session_id?: string | null;
+          runtime_reference_hash: string;
+          runtime_version?: string | null;
+          started_at?: string;
+          state?: string;
+          title: string;
+          updated_at?: string;
+          workspace_id: string;
+        };
+        Update: {
+          completed_at?: string | null;
+          connector_kind?: string;
+          connector_origin_hash?: string;
+          created_at?: string;
+          created_by?: string;
+          execution_location?: string;
+          id?: string;
+          last_event_sequence?: number;
+          mode?: string;
+          parent_session_id?: string | null;
+          runtime_reference_hash?: string;
+          runtime_version?: string | null;
+          started_at?: string;
+          state?: string;
+          title?: string;
+          updated_at?: string;
+          workspace_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "io_terminal_sessions_parent_session_id_fkey";
+            columns: ["parent_session_id"];
+            isOneToOne: false;
+            referencedRelation: "io_terminal_sessions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "io_terminal_sessions_workspace_id_fkey";
+            columns: ["workspace_id"];
+            isOneToOne: false;
+            referencedRelation: "io_workspaces";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      io_usage_records: {
+        Row: {
+          actor_user_id: string;
+          amount_minor: number;
+          currency_code: string;
+          customer_charge_nanos: number | null;
+          endpoint_id: string;
+          id: string;
+          input_tokens: number | null;
+          output_tokens: number | null;
+          provider_cost_nanos: number | null;
+          receipt_id: string;
+          recorded_at: string;
+          request_id: string;
+          reservation_id: string;
+          service_fee_basis_points: number | null;
+          service_fee_nanos: number | null;
+          service_fee_policy_version: number | null;
+          workspace_id: string;
+        };
+        Insert: {
+          actor_user_id: string;
+          amount_minor: number;
+          currency_code: string;
+          customer_charge_nanos?: number | null;
+          endpoint_id: string;
+          id?: string;
+          input_tokens?: number | null;
+          output_tokens?: number | null;
+          provider_cost_nanos?: number | null;
+          receipt_id: string;
+          recorded_at?: string;
+          request_id: string;
+          reservation_id: string;
+          service_fee_basis_points?: number | null;
+          service_fee_nanos?: number | null;
+          service_fee_policy_version?: number | null;
+          workspace_id: string;
+        };
+        Update: {
+          actor_user_id?: string;
+          amount_minor?: number;
+          currency_code?: string;
+          customer_charge_nanos?: number | null;
+          endpoint_id?: string;
+          id?: string;
+          input_tokens?: number | null;
+          output_tokens?: number | null;
+          provider_cost_nanos?: number | null;
+          receipt_id?: string;
+          recorded_at?: string;
+          request_id?: string;
+          reservation_id?: string;
+          service_fee_basis_points?: number | null;
+          service_fee_nanos?: number | null;
+          service_fee_policy_version?: number | null;
+          workspace_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "io_usage_records_endpoint_id_fkey";
+            columns: ["endpoint_id"];
+            isOneToOne: false;
+            referencedRelation: "io_model_endpoints";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "io_usage_records_receipt_id_fkey";
+            columns: ["receipt_id"];
+            isOneToOne: true;
+            referencedRelation: "io_route_receipts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "io_usage_records_reservation_id_fkey";
+            columns: ["reservation_id"];
+            isOneToOne: true;
+            referencedRelation: "io_usage_reservations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "io_usage_records_workspace_id_fkey";
+            columns: ["workspace_id"];
+            isOneToOne: false;
+            referencedRelation: "io_workspaces";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      io_usage_reservations: {
+        Row: {
+          actor_user_id: string;
+          budget_limit_id: string;
+          created_at: string;
+          currency_code: string;
+          endpoint_id: string;
+          expires_at: string;
+          id: string;
+          receipt_id: string | null;
+          request_id: string;
+          reserved_minor: number;
+          settled_at: string | null;
+          settled_minor: number | null;
+          state: string;
+          workspace_id: string;
+        };
+        Insert: {
+          actor_user_id: string;
+          budget_limit_id: string;
+          created_at?: string;
+          currency_code: string;
+          endpoint_id: string;
+          expires_at: string;
+          id?: string;
+          receipt_id?: string | null;
+          request_id: string;
+          reserved_minor: number;
+          settled_at?: string | null;
+          settled_minor?: number | null;
+          state?: string;
+          workspace_id: string;
+        };
+        Update: {
+          actor_user_id?: string;
+          budget_limit_id?: string;
+          created_at?: string;
+          currency_code?: string;
+          endpoint_id?: string;
+          expires_at?: string;
+          id?: string;
+          receipt_id?: string | null;
+          request_id?: string;
+          reserved_minor?: number;
+          settled_at?: string | null;
+          settled_minor?: number | null;
+          state?: string;
+          workspace_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "io_usage_reservations_budget_limit_id_fkey";
+            columns: ["budget_limit_id"];
+            isOneToOne: false;
+            referencedRelation: "io_budget_limits";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "io_usage_reservations_endpoint_id_fkey";
+            columns: ["endpoint_id"];
+            isOneToOne: false;
+            referencedRelation: "io_model_endpoints";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "io_usage_reservations_receipt_id_fkey";
+            columns: ["receipt_id"];
+            isOneToOne: true;
+            referencedRelation: "io_route_receipts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "io_usage_reservations_workspace_id_fkey";
             columns: ["workspace_id"];
             isOneToOne: false;
             referencedRelation: "io_workspaces";
@@ -4692,30 +5186,44 @@ export type Database = {
       };
     };
     Functions: {
-      io_get_active_service_fee_policy: { Args: never; Returns: Json };
-      io_finalize_priced_route_request: {
+      admin_io_begin_provider_conformance: {
         Args: {
-          _request_id: string;
-          _result_state: string;
-          _route_strategy: string;
-          _selection: Json;
-          _attempts: Json;
-          _candidate_count: number;
-          _fallback_count: number;
-          _estimated_cost_nanos: number;
-          _currency_code: string;
-          _input_tokens: number | null;
-          _output_tokens: number | null;
-          _customer_charge_minor: number;
-          _provider_cost_nanos: number;
-          _service_fee_nanos: number;
-          _customer_charge_nanos: number;
-          _service_fee_policy_version: number;
-          _service_fee_basis_points: number;
-          _policy_snapshot: Json;
-          _candidate_summary: Json;
+          _acknowledge_external_processing: boolean;
+          _endpoint_id: string;
+          _max_provider_cost_nanos: number;
+          _reason: string;
         };
         Returns: Json;
+      };
+      admin_io_budget_snapshot: {
+        Args: never;
+        Returns: {
+          budget_status: string;
+          currency_code: string;
+          hard_limit_minor: string;
+          period_end: string;
+          period_start: string;
+          remaining_minor: string;
+          reserved_minor: string;
+          spent_minor: string;
+          workspace_id: string;
+          workspace_name: string;
+        }[];
+      };
+      admin_io_endpoint_health_snapshot: {
+        Args: never;
+        Returns: {
+          circuit_state: string;
+          consecutive_failures: number;
+          endpoint_id: string;
+          endpoint_key: string;
+          health_state: string;
+          latency_ms: number;
+          observed_at: string;
+          provider_id: string;
+          provider_key: string;
+          retry_after: string;
+        }[];
       };
       admin_io_evidence_summary: { Args: never; Returns: Json };
       admin_io_operational_snapshot: {
@@ -4747,11 +5255,27 @@ export type Database = {
         Args: never;
         Returns: {
           commercial_access_state: string;
-          commercial_terms_evidence_url: string | null;
-          commercial_terms_reviewed_at: string | null;
+          commercial_terms_evidence_url: string;
+          commercial_terms_reviewed_at: string;
           provider_id: string;
           provider_key: string;
           resale_authorized: boolean;
+        }[];
+      };
+      admin_io_provider_conformance_snapshot: {
+        Args: never;
+        Returns: {
+          discovery_state: string;
+          endpoint_id: string;
+          finished_at: string;
+          model_name: string;
+          provider_cost_nanos: number;
+          provider_key: string;
+          residency_country_code: string;
+          run_id: string;
+          run_state: string;
+          started_at: string;
+          suite_version: string;
         }[];
       };
       admin_io_recent_route_receipts: {
@@ -4783,8 +5307,28 @@ export type Database = {
           route_strategy: string;
         }[];
       };
+      admin_io_set_endpoint_circuit: {
+        Args: {
+          _circuit_state: string;
+          _endpoint_id: string;
+          _reason: string;
+          _retry_after?: string;
+        };
+        Returns: Json;
+      };
       admin_io_set_provider_routing: {
         Args: { _enabled: boolean; _provider_id: string; _reason: string };
+        Returns: Json;
+      };
+      admin_io_set_workspace_budget: {
+        Args: {
+          _currency_code: string;
+          _hard_limit_minor: number;
+          _period_end: string;
+          _period_start: string;
+          _reason: string;
+          _workspace_id: string;
+        };
         Returns: Json;
       };
       admin_list_team_members: {
@@ -4818,6 +5362,21 @@ export type Database = {
           _target_user_id: string;
         };
         Returns: Json;
+      };
+      append_my_io_terminal_event: {
+        Args: {
+          _event_key: string;
+          _event_type: string;
+          _payload?: Json;
+          _session_id: string;
+        };
+        Returns: {
+          event_id: number;
+          event_type: string;
+          occurred_at: string;
+          replayed: boolean;
+          sequence: number;
+        }[];
       };
       approve_chapter_proposal: {
         Args: { _proposal_id: string };
@@ -4854,6 +5413,34 @@ export type Database = {
           io_access: boolean;
           measurement_consent: boolean;
         }[];
+      };
+      complete_my_io_terminal_session: {
+        Args: { _session_id: string; _state: string };
+        Returns: {
+          completed_at: string | null;
+          connector_kind: string;
+          connector_origin_hash: string;
+          created_at: string;
+          created_by: string;
+          execution_location: string;
+          id: string;
+          last_event_sequence: number;
+          mode: string;
+          parent_session_id: string | null;
+          runtime_reference_hash: string;
+          runtime_version: string | null;
+          started_at: string;
+          state: string;
+          title: string;
+          updated_at: string;
+          workspace_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "io_terminal_sessions";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
       };
       create_managed_chapter: {
         Args: {
@@ -4996,6 +5583,50 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      create_my_io_terminal_session: {
+        Args: {
+          _connector_origin: string;
+          _mode: string;
+          _runtime_reference: string;
+          _runtime_version?: string;
+          _title: string;
+          _workspace_id: string;
+        };
+        Returns: {
+          completed_at: string | null;
+          connector_kind: string;
+          connector_origin_hash: string;
+          created_at: string;
+          created_by: string;
+          execution_location: string;
+          id: string;
+          last_event_sequence: number;
+          mode: string;
+          parent_session_id: string | null;
+          runtime_reference_hash: string;
+          runtime_version: string | null;
+          started_at: string;
+          state: string;
+          title: string;
+          updated_at: string;
+          workspace_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "io_terminal_sessions";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      create_my_io_test_api_key: {
+        Args: {
+          _expires_at?: string;
+          _name: string;
+          _scopes?: string[];
+          _workspace_id: string;
+        };
+        Returns: Json;
+      };
       create_my_io_workspace: {
         Args: never;
         Returns: {
@@ -5016,79 +5647,6 @@ export type Database = {
           isOneToOne: true;
           isSetofReturn: false;
         };
-      };
-      create_my_io_test_api_key: {
-        Args: {
-          _workspace_id: string;
-          _name: string;
-          _scopes?: string[];
-          _expires_at?: string;
-        };
-        Returns: Json;
-      };
-      get_my_io_workspace_provider_policy: {
-        Args: { _workspace_id: string };
-        Returns: Json;
-      };
-      set_my_io_workspace_provider_policy: {
-        Args: {
-          _workspace_id: string;
-          _allow_china_hosted: boolean;
-          _allow_training_possible: boolean;
-        };
-        Returns: Json;
-      };
-      revoke_my_io_api_key: {
-        Args: { _key_id: string };
-        Returns: Json;
-      };
-      create_my_io_terminal_session: {
-        Args: {
-          _workspace_id: string;
-          _title: string;
-          _mode: string;
-          _connector_origin: string;
-          _runtime_reference: string;
-          _runtime_version?: string | null;
-        };
-        Returns: {
-          id: string;
-          title: string;
-          mode: string;
-          state: string;
-          runtime_version: string | null;
-          last_event_sequence: number;
-          started_at: string;
-          completed_at: string | null;
-        };
-      };
-      complete_my_io_terminal_session: {
-        Args: { _session_id: string; _state: string };
-        Returns: {
-          id: string;
-          title: string;
-          mode: string;
-          state: string;
-          runtime_version: string | null;
-          last_event_sequence: number;
-          started_at: string;
-          completed_at: string | null;
-        };
-      };
-      append_my_io_terminal_event: {
-        Args: {
-          _session_id: string;
-          _event_type: string;
-          _event_key: string;
-          _payload?: Json;
-        };
-        Returns: {
-          event_id: number;
-          sequence: number;
-          event_type: string;
-          occurred_at: string;
-          replayed: boolean;
-        }[];
       };
       create_my_mission: {
         Args: {
@@ -5137,6 +5695,10 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      decide_my_io_terminal_approval: {
+        Args: { _decision: string; _reason: string; _request_id: string };
+        Returns: Json;
+      };
       decide_space_membership: {
         Args: {
           _decision: string;
@@ -5158,47 +5720,8 @@ export type Database = {
         Args: { _workspace_id: string };
         Returns: Json;
       };
-      list_my_io_terminal_sessions: {
+      get_my_io_workspace_provider_policy: {
         Args: { _workspace_id: string };
-        Returns: {
-          session_id: string;
-          title: string;
-          mode: string;
-          state: string;
-          runtime_version: string | null;
-          last_event_sequence: number;
-          started_at: string;
-          completed_at: string | null;
-        }[];
-      };
-      list_my_io_terminal_events: {
-        Args: {
-          _session_id: string;
-          _before_sequence?: number | null;
-          _limit?: number | null;
-        };
-        Returns: {
-          event_id: number;
-          sequence: number;
-          event_type: string;
-          content_classification: string;
-          sync_policy: string;
-          occurred_at: string;
-        }[];
-      };
-      request_my_io_terminal_approval: {
-        Args: {
-          _session_id: string;
-          _permission_kind: string;
-          _risk_class: string;
-          _decision_scope: string;
-          _reason: string;
-          _expires_at: string;
-        };
-        Returns: Json;
-      };
-      decide_my_io_terminal_approval: {
-        Args: { _request_id: string; _decision: string; _reason: string };
         Returns: Json;
       };
       get_my_location_preferences: { Args: never; Returns: Json };
@@ -5219,6 +5742,155 @@ export type Database = {
           _user_id: string;
         };
         Returns: boolean;
+      };
+      io_begin_api_key_route_request: {
+        Args: {
+          _actor_user_id: string;
+          _api_key_id: string;
+          _currency_code: string;
+          _endpoint_id: string;
+          _idempotency_key: string;
+          _request_fingerprint: string;
+          _request_id: string;
+          _reserve_customer_nanos: number;
+          _reserve_minor: number;
+          _workspace_id: string;
+        };
+        Returns: Json;
+      };
+      io_begin_route_request: {
+        Args: {
+          _actor_user_id: string;
+          _currency_code: string;
+          _endpoint_id: string;
+          _idempotency_key: string;
+          _request_fingerprint: string;
+          _request_id: string;
+          _reserve_minor: number;
+          _workspace_id: string;
+        };
+        Returns: Json;
+      };
+      io_consume_api_key_request: {
+        Args: {
+          _key_hash_hex: string;
+          _limit?: number;
+          _required_scope: string;
+        };
+        Returns: Json;
+      };
+      io_finalize_api_key_priced_route_request: {
+        Args: {
+          _api_key_id: string;
+          _attempts: Json;
+          _candidate_count: number;
+          _candidate_summary: Json;
+          _currency_code: string;
+          _customer_charge_minor: number;
+          _customer_charge_nanos: number;
+          _estimated_cost_nanos: number;
+          _fallback_count: number;
+          _input_tokens: number;
+          _output_tokens: number;
+          _policy_snapshot: Json;
+          _provider_cost_nanos: number;
+          _request_id: string;
+          _result_state: string;
+          _route_strategy: string;
+          _selection: Json;
+          _service_fee_basis_points: number;
+          _service_fee_nanos: number;
+          _service_fee_policy_version: number;
+        };
+        Returns: Json;
+      };
+      io_finalize_priced_route_request: {
+        Args: {
+          _attempts: Json;
+          _candidate_count: number;
+          _candidate_summary: Json;
+          _currency_code: string;
+          _customer_charge_minor: number;
+          _customer_charge_nanos: number;
+          _estimated_cost_nanos: number;
+          _fallback_count: number;
+          _input_tokens: number;
+          _output_tokens: number;
+          _policy_snapshot: Json;
+          _provider_cost_nanos: number;
+          _request_id: string;
+          _result_state: string;
+          _route_strategy: string;
+          _selection: Json;
+          _service_fee_basis_points: number;
+          _service_fee_nanos: number;
+          _service_fee_policy_version: number;
+        };
+        Returns: Json;
+      };
+      io_finalize_route_request: {
+        Args: {
+          _actual_cost_minor: number;
+          _attempts: Json;
+          _candidate_count: number;
+          _candidate_summary: Json;
+          _currency_code: string;
+          _estimated_cost_nanos: number;
+          _fallback_count: number;
+          _input_tokens: number;
+          _output_tokens: number;
+          _policy_snapshot: Json;
+          _request_id: string;
+          _result_state: string;
+          _route_strategy: string;
+          _selection: Json;
+        };
+        Returns: Json;
+      };
+      io_finish_provider_conformance: {
+        Args: {
+          _discovery_state: string;
+          _evidence_sha256: string;
+          _provider_cost_nanos: number;
+          _result_summary: Json;
+          _run_id: string;
+          _run_state: string;
+        };
+        Returns: Json;
+      };
+      io_get_active_service_fee_policy: { Args: never; Returns: Json };
+      io_get_provider_conformance_connection: {
+        Args: { _run_id: string };
+        Returns: {
+          auto_route_tier: string;
+          capability_version: number;
+          capacity_mode: string;
+          capacity_source_id: string;
+          circuit_state: string;
+          currency_code: string;
+          endpoint_base_url: string;
+          endpoint_id: string;
+          endpoint_key: string;
+          health_state: string;
+          input_price_nanos: number;
+          integration_style: string;
+          max_context_tokens: number;
+          model_deprecation_at: string;
+          model_display_name: string;
+          model_id: string;
+          model_release_date: string;
+          output_price_nanos: number;
+          price_version: number;
+          provider_display_name: string;
+          provider_id: string;
+          provider_key: string;
+          provider_model_id: string;
+          region_code: string;
+          residency_country_code: string;
+          retention_class: string;
+          secret_reference: string;
+          unit_quantity: number;
+        }[];
       };
       io_get_ready_endpoint_connections: {
         Args: never;
@@ -5251,6 +5923,52 @@ export type Database = {
           unit_quantity: number;
         }[];
       };
+      io_get_routable_endpoint_connections_v2: {
+        Args: never;
+        Returns: {
+          auto_route_tier: string;
+          capability_version: number;
+          capacity_mode: string;
+          capacity_source_id: string;
+          circuit_state: string;
+          currency_code: string;
+          endpoint_base_url: string;
+          endpoint_id: string;
+          endpoint_key: string;
+          health_state: string;
+          input_price_nanos: number;
+          integration_style: string;
+          max_context_tokens: number;
+          model_deprecation_at: string;
+          model_display_name: string;
+          model_id: string;
+          model_release_date: string;
+          output_price_nanos: number;
+          price_version: number;
+          provider_display_name: string;
+          provider_id: string;
+          provider_key: string;
+          provider_model_id: string;
+          region_code: string;
+          residency_country_code: string;
+          retention_class: string;
+          secret_reference: string;
+          unit_quantity: number;
+        }[];
+      };
+      io_get_workspace_provider_policy: {
+        Args: { _workspace_id: string };
+        Returns: Json;
+      };
+      io_record_endpoint_outcome: {
+        Args: {
+          _endpoint_id: string;
+          _error_code?: string;
+          _latency_ms: number;
+          _success: boolean;
+        };
+        Returns: Json;
+      };
       is_chapter_lead: {
         Args: { _chapter_id: string; _user_id: string };
         Returns: boolean;
@@ -5271,9 +5989,62 @@ export type Database = {
         Args: { _reason?: string; _story_id: string };
         Returns: undefined;
       };
+      lead_remove_chapter_member: {
+        Args: { _chapter_id: string; _target_user_id: string };
+        Returns: undefined;
+      };
+      lead_remove_mission_member: {
+        Args: { _mission_id: string; _target_user_id: string };
+        Returns: undefined;
+      };
       leave_my_conversation_space: {
         Args: { _expected_version: number; _space_id: string };
         Returns: undefined;
+      };
+      list_my_direct_conversation: {
+        Args: {
+          _before_created_at?: string;
+          _before_id?: string;
+          _limit?: number;
+          _other_user_id: string;
+        };
+        Returns: {
+          client_request_id: string;
+          content: string;
+          created_at: string;
+          message_id: string;
+          read_at: string;
+          recipient_id: string;
+          sender_id: string;
+        }[];
+      };
+      list_my_io_terminal_events: {
+        Args: {
+          _before_sequence?: number;
+          _limit?: number;
+          _session_id: string;
+        };
+        Returns: {
+          content_classification: string;
+          event_id: number;
+          event_type: string;
+          occurred_at: string;
+          sequence: number;
+          sync_policy: string;
+        }[];
+      };
+      list_my_io_terminal_sessions: {
+        Args: { _workspace_id: string };
+        Returns: {
+          completed_at: string;
+          last_event_sequence: number;
+          mode: string;
+          runtime_version: string;
+          session_id: string;
+          started_at: string;
+          state: string;
+          title: string;
+        }[];
       };
       lookup_vouch_code: {
         Args: { _code: string };
@@ -5303,23 +6074,6 @@ export type Database = {
       mark_my_direct_conversation_read: {
         Args: { _other_user_id: string };
         Returns: number;
-      };
-      list_my_direct_conversation: {
-        Args: {
-          _other_user_id: string;
-          _before_created_at?: string | null;
-          _before_id?: string | null;
-          _limit?: number | null;
-        };
-        Returns: {
-          message_id: string;
-          sender_id: string;
-          recipient_id: string;
-          content: string;
-          client_request_id: string | null;
-          created_at: string;
-          read_at: string | null;
-        }[];
       };
       my_lead_summary: { Args: never; Returns: Json };
       post_my_mission_update: {
@@ -5356,6 +6110,17 @@ export type Database = {
       reject_chapter_proposal: {
         Args: { _proposal_id: string };
         Returns: undefined;
+      };
+      request_my_io_terminal_approval: {
+        Args: {
+          _decision_scope: string;
+          _expires_at: string;
+          _permission_kind: string;
+          _reason: string;
+          _risk_class: string;
+          _session_id: string;
+        };
+        Returns: Json;
       };
       request_my_mentor_session: {
         Args: {
@@ -5436,6 +6201,7 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      revoke_my_io_api_key: { Args: { _key_id: string }; Returns: Json };
       send_my_conversation_message: {
         Args: {
           _client_request_id: string;
@@ -5517,6 +6283,14 @@ export type Database = {
           _timezone_name: string;
           _use_for_recommendations: boolean;
           _use_for_scheduling: boolean;
+        };
+        Returns: Json;
+      };
+      set_my_io_workspace_provider_policy: {
+        Args: {
+          _allow_china_hosted: boolean;
+          _allow_training_possible: boolean;
+          _workspace_id: string;
         };
         Returns: Json;
       };

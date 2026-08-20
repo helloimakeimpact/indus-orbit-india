@@ -1,6 +1,6 @@
 # I/O Port operating guide
 
-Operational truth, updated 20 August 2026: the registry-driven multi-provider foundation, latest-evidence resolver, `io-gateway` v22, scoped-key `io-openai` v3, top-level `/io` boundary, budget/idempotency/ledger/health/circuit controls, transparent 5.5% fee, commercial provider gate, terminal metadata and safe-timeline/approval boundary are Released to the demo. Gateway v22 bounds and validates provider responses and shares one priced route transaction with the API. Hosted contracts confirm RLS/grants/containment; the last inventory has five staged provider/model/endpoint/capability/price/runtime-control/connection records, three capacity sources/grants and zero receipts/attempts. OpenAI and DeepSeek remain resale-pending. Secrets and inventory alone do not prove conformance or activate routing. Read `IO_PORT_IMPLEMENTATION_STATUS.md`, `OPENAI_COMPATIBLE_API_STATUS.md` and `PRODUCTION_API_COMMERCIAL_AND_PROVIDER_POLICY.md` before any inventory or traffic change.
+Operational truth, updated 20 August 2026: the registry-driven multi-provider foundation, latest-evidence resolver, `io-gateway` v23, scoped-key `io-openai` v4, single-use `io-provider-conformance` v1, top-level `/io` boundary, multi-window key/spend limits, budget/idempotency/ledger/health/circuit controls, transparent 5.5% fee, commercial provider gate, terminal metadata and safe-timeline/approval boundary are Released to the demo. Hosted contracts confirm RLS/grants/containment; the inventory has five staged provider/model/endpoint/capability/price/runtime-control/connection records, three capacity sources/grants and zero receipts/attempts. OpenAI and DeepSeek remain resale-pending. Secrets and inventory alone do not prove conformance or activate routing. Read `IO_PORT_IMPLEMENTATION_STATUS.md`, `OPENAI_COMPATIBLE_API_STATUS.md` and `PRODUCTION_API_COMMERCIAL_AND_PROVIDER_POLICY.md` before any inventory or traffic change.
 
 ## What is live in the demo project
 
@@ -77,7 +77,7 @@ Optional server-only selector controls have safe defaults:
 | `IO_MODEL_SELECTION_FRESHNESS_DAYS`           | `180`      | How close to the newest reviewed release a candidate must be.                                    |
 | `IO_MODEL_SELECTION_AFFORDABILITY_MULTIPLIER` | `1.35`     | Maximum estimated-cost multiple above the cheapest fresh candidate.                              |
 
-API-key beta limits are no longer environment-variable controls in the Verified hardening candidate. Each issued key snapshots policy version 1: 30-day default expiry, 20 requests/minute, 200/day, 2,000/month, USD 1/day and USD 10/month. Change them only through a reviewed migration/policy version.
+API-key beta limits are no longer environment-variable controls. Each issued key snapshots Released policy version 1: 30-day default expiry, 20 requests/minute, 200/day, 2,000/month, USD 1/day and USD 10/month. Change them only through a reviewed migration/policy version.
 
 For each request, I/O considers only models whose provider is active; model is listed, release-dated and not deprecated; endpoint is active/member-visible; capacity source is actively entitled; latest capability certificate verifies chat; and a published price card is effective. The local resolver also excludes open circuits. `latest_affordable` uses tier, freshness and affordability bands; `lowest_cost` selects the least costly eligible candidate; an explicit model must be in the reviewed catalogue. Mixed currencies fail closed until FX data is reviewed.
 
@@ -97,22 +97,22 @@ The demo project has one member-owned `Indus Orbit demo` workspace and three vis
 
 The deployed gateway accepts the standard local Vite origins on ports `5173` and `5174`, alongside the Indus Orbit production origins. Other origins remain rejected.
 
-## Release the locally Verified slice
+## Hosted release record
 
 1. Use the connected Supabase migration API for project `jpwvgpnbkrktipwhvqss`; ordinary linked pushes remain unsafe because of historical aliases.
-2. Apply `20260820140000_harden_io_workspace_and_api_key_policy.sql`, then `20260820150000_add_io_provider_conformance_workflow.sql`.
+2. Applied `20260820140000_harden_io_workspace_and_api_key_policy.sql`, `20260820150000_add_io_provider_conformance_workflow.sql` and the follow-up conformance FK-index migration as hosted versions `20260820191501`, `20260820191544` and `20260820191815`.
 3. Add `IO_SAFETY_IDENTIFIER_SECRET`; do not replace a provider key or reuse a browser secret.
-4. Deploy `io-gateway` with JWT verification enabled, `io-openai` with its existing custom-key boundary, and `io-provider-conformance` with JWT verification enabled.
-5. Regenerate/compare hosted types and run RLS/RPC/advisor/member/admin checks.
+4. Deployed `io-gateway` v23 with JWT verification enabled, `io-openai` v4 with its existing custom-key boundary, and `io-provider-conformance` v1 with JWT verification enabled.
+5. Regenerated hosted TypeScript types and verified objects, defaults, ACLs, zero-route state and post-DDL advisors.
 6. Deploy the member/admin web builds only after the database/function checks pass.
 7. Do not make a provider request during release verification. The admin reason, confirmation, CN acknowledgement and USD 0.01 cap are a separate explicit operation.
 
-Current release note: the connected project read succeeded, but the migration write was rejected by the Codex approval service's usage limit. These two migrations and three function deployments are therefore Verified in source, not Released.
+Current release note: all three migrations and three function versions are Released. Routes, active API keys, conformance approvals and running conformance runs remain zero. No provider key was read and no paid request was made.
 
 ## Guardrails before public beta
 
-1. Release and concurrency-test the budget/idempotency/ledger/health/circuit core before enabling paid traffic.
-2. Build operator provider evidence, conformance, secret-reference and capacity/grant lifecycle workflows.
+1. Concurrency-test the Released budget/idempotency/ledger/health/circuit core with an explicitly approved bounded run before enabling broader traffic.
+2. Extend the Released provider evidence/conformance boundary with reviewed secret-reference rotation and capacity/grant lifecycle workflows.
 3. Add provider-specific conformance, region/retention evidence, formal fallback policy and immutable route-policy snapshots before activating multiple routes.
 4. Add scheduled probes, distributed rate limits, streaming and cancellation before broad access.
 5. Add credits, fees, reviewed FX, tax, invoices, payments/refunds and provider-bill reconciliation before commercial launch.

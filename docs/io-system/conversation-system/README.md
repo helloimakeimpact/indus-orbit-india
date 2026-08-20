@@ -1,6 +1,6 @@
 # Conversation and branded spatial system record
 
-Status: direct messages and the Chapter/Mission Space foundation are Released to demo. Bounded direct-history pagination is Verified locally and awaits migration 68, audited 19 August 2026.
+Status: direct messages, bounded direct-history pagination and the Chapter/Mission Space foundation are Released to demo, updated 20 August 2026.
 
 ## Current truth
 
@@ -43,4 +43,4 @@ Still left:
 - one reusable Indus Orbit rail/sidebar/workspace/inspector shell across product systems;
 - I/O session collaboration that never leaks prompts, terminal output, files or tools through human messaging.
 
-The pagination migration and its nine new assertions pass in the clean 68-migration/550-assertion local replay. It is not Released: the hosted dry run stopped before mutation because the current network cannot use the Supabase direct-database IPv6 path. The exact delivered Space slice, deployment order and owner/code split are in `CHAPTER_MISSION_SPACE_SYSTEM_PLAN.md`. The complete feature comparison is in `DISCORD_LIKE_CAPABILITY_PLAN.md`; the wider engineering plan remains in `CONVERSATION_SYSTEM_IMPLEMENTATION_PLAN.md`; the released delivery contract is in `TRUSTED_NOTIFICATION_AND_EMAIL_BOUNDARY.md`.
+The pagination migration and its nine assertions pass in the clean 68-migration/550-assertion local replay and are Released as hosted version `20260819225550`. The exact delivered Space slice, deployment order and owner/code split are in `CHAPTER_MISSION_SPACE_SYSTEM_PLAN.md`. The complete feature comparison is in `DISCORD_LIKE_CAPABILITY_PLAN.md`; the wider engineering plan remains in `CONVERSATION_SYSTEM_IMPLEMENTATION_PLAN.md`; the released delivery contract is in `TRUSTED_NOTIFICATION_AND_EMAIL_BOUNDARY.md`.

@@ -855,7 +855,7 @@ export async function createMyIoTerminalSession(input: {
     _mode: input.mode,
     _connector_origin: input.connectorOrigin,
     _runtime_reference: input.runtimeReference,
-    _runtime_version: input.runtimeVersion,
+    _runtime_version: input.runtimeVersion ?? undefined,
   });
   if (error) throw new Error(error.message);
   const session = parseTerminalSession(data);

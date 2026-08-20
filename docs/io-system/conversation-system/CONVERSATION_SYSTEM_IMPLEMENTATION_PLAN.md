@@ -1,6 +1,6 @@
 # Indus Orbit conversation and Discord-like system plan
 
-Status: active code-level plan, audited 19 August 2026. Direct messages, trusted events and the Chapter/Mission Space foundation are Released. Caller-bound keyset history and Load earlier are Verified locally in migration 68. A clean 68-migration replay, 550 assertions, 46 member tests, typecheck and build pass; migration 68 is not yet hosted. Threads UI, browser personas, shared cache, private Broadcast and wider collaboration remain Partial or Planned. This extends the existing conversation product; it does not authorize a Discord clone or replacement social system.
+Status: active code-level plan, updated 20 August 2026. Direct messages, trusted events, caller-bound keyset history/Load earlier and the Chapter/Mission Space foundation are Released. The last clean database replay passes 68 migrations/550 assertions; 54 member tests, typecheck and build pass. Threads UI, browser personas, shared cache, private Broadcast and wider collaboration remain Partial or Planned. This extends the existing conversation product; it does not authorize a Discord clone or replacement social system.
 
 ## Current Chapter/Mission Space addendum
 

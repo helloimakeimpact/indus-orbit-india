@@ -1,6 +1,6 @@
 # Indus Orbit admin system
 
-Status: separate application foundation; provider/evidence/budget/circuit/commercial database controls Released to demo, with the capped provider-conformance workflow Verified locally on 20 August 2026.
+Status: separate application foundation published to private GitHub `main`; provider/evidence/budget/circuit/commercial and capped provider-conformance database controls Released to demo on 20 August 2026.
 
 ## Ownership boundary
 
@@ -42,7 +42,7 @@ Current demo facts:
 
 No provider call or credit was consumed by this work.
 
-The locally Verified operational-core migration and admin build additionally provide:
+The Released operational/conformance backend and published admin build additionally provide:
 
 - capability-checked workspace budget snapshots;
 - immutable integer-minor-unit budget-version creation with an operator reason;
@@ -53,7 +53,7 @@ The locally Verified operational-core migration and admin build additionally pro
 - explicit China-hosted processing acknowledgement for the DeepSeek API test;
 - 13 passing browser contract tests and the last shared 550-assertion local database baseline.
 
-The operational slice is Released through `20260810002754_create_io_operational_core.sql`; the commercial projection/gate is Released through `20260820001339_add_io_transparent_service_fee.sql`. The separate admin browser application remains local-source verified until it is hosted against the shared project.
+The operational slice is Released through `20260810002754_create_io_operational_core.sql`; the commercial projection/gate is Released through `20260820001339_add_io_transparent_service_fee.sql`; conformance is Released through hosted versions `20260820191544` and `20260820191815` plus `io-provider-conformance` v1. The separate admin browser application is published but remains unhosted.
 
 ## Code complete versus left
 
@@ -66,6 +66,7 @@ Implemented:
 - reasoned, explicitly confirmed and cost-capped OpenAI/DeepSeek conformance controls;
 - safe unconfigured state and environment contract;
 - typed/build verification in both repositories;
+- all 23 tracked admin files published to `helloimakeimpact/admin-indus-orbit` private `main`;
 - demo database migrations and post-apply checks;
 - covering indexes for every foreign-key path in the new assignment, audit and provider-control tables.
 
@@ -76,7 +77,7 @@ Left before production:
 3. replace legacy trust/report, member, content and programme direct-table mutations with transactional capability-checked RPCs;
 4. add optimistic concurrency, mandatory decision reasons, immutable/redacted events, appeals and negative role-matrix tests;
 5. add paginated audit search/export with retention and redaction policy;
-6. release and role-test the locally Verified conformance migration/function, then add commercial evidence mutation/expiry, scheduled health and ledger reconciliation before user traffic;
+6. role-test and explicitly execute the Released conformance boundary, then add commercial evidence mutation/expiry, scheduled health and ledger reconciliation before user traffic;
 7. create staging/production separation, SLOs, alerts, incident response and rollback proof.
 
 ## Security-advisor interpretation

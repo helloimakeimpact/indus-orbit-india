@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
 
-select plan(44);
+select plan(50);
 
 select has_table('public', 'io_workspace_provider_policies', 'workspace provider policy exists');
 select has_column('public', 'io_workspace_provider_policies', 'allow_china_hosted', 'CN hosting consent is explicit');
@@ -55,8 +55,24 @@ select ok(
   'browser users cannot inspect spend reservations'
 );
 select ok(
-  has_function_privilege('service_role', 'public.io_consume_api_key_request(text,text)', 'execute'),
-  'API service can enforce the immutable key policy'
+  to_regclass('private.io_provider_conformance_approvals_capability_version_idx') is not null,
+  'conformance approval capability foreign key is indexed'
+);
+select ok(
+  to_regclass('private.io_provider_conformance_events_actor_user_idx') is not null,
+  'conformance event actor foreign key is indexed'
+);
+select ok(
+  to_regclass('private.io_provider_conformance_events_approval_idx') is not null,
+  'conformance event approval foreign key is indexed'
+);
+select ok(
+  to_regclass('private.io_provider_conformance_events_endpoint_idx') is not null,
+  'conformance event endpoint foreign key is indexed'
+);
+select ok(
+  has_function_privilege('service_role', 'public.io_consume_api_key_request(text,text,integer)', 'execute'),
+  'API service can enforce the immutable key policy through the deployed RPC'
 );
 select is(
   (
@@ -66,6 +82,19 @@ select is(
   ),
   array['_key_hash_hex', '_required_scope', '_limit']::text[],
   'the deployed compatibility overload preserves its existing parameter names'
+);
+select like(
+  (
+    select pg_get_function_arguments(oid)
+    from pg_proc
+    where oid = 'public.io_consume_api_key_request(text,text,integer)'::regprocedure
+  ),
+  '%_limit integer DEFAULT 60%',
+  'the deployed RPC preserves its default argument for two-argument callers'
+);
+select ok(
+  not has_function_privilege('service_role', 'private.io_consume_api_key_request_v2(text,text)', 'execute'),
+  'the immutable policy helper is not directly callable by the API service'
 );
 select ok(
   has_function_privilege(

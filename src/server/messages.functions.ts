@@ -35,8 +35,8 @@ const conversationPageSize = 50;
 export async function getConversation(otherUserId: string, before?: DirectConversationCursor) {
   const { data, error } = await supabase.rpc("list_my_direct_conversation", {
     _other_user_id: otherUserId,
-    _before_created_at: before?.createdAt ?? null,
-    _before_id: before?.id ?? null,
+    _before_created_at: before?.createdAt,
+    _before_id: before?.id,
     _limit: conversationPageSize,
   });
   if (error) throw new Error(error.message);

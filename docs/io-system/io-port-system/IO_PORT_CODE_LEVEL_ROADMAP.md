@@ -1,6 +1,6 @@
 # I/O Port code-level roadmap
 
-Status: active implementation roadmap, audited 19 August 2026. It distinguishes local source work from the deployed demo proof and from work required before a private or paid beta. The current operational verdict is in `IO_PORT_IMPLEMENTATION_STATUS.md`.
+Status: active implementation roadmap, updated 20 August 2026 after the hosted key/residency/conformance release. It distinguishes source work from deployed demo proof and from work required before a private or paid beta. The current operational verdict is in `IO_PORT_IMPLEMENTATION_STATUS.md`.
 
 Related documents:
 
@@ -13,7 +13,7 @@ Related documents:
 
 ## 1. Current implemented proof
 
-The demo project has an RLS-protected I/O control plane, three clearly labelled demo capacity sources and active verified-JWT `io-gateway` version 20. Released web source moves the authenticated product to `/io`; it uses its own shell and does not require Community onboarding. The activation-grade budget/idempotency/ledger/health/circuit, terminal-metadata, safe-timeline and approval-boundary slices described below are Released. Provider traffic remains off.
+The demo project has an RLS-protected I/O control plane, three clearly labelled demo capacity sources, verified-JWT `io-gateway` v23, custom-key `io-openai` v4 and verified-JWT `io-provider-conformance` v1. Released web source moves the authenticated product to `/io`; it uses its own shell and does not require Community onboarding. Provider traffic remains off.
 
 The existing people-messaging system is also now hardened in the demo project: only accepted, non-suspended connections can insert a direct message, recipients can update only `read_at`, and new messages are capped at 4,000 characters.
 
@@ -23,7 +23,7 @@ The shared-message client extraction in `src/features/conversations/` provides c
 | ------------------------ | --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Web control room         | `src/features/io/IoOverview.tsx`                                      | Member UI with local/OpenCode, provider catalogue, route/model selection, budget status, settled cost and safe session/receipt history.                               |
 | Local terminal connector | `src/features/io/opencode.ts`                                         | Loopback-only health → session → prompt with durable lifecycle, cancellation, time/input/1 MiB response bounds. Daemon-confirmed abort and Realtime remain.           |
-| Provider gateway         | `supabase/functions/io-gateway/index.ts`                              | Demo v22 is Released with the streamed 2 MiB success-body cap, strict JSON validation, transparent fee settlement and a shared execution core used by `io-openai` v3. |
+| Provider gateway         | `supabase/functions/io-gateway/index.ts`                              | Demo v23 is Released with the streamed 2 MiB success-body cap, strict JSON validation, transparent fee settlement and a shared execution core used by `io-openai` v4. |
 | Browser data access      | `src/features/io/io.client.ts`                                        | Browser-facing I/O data access, explicitly separated from privileged Edge/RPC work.                                                                                   |
 | Control-plane schema     | `supabase/migrations/20260730155210_create_io_port_control_plane.sql` | Workspaces, memberships, sources, grants, policy records, key metadata and safe audit events.                                                                         |
 | I/O nested shell         | `src/features/io/IoWorkspaceShell.tsx`                                | Working in-page context navigation and evidence guide; preview-only workspace/health/activity claims are removed.                                                     |
@@ -74,7 +74,7 @@ The boundary validates request shape, workspace UUIDs, modes, route strategy/mod
 
 **Released after demo v18:** the client sends an idempotency key; `operations.ts` calls the reserve/finalize/outcome RPC boundary; the resolver excludes open circuits; and the gateway settles/releases exactly once. SQL tests cover budget isolation, idempotency, balanced ledger, stale holds and health/circuit behavior. The hosted release contract confirms the schema/grants; real provider concurrency is still untested.
 
-Still required before broad provider rollout: formal route-policy versions, scheduled health/latency probes, cancellation, streaming/SSE, tools/media/structured output and provider conformance. The current adapter remains intentionally non-streaming and supports only the reviewed OpenAI-compatible and Gemini-native chat surfaces.
+Still required before broad provider rollout: formal route-policy versions, scheduled health/latency probes, cancellation, streaming/SSE, tools/media/structured output and broader provider/capability conformance. The current adapter remains intentionally non-streaming and supports only the reviewed OpenAI-compatible and Gemini-native chat surfaces.
 
 ### 4.2 Make workspace creation atomic
 
@@ -177,7 +177,7 @@ admin-indus-orbit/src/contracts.test.ts
 
 **Released to demo:** immutable workspace budget configuration, budget snapshots, endpoint health/circuit snapshots and reasoned 15-minute manual circuit open/close. All authorization remains in database RPCs; browser state does not grant authority.
 
-**Verified locally, pending hosted release:** provider conformance approval/execution now uses a single-use 30-minute authorization, non-billable discovery first, one bounded eight-token chat check, a USD 0.01 ceiling, a mandatory operator reason, explicit DeepSeek China-processing acknowledgement and redacted evidence. Still required: controlled execution, secret-reference workflows, capacity/grant lifecycle, broader policy review, scheduled health, reconciliation/commercial ledger, retention jobs and export.
+**Released to demo:** provider conformance approval/execution uses a single-use 30-minute authorization, non-billable discovery first, one bounded eight-token chat check, a USD 0.01 ceiling, a mandatory operator reason, explicit DeepSeek China-processing acknowledgement and redacted evidence. No approval/run exists yet. Still required: controlled execution, secret-reference workflows, capacity/grant lifecycle, broader policy review, scheduled health, reconciliation/commercial ledger, retention jobs and export.
 
 Hiding a route through `useAuth().isAdmin` is only presentation. RLS and Edge/RPC checks must authorize every mutation.
 
@@ -255,12 +255,11 @@ Private-beta acceptance requires:
 
 Execute in this order:
 
-1. release migrations `20260820140000` and `20260820150000` to the authenticated Indus Orbit project and regenerate types from the hosted schema;
-2. deploy `io-gateway`, `io-openai` and `io-provider-conformance`, then run hosted RLS/RPC/negative-role contracts before any provider call;
-3. configure `IO_SAFETY_IDENTIFIER_SECRET` and verify OpenAI safety identifiers contain no raw member data;
-4. use the separate admin application to authorize and execute one discovery-first, USD 0.01-capped conformance run; DeepSeek additionally requires explicit China-hosted processing acknowledgement;
-5. keep activation disabled until provider conformance passes **and** reviewed written onward-access authorization exists;
-6. add terminal Realtime/resume/approval enforcement, then streaming/tools/structured output/media suites as separately conformed capabilities;
-7. continue the shared conversation/spatial shell plan without merging human and terminal storage.
+1. verify/configure `IO_SAFETY_IDENTIFIER_SECRET`; the hosted TypeScript schema snapshot already matches migration 73;
+2. host the member/admin web builds and run authenticated member/operator negative-role personas without a provider call;
+3. use the separate admin application to authorize and execute one discovery-first, USD 0.01-capped conformance run; DeepSeek additionally requires explicit China-hosted processing acknowledgement;
+4. keep activation disabled until provider conformance passes **and** reviewed written onward-access authorization exists;
+5. add terminal Realtime/resume/approval enforcement, then streaming/tools/structured output/media suites as separately conformed capabilities;
+6. continue the shared conversation/spatial shell plan without merging human and terminal storage.
 
-No provider call or paid traffic is needed for steps 1–3. Step 4 is the only billable step and requires the operator's explicit confirmation; conformance never activates a route.
+No provider call or paid traffic is needed for steps 1–2. Step 3 is the only billable step and requires the operator's explicit confirmation; conformance never activates a route.
