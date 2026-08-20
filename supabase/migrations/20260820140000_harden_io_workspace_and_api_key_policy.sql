@@ -591,7 +591,7 @@ $function$;
 create or replace function public.io_consume_api_key_request(
   _key_hash_hex text,
   _required_scope text,
-  _ignored_limit integer
+  _limit integer
 )
 returns jsonb
 language sql
