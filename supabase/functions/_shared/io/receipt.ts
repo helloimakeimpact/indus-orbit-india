@@ -15,6 +15,7 @@ export type ProviderAttempt = {
 
 type RouteReceiptInput = {
   requestId: string;
+  apiKeyId?: string;
   selection: RouteSelection | null;
   resultState: "completed" | "failed";
   inputTokens?: number;
@@ -31,8 +32,12 @@ type RouteReceiptInput = {
 
 export async function writeRouteReceipt(admin: SupabaseClient, input: RouteReceiptInput) {
   const selected = input.selection?.connection;
-  const { data, error } = await admin.rpc("io_finalize_priced_route_request", {
+  const rpcName = input.apiKeyId
+    ? "io_finalize_api_key_priced_route_request"
+    : "io_finalize_priced_route_request";
+  const { data, error } = await admin.rpc(rpcName, {
     _request_id: input.requestId,
+    ...(input.apiKeyId ? { _api_key_id: input.apiKeyId } : {}),
     _result_state: input.resultState,
     _route_strategy: input.selection?.strategy ?? "latest_affordable",
     _selection: selected

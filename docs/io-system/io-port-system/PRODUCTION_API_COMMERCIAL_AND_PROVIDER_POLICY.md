@@ -1,6 +1,6 @@
 # I/O production API, commercial and provider policy
 
-Status: **Partial**. The code and hosted database controls described as Released below are live on the Indus Orbit demo project as of 20 August 2026. No external provider is commercially approved or routing production traffic.
+Status: **Partial**. The code and hosted database controls described as Released below are live on the Indus Orbit demo project as of 20 August 2026. The workspace-residency, API-key quota/spend and bounded-conformance additions described as Verified are complete in source and local tests but are not Released: the connected migration write was rejected by the Codex approval service's usage limit. No external provider is commercially approved or routing production traffic.
 
 This is the decision record for the first I/O production lane: OpenAI and DeepSeek, an OpenAI-compatible Indus Orbit API, a transparent 5.5% I/O service fee, and a separate admin control plane. Public provider documentation establishes technical and data-handling facts; it does not by itself establish permission to resell raw API access.
 
@@ -50,6 +50,23 @@ I/O will not copy that behavior into persistent keys. A later browser-direct API
 - exact-origin CORS and CSP.
 
 That mode is **Planned**, not part of the released API. Sources: [OpenRouter OAuth PKCE](https://openrouter.ai/docs/guides/overview/auth/oauth), [OpenRouter API-key creation](https://openrouter.ai/docs/api/api-reference/api-keys/create-keys), [OpenRouter attribution](https://openrouter.ai/docs/app-attribution), [OpenAI authentication guidance](https://developers.openai.com/api/reference/overview#authentication), [DeepSeek Open Platform Terms](https://cdn.deepseek.com/policies/en-US/deepseek-open-platform-terms-of-service.html).
+
+### Verified API-key beta policy awaiting hosted release
+
+Migration `20260820140000_harden_io_workspace_and_api_key_policy.sql` snapshots conservative limits onto every key and enforces them in Postgres. A server environment variable can no longer widen a key after issuance.
+
+| Limit                         | 30-day beta test key default  |
+| ----------------------------- | ----------------------------- |
+| Expiry                        | 30 days; hard maximum 90 days |
+| Requests per minute           | 20                            |
+| Requests per UTC day          | 200                           |
+| Requests per UTC month        | 2,000                         |
+| Customer charge per UTC day   | USD 1.00                      |
+| Customer charge per UTC month | USD 10.00                     |
+
+The request counters are atomic minute/day/month windows. Chat dispatch atomically reserves both the workspace budget and the key's daily/monthly customer-charge allowance; success settles the exact provider cost plus 5.5% fee and failure releases both reservations. Limits are deliberately low for the first beta and may only be widened through a new reviewed policy version, never by changing client input.
+
+OpenAI calls also require `IO_SAFETY_IDENTIFIER_SECRET`, a separate random server-side secret of at least 32 characters. The gateway derives an HMAC identifier from the internal actor ID and sends no raw email or member identifier upstream. This follows OpenAI's current safety-identifier guidance; provider API keys remain separate secrets.
 
 ## 3. Transparent 5.5% price rule
 
@@ -103,12 +120,12 @@ The separate admin application now shows commercial state and terms evidence as 
 
 ## 5. First provider assessment
 
-| Provider lane                | Technical state                                                                  | Data/region evidence                                                                                                        | Training/retention evidence                                                                                                                                                      | Commercial state                   | Activation decision                                                                                                                                     |
-| ---------------------------- | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| OpenAI hosted API            | Adapter and `gpt-5.6-luna` price v2 are staged; key is server-side               | India endpoint currently provides regional storage, not India-only processing; eligible residency controls require approval | API data is not used for training by default unless opted in; default abuse monitoring may retain content up to 30 days; MAM/ZDR require approval and endpoint exceptions remain | `resale_pending`                   | Do not route until written authorization for the aggregator/API-port model, selected region and retention controls are recorded                         |
-| DeepSeek hosted API          | OpenAI-compatible adapter and `deepseek-v4-flash` are staged; key is server-side | Public privacy terms identify processing/storage in China; registry records CN                                              | Public terms describe collection and training use with opt-out; no verified API ZDR, India residency or fixed API retention commitment was found                                 | `resale_pending`                   | Global/China-disclosed cohort only after written onward-access permission and explicit member policy; never an India-only route                         |
-| DeepSeek self-hosted weights | Separate rented/owned-capacity adapter, not the hosted DeepSeek API              | Region is the actual I/O-controlled server location                                                                         | I/O owns serving logs/retention; model/serving licences and supply chain still require review                                                                                    | Planned `self_hosted_licence` lane | Candidate for I/O-rented/owned capacity after exact weight licence, runtime, safety, benchmark and infrastructure approval                              |
-| OpenRouter upstream          | No key or route                                                                  | Downstream provider varies                                                                                                  | Provider policies vary; ZDR/filtering exist                                                                                                                                      | Not authorized                     | Do not use as a raw upstream. Current standard and enterprise terms restrict resale/sublicensing/competing access without bespoke written authorization |
+| Provider lane                | Technical state                                                                                                  | Data/region evidence                                                                                                        | Training/retention evidence                                                                                                                                                      | Commercial state                   | Activation decision                                                                                                                                                                                                   |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| OpenAI hosted API            | Adapter, HMAC safety identifier and `gpt-5.6-luna` price v2 are staged; key is server-side                       | India endpoint currently provides regional storage, not India-only processing; eligible residency controls require approval | API data is not used for training by default unless opted in; default abuse monitoring may retain content up to 30 days; MAM/ZDR require approval and endpoint exceptions remain | `resale_pending`                   | Do not route until written authorization for the aggregator/API-port model, selected region and retention controls are recorded                                                                                       |
+| DeepSeek hosted API          | OpenAI-compatible adapter, CN registry fact and explicit workspace consent filter are staged; key is server-side | Public privacy terms identify processing/storage in China; registry records CN                                              | Public terms describe collection and training use with opt-out; no verified API ZDR, India residency or fixed API retention commitment was found                                 | `resale_pending`                   | Keep present as a global/China-disclosed lane, but exclude it from each workspace by default; route only after written onward-access permission and the workspace accepts China processing plus possible training use |
+| DeepSeek self-hosted weights | Separate rented/owned-capacity adapter, not the hosted DeepSeek API                                              | Region is the actual I/O-controlled server location                                                                         | I/O owns serving logs/retention; model/serving licences and supply chain still require review                                                                                    | Planned `self_hosted_licence` lane | Candidate for I/O-rented/owned capacity after exact weight licence, runtime, safety, benchmark and infrastructure approval                                                                                            |
+| OpenRouter upstream          | No key or route                                                                                                  | Downstream provider varies                                                                                                  | Provider policies vary; ZDR/filtering exist                                                                                                                                      | Not authorized                     | Do not use as a raw upstream. Current standard and enterprise terms restrict resale/sublicensing/competing access without bespoke written authorization                                                               |
 
 OpenAI sources: [data controls](https://developers.openai.com/api/docs/guides/your-data#data-controls-in-the-openai-platform), [retention controls](https://developers.openai.com/api/docs/guides/your-data#data-retention-controls-for-abuse-monitoring), [regional controls](https://developers.openai.com/api/docs/guides/your-data#data-residency-controls), [regional support](https://developers.openai.com/api/docs/guides/your-data#support-by-region), [pricing](https://developers.openai.com/api/docs/pricing).
 
@@ -153,7 +170,7 @@ The runtime must fail closed when evidence expires, a region becomes ineligible,
 
 ## 8. Ordered completion plan
 
-### Code and hosted controls — completed in this release
+### Code and hosted controls — Released before this hardening candidate
 
 - reject persistent I/O API keys from browser-origin requests;
 - keep provider credentials server-only;
@@ -166,23 +183,34 @@ The runtime must fail closed when evidence expires, a region becomes ineligible,
 - update OpenAI Luna price evidence and DeepSeek CN disclosure;
 - deploy `io-gateway` v22 and `io-openai` v3.
 
+### Verified locally; hosted release still required
+
+- explicit workspace opt-in before any CN-resident endpoint enters catalogues or routing;
+- versioned 20/minute, 200/day and 2,000/month request limits on each beta key;
+- atomic USD 1/day and USD 10/month per-key spend reservations and settlement;
+- HMAC-derived OpenAI `safety_identifier` with a dedicated server secret;
+- admin-authorized `io-chat-v1` conformance: discovery first, one eight-token chat check, USD 0.01 maximum, CN acknowledgement and allow-listed redacted evidence only;
+- only a passing run seals the endpoint's tested draft chat/model-listing/usage declaration as Verified; a failed run leaves it unroutable;
+- member/admin UI for residency consent, visible key limits and capped conformance approval;
+- 54 member and 13 admin tests pass locally.
+
 ### Next code slices
 
 1. Add upstream cached/cache-write token parsing and dimension-complete settlement tests.
-2. Build provider conformance jobs with non-billable discovery first, then an owner-approved tiny paid test.
+2. Release the two new migrations and deploy `io-gateway`, `io-openai` and `io-provider-conformance`; do not execute the paid test during deployment.
 3. Add provider model/price sync as reviewed drafts; never auto-publish external changes.
-4. Add per-key daily/monthly spend caps, anomaly suspension, rotation and production-key lifecycle.
+4. Add anomaly suspension, rotation reminders and a separately approved production live-key lifecycle.
 5. Add streaming cancellation/settlement, then a tested Responses subset.
-6. Build contract-expiry, price-staleness, region-policy and incident controls in admin.
+6. Build contract-expiry, price-staleness and incident controls in admin.
 7. Add invoice/credit/FX/tax/refund/reconciliation journals and operator evidence.
 8. Provision `api.indusorbit.com`, docs/status surfaces, monitoring, WAF/rate controls and redacted logs.
 
 ### Owner/legal/operations actions
 
 1. Obtain written OpenAI and DeepSeek decisions for this exact raw API-port/aggregator model and fee treatment.
-2. Choose the OpenAI data-control tier and whether China-hosted DeepSeek is allowed for any initial cohort.
-3. Approve a maximum conformance spend separately for each provider.
-4. Set launch key expiry plus per-minute/day/month request and spend limits.
+2. Choose the OpenAI data-control tier. China-hosted DeepSeek is retained as an explicit opt-in lane and never satisfies India-only routing.
+3. Use the coded USD 0.01 single-run conformance ceiling unless a later reviewed suite deliberately changes it.
+4. Use the coded conservative beta key defaults above; approve a new policy version before any increase.
 5. Nominate privacy, security, billing, provider-operations and incident owners.
 6. Provision DNS/TLS/proxy/hosting and connect/deploy the separate admin repository.
 

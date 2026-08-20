@@ -1,6 +1,6 @@
 # Indus Orbit full finalization execution plan
 
-Status: active, evidence-gated plan updated 20 August 2026. All 71 source migrations, `io-gateway` v22 and bounded `io-openai` v3 plus the transparent commercial gate are Released to the demo. Production readiness is not claimed.
+Status: active, evidence-gated plan updated 20 August 2026. The hosted project remains at 71 migrations with `io-gateway` v22 and bounded `io-openai` v3 Released. Two additional residency/key/conformance migrations and three matching function builds are locally Verified but not Released because the connected migration write hit the Codex approval service usage limit. Production readiness is not claimed.
 
 This plan covers the whole product: public brand site, identity, Community, conversation, I/O Port, terminal/OpenCode, admin, data, operations and commercial readiness. “Done” means code, authorization, data migration, browser behavior, deployment and operating evidence all agree. A source file or attractive UI alone is not completion.
 
@@ -23,6 +23,15 @@ Completed in the demo environment:
 - last clean local 68-migration replay with 550/550 assertions; the hosted project has 71 migrations with direct-pagination, I/O API-key, transparent-fee and commercial-gate contracts, while the local 71-migration rerun awaits Docker repair;
 - exact 5.5% provider-cost/fee/customer-total evidence, browser-origin persistent-key rejection and fail-closed written onward-access gates; OpenAI and DeepSeek remain `resale_pending`;
 - five-provider/model/endpoint inventory with three capacity sources/grants, while route receipts and provider attempts remain zero.
+
+Locally Verified after that checkpoint:
+
+- explicit workspace consent before any CN-resident route is catalogued or selected;
+- immutable beta-key limits: 30-day default, 20 requests/minute, 200/day, 2,000/month, USD 1/day and USD 10/month;
+- atomic per-key spend reserve/settle/release in the same database transaction as workspace accounting;
+- HMAC-derived OpenAI safety identifiers;
+- operator-reasoned, confirmation-gated, discovery-first `io-chat-v1` conformance with an eight-token request and USD 0.01 maximum;
+- 54 member tests and 13 admin tests.
 
 The product is still a release candidate foundation, not a finished production system.
 
@@ -112,13 +121,13 @@ User input needed: approve the first group-collaboration scope and moderation/re
 
 Deliverables:
 
-1. Build the operator conformance runner and evidence UI; validate chat, streaming, tools, structured output, usage, errors, cancellation and safety one provider at a time.
+1. **Verified locally:** the first operator conformance runner/evidence UI covers model discovery, bounded text chat, usage, response shape, cost, reason, CN acknowledgement and redacted evidence for staged OpenAI/DeepSeek endpoints. Release it first; streaming, tools, structured output, cancellation and media remain separate future suites.
 2. **Released to demo:** request idempotency, hard workspace budgets, reserve/settle accounting, retry-cost reservation, circuit breakers and outcome sampling. Still required: controlled hosted concurrency evidence, scheduled health/latency probes, distributed retry/rate budgets and kill-switch drills.
 3. Complete dynamic model refresh with evidence timestamps, region/residency labels that are never inferred, price versions and approved FX snapshots.
 4. Validate and expand the live five-provider registry toward the reviewed 20-provider inventory using partnership, owned/rented and donated-capacity adapters.
 5. Add OpenAI-compatible partner and local endpoints while preserving provider-specific adapters where semantics differ.
 6. Add member usage, credit, sponsorship, estimate, receipt and failure/offline UI.
-7. Activate one provider at a time only after contract tests; make one bounded live conformance call only with explicit spend approval.
+7. Activate one provider at a time only after contract tests; the first live conformance call requires an explicit admin reason/confirmation and is capped at USD 0.01.
 8. **Released foundation:** versioned 5.5% fee settlement and written onward-access activation gates. Still required: cached/tools/media/storage/regional billing dimensions, credits/FX/tax/invoices/refunds and provider reconciliation.
 
 Exit criteria:
@@ -129,7 +138,7 @@ Exit criteria:
 - provider disablement is immediate and audited;
 - published model/price/residency claims have current evidence.
 
-User input needed: written OpenAI/DeepSeek onward-access decisions, permitted regions/data controls, separate conformance spend ceilings, production API DNS/TLS owner and donated-capacity rules. The fee is fixed at 5.5% for policy version 1.
+User input needed: restore/approve the hosted migration/deployment path, add the safety-identifier secret, obtain written OpenAI/DeepSeek onward-access decisions, choose OpenAI data controls, explicitly execute the first capped conformance check, assign production API DNS/TLS ownership and approve donated-capacity rules. The fee is fixed at 5.5% for policy version 1; the first conformance ceiling is USD 0.01.
 
 ## Phase 6 — complete the I/O terminal and OpenCode system
 

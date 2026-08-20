@@ -5,6 +5,7 @@ export type RouteInput = {
   strategy?: RouteStrategy;
   requestedModelId?: string;
   entitledCapacitySourceIds: ReadonlySet<string>;
+  connectionFilter?: (connection: ProviderConnection) => boolean;
 };
 
 export type RoutingSettings = {
@@ -79,6 +80,7 @@ export function selectProviderRoute(
   const requiredContext = inputTokens + settings.outputTokenAllowance;
   const eligible = registryConnections.filter((connection) => {
     if (!input.entitledCapacitySourceIds.has(connection.capacitySourceId)) return false;
+    if (input.connectionFilter && !input.connectionFilter(connection)) return false;
     if (isDeprecated(connection, now)) return false;
     if (dateMillis(connection.modelReleaseDate) === null) return false;
     if (connection.maxContextTokens !== null && connection.maxContextTokens < requiredContext)

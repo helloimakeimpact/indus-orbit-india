@@ -60,9 +60,10 @@ IO_PROVIDER_XAI_API_KEY
 IO_PROVIDER_GEMINI_API_KEY
 IO_PROVIDER_DEEPSEEK_API_KEY
 IO_PROVIDER_GROQ_API_KEY
+IO_SAFETY_IDENTIFIER_SECRET
 ```
 
-The gateway stores only each secret name in a private connection record, resolves it server-side only after a service-role-only resolver approves the endpoint, and queries all eligible providers. The reference must match `IO_PROVIDER_[A-Z0-9_]+_API_KEY`; endpoint URLs and connection state belong in the private registry; secret values never belong in a table, browser, log, document, or repository. The five current records are `testing`, so the gateway cannot resolve or use their values yet.
+The gateway stores only each provider secret name in a private connection record, resolves it server-side only after a service-role-only resolver approves the endpoint, and queries all eligible providers. The reference must match `IO_PROVIDER_[A-Z0-9_]+_API_KEY`; endpoint URLs and connection state belong in the private registry; secret values never belong in a table, browser, log, document, or repository. `IO_SAFETY_IDENTIFIER_SECRET` is different: use a separately generated random value of at least 32 characters so OpenAI receives an HMAC-derived, privacy-preserving actor identifier instead of a raw member ID. The five current provider records are `testing`, so the gateway cannot route them yet.
 
 Legacy `IO_PARTNER_*` secrets, if present, do not represent the current registry contract. Do not overwrite one legacy name repeatedly to add providers. `IO_PARTNER_DEFAULT_MODEL` remains retired; the reviewed registry/policy selects the model.
 
@@ -75,6 +76,8 @@ Optional server-only selector controls have safe defaults:
 | `IO_MODEL_SELECTION_TIER`                     | `balanced` | One of `economy`, `balanced`, or `premium`. Models marked `manual_only` are never auto-selected. |
 | `IO_MODEL_SELECTION_FRESHNESS_DAYS`           | `180`      | How close to the newest reviewed release a candidate must be.                                    |
 | `IO_MODEL_SELECTION_AFFORDABILITY_MULTIPLIER` | `1.35`     | Maximum estimated-cost multiple above the cheapest fresh candidate.                              |
+
+API-key beta limits are no longer environment-variable controls in the Verified hardening candidate. Each issued key snapshots policy version 1: 30-day default expiry, 20 requests/minute, 200/day, 2,000/month, USD 1/day and USD 10/month. Change them only through a reviewed migration/policy version.
 
 For each request, I/O considers only models whose provider is active; model is listed, release-dated and not deprecated; endpoint is active/member-visible; capacity source is actively entitled; latest capability certificate verifies chat; and a published price card is effective. The local resolver also excludes open circuits. `latest_affordable` uses tier, freshness and affordability bands; `lowest_cost` selects the least costly eligible candidate; an explicit model must be in the reviewed catalogue. Mixed currencies fail closed until FX data is reviewed.
 
@@ -96,12 +99,15 @@ The deployed gateway accepts the standard local Vite origins on ports `5173` and
 
 ## Release the locally Verified slice
 
-1. Authenticate the Supabase CLI against linked project `jpwvgpnbkrktipwhvqss`.
-2. Inspect hosted migration drift and apply `20260810002754_create_io_operational_core.sql` and `20260810010415_create_io_terminal_session_foundation.sql`.
-3. Deploy the updated `io-gateway` with JWT verification enabled.
-4. Regenerate/compare hosted database types and run RLS/RPC/admin contract tests.
-5. Deploy the member and admin web builds only after steps 2–4 pass.
-6. Do not make a provider request during release verification. Conformance traffic is a separate spend-approved operation.
+1. Use the connected Supabase migration API for project `jpwvgpnbkrktipwhvqss`; ordinary linked pushes remain unsafe because of historical aliases.
+2. Apply `20260820140000_harden_io_workspace_and_api_key_policy.sql`, then `20260820150000_add_io_provider_conformance_workflow.sql`.
+3. Add `IO_SAFETY_IDENTIFIER_SECRET`; do not replace a provider key or reuse a browser secret.
+4. Deploy `io-gateway` with JWT verification enabled, `io-openai` with its existing custom-key boundary, and `io-provider-conformance` with JWT verification enabled.
+5. Regenerate/compare hosted types and run RLS/RPC/advisor/member/admin checks.
+6. Deploy the member/admin web builds only after the database/function checks pass.
+7. Do not make a provider request during release verification. The admin reason, confirmation, CN acknowledgement and USD 0.01 cap are a separate explicit operation.
+
+Current release note: the connected project read succeeded, but the migration write was rejected by the Codex approval service's usage limit. These two migrations and three function deployments are therefore Verified in source, not Released.
 
 ## Guardrails before public beta
 

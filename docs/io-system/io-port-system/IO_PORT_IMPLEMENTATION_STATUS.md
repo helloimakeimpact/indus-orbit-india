@@ -203,13 +203,13 @@ Durable terminal session/member/event/approval foundations are locally Verified,
 ### 5.3 Missing operational surfaces
 
 - operator provider/connection/model/endpoint/evidence/price onboarding;
-- conformance runner and signed review/activation flow;
+- hosted release and controlled execution of the locally Verified, reasoned, CN-aware, USD 0.01-capped `io-chat-v1` conformance runner; broader streaming/tools/media suites remain Planned;
 - scheduled provider health probes and a member-safe live status page;
-- member policy, provider/model, BYOK and fallback controls; member budget status is locally implemented;
+- broader provider/model, BYOK and fallback controls; the CN workspace opt-in policy is locally Verified and member budget status is Released;
 - pre-run estimate and candidate explanation; post-run route receipts are already present;
 - usage, credits, invoice, export, and reconciliation views;
 - on-call dashboards, alerts, SLOs, incident playbooks and key rotation (the first provider kill switch is now implemented);
-- streaming/Responses compatibility, SDK/CLI examples, production key plans/quotas and compatibility/load evidence; the bounded v1 key/models/non-streaming-chat contract is Released.
+- streaming/Responses compatibility, SDK/CLI examples, production live-key plans and compatibility/load evidence; conservative beta request/spend quotas are locally Verified and the bounded v1 key/models/non-streaming-chat contract is Released.
 
 ## 6. Provider secrets and member I/O API keys
 
@@ -228,11 +228,12 @@ IO_PROVIDER_XAI_API_KEY
 IO_PROVIDER_GEMINI_API_KEY
 IO_PROVIDER_DEEPSEEK_API_KEY
 IO_PROVIDER_GROQ_API_KEY
+IO_SAFETY_IDENTIFIER_SECRET     # separate 32+ character random HMAC secret
 IO_PROVIDER_SARVAM_API_KEY       # only after partnership/conformance
 IO_PROVIDER_OPENROUTER_API_KEY   # only if OpenRouter capacity is contracted
 ```
 
-The first five names exist in the Supabase Edge Function secret store. Their values were not read, copied or exposed during registry deployment. Additional provider and owned-capacity secrets follow the same unique-name rule. Canonical endpoint URLs, provider identity, account scope, and the secret **name** belong in `private.io_endpoint_connections`; the secret value remains only in the Edge Function secret store.
+The first five provider names exist in the Supabase Edge Function secret store. Their values were not read, copied or exposed during registry deployment. `IO_SAFETY_IDENTIFIER_SECRET` still requires owner configuration before an OpenAI call. Additional provider and owned-capacity secrets follow the same unique-name rule. Canonical endpoint URLs, provider identity, account scope, and the provider secret **name** belong in `private.io_endpoint_connections`; the secret value remains only in the Edge Function secret store.
 
 The deployed gateway reads a provider-specific value only after the service-role-only registry resolver approves its connection and the reference matches `IO_PROVIDER_[A-Z0-9_]+_API_KEY`. The current five rows use the five exact first-cohort names above, but they remain testing and therefore resolve to no route.
 

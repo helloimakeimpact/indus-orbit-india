@@ -162,9 +162,24 @@ export type IoApiKeyMetadata = {
   expiresAt: string | null;
   lastUsedAt: string | null;
   createdAt: string;
+  limitPolicyVersion: number;
+  requestsPerMinute: number;
+  requestsPerDay: number;
+  requestsPerMonth: number;
+  spendCurrencyCode: string;
+  spendPerDayNanos: number;
+  spendPerMonthNanos: number;
 };
 
 export type IoCreatedApiKey = IoApiKeyMetadata & { rawKey: string };
+
+export type IoWorkspaceProviderPolicy = {
+  workspaceId: string;
+  allowChinaHosted: boolean;
+  allowTrainingPossible: boolean;
+  acknowledgedAt: string | null;
+  updatedAt: string | null;
+};
 
 type UnknownRecord = Record<string, unknown>;
 
@@ -450,7 +465,9 @@ export async function getIoCapacitySources(workspaceId: string): Promise<IoCapac
 export async function listMyIoApiKeys(workspaceId: string): Promise<IoApiKeyMetadata[]> {
   const { data, error } = await supabase
     .from("io_api_key_metadata")
-    .select("id, name, key_prefix, last_four, scopes, status, expires_at, last_used_at, created_at")
+    .select(
+      "id, name, key_prefix, last_four, scopes, status, expires_at, last_used_at, created_at, limit_policy_version, requests_per_minute, requests_per_day, requests_per_month, spend_currency_code, spend_per_day_nanos, spend_per_month_nanos",
+    )
     .eq("workspace_id", workspaceId)
     .order("created_at", { ascending: false });
   if (error) throw new Error(error.message);
@@ -462,6 +479,13 @@ export async function listMyIoApiKeys(workspaceId: string): Promise<IoApiKeyMeta
       !value.last_four ||
       !value.scopes ||
       !value.created_at ||
+      !value.limit_policy_version ||
+      !value.requests_per_minute ||
+      !value.requests_per_day ||
+      !value.requests_per_month ||
+      !value.spend_currency_code ||
+      value.spend_per_day_nanos === null ||
+      value.spend_per_month_nanos === null ||
       !["active", "revoked", "expired"].includes(value.status ?? "")
     ) {
       return [];
@@ -477,6 +501,13 @@ export async function listMyIoApiKeys(workspaceId: string): Promise<IoApiKeyMeta
         expiresAt: value.expires_at,
         lastUsedAt: value.last_used_at,
         createdAt: value.created_at,
+        limitPolicyVersion: value.limit_policy_version,
+        requestsPerMinute: value.requests_per_minute,
+        requestsPerDay: value.requests_per_day,
+        requestsPerMonth: value.requests_per_month,
+        spendCurrencyCode: value.spend_currency_code,
+        spendPerDayNanos: value.spend_per_day_nanos,
+        spendPerMonthNanos: value.spend_per_month_nanos,
       },
     ];
   });
@@ -501,6 +532,13 @@ export async function createMyIoTestApiKey(
   const expiresAt = readString(key, "expiresAt");
   const createdAt = readString(key, "createdAt");
   const rawKey = readString(key, "rawKey");
+  const limitPolicyVersion = readNonNegativeInteger(key, "limitPolicyVersion");
+  const requestsPerMinute = readNonNegativeInteger(key, "requestsPerMinute");
+  const requestsPerDay = readNonNegativeInteger(key, "requestsPerDay");
+  const requestsPerMonth = readNonNegativeInteger(key, "requestsPerMonth");
+  const spendCurrencyCode = readString(key, "spendCurrencyCode");
+  const spendPerDayNanos = readNonNegativeIntegerString(key, "spendPerDayNanos");
+  const spendPerMonthNanos = readNonNegativeIntegerString(key, "spendPerMonthNanos");
   const scopes = Array.isArray(key.scopes)
     ? key.scopes.filter((scope): scope is string => typeof scope === "string")
     : [];
@@ -513,6 +551,14 @@ export async function createMyIoTestApiKey(
     !expiresAt ||
     !createdAt ||
     !rawKey ||
+    limitPolicyVersion === null ||
+    limitPolicyVersion < 1 ||
+    requestsPerMinute === null ||
+    requestsPerDay === null ||
+    requestsPerMonth === null ||
+    !spendCurrencyCode ||
+    spendPerDayNanos === null ||
+    spendPerMonthNanos === null ||
     scopes.length === 0
   ) {
     throw new Error("API key creation returned an invalid result.");
@@ -528,7 +574,50 @@ export async function createMyIoTestApiKey(
     lastUsedAt: null,
     createdAt,
     rawKey,
+    limitPolicyVersion,
+    requestsPerMinute,
+    requestsPerDay,
+    requestsPerMonth,
+    spendCurrencyCode,
+    spendPerDayNanos,
+    spendPerMonthNanos,
   };
+}
+
+function parseWorkspaceProviderPolicy(value: unknown): IoWorkspaceProviderPolicy {
+  const policy = asRecord(value);
+  const workspaceId = policy ? readString(policy, "workspaceId") : null;
+  if (!policy || !workspaceId) throw new Error("The workspace provider policy is invalid.");
+  return {
+    workspaceId,
+    allowChinaHosted: policy.allowChinaHosted === true,
+    allowTrainingPossible: policy.allowTrainingPossible === true,
+    acknowledgedAt: readNullableString(policy, "acknowledgedAt"),
+    updatedAt: readNullableString(policy, "updatedAt"),
+  };
+}
+
+export async function getMyIoWorkspaceProviderPolicy(
+  workspaceId: string,
+): Promise<IoWorkspaceProviderPolicy> {
+  const { data, error } = await supabase.rpc("get_my_io_workspace_provider_policy", {
+    _workspace_id: workspaceId,
+  });
+  if (error) throw new Error(error.message);
+  return parseWorkspaceProviderPolicy(data);
+}
+
+export async function setMyIoWorkspaceProviderPolicy(
+  workspaceId: string,
+  allowChinaHosted: boolean,
+): Promise<IoWorkspaceProviderPolicy> {
+  const { data, error } = await supabase.rpc("set_my_io_workspace_provider_policy", {
+    _workspace_id: workspaceId,
+    _allow_china_hosted: allowChinaHosted,
+    _allow_training_possible: allowChinaHosted,
+  });
+  if (error) throw new Error(error.message);
+  return parseWorkspaceProviderPolicy(data);
 }
 
 export async function revokeMyIoApiKey(keyId: string) {

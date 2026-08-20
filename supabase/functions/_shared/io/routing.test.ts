@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { GatewayError } from "./errors.ts";
+import { workspaceAllowsProvider } from "./policy.ts";
 import { selectProviderRoute, selectRouteAttempts } from "./routing.ts";
 import type { ProviderConnection } from "./types.ts";
 
@@ -174,5 +175,30 @@ describe("selectRouteAttempts", () => {
   it("requires an explicit bounded setting for fallback", () => {
     assert.deepEqual(selectRouteAttempts(["a", "b", "c"], "2"), ["a", "b"]);
     assert.throws(() => selectRouteAttempts(["a"], "4"), /integer from 1 to 3/);
+  });
+});
+
+describe("workspace provider residency policy", () => {
+  it("keeps CN routes excluded until both disclosures are accepted", () => {
+    const cnRoute = { residencyCountryCode: "CN" };
+    assert.equal(
+      workspaceAllowsProvider({ allowChinaHosted: false, allowTrainingPossible: false }, cnRoute),
+      false,
+    );
+    assert.equal(
+      workspaceAllowsProvider({ allowChinaHosted: true, allowTrainingPossible: false }, cnRoute),
+      false,
+    );
+    assert.equal(
+      workspaceAllowsProvider({ allowChinaHosted: true, allowTrainingPossible: true }, cnRoute),
+      true,
+    );
+    assert.equal(
+      workspaceAllowsProvider(
+        { allowChinaHosted: false, allowTrainingPossible: false },
+        { residencyCountryCode: "IN" },
+      ),
+      true,
+    );
   });
 });

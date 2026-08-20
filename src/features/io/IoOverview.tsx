@@ -47,6 +47,7 @@ import {
   appendMyIoTerminalEvent,
   getIoAuditEvents,
   getMyIoBudgetStatus,
+  getMyIoWorkspaceProviderPolicy,
   getIoCapacitySources,
   getIoRouteReceipts,
   getIoRouteCatalog,
@@ -55,6 +56,7 @@ import {
   listMyIoTerminalSessions,
   listMyIoTerminalEvents,
   runPartnerRoute,
+  setMyIoWorkspaceProviderPolicy,
   revokeMyIoApiKey,
   type IoApiKeyMetadata,
   type IoAuditEvent,
@@ -66,6 +68,7 @@ import {
   type IoTerminalSession,
   type IoTerminalEvent,
   type IoWorkspace,
+  type IoWorkspaceProviderPolicy,
   type PartnerRunResult,
 } from "@/features/io/io.client";
 
@@ -88,6 +91,8 @@ export function IoOverview() {
   const [newRawApiKey, setNewRawApiKey] = useState<string | null>(null);
   const [apiKeyBusy, setApiKeyBusy] = useState<string | null>(null);
   const [routeCatalog, setRouteCatalog] = useState<IoRouteCatalog | null>(null);
+  const [providerPolicy, setProviderPolicy] = useState<IoWorkspaceProviderPolicy | null>(null);
+  const [providerPolicyBusy, setProviderPolicyBusy] = useState(false);
   const [terminalSessions, setTerminalSessions] = useState<IoTerminalSession[]>([]);
   const [terminalTimeline, setTerminalTimeline] = useState<IoTerminalEvent[]>([]);
   const [selectedTerminalSessionId, setSelectedTerminalSessionId] = useState<string | null>(null);
@@ -137,6 +142,7 @@ export function IoOverview() {
         setApiKeys([]);
         setNewRawApiKey(null);
         setRouteCatalog(null);
+        setProviderPolicy(null);
         setTerminalSessions([]);
         setTerminalTimeline([]);
         setSelectedTerminalSessionId(null);
@@ -152,6 +158,7 @@ export function IoOverview() {
         budgetResult,
         apiKeysResult,
         terminalSessionsResult,
+        providerPolicyResult,
         catalogResult,
       ] = await Promise.allSettled([
         getIoCapacitySources(nextWorkspace.id),
@@ -160,6 +167,7 @@ export function IoOverview() {
         getMyIoBudgetStatus(nextWorkspace.id),
         listMyIoApiKeys(nextWorkspace.id),
         listMyIoTerminalSessions(nextWorkspace.id),
+        getMyIoWorkspaceProviderPolicy(nextWorkspace.id),
         getIoRouteCatalog(nextWorkspace.id),
       ]);
       if (loadSequence !== workspaceLoadSequence.current) return;
@@ -169,6 +177,7 @@ export function IoOverview() {
       if (budgetResult.status === "rejected") throw budgetResult.reason;
       if (apiKeysResult.status === "rejected") throw apiKeysResult.reason;
       if (terminalSessionsResult.status === "rejected") throw terminalSessionsResult.reason;
+      if (providerPolicyResult.status === "rejected") throw providerPolicyResult.reason;
       setSources(sourcesResult.value);
       setEvents(eventsResult.value);
       setReceipts(receiptsResult.value);
@@ -176,6 +185,7 @@ export function IoOverview() {
       setApiKeys(apiKeysResult.value);
       setNewRawApiKey(null);
       setTerminalSessions(terminalSessionsResult.value);
+      setProviderPolicy(providerPolicyResult.value);
       setTerminalTimeline([]);
       setSelectedTerminalSessionId(null);
       if (catalogResult.status === "fulfilled") {
@@ -286,6 +296,26 @@ export function IoOverview() {
       toast.error(error instanceof Error ? error.message : "Could not revoke the API key.");
     } finally {
       setApiKeyBusy(null);
+    }
+  }
+
+  async function toggleChinaHostedRoute() {
+    if (!workspace || providerPolicyBusy) return;
+    const next = !providerPolicy?.allowChinaHosted;
+    setProviderPolicyBusy(true);
+    try {
+      const updated = await setMyIoWorkspaceProviderPolicy(workspace.id, next);
+      setProviderPolicy(updated);
+      toast.success(
+        next
+          ? "China-hosted provider routes are allowed for this workspace."
+          : "China-hosted provider routes are blocked for this workspace.",
+      );
+      await loadWorkspace(workspace.id);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not update provider policy.");
+    } finally {
+      setProviderPolicyBusy(false);
     }
   }
 
@@ -586,6 +616,25 @@ export function IoOverview() {
                   Partner calls are routed only through the I/O gateway. Browser code never receives
                   a provider credential. A configured partner source and entitlement are required.
                 </p>
+                <div className="flex flex-col gap-2 rounded-lg border border-amber-300 bg-amber-50 p-2 text-amber-950 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-[10px] leading-4">
+                    <strong>China-hosted lane:</strong> DeepSeek may process and store data in
+                    China, and verified API zero-retention/no-training controls are not yet
+                    recorded. It is excluded unless this workspace explicitly accepts both
+                    conditions.
+                  </p>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={providerPolicy?.allowChinaHosted ? "default" : "outline"}
+                    className="shrink-0 text-[10px]"
+                    disabled={!workspace || providerPolicyBusy}
+                    onClick={() => void toggleChinaHostedRoute()}
+                  >
+                    {providerPolicyBusy ? <LoaderCircle className="animate-spin" /> : <Globe2 />}
+                    {providerPolicy?.allowChinaHosted ? "Allowed · turn off" : "Review + allow"}
+                  </Button>
+                </div>
                 <div className="flex flex-wrap gap-1.5" aria-label="Partner routing strategy">
                   {(
                     [
@@ -798,8 +847,9 @@ export function IoOverview() {
             </div>
             <p className="text-[10px] leading-4 text-muted-foreground">
               Workspace owners and admins can create keys. New keys receive model-list and inference
-              scopes, expire automatically, and are limited per minute at the server boundary. Do
-              not put an I/O key in browser JavaScript; use the signed-in I/O web workspace instead.
+              scopes and expire after 30 days. The beta policy enforces 20 requests/minute, 200/day,
+              2,000/month, plus USD 1/day and USD 10/month customer-charge ceilings. Do not put an
+              I/O key in browser JavaScript; use the signed-in I/O web workspace instead.
             </p>
 
             {newRawApiKey ? (
@@ -843,6 +893,12 @@ export function IoOverview() {
                       <p className="mt-1 truncate font-mono text-[9px] text-muted-foreground">
                         {key.keyPrefix}…{key.lastFour} · expires{" "}
                         {key.expiresAt ? new Date(key.expiresAt).toLocaleDateString() : "never"}
+                      </p>
+                      <p className="mt-1 text-[9px] text-muted-foreground">
+                        {key.requestsPerMinute}/min · {key.requestsPerDay}/day ·{" "}
+                        {key.requestsPerMonth}/month ·{" "}
+                        {formatNanos(key.spendPerDayNanos, key.spendCurrencyCode)}
+                        /day · {formatNanos(key.spendPerMonthNanos, key.spendCurrencyCode)}/month
                       </p>
                     </div>
                     <Badge

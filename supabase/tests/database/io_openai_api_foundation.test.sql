@@ -71,7 +71,7 @@ select ok(
 select ok(
   not has_function_privilege(
     'authenticated',
-    'public.io_consume_api_key_request(text,text,integer)',
+    'public.io_consume_api_key_request(text,text)',
     'execute'
   ),
   'browser users cannot authenticate or meter an API key directly'
@@ -80,19 +80,19 @@ select ok(
 select ok(
   has_function_privilege(
     'service_role',
-    'public.io_consume_api_key_request(text,text,integer)',
+    'public.io_consume_api_key_request(text,text)',
     'execute'
   ),
   'service role can use the API-key authentication boundary'
 );
 
 select ok(
-  not has_table_privilege('authenticated', 'private.io_api_key_rate_windows', 'select'),
+  not has_table_privilege('authenticated', 'private.io_api_key_request_windows_v2', 'select'),
   'browser users cannot inspect service rate windows'
 );
 
 select ok(
-  not has_table_privilege('authenticated', 'private.io_api_key_rate_windows', 'insert'),
+  not has_table_privilege('authenticated', 'private.io_api_key_request_windows_v2', 'insert'),
   'browser users cannot forge service rate windows'
 );
 
@@ -189,11 +189,14 @@ select throws_ok(
 reset role;
 set local role service_role;
 
+update public.io_api_keys
+set requests_per_minute = 1
+where id = ((select payload ->> 'id' from pg_temp.api_key_result))::uuid;
+
 select is(
   public.io_consume_api_key_request(
     encode(extensions.digest(convert_to((select payload ->> 'rawKey' from pg_temp.api_key_result), 'UTF8'), 'sha256'), 'hex'),
-    'models:read',
-    1
+    'models:read'
   ) ->> 'allowed',
   'true',
   'first scoped API request is allowed atomically'
@@ -202,8 +205,7 @@ select is(
 select is(
   public.io_consume_api_key_request(
     encode(extensions.digest(convert_to((select payload ->> 'rawKey' from pg_temp.api_key_result), 'UTF8'), 'sha256'), 'hex'),
-    'models:read',
-    1
+    'models:read'
   ) ->> 'allowed',
   'false',
   'request above the key minute limit is rejected'
@@ -212,15 +214,16 @@ select is(
 select is(
   (
     select request_count
-    from private.io_api_key_rate_windows
+    from private.io_api_key_request_windows_v2
     where api_key_id = ((select payload ->> 'id' from pg_temp.api_key_result))::uuid
+      and period_kind = 'minute'
   ),
   1,
   'rate window never increments past its enforced limit'
 );
 
 select is(
-  public.io_consume_api_key_request(repeat('0', 64), 'models:read', 60) ->> 'authenticated',
+  public.io_consume_api_key_request(repeat('0', 64), 'models:read') ->> 'authenticated',
   'false',
   'unknown key hash fails with no identity disclosure'
 );
@@ -259,8 +262,7 @@ set local role service_role;
 select is(
   public.io_consume_api_key_request(
     encode(extensions.digest(convert_to((select payload ->> 'rawKey' from pg_temp.api_key_result), 'UTF8'), 'sha256'), 'hex'),
-    'models:read',
-    60
+    'models:read'
   ) ->> 'authenticated',
   'false',
   'revoked key cannot authenticate'

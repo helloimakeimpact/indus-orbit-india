@@ -177,7 +177,7 @@ admin-indus-orbit/src/contracts.test.ts
 
 **Released to demo:** immutable workspace budget configuration, budget snapshots, endpoint health/circuit snapshots and reasoned 15-minute manual circuit open/close. All authorization remains in database RPCs; browser state does not grant authority.
 
-Still required: provider conformance execution/approval, secret-reference workflows, capacity/grant lifecycle, policy review, scheduled health, reconciliation/commercial ledger, retention jobs and export.
+**Verified locally, pending hosted release:** provider conformance approval/execution now uses a single-use 30-minute authorization, non-billable discovery first, one bounded eight-token chat check, a USD 0.01 ceiling, a mandatory operator reason, explicit DeepSeek China-processing acknowledgement and redacted evidence. Still required: controlled execution, secret-reference workflows, capacity/grant lifecycle, broader policy review, scheduled health, reconciliation/commercial ledger, retention jobs and export.
 
 Hiding a route through `useAuth().isAdmin` is only presentation. RLS and Edge/RPC checks must authorize every mutation.
 
@@ -255,12 +255,12 @@ Private-beta acceptance requires:
 
 Execute in this order:
 
-1. use the authenticated linked Supabase project to reconcile the known hosted migration aliases and inspect drift;
-2. apply operational-core, terminal-foundation and terminal-timeline/approval migrations together;
-3. deploy/verify the updated gateway before deploying matching web clients;
-4. regenerate database types and run hosted RLS/RPC/admin/browser contracts;
-5. implement provider conformance/evidence approval and activate one bounded provider route only with spend permission;
-6. build terminal realtime/resume/approval enforcement and the OpenAI-compatible I/O API;
+1. release migrations `20260820140000` and `20260820150000` to the authenticated Indus Orbit project and regenerate types from the hosted schema;
+2. deploy `io-gateway`, `io-openai` and `io-provider-conformance`, then run hosted RLS/RPC/negative-role contracts before any provider call;
+3. configure `IO_SAFETY_IDENTIFIER_SECRET` and verify OpenAI safety identifiers contain no raw member data;
+4. use the separate admin application to authorize and execute one discovery-first, USD 0.01-capped conformance run; DeepSeek additionally requires explicit China-hosted processing acknowledgement;
+5. keep activation disabled until provider conformance passes **and** reviewed written onward-access authorization exists;
+6. add terminal Realtime/resume/approval enforcement, then streaming/tools/structured output/media suites as separately conformed capabilities;
 7. continue the shared conversation/spatial shell plan without merging human and terminal storage.
 
-No secret value, provider call or paid traffic is needed for steps 1–4. Step 5 requires explicit operator approval and a small spend ceiling.
+No provider call or paid traffic is needed for steps 1–3. Step 4 is the only billable step and requires the operator's explicit confirmation; conformance never activates a route.

@@ -143,6 +143,21 @@ export function calculateReservationMinor(
   outputTokenLimit = 1_024,
   feeBasisPoints = 0,
 ) {
+  const reservation = calculateReservationNanos(
+    attempts,
+    messages,
+    outputTokenLimit,
+    feeBasisPoints,
+  );
+  return nanosToMinorUnits(reservation.customerChargeNanos, reservation.currencyCode);
+}
+
+export function calculateReservationNanos(
+  attempts: Array<{ connection: ProviderConnection }>,
+  messages: GatewayMessage[],
+  outputTokenLimit = 1_024,
+  feeBasisPoints = 0,
+) {
   if (attempts.length === 0) {
     throw new GatewayError("not_configured", 503, "No provider attempt is available to reserve.");
   }
@@ -166,10 +181,10 @@ export function calculateReservationMinor(
       ),
     0n,
   );
-  return nanosToMinorUnits(
-    safeNumber(totalWorstCaseNanos, "Worst-case attempt reservation"),
+  return {
+    customerChargeNanos: safeNumber(totalWorstCaseNanos, "Worst-case attempt reservation"),
     currencyCode,
-  );
+  };
 }
 
 export function calculateSettlement(input: {
@@ -216,6 +231,27 @@ function mapOperationalError(error: { message?: string } | null): never {
   if (message.includes("Workspace budget would be exceeded")) {
     throw new GatewayError("budget_exceeded", 402, "This route would exceed the workspace budget.");
   }
+  if (message.includes("API key daily spend limit would be exceeded")) {
+    throw new GatewayError(
+      "budget_exceeded",
+      402,
+      "This route would exceed the API key daily spend limit.",
+    );
+  }
+  if (message.includes("API key monthly spend limit would be exceeded")) {
+    throw new GatewayError(
+      "budget_exceeded",
+      402,
+      "This route would exceed the API key monthly spend limit.",
+    );
+  }
+  if (message.includes("API key spend currency does not match")) {
+    throw new GatewayError(
+      "not_configured",
+      503,
+      "This API key is not configured for the selected route currency.",
+    );
+  }
   if (message.includes("No active workspace budget")) {
     throw new GatewayError(
       "not_configured",
@@ -251,9 +287,15 @@ export async function beginRouteRequest(
     endpointId: string;
     currencyCode: string;
     reserveMinor: number;
+    apiKeyId?: string;
+    reserveCustomerNanos?: number;
   },
 ): Promise<RouteReservation> {
-  const { data, error } = await admin.rpc("io_begin_route_request", {
+  if (input.apiKeyId && input.reserveCustomerNanos === undefined) {
+    throw new GatewayError("internal_error", 500, "The API key spend reservation is missing.");
+  }
+  const rpcName = input.apiKeyId ? "io_begin_api_key_route_request" : "io_begin_route_request";
+  const { data, error } = await admin.rpc(rpcName, {
     _workspace_id: input.workspaceId,
     _actor_user_id: input.actorUserId,
     _idempotency_key: input.idempotencyKey,
@@ -262,6 +304,12 @@ export async function beginRouteRequest(
     _endpoint_id: input.endpointId,
     _currency_code: input.currencyCode,
     _reserve_minor: input.reserveMinor,
+    ...(input.apiKeyId
+      ? {
+          _api_key_id: input.apiKeyId,
+          _reserve_customer_nanos: input.reserveCustomerNanos,
+        }
+      : {}),
   });
   if (error) mapOperationalError(error);
   const result = asRecord(data);

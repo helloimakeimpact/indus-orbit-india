@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { GatewayError } from "./errors.ts";
-import { sendProviderChat } from "./provider-adapter.ts";
+import { discoverProviderModel, sendProviderChat } from "./provider-adapter.ts";
 import type { GatewayMessage, ProviderConnection } from "./types.ts";
 
 const messages: GatewayMessage[] = [{ role: "user", content: "Reply with a short test." }];
@@ -65,14 +65,19 @@ async function captureProviderRequests(
 
   (globalThis as typeof globalThis & { Deno: unknown }).Deno = {
     env: {
-      get: (name: string) => (name === "IO_PROVIDER_TEST_API_KEY" ? "fixture-secret" : undefined),
+      get: (name: string) =>
+        name === "IO_PROVIDER_TEST_API_KEY"
+          ? "fixture-secret"
+          : name === "IO_SAFETY_IDENTIFIER_SECRET"
+            ? "fixture-safety-secret-with-more-than-32-characters"
+            : undefined,
     },
   };
   globalThis.fetch = async (input, init) => {
     requests.push({
       url: String(input),
       headers: new Headers(init?.headers),
-      body: JSON.parse(String(init?.body)) as Record<string, unknown>,
+      body: init?.body ? (JSON.parse(String(init.body)) as Record<string, unknown>) : {},
     });
     return responseFactory();
   };
@@ -130,6 +135,11 @@ describe("sendProviderChat request contracts", { concurrency: false }, () => {
         );
         for (const key of testCase.absent) assert.equal(key in request.body, false);
         assert.equal(request.body.stream, false);
+        if (testCase.providerKey === "openai") {
+          assert.match(String(request.body.safety_identifier), /^io_[a-f0-9]{64}$/);
+        } else {
+          assert.equal("safety_identifier" in request.body, false);
+        }
         assert.equal(result.content, "Fixture response");
         assert.equal(result.providerRequestId, "req-test");
       }
@@ -157,6 +167,22 @@ describe("sendProviderChat request contracts", { concurrency: false }, () => {
       assert.deepEqual(request.body.systemInstruction, { parts: [{ text: "Be concise." }] });
       assert.deepEqual(request.body.generationConfig, { maxOutputTokens: 1_024 });
     });
+  });
+
+  it("discovers the exact configured model without exposing catalogue content", async () => {
+    await captureProviderRequests(
+      async (requests) => {
+        const result = await discoverProviderModel(connection({ providerModelId: "model-test" }));
+        assert.equal(requests[0].url, "https://provider.example/v1/models");
+        assert.equal(requests[0].headers.get("authorization"), "Bearer fixture-secret");
+        assert.deepEqual(result, { modelIdMatched: true, providerRequestId: "req-models" });
+      },
+      () =>
+        Response.json(
+          { object: "list", data: [{ id: "model-test", object: "model" }] },
+          { headers: { "x-request-id": "req-models" } },
+        ),
+    );
   });
 
   it("rejects a successful response without assistant content", async () => {

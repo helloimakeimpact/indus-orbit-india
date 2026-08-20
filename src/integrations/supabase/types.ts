@@ -1838,10 +1838,17 @@ export type Database = {
           key_prefix: string;
           last_four: string;
           last_used_at: string | null;
+          limit_policy_version: number;
           name: string;
           project_id: string | null;
+          requests_per_day: number;
+          requests_per_minute: number;
+          requests_per_month: number;
           revoked_at: string | null;
           scopes: string[];
+          spend_currency_code: string;
+          spend_per_day_nanos: number;
+          spend_per_month_nanos: number;
           status: string;
           workspace_id: string;
         };
@@ -1857,10 +1864,17 @@ export type Database = {
           key_prefix: string;
           last_four: string;
           last_used_at?: string | null;
+          limit_policy_version?: number;
           name: string;
           project_id?: string | null;
+          requests_per_day?: number;
+          requests_per_minute?: number;
+          requests_per_month?: number;
           revoked_at?: string | null;
           scopes?: string[];
+          spend_currency_code?: string;
+          spend_per_day_nanos?: number;
+          spend_per_month_nanos?: number;
           status?: string;
           workspace_id: string;
         };
@@ -1876,10 +1890,17 @@ export type Database = {
           key_prefix?: string;
           last_four?: string;
           last_used_at?: string | null;
+          limit_policy_version?: number;
           name?: string;
           project_id?: string | null;
+          requests_per_day?: number;
+          requests_per_minute?: number;
+          requests_per_month?: number;
           revoked_at?: string | null;
           scopes?: string[];
+          spend_currency_code?: string;
+          spend_per_day_nanos?: number;
+          spend_per_month_nanos?: number;
           status?: string;
           workspace_id?: string;
         };
@@ -2916,6 +2937,44 @@ export type Database = {
             foreignKeyName: "io_workspace_members_workspace_id_fkey";
             columns: ["workspace_id"];
             isOneToOne: false;
+            referencedRelation: "io_workspaces";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      io_workspace_provider_policies: {
+        Row: {
+          acknowledged_at: string | null;
+          allow_china_hosted: boolean;
+          allow_training_possible: boolean;
+          created_at: string;
+          updated_at: string;
+          updated_by: string;
+          workspace_id: string;
+        };
+        Insert: {
+          acknowledged_at?: string | null;
+          allow_china_hosted?: boolean;
+          allow_training_possible?: boolean;
+          created_at?: string;
+          updated_at?: string;
+          updated_by: string;
+          workspace_id: string;
+        };
+        Update: {
+          acknowledged_at?: string | null;
+          allow_china_hosted?: boolean;
+          allow_training_possible?: boolean;
+          created_at?: string;
+          updated_at?: string;
+          updated_by?: string;
+          workspace_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "io_workspace_provider_policies_workspace_id_fkey";
+            columns: ["workspace_id"];
+            isOneToOne: true;
             referencedRelation: "io_workspaces";
             referencedColumns: ["id"];
           },
@@ -4543,10 +4602,17 @@ export type Database = {
           key_prefix: string | null;
           last_four: string | null;
           last_used_at: string | null;
+          limit_policy_version: number | null;
           name: string | null;
           project_id: string | null;
+          requests_per_day: number | null;
+          requests_per_minute: number | null;
+          requests_per_month: number | null;
           revoked_at: string | null;
           scopes: string[] | null;
+          spend_currency_code: string | null;
+          spend_per_day_nanos: number | null;
+          spend_per_month_nanos: number | null;
           status: string | null;
           workspace_id: string | null;
         };
@@ -4561,10 +4627,17 @@ export type Database = {
           key_prefix?: string | null;
           last_four?: string | null;
           last_used_at?: string | null;
+          limit_policy_version?: number | null;
           name?: string | null;
           project_id?: string | null;
+          requests_per_day?: number | null;
+          requests_per_minute?: number | null;
+          requests_per_month?: number | null;
           revoked_at?: string | null;
           scopes?: string[] | null;
+          spend_currency_code?: string | null;
+          spend_per_day_nanos?: number | null;
+          spend_per_month_nanos?: number | null;
           status?: string | null;
           workspace_id?: string | null;
         };
@@ -4579,10 +4652,17 @@ export type Database = {
           key_prefix?: string | null;
           last_four?: string | null;
           last_used_at?: string | null;
+          limit_policy_version?: number | null;
           name?: string | null;
           project_id?: string | null;
+          requests_per_day?: number | null;
+          requests_per_minute?: number | null;
+          requests_per_month?: number | null;
           revoked_at?: string | null;
           scopes?: string[] | null;
+          spend_currency_code?: string | null;
+          spend_per_day_nanos?: number | null;
+          spend_per_month_nanos?: number | null;
           status?: string | null;
           workspace_id?: string | null;
         };
@@ -4943,6 +5023,18 @@ export type Database = {
           _name: string;
           _scopes?: string[];
           _expires_at?: string;
+        };
+        Returns: Json;
+      };
+      get_my_io_workspace_provider_policy: {
+        Args: { _workspace_id: string };
+        Returns: Json;
+      };
+      set_my_io_workspace_provider_policy: {
+        Args: {
+          _workspace_id: string;
+          _allow_china_hosted: boolean;
+          _allow_training_possible: boolean;
         };
         Returns: Json;
       };

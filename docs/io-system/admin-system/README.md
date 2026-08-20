@@ -1,6 +1,6 @@
 # Indus Orbit admin system
 
-Status: separate application foundation; provider/evidence/budget/circuit/commercial database controls Released to demo, updated 20 August 2026.
+Status: separate application foundation; provider/evidence/budget/circuit/commercial database controls Released to demo, with the capped provider-conformance workflow Verified locally on 20 August 2026.
 
 ## Ownership boundary
 
@@ -48,7 +48,10 @@ The locally Verified operational-core migration and admin build additionally pro
 - immutable integer-minor-unit budget-version creation with an operator reason;
 - endpoint health/circuit snapshots;
 - reasoned manual circuit open/close controls;
-- 12 passing browser contract tests and the last shared 550-assertion local database baseline.
+- a single-use, 30-minute, USD 0.01-capped provider-conformance approval with discovery-first execution and redacted evidence;
+- a fail-closed capability transition in which only a passing run seals the tested draft as Verified;
+- explicit China-hosted processing acknowledgement for the DeepSeek API test;
+- 13 passing browser contract tests and the last shared 550-assertion local database baseline.
 
 The operational slice is Released through `20260810002754_create_io_operational_core.sql`; the commercial projection/gate is Released through `20260820001339_add_io_transparent_service_fee.sql`. The separate admin browser application remains local-source verified until it is hosted against the shared project.
 
@@ -60,6 +63,7 @@ Implemented:
 - desktop and 390px mobile runtime verification;
 - control overview, team assignment/revocation and I/O operations pages;
 - provider commercial state, onward-access activation gate and terms-evidence link;
+- reasoned, explicitly confirmed and cost-capped OpenAI/DeepSeek conformance controls;
 - safe unconfigured state and environment contract;
 - typed/build verification in both repositories;
 - demo database migrations and post-apply checks;
@@ -72,7 +76,7 @@ Left before production:
 3. replace legacy trust/report, member, content and programme direct-table mutations with transactional capability-checked RPCs;
 4. add optimistic concurrency, mandatory decision reasons, immutable/redacted events, appeals and negative role-matrix tests;
 5. add paginated audit search/export with retention and redaction policy;
-6. add commercial evidence mutation/expiry workflow, I/O conformance approval, scheduled health and ledger reconciliation before paid traffic;
+6. release and role-test the locally Verified conformance migration/function, then add commercial evidence mutation/expiry, scheduled health and ledger reconciliation before user traffic;
 7. create staging/production separation, SLOs, alerts, incident response and rollback proof.
 
 ## Security-advisor interpretation

@@ -2,6 +2,37 @@ import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { GatewayError } from "./errors.ts";
 import type { ActiveCapacityEntitlement } from "./types.ts";
 
+export type WorkspaceProviderPolicy = {
+  allowChinaHosted: boolean;
+  allowTrainingPossible: boolean;
+};
+
+export async function getWorkspaceProviderPolicy(
+  admin: SupabaseClient,
+  workspaceId: string,
+): Promise<WorkspaceProviderPolicy> {
+  const { data, error } = await admin.rpc("io_get_workspace_provider_policy", {
+    _workspace_id: workspaceId,
+  });
+  if (error) throw error;
+  const row =
+    data !== null && typeof data === "object" && !Array.isArray(data)
+      ? (data as Record<string, unknown>)
+      : null;
+  return {
+    allowChinaHosted: row?.allowChinaHosted === true,
+    allowTrainingPossible: row?.allowTrainingPossible === true,
+  };
+}
+
+export function workspaceAllowsProvider(
+  policy: WorkspaceProviderPolicy,
+  input: { residencyCountryCode: string | null },
+) {
+  if (input.residencyCountryCode !== "CN") return true;
+  return policy.allowChinaHosted && policy.allowTrainingPossible;
+}
+
 type CapacitySourceRow = {
   id: string;
   source_key: string;

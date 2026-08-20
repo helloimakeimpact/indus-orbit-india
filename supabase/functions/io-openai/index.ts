@@ -8,7 +8,11 @@ import {
   requireClientIdempotencyKey,
   sha256Hex,
 } from "../_shared/io/openai-api.ts";
-import { getActiveCapacityEntitlements } from "../_shared/io/policy.ts";
+import {
+  getActiveCapacityEntitlements,
+  getWorkspaceProviderPolicy,
+  workspaceAllowsProvider,
+} from "../_shared/io/policy.ts";
 import { loadReadyProviderConnections } from "../_shared/io/provider-adapter.ts";
 import { executePartnerRoute } from "../_shared/io/route-execution.ts";
 import type { ProviderConnection, RouteStrategy } from "../_shared/io/types.ts";
@@ -20,6 +24,12 @@ type ApiKeyActor = {
   remaining: number;
   limit: number;
   resetAt: string;
+  dayRemaining: number;
+  dayLimit: number;
+  dayResetAt: string;
+  monthRemaining: number;
+  monthLimit: number;
+  monthResetAt: string;
 };
 
 function json(body: unknown, status = 200, headers: Record<string, string> = {}) {
@@ -47,13 +57,12 @@ function asRecord(value: unknown): Record<string, unknown> | null {
     : null;
 }
 
-function requestLimit() {
-  const raw = Deno.env.get("IO_API_KEY_REQUESTS_PER_MINUTE") ?? "60";
-  const parsed = Number(raw);
-  if (!Number.isInteger(parsed) || parsed < 1 || parsed > 600) {
-    throw new GatewayError("internal_error", 500, "The I/O API key request limit is invalid.");
-  }
-  return parsed;
+function readWindow(value: Record<string, unknown> | null, key: "day" | "month") {
+  const window = value ? asRecord(value[key]) : null;
+  const limit = typeof window?.limit === "number" ? window.limit : 0;
+  const remaining = typeof window?.remaining === "number" ? window.remaining : 0;
+  const resetAt = typeof window?.resetAt === "string" ? window.resetAt : "";
+  return { limit, remaining, resetAt };
 }
 
 async function authenticateApiKey(
@@ -65,7 +74,6 @@ async function authenticateApiKey(
   const { data, error } = await admin.rpc("io_consume_api_key_request", {
     _key_hash_hex: await sha256Hex(rawKey),
     _required_scope: requiredScope,
-    _limit: requestLimit(),
   });
   if (error) {
     throw new GatewayError("internal_error", 500, "I/O API key authentication failed.");
@@ -90,13 +98,22 @@ async function authenticateApiKey(
   if (!apiKeyId || !workspaceId || !actorUserId || !resetAt) {
     throw new GatewayError("internal_error", 500, "I/O API key authentication was incomplete.");
   }
+  const requestLimits = asRecord(result.requestLimits);
+  const day = readWindow(requestLimits, "day");
+  const month = readWindow(requestLimits, "month");
   return {
     apiKeyId,
     workspaceId,
     actorUserId,
     remaining: typeof result.remaining === "number" ? result.remaining : 0,
-    limit: typeof result.limit === "number" ? result.limit : requestLimit(),
+    limit: typeof result.limit === "number" ? result.limit : 0,
     resetAt,
+    dayRemaining: day.remaining,
+    dayLimit: day.limit,
+    dayResetAt: day.resetAt,
+    monthRemaining: month.remaining,
+    monthLimit: month.limit,
+    monthResetAt: month.resetAt,
   };
 }
 
@@ -105,14 +122,23 @@ function rateHeaders(actor: ApiKeyActor) {
     "x-ratelimit-limit-requests": String(actor.limit),
     "x-ratelimit-remaining-requests": String(actor.remaining),
     "x-ratelimit-reset-requests": actor.resetAt,
+    "x-io-ratelimit-limit-requests-day": String(actor.dayLimit),
+    "x-io-ratelimit-remaining-requests-day": String(actor.dayRemaining),
+    "x-io-ratelimit-reset-requests-day": actor.dayResetAt,
+    "x-io-ratelimit-limit-requests-month": String(actor.monthLimit),
+    "x-io-ratelimit-remaining-requests-month": String(actor.monthRemaining),
+    "x-io-ratelimit-reset-requests-month": actor.monthResetAt,
   };
 }
 
 async function entitledConnections(admin: SupabaseClient, workspaceId: string) {
   const entitlements = await getActiveCapacityEntitlements(admin, workspaceId);
+  const providerPolicy = await getWorkspaceProviderPolicy(admin, workspaceId);
   const sourceIds = new Set(entitlements.map((entitlement) => entitlement.sourceId));
-  return (await loadReadyProviderConnections(admin)).filter((connection) =>
-    sourceIds.has(connection.capacitySourceId),
+  return (await loadReadyProviderConnections(admin)).filter(
+    (connection) =>
+      sourceIds.has(connection.capacitySourceId) &&
+      workspaceAllowsProvider(providerPolicy, connection),
   );
 }
 

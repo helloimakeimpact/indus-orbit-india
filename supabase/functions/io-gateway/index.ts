@@ -5,7 +5,11 @@ import {
   requireWorkspaceMembership,
 } from "../_shared/io/auth.ts";
 import { asGatewayError, GatewayError } from "../_shared/io/errors.ts";
-import { getActiveCapacityEntitlements } from "../_shared/io/policy.ts";
+import {
+  getActiveCapacityEntitlements,
+  getWorkspaceProviderPolicy,
+  workspaceAllowsProvider,
+} from "../_shared/io/policy.ts";
 import { loadReadyProviderConnections } from "../_shared/io/provider-adapter.ts";
 import { executePartnerRoute } from "../_shared/io/route-execution.ts";
 import { parseGatewayRequest } from "../_shared/io/validation.ts";
@@ -63,12 +67,16 @@ Deno.serve(async (request) => {
     await requireWorkspaceMembership(admin, body.workspaceId, actor.id);
 
     const entitlements = await getActiveCapacityEntitlements(admin, body.workspaceId);
+    const providerPolicy = await getWorkspaceProviderPolicy(admin, body.workspaceId);
     const entitledSourceIds = new Set(entitlements.map((entitlement) => entitlement.sourceId));
+    const availableConnections = (await loadReadyProviderConnections(admin)).filter(
+      (connection) =>
+        entitledSourceIds.has(connection.capacitySourceId) &&
+        workspaceAllowsProvider(providerPolicy, connection),
+    );
 
     if (body.action === "status") {
-      const readyConnectionCount = (await loadReadyProviderConnections(admin)).filter(
-        (connection) => entitledSourceIds.has(connection.capacitySourceId),
-      ).length;
+      const readyConnectionCount = availableConnections.length;
       return json(request, {
         ok: true,
         partner: {
@@ -82,9 +90,7 @@ Deno.serve(async (request) => {
     }
 
     if (body.action === "catalog") {
-      const connections = (await loadReadyProviderConnections(admin)).filter((connection) =>
-        entitledSourceIds.has(connection.capacitySourceId),
-      );
+      const connections = availableConnections;
       return json(request, {
         ok: true,
         routeStrategies: ["latest_affordable", "lowest_cost", "explicit_model"],

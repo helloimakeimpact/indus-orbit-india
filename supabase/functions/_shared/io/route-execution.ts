@@ -3,13 +3,18 @@ import { writeIoAuditEvent } from "./audit.ts";
 import { asGatewayError, GatewayError } from "./errors.ts";
 import {
   beginRouteRequest,
+  calculateReservationNanos,
   calculateReservationMinor,
   calculateSettlement,
   fingerprintRouteRequest,
   loadActiveServiceFeePolicy,
   recordEndpointOutcome,
 } from "./operations.ts";
-import { getActiveCapacityEntitlements } from "./policy.ts";
+import {
+  getActiveCapacityEntitlements,
+  getWorkspaceProviderPolicy,
+  workspaceAllowsProvider,
+} from "./policy.ts";
 import { resolveProviderRoute, sendProviderChat } from "./provider-adapter.ts";
 import { writeRouteReceipt, type ProviderAttempt } from "./receipt.ts";
 import { selectRouteAttempts } from "./routing.ts";
@@ -76,6 +81,7 @@ export async function executePartnerRoute(
   input: RouteExecutionInput,
 ): Promise<RouteExecutionReplay | RouteExecutionSuccess> {
   const entitlements = await getActiveCapacityEntitlements(admin, input.workspaceId);
+  const providerPolicy = await getWorkspaceProviderPolicy(admin, input.workspaceId);
   const serviceFeePolicy = await loadActiveServiceFeePolicy(admin);
   const entitledSourceIds = new Set(entitlements.map((entitlement) => entitlement.sourceId));
   const requestId = crypto.randomUUID();
@@ -84,6 +90,7 @@ export async function executePartnerRoute(
     strategy: input.routeStrategy,
     requestedModelId: input.requestedModelId,
     entitledCapacitySourceIds: entitledSourceIds,
+    connectionFilter: (connection) => workspaceAllowsProvider(providerPolicy, connection),
   });
   const routeAttempts = selectRouteAttempts(
     selection.routeCandidates,
@@ -95,6 +102,12 @@ export async function executePartnerRoute(
     1_024,
     serviceFeePolicy.feeBasisPoints,
   );
+  const reserveCustomerNanos = calculateReservationNanos(
+    routeAttempts,
+    input.messages,
+    1_024,
+    serviceFeePolicy.feeBasisPoints,
+  ).customerChargeNanos;
   const fingerprint = await fingerprintRouteRequest({
     workspaceId: input.workspaceId,
     mode,
@@ -111,6 +124,8 @@ export async function executePartnerRoute(
     endpointId: selection.connection.endpointId,
     currencyCode: selection.connection.currencyCode,
     reserveMinor,
+    apiKeyId: input.apiKeyId,
+    reserveCustomerNanos: input.apiKeyId ? reserveCustomerNanos : undefined,
   });
 
   if (reservation.replayed) {
@@ -155,7 +170,9 @@ export async function executePartnerRoute(
     const startedAt = new Date().toISOString();
     const startedAtMonotonic = performance.now();
     try {
-      const candidateResult = await sendProviderChat(candidate.connection, input.messages);
+      const candidateResult = await sendProviderChat(candidate.connection, input.messages, {
+        safetySubject: input.actorUserId,
+      });
       attempts.push({
         connection: candidate.connection,
         startedAt,
@@ -209,6 +226,7 @@ export async function executePartnerRoute(
       lastError ?? new GatewayError("upstream_failure", 502, "No provider route completed.");
     const finalization = await writeRouteReceipt(admin, {
       requestId,
+      apiKeyId: input.apiKeyId,
       selection,
       resultState: "failed",
       customerChargeMinor: 0,
@@ -245,6 +263,7 @@ export async function executePartnerRoute(
   });
   const finalization = await writeRouteReceipt(admin, {
     requestId,
+    apiKeyId: input.apiKeyId,
     selection: selectedRoute,
     resultState: "completed",
     inputTokens: result.usage.inputTokens,

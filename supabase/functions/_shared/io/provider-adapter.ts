@@ -10,6 +10,11 @@ const secretReferencePattern = /^IO_PROVIDER_[A-Z0-9_]+_API_KEY$/;
 const defaultOutputTokenAllowance = 1_024;
 const maximumProviderResponseBytes = 2 * 1_024 * 1_024;
 
+export type ProviderChatOptions = {
+  maxOutputTokens?: number;
+  safetySubject?: string;
+};
+
 type RegistryRow = Record<string, unknown>;
 
 function readPositiveInteger(name: string, fallback: number, maximum: number) {
@@ -186,6 +191,26 @@ export async function loadReadyProviderConnections(
     .flatMap((connection) => (connection ? [connection] : []));
 }
 
+export async function loadConformanceProviderConnection(
+  admin: SupabaseClient,
+  runId: string,
+): Promise<ProviderConnection> {
+  const { data, error } = await admin.rpc("io_get_provider_conformance_connection", {
+    _run_id: runId,
+  });
+  if (error) throw error;
+  const first = Array.isArray(data) ? asRecord(data[0]) : asRecord(data);
+  const connection = first ? readConnection(first) : null;
+  if (!connection) {
+    throw new GatewayError(
+      "not_configured",
+      503,
+      "The approved provider conformance connection is unavailable.",
+    );
+  }
+  return connection;
+}
+
 export async function resolveProviderRoute(
   admin: SupabaseClient,
   messages: GatewayMessage[],
@@ -324,7 +349,80 @@ async function readProviderJson(response: Response): Promise<unknown> {
   }
 }
 
-function toGeminiRequest(messages: GatewayMessage[]) {
+export async function discoverProviderModel(connection: ProviderConnection) {
+  if (connection.integrationStyle !== "openai_compatible") {
+    throw new GatewayError(
+      "not_configured",
+      503,
+      "The current conformance discovery suite requires an OpenAI-compatible endpoint.",
+    );
+  }
+  const apiKey = resolveSecret(connection.secretReference);
+  let upstream: Response;
+  try {
+    upstream = await fetch(`${connection.baseUrl}/models`, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${apiKey}`, Accept: "application/json" },
+      signal: AbortSignal.timeout(15_000),
+    });
+  } catch {
+    throw new GatewayError("upstream_failure", 502, "Provider model discovery could not connect.");
+  }
+  if (!upstream.ok) {
+    throw new GatewayError(
+      upstream.status === 429 ? "rate_limited" : "upstream_failure",
+      upstream.status === 429 ? 429 : 502,
+      "Provider model discovery did not complete.",
+      upstream.status,
+    );
+  }
+  const body = asRecord(await readProviderJson(upstream));
+  const models = Array.isArray(body?.data) ? body.data : [];
+  const modelIdMatched = models.some((value) => {
+    const model = asRecord(value);
+    return model && readString(model, "id") === connection.providerModelId;
+  });
+  return {
+    modelIdMatched,
+    providerRequestId: providerRequestId(upstream),
+  };
+}
+
+function checkedOutputTokenLimit(value?: number) {
+  const limit = value ?? defaultOutputTokenAllowance;
+  if (!Number.isInteger(limit) || limit < 1 || limit > defaultOutputTokenAllowance) {
+    throw new GatewayError("bad_request", 400, "The provider output limit is invalid.");
+  }
+  return limit;
+}
+
+async function createSafetyIdentifier(subject: string) {
+  const secret = Deno.env.get("IO_SAFETY_IDENTIFIER_SECRET");
+  if (!secret || secret.length < 32) {
+    throw new GatewayError(
+      "not_configured",
+      503,
+      "The OpenAI safety identifier secret is not configured.",
+    );
+  }
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const signature = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    new TextEncoder().encode(`io-user:${subject}`),
+  );
+  return `io_${Array.from(new Uint8Array(signature), (byte) =>
+    byte.toString(16).padStart(2, "0"),
+  ).join("")}`;
+}
+
+function toGeminiRequest(messages: GatewayMessage[], maxOutputTokens: number) {
   const systemText = messages
     .filter((message) => message.role === "system")
     .map((message) => message.content)
@@ -345,11 +443,16 @@ function toGeminiRequest(messages: GatewayMessage[]) {
   return {
     ...(systemText ? { systemInstruction: { parts: [{ text: systemText }] } } : {}),
     contents,
-    generationConfig: { maxOutputTokens: defaultOutputTokenAllowance },
+    generationConfig: { maxOutputTokens },
   };
 }
 
-function toOpenAiCompatibleRequest(connection: ProviderConnection, messages: GatewayMessage[]) {
+function toOpenAiCompatibleRequest(
+  connection: ProviderConnection,
+  messages: GatewayMessage[],
+  maxOutputTokens: number,
+  safetyIdentifier?: string,
+) {
   const usesModernCompletionLimit =
     connection.providerKey === "openai" || connection.providerKey === "groq";
   const reasoningSettings =
@@ -365,8 +468,11 @@ function toOpenAiCompatibleRequest(connection: ProviderConnection, messages: Gat
     model: connection.providerModelId,
     messages,
     ...(usesModernCompletionLimit
-      ? { max_completion_tokens: defaultOutputTokenAllowance }
-      : { max_tokens: defaultOutputTokenAllowance }),
+      ? { max_completion_tokens: maxOutputTokens }
+      : { max_tokens: maxOutputTokens }),
+    ...(connection.providerKey === "openai" && safetyIdentifier
+      ? { safety_identifier: safetyIdentifier }
+      : {}),
     ...reasoningSettings,
     stream: false,
   };
@@ -375,8 +481,14 @@ function toOpenAiCompatibleRequest(connection: ProviderConnection, messages: Gat
 export async function sendProviderChat(
   connection: ProviderConnection,
   messages: GatewayMessage[],
+  options: ProviderChatOptions = {},
 ): Promise<PartnerResult> {
   const apiKey = resolveSecret(connection.secretReference);
+  const maxOutputTokens = checkedOutputTokenLimit(options.maxOutputTokens);
+  const safetyIdentifier =
+    connection.providerKey === "openai"
+      ? await createSafetyIdentifier(options.safetySubject ?? "system")
+      : undefined;
   const isGemini =
     connection.integrationStyle === "native_adapter" && connection.providerKey === "gemini";
   const url = isGemini
@@ -386,8 +498,8 @@ export async function sendProviderChat(
     ? { "x-goog-api-key": apiKey, "Content-Type": "application/json" }
     : { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" };
   const body = isGemini
-    ? toGeminiRequest(messages)
-    : toOpenAiCompatibleRequest(connection, messages);
+    ? toGeminiRequest(messages, maxOutputTokens)
+    : toOpenAiCompatibleRequest(connection, messages, maxOutputTokens, safetyIdentifier);
 
   let upstream: Response;
   try {

@@ -11,14 +11,16 @@ Commercial/provider release completed later on 20 August:
 - OpenAI and DeepSeek are `resale_pending`; a shared database gate blocks endpoint eligibility and operator route enablement until reviewed written onward-access evidence exists.
 - Persistent I/O API keys are now rejected for browser-origin requests. Live probes returned `403` for browser-origin use and `401` for an invalid server-shaped key with no inference traffic.
 - The separate admin app now shows provider commercial state/evidence and fails closed when it is absent.
-- Member checks pass 52/52 plus format/type/build; admin checks pass 12/12 plus format/type/build.
+- Member checks pass 54/54 plus format/type/build; admin checks pass 13/13 plus format/type/build.
 - Production domain, browser-key, fee and provider research is filed in `io-port-system/PRODUCTION_API_COMMERCIAL_AND_PROVIDER_POLICY.md`.
 
 - Direct-message pagination migration 68 is Released and verified on the hosted Indus Orbit project as version `20260819225550`.
 - Migration 69 (`20260819232624_add_io_openai_api_foundation.sql`) is Released with one-time hash-only test keys, revocation, scopes, membership revalidation and atomic minute limits.
 - `io-gateway` v22 and `io-openai` v3 are active. Both browser and public chat requests use the same entitlement, idempotency, budget, fallback, priced receipt, settlement and audit core.
 - `/v1/models` and a strict non-streaming `/v1/chat/completions` subset are Released. An invalid-key `401` and valid-key empty-catalogue `200` were verified without provider traffic; the temporary key was removed.
-- Member unit coverage is now 52/52 and admin coverage is 12/12. The local Docker database remains unhealthy during managed-service bootstrap; the last full local DB baseline remains 68 migrations/550 assertions, while migrations 69–71 have hosted contract evidence.
+- Member unit coverage is now 54/54 and admin coverage is 13/13. The local Docker database remains unhealthy during managed-service bootstrap; the last full local DB baseline remains 68 migrations/550 assertions, while migrations 69–71 have hosted contract evidence.
+
+Local post-release hardening adds immutable per-key minute/day/month request and day/month spend ceilings, explicit China-route workspace consent, HMAC-derived OpenAI safety identifiers and a discovery-first USD 0.01-capped provider-conformance workflow. These changes are **Verified**, not Released: the connected-project migration write hit the Codex approval service usage limit, and no provider call was made.
 
 The words in this record are deliberate:
 

@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import {
   calculateCostNanos,
   calculateReservationMinor,
+  calculateReservationNanos,
   calculateSettlement,
   calculateUsageChargeNanos,
   conservativeInputTokenBound,
@@ -93,6 +94,18 @@ describe("I/O operational calculations", () => {
         550,
       ),
       10,
+    );
+    assert.deepEqual(
+      calculateReservationNanos(
+        [
+          { connection: connection() },
+          { connection: connection({ outputPriceNanos: 80_000_000 }) },
+        ],
+        messages,
+        1_024,
+        550,
+      ),
+      { customerChargeNanos: 95_696_940, currencyCode: "USD" },
     );
     assert.throws(() => calculateReservationMinor([], messages), /No provider attempt/);
     assert.throws(
