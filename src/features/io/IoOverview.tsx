@@ -1437,6 +1437,18 @@ function RunResult({
             value={formatMinor(partner.route.settledMinor, partner.route.currencyCode)}
           />
         </div>
+      ) : terminal ? (
+        <div className="mt-3 grid gap-2 border-t border-emerald-200/80 pt-2.5 text-[10px] text-emerald-950/80 sm:grid-cols-2">
+          <RouteFact label="Local session" value={terminal.sessionId} />
+          <RouteFact
+            label="Changed files"
+            value={
+              terminal.changedFileCount === null
+                ? "Not reported by this OpenCode version"
+                : String(terminal.changedFileCount)
+            }
+          />
+        </div>
       ) : null}
     </section>
   );

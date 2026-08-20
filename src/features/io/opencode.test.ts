@@ -28,6 +28,7 @@ describe("runOpenCodeSession", { concurrency: false }, () => {
       urls.push(url);
       if (url.endsWith("/global/health")) return Response.json({ version: "1.2.3" });
       if (url.endsWith("/session")) return Response.json({ id: "session/one", title: "Local" });
+      if (url.endsWith("/diff")) return Response.json([{ path: "src/app.ts" }]);
       return Response.json({ parts: [{ type: "text", text: "Completed" }] });
     };
     try {
@@ -50,6 +51,7 @@ describe("runOpenCodeSession", { concurrency: false }, () => {
       assert.equal(result.connectorOrigin, "http://localhost:4096");
       assert.equal(result.content, "Completed");
       assert.equal(result.serverVersion, "1.2.3");
+      assert.equal(result.changedFileCount, 1);
       assert.deepEqual(lifecycle, ["created:session/one", "completed:session/one"]);
       assert.deepEqual(metadata, ["runtime.connected", "prompt.accepted"]);
     } finally {
@@ -64,6 +66,7 @@ describe("runOpenCodeSession", { concurrency: false }, () => {
       const url = String(input);
       if (url.endsWith("/global/health")) return Response.json({ version: "1" });
       if (url.endsWith("/session")) return Response.json({ id: "session-failed" });
+      if (url.endsWith("/abort")) return Response.json(true);
       return new Response("Rejected", { status: 500 });
     };
     try {
@@ -95,6 +98,7 @@ describe("runOpenCodeSession", { concurrency: false }, () => {
       const url = String(input);
       if (url.endsWith("/global/health")) return Response.json({ version: "1" });
       if (url.endsWith("/session")) return Response.json({ id: "session-malformed" });
+      if (url.endsWith("/abort")) return Response.json(true);
       return Response.json({ unexpected: true });
     };
     try {
@@ -144,6 +148,7 @@ describe("runOpenCodeSession", { concurrency: false }, () => {
     const originalFetch = globalThis.fetch;
     const controller = new AbortController();
     const lifecycle: string[] = [];
+    let abortCalled = false;
     let promptStarted!: () => void;
     const promptRequestStarted = new Promise<void>((resolve) => {
       promptStarted = resolve;
@@ -152,6 +157,10 @@ describe("runOpenCodeSession", { concurrency: false }, () => {
       const url = String(input);
       if (url.endsWith("/global/health")) return Response.json({ version: "1" });
       if (url.endsWith("/session")) return Response.json({ id: "session-stopped" });
+      if (url.endsWith("/abort")) {
+        abortCalled = true;
+        return Response.json(true);
+      }
       promptStarted();
       return new Promise<Response>((_resolve, reject) => {
         init?.signal?.addEventListener(
@@ -179,6 +188,7 @@ describe("runOpenCodeSession", { concurrency: false }, () => {
       controller.abort();
       await assert.rejects(run, OpenCodeStoppedError);
       assert.deepEqual(lifecycle, ["created", "stopped"]);
+      assert.equal(abortCalled, true);
     } finally {
       globalThis.fetch = originalFetch;
     }

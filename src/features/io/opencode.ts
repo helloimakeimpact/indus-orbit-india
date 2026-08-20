@@ -4,6 +4,7 @@ export type OpenCodeRunResult = {
   title: string;
   content: string;
   serverVersion: string | null;
+  changedFileCount: number | null;
 };
 
 export type OpenCodeSessionReference = {
@@ -134,6 +135,44 @@ async function requestOpenCode(
   }
 }
 
+async function bestEffortAbortSession(
+  baseUrl: string,
+  password: string,
+  sessionId: string,
+  timeoutMs: number,
+) {
+  try {
+    await requestOpenCode(
+      `${baseUrl}/session/${encodeURIComponent(sessionId)}/abort`,
+      { method: "POST", headers: headers(password) },
+      undefined,
+      Math.min(timeoutMs, 5_000),
+    );
+  } catch {
+    // The original request error remains authoritative. A disconnected local
+    // daemon must not hide the reason the member already sees.
+  }
+}
+
+async function readChangedFileCount(
+  baseUrl: string,
+  password: string,
+  sessionId: string,
+  timeoutMs: number,
+) {
+  try {
+    const value = await requestOpenCode(
+      `${baseUrl}/session/${encodeURIComponent(sessionId)}/diff`,
+      { headers: headers(password) },
+      undefined,
+      Math.min(timeoutMs, 5_000),
+    );
+    return Array.isArray(value) ? value.length : null;
+  } catch {
+    return null;
+  }
+}
+
 async function parseResponse(response: Response) {
   const text = await readBoundedText(response);
   if (response.ok) {
@@ -143,7 +182,9 @@ async function parseResponse(response: Response) {
     } catch (error) {
       throw new Error("OpenCode returned invalid JSON.", { cause: error });
     }
-    if (!asRecord(value)) throw new Error("OpenCode returned an invalid JSON object.");
+    if (value === null || (typeof value !== "object" && typeof value !== "boolean")) {
+      throw new Error("OpenCode returned an invalid JSON response.");
+    }
     return value;
   }
   const detail = text.trim().slice(0, 500);
@@ -227,6 +268,7 @@ export async function runOpenCodeSession(input: {
   });
 
   let content: string;
+  let changedFileCount: number | null = null;
   try {
     const message = await requestOpenCode(
       `${baseUrl}/session/${encodeURIComponent(sessionId)}/message`,
@@ -256,7 +298,9 @@ export async function runOpenCodeSession(input: {
       type: "prompt.accepted",
       payload: {},
     });
+    changedFileCount = await readChangedFileCount(baseUrl, input.password, sessionId, timeoutMs);
   } catch (error) {
+    await bestEffortAbortSession(baseUrl, input.password, sessionId, timeoutMs);
     await input.onSessionSettled?.(
       reference,
       error instanceof OpenCodeStoppedError ? "stopped" : "failed",
@@ -267,6 +311,7 @@ export async function runOpenCodeSession(input: {
 
   return {
     ...reference,
+    changedFileCount,
     content:
       content || "OpenCode completed the request. Open its session to inspect the full tool trail.",
   };

@@ -14,6 +14,8 @@ The application does not embed a full fork of OpenCode. It uses a reviewed brows
 
 - accepts only credential-free HTTP loopback origins;
 - keeps the optional OpenCode password in memory;
+- propagates cancellation to `POST /session/:id/abort` after cancelling the browser request;
+- reads `GET /session/:id/diff` after success only to display the local changed-file count; no diff body is uploaded;
 - checks server health, creates a runtime session and sends one prompt with a 45-second default request timeout;
 - validates returned health, session and message shapes;
 - bounds prompt/title/password/server metadata, streams responses through a 1 MiB limit and composes caller cancellation with its timeout;
@@ -40,7 +42,7 @@ The same migration adds caller-bound approval request and owner-decision RPCs wi
 
 ### Evidence
 
-- OpenCode lifecycle, cancellation, timeout and validation unit tests pass as part of the 46-test member suite.
+- OpenCode lifecycle, daemon-abort propagation, local diff count, timeout and validation unit tests pass as part of the 54-test member suite.
 - The two terminal SQL contracts contribute 49 passing assertions to the 550-assertion fresh database replay.
 - Database lint reports no `public` or `private` schema errors.
 - Member typecheck, production build and formatting pass.
@@ -52,7 +54,7 @@ These facts are **Released** to hosted project `jpwvgpnbkrktipwhvqss`: the three
 The following capabilities are still **Planned** or **Partial**:
 
 1. realtime/SSE timeline delivery, runtime reconnect and bounded retention/compaction of the existing ordered metadata timeline;
-2. resume, reconnect, daemon-confirmed abort, fork, child sessions and task tree; the current Stop action cancels the browser request and records `stopped`, but does not prove daemon process termination;
+2. resume, reconnect, verified daemon-abort acknowledgement, fork, child sessions and task tree; Stop now invokes OpenCode abort, but its best-effort cleanup deliberately preserves the original failure and therefore does not yet prove process termination;
 3. command, tool, MCP, LSP, formatter and repository-context UI;
 4. step-up, approval UI, daemon-side execution enforcement and revoke/expiry handling for the existing approval request/decision boundary;
 5. diff, review, revert, artifact and safe download flows;

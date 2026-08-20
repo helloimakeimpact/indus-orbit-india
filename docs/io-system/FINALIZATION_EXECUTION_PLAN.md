@@ -148,7 +148,7 @@ User input needed: verify/add the safety-identifier secret, obtain written OpenA
 Deliverables:
 
 1. **Released to demo:** safe creator-only sessions, lifecycle, replay-safe ordered metadata events and non-executable request/owner-decision boundaries. Still required: realtime delivery, executable approval/tool contracts, artifacts and handoffs.
-2. Add resumable streaming timelines, task trees, commands, diffs/revert, abort/recovery and daemon-enforced approval states.
+2. **Verified locally:** browser cancellation propagates to OpenCode session abort and completed runs expose only a local changed-file count. Still add resumable streaming timelines, task trees, commands, full diff/revert, verified abort/recovery and daemon-enforced approval states.
 3. Authenticate the local daemon with short-lived pairing, origin binding and revocation instead of an in-memory password alone.
 4. Package the local client and define compatibility/version negotiation with OpenCode.
 5. Keep local execution local; the hosted service stores only deliberate, permissioned session metadata/artifacts.
