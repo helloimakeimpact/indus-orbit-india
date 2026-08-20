@@ -1,8 +1,19 @@
 # I/O Port: 20-provider implementation inventory
 
-Status: operator research inventory and next-phase implementation plan, updated 1 August 2026. Current deployed readiness and the corrected multi-provider architecture are tracked in `IO_PORT_IMPLEMENTATION_STATUS.md`.
+Status: operator research inventory and next-phase implementation plan, updated 20 August 2026. Current deployed readiness and the corrected multi-provider architecture are tracked in `IO_PORT_IMPLEMENTATION_STATUS.md`.
 
 This is an **evaluation inventory**, not a public model catalogue and not an activation list. Five direct providers now have one staged model, endpoint, testing connection, draft capability certificate and published evidence-backed price card in the demo registry, but no external provider is routable and no conformance run exists. The other inventory entries remain research only. A secret is credential material, not activation evidence. Prices, model lists, limits and deployment regions change often; a linked provider page is evidence for research, not a substitute for a signed agreement or an immutable I/O price card.
+
+## Current first-production research — 20 August 2026
+
+The owner selected OpenAI and DeepSeek as the first technical production candidates. This changes prioritization, not activation. Migration `20260820001339_add_io_transparent_service_fee.sql` marks both providers `resale_pending`, makes reviewed onward-access evidence part of endpoint eligibility and blocks privileged route activation without it.
+
+| Provider | Current staged model/evidence                                                                                               | Hosted data boundary                                                                                                          | Public terms conclusion                                                                                                                                   | Next evidence required                                                                                                              |
+| -------- | --------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| OpenAI   | `gpt-5.6-luna`; price v2 records $0.20/M input, $0.02/M cached input and $1.20/M output for the standard short-context card | India regional storage is available for eligible approved customers, but the cited current route is not India-only processing | Product integration is technically documented; raw API-port resale with I/O's own metering/fee is not established by docs alone                           | Written authorization/order-form position, selected data-control tier, region, DPA/support, conformance spend and passing run       |
+| DeepSeek | `deepseek-v4-flash`; public price evidence records $0.14/M cache-miss input, $0.0028/M cache-hit input and $0.28/M output   | Hosted public privacy terms identify China processing/storage; registry records CN                                            | Open Platform terms support downstream applications, but raw onward metered API resale remains ambiguous alongside general sale/sublicensing restrictions | Written onward-access position, explicit China-route product policy, retention/training decision, conformance spend and passing run |
+
+The current I/O price policy adds 5.5% to settled provider usage and preserves provider cost, fee and customer total separately. This is the same headline rate as OpenRouter's current credit-purchase fee, not a claim that OpenRouter has a larger inference markup. Full evidence and URLs are maintained in `PRODUCTION_API_COMMERCIAL_AND_PROVIDER_POLICY.md`.
 
 ## 1. How to read the inventory
 

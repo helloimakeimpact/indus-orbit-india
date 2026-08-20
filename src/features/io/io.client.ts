@@ -144,6 +144,10 @@ export type IoRouteDisclosure = {
   currencyCode: string;
   settledMinor: number;
   releasedMinor: number;
+  providerCostNanos: number;
+  serviceFeeNanos: number;
+  customerChargeNanos: number;
+  serviceFeeBasisPoints: number;
   costBasis: "provider_usage" | "route_estimate_missing_usage";
   fallbackCount: number;
 };
@@ -269,6 +273,10 @@ function parseRouteDisclosure(value: unknown): IoRouteDisclosure | null {
   const fallbackCount = readNonNegativeInteger(route, "fallbackCount");
   const settledMinor = readNonNegativeInteger(route, "settledMinor");
   const releasedMinor = readNonNegativeInteger(route, "releasedMinor");
+  const providerCostNanos = readNonNegativeInteger(route, "providerCostNanos");
+  const serviceFeeNanos = readNonNegativeInteger(route, "serviceFeeNanos");
+  const customerChargeNanos = readNonNegativeInteger(route, "customerChargeNanos");
+  const serviceFeeBasisPoints = readNonNegativeInteger(route, "serviceFeeBasisPoints");
   const costBasis = readString(route, "costBasis");
   const regionCode = readNullableString(route, "regionCode");
   const residencyCountryCode = readNullableString(route, "residencyCountryCode");
@@ -278,6 +286,12 @@ function parseRouteDisclosure(value: unknown): IoRouteDisclosure | null {
     fallbackCount === null ||
     settledMinor === null ||
     releasedMinor === null ||
+    providerCostNanos === null ||
+    serviceFeeNanos === null ||
+    customerChargeNanos === null ||
+    serviceFeeBasisPoints === null ||
+    serviceFeeBasisPoints > 10_000 ||
+    customerChargeNanos !== providerCostNanos + serviceFeeNanos ||
     (costBasis !== "provider_usage" && costBasis !== "route_estimate_missing_usage") ||
     (regionCode === null && route.regionCode !== null) ||
     (residencyCountryCode === null && route.residencyCountryCode !== null)
@@ -296,6 +310,10 @@ function parseRouteDisclosure(value: unknown): IoRouteDisclosure | null {
     estimatedCostNanos,
     settledMinor,
     releasedMinor,
+    providerCostNanos,
+    serviceFeeNanos,
+    customerChargeNanos,
+    serviceFeeBasisPoints,
     costBasis,
     fallbackCount,
   };

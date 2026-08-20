@@ -1,6 +1,6 @@
 # Indus Orbit full finalization execution plan
 
-Status: active, evidence-gated plan updated 20 August 2026. All 69 source migrations, `io-gateway` v21 and the bounded `io-openai` v2 foundation are Released to the demo. Production readiness is not claimed.
+Status: active, evidence-gated plan updated 20 August 2026. All 71 source migrations, `io-gateway` v22 and bounded `io-openai` v3 plus the transparent commercial gate are Released to the demo. Production readiness is not claimed.
 
 This plan covers the whole product: public brand site, identity, Community, conversation, I/O Port, terminal/OpenCode, admin, data, operations and commercial readiness. “Done” means code, authorization, data migration, browser behavior, deployment and operating evidence all agree. A source file or attractive UI alone is not completion.
 
@@ -10,7 +10,7 @@ Execution update, 19 August 2026: the Released I/O controls remain unchanged. Di
 
 Completed in the demo environment:
 
-- provider registry/control-plane foundation and Released `io-gateway` v20;
+- provider registry/control-plane foundation and Released `io-gateway` v22;
 - latest endpoint-bound eligibility enforcement;
 - notification table containment and vouch contract repairs;
 - complete Loops browser retirement with service-only archive access;
@@ -20,7 +20,8 @@ Completed in the demo environment:
 - removal of anonymous access to eight privileged functions;
 - caller-bound domain mutations, retirement of generic notification execution and a private service-leased email outbox;
 - Chapter/Mission Space schema, deterministic Room blueprints, membership projection and caller-bound lifecycle/message/read operations;
-- last clean local 68-migration replay with 550/550 assertions; the hosted project has 69 migrations with direct-pagination and I/O API-key contracts, while the local 69-migration rerun awaits Docker repair;
+- last clean local 68-migration replay with 550/550 assertions; the hosted project has 71 migrations with direct-pagination, I/O API-key, transparent-fee and commercial-gate contracts, while the local 71-migration rerun awaits Docker repair;
+- exact 5.5% provider-cost/fee/customer-total evidence, browser-origin persistent-key rejection and fail-closed written onward-access gates; OpenAI and DeepSeek remain `resale_pending`;
 - five-provider/model/endpoint inventory with three capacity sources/grants, while route receipts and provider attempts remain zero.
 
 The product is still a release candidate foundation, not a finished production system.
@@ -118,6 +119,7 @@ Deliverables:
 5. Add OpenAI-compatible partner and local endpoints while preserving provider-specific adapters where semantics differ.
 6. Add member usage, credit, sponsorship, estimate, receipt and failure/offline UI.
 7. Activate one provider at a time only after contract tests; make one bounded live conformance call only with explicit spend approval.
+8. **Released foundation:** versioned 5.5% fee settlement and written onward-access activation gates. Still required: cached/tools/media/storage/regional billing dimensions, credits/FX/tax/invoices/refunds and provider reconciliation.
 
 Exit criteria:
 
@@ -127,7 +129,7 @@ Exit criteria:
 - provider disablement is immediate and audited;
 - published model/price/residency claims have current evidence.
 
-User input needed: provider partnership terms, permitted regions, spend ceiling, activation order, commercial pricing and donated-capacity rules.
+User input needed: written OpenAI/DeepSeek onward-access decisions, permitted regions/data controls, separate conformance spend ceilings, production API DNS/TLS owner and donated-capacity rules. The fee is fixed at 5.5% for policy version 1.
 
 ## Phase 6 — complete the I/O terminal and OpenCode system
 

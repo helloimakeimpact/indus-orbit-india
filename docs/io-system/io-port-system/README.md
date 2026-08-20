@@ -1,30 +1,31 @@
 # I/O Port system record
 
-Status: deployed provider foundation, operational core, terminal safety boundary and bounded OpenAI-compatible API foundation, updated 20 August 2026.
+Status: deployed provider foundation, operational core, terminal safety boundary, bounded OpenAI-compatible API and transparent commercial gate, updated 20 August 2026.
 
 ## Current operational truth
 
 I/O Port has a real web surface, Supabase control plane and registry-driven gateway. The last hosted verification found five provider/model/endpoint/control records and three capacity sources/grants. It does **not** yet have shared OpenRouter capacity or an active direct-provider route; route receipts and provider attempts were zero.
 
-| Layer                      | Current state                                                                                                                                                 |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Public `/io-port`          | Implemented; private-beta language rather than a public-capacity claim.                                                                                       |
-| Product `/io`              | Released to demo; any authenticated identity can enter without Community onboarding. `/app/io` redirects here.                                                |
-| Supabase control plane     | Deployed to demo.                                                                                                                                             |
-| Provider registry          | Five direct providers/models/endpoints/prices staged.                                                                                                         |
-| Provider secrets           | Present in Edge Function secret storage by unique provider name; values are not in registry or Git.                                                           |
-| Gateway                    | `io-gateway` v21 Released with a shared idempotent reserve/settle/circuit/receipt core; JWT-protected, provider traffic disabled.                             |
-| OpenAI-compatible API      | `io-openai` v2 Released: expiring scoped test keys, atomic rate limit, `/v1/models` and non-streaming `/v1/chat/completions`; valid empty catalogue verified. |
-| Member route evidence      | Latest twelve RLS-scoped receipts show route, capacity, attempt/fallback, token and currency-labelled estimate facts.                                         |
-| Admin route evidence       | Capability-checked aggregate plus keyset-paginated redacted receipt feed in the separate admin app.                                                           |
-| Ready providers            | Zero. All five connections are testing; capability proofs are draft; providers/endpoints are conformance-only.                                                |
-| OpenRouter upstream        | Not configured. No OpenRouter key, connection, model sync or paid/shared capacity has been claimed.                                                           |
-| Owned/rented capacity      | Architecture only; no certified server endpoint.                                                                                                              |
-| Donated/sponsored capacity | Demo source and plan only; no eligible live endpoint.                                                                                                         |
-| Member BYOK                | Planned; current stored keys are operator-owned server secrets, not member connections.                                                                       |
-| Budgets and route ledger   | Hard reservation, usage, balanced settle/release and stale-hold expiry are Released to the demo; no live provider concurrency evidence yet.                   |
-| Commercial billing         | Credits, fees/FX/tax, invoices, payments/refunds and provider reconciliation remain Planned.                                                                  |
-| Durable terminal metadata  | Creator-only sessions/events/approval foundation, safe ordered timeline and non-executable approval boundary with hashed runtime references Released to demo. |
+| Layer                      | Current state                                                                                                                                                                                                         |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Public `/io-port`          | Implemented; private-beta language rather than a public-capacity claim.                                                                                                                                               |
+| Product `/io`              | Released to demo; any authenticated identity can enter without Community onboarding. `/app/io` redirects here.                                                                                                        |
+| Supabase control plane     | Deployed to demo.                                                                                                                                                                                                     |
+| Provider registry          | Five direct providers/models/endpoints/prices staged.                                                                                                                                                                 |
+| Provider secrets           | Present in Edge Function secret storage by unique provider name; values are not in registry or Git.                                                                                                                   |
+| Gateway                    | `io-gateway` v22 Released with a shared idempotent reserve/settle/circuit/receipt core and versioned 5.5% fee settlement; JWT-protected, provider traffic disabled.                                                   |
+| OpenAI-compatible API      | `io-openai` v3 Released: expiring scoped test keys, atomic rate limit, browser-origin key rejection, `/v1/models` and non-streaming `/v1/chat/completions`.                                                           |
+| Member route evidence      | Latest twelve RLS-scoped receipts show route, capacity, attempt/fallback, token and currency-labelled estimate facts.                                                                                                 |
+| Admin route evidence       | Capability-checked aggregate plus keyset-paginated redacted receipt feed in the separate admin app.                                                                                                                   |
+| Ready providers            | Zero. All five connections are testing; capability proofs are draft; providers/endpoints are conformance-only.                                                                                                        |
+| OpenRouter upstream        | Not configured. No OpenRouter key, connection, model sync or paid/shared capacity has been claimed.                                                                                                                   |
+| Owned/rented capacity      | Architecture only; no certified server endpoint.                                                                                                                                                                      |
+| Donated/sponsored capacity | Demo source and plan only; no eligible live endpoint.                                                                                                                                                                 |
+| Member BYOK                | Planned; current stored keys are operator-owned server secrets, not member connections.                                                                                                                               |
+| Budgets and route ledger   | Hard reservation, usage, balanced settle/release and stale-hold expiry are Released to the demo; no live provider concurrency evidence yet.                                                                           |
+| Commercial billing         | Provider cost + versioned 5.5% I/O fee + customer total are Released in nanos/receipts. Cached/tool/media dimensions, credits, FX/tax, invoices, payments/refunds and provider reconciliation remain Partial/Planned. |
+| Commercial provider gate   | Released and fail-closed. OpenAI and DeepSeek are `resale_pending`; no route can enable until reviewed written onward-access evidence is recorded.                                                                    |
+| Durable terminal metadata  | Creator-only sessions/events/approval foundation, safe ordered timeline and non-executable approval boundary with hashed runtime references Released to demo.                                                         |
 
 I/O and the Community share one identity but not one onboarding gate. The Community switch opens `/app`, which offers explicit opt-in setup only when it has not already been completed.
 
@@ -32,6 +33,7 @@ I/O and the Community share one identity but not one onboarding gate. The Commun
 
 - `IO_PORT_IMPLEMENTATION_STATUS.md` — detailed done/partial/left and verified deployment state.
 - `OPENAI_COMPATIBLE_API_STATUS.md` — released API/key contract, evidence, limitations and next work.
+- `PRODUCTION_API_COMMERCIAL_AND_PROVIDER_POLICY.md` — production domains, browser-key boundary, 5.5% settlement and OpenAI/DeepSeek/OpenRouter commercial research.
 - `OPENROUTER_CAPABILITY_AND_CAPACITY_PLAN.md` — feature-by-feature OpenRouter comparison and capacity adoption plan.
 - `IO_PORT_IMPLEMENTATION_PLAN.md` — product and platform target.
 - `IO_PORT_CODE_LEVEL_ROADMAP.md` — engineering sequence.

@@ -19,14 +19,19 @@ type RouteReceiptInput = {
   resultState: "completed" | "failed";
   inputTokens?: number;
   outputTokens?: number;
-  actualCostMinor: number;
+  customerChargeMinor: number;
+  providerCostNanos: number;
+  serviceFeeNanos: number;
+  customerChargeNanos: number;
+  serviceFeePolicyVersion: number;
+  serviceFeeBasisPoints: number;
   costBasis: "provider_usage" | "route_estimate_missing_usage" | "released_failure";
   attempts: ProviderAttempt[];
 };
 
 export async function writeRouteReceipt(admin: SupabaseClient, input: RouteReceiptInput) {
   const selected = input.selection?.connection;
-  const { data, error } = await admin.rpc("io_finalize_route_request", {
+  const { data, error } = await admin.rpc("io_finalize_priced_route_request", {
     _request_id: input.requestId,
     _result_state: input.resultState,
     _route_strategy: input.selection?.strategy ?? "latest_affordable",
@@ -65,7 +70,12 @@ export async function writeRouteReceipt(admin: SupabaseClient, input: RouteRecei
     _currency_code: selected?.currencyCode ?? input.attempts[0]?.connection.currencyCode,
     _input_tokens: input.inputTokens ?? null,
     _output_tokens: input.outputTokens ?? null,
-    _actual_cost_minor: input.actualCostMinor,
+    _customer_charge_minor: input.customerChargeMinor,
+    _provider_cost_nanos: input.providerCostNanos,
+    _service_fee_nanos: input.serviceFeeNanos,
+    _customer_charge_nanos: input.customerChargeNanos,
+    _service_fee_policy_version: input.serviceFeePolicyVersion,
+    _service_fee_basis_points: input.serviceFeeBasisPoints,
     _policy_snapshot: input.selection
       ? {
           strategy: input.selection.strategy,

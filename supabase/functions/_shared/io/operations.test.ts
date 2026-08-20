@@ -4,6 +4,7 @@ import {
   calculateCostNanos,
   calculateReservationMinor,
   calculateSettlement,
+  calculateUsageChargeNanos,
   conservativeInputTokenBound,
   fingerprintRouteRequest,
   nanosToMinorUnits,
@@ -63,6 +64,21 @@ describe("I/O operational calculations", () => {
     assert.equal(nanosToMinorUnits(1_000_000_000, "JPY"), 1);
   });
 
+  it("calculates the transparent 5.5% fee in currency nanos", () => {
+    assert.deepEqual(calculateUsageChargeNanos(1_000_000_000, 550), {
+      providerCostNanos: 1_000_000_000,
+      serviceFeeNanos: 55_000_000,
+      customerChargeNanos: 1_055_000_000,
+      feeBasisPoints: 550,
+    });
+    assert.deepEqual(calculateUsageChargeNanos(1, 550), {
+      providerCostNanos: 1,
+      serviceFeeNanos: 1,
+      customerChargeNanos: 2,
+      feeBasisPoints: 550,
+    });
+  });
+
   it("reserves the total worst-case cost across every allowed attempt", () => {
     const messages = [{ role: "user" as const, content: "hello" }];
     assert.equal(conservativeInputTokenBound(messages), 149);
@@ -73,10 +89,20 @@ describe("I/O operational calculations", () => {
           { connection: connection({ outputPriceNanos: 80_000_000 }) },
         ],
         messages,
+        1_024,
+        550,
       ),
       10,
     );
     assert.throws(() => calculateReservationMinor([], messages), /No provider attempt/);
+    assert.throws(
+      () =>
+        calculateReservationMinor(
+          [{ connection: connection() }, { connection: connection({ currencyCode: "INR" }) }],
+          messages,
+        ),
+      /Cross-currency fallback/,
+    );
   });
 
   it("settles from complete provider usage and labels missing usage estimates", () => {
@@ -86,13 +112,28 @@ describe("I/O operational calculations", () => {
         selection: selection(candidate),
         inputTokens: 1_000,
         outputTokens: 500,
+        feeBasisPoints: 550,
       }),
-      { actualCostMinor: 1, costBasis: "provider_usage" },
+      {
+        providerCostNanos: 6_000_000,
+        serviceFeeNanos: 330_000,
+        customerChargeNanos: 6_330_000,
+        customerChargeMinor: 1,
+        feeBasisPoints: 550,
+        costBasis: "provider_usage",
+      },
     );
-    assert.deepEqual(calculateSettlement({ selection: selection(candidate) }), {
-      actualCostMinor: 2,
-      costBasis: "route_estimate_missing_usage",
-    });
+    assert.deepEqual(
+      calculateSettlement({ selection: selection(candidate), feeBasisPoints: 550 }),
+      {
+        providerCostNanos: 20_000_000,
+        serviceFeeNanos: 1_100_000,
+        customerChargeNanos: 21_100_000,
+        customerChargeMinor: 3,
+        feeBasisPoints: 550,
+        costBasis: "route_estimate_missing_usage",
+      },
+    );
   });
 
   it("fingerprints canonical route intent without exposing prompt data", async () => {

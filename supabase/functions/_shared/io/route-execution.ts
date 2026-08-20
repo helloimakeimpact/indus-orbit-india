@@ -6,6 +6,7 @@ import {
   calculateReservationMinor,
   calculateSettlement,
   fingerprintRouteRequest,
+  loadActiveServiceFeePolicy,
   recordEndpointOutcome,
 } from "./operations.ts";
 import { getActiveCapacityEntitlements } from "./policy.ts";
@@ -61,6 +62,10 @@ export type RouteExecutionSuccess = {
     currencyCode: string;
     settledMinor: number;
     releasedMinor: number;
+    providerCostNanos: number;
+    serviceFeeNanos: number;
+    customerChargeNanos: number;
+    serviceFeeBasisPoints: number;
     costBasis: "provider_usage" | "route_estimate_missing_usage";
     fallbackCount: number;
   };
@@ -71,6 +76,7 @@ export async function executePartnerRoute(
   input: RouteExecutionInput,
 ): Promise<RouteExecutionReplay | RouteExecutionSuccess> {
   const entitlements = await getActiveCapacityEntitlements(admin, input.workspaceId);
+  const serviceFeePolicy = await loadActiveServiceFeePolicy(admin);
   const entitledSourceIds = new Set(entitlements.map((entitlement) => entitlement.sourceId));
   const requestId = crypto.randomUUID();
   const mode = input.mode ?? "plan";
@@ -83,7 +89,12 @@ export async function executePartnerRoute(
     selection.routeCandidates,
     Deno.env.get("IO_PROVIDER_MAX_ATTEMPTS"),
   );
-  const reserveMinor = calculateReservationMinor(routeAttempts, input.messages);
+  const reserveMinor = calculateReservationMinor(
+    routeAttempts,
+    input.messages,
+    1_024,
+    serviceFeePolicy.feeBasisPoints,
+  );
   const fingerprint = await fingerprintRouteRequest({
     workspaceId: input.workspaceId,
     mode,
@@ -200,7 +211,12 @@ export async function executePartnerRoute(
       requestId,
       selection,
       resultState: "failed",
-      actualCostMinor: 0,
+      customerChargeMinor: 0,
+      providerCostNanos: 0,
+      serviceFeeNanos: 0,
+      customerChargeNanos: 0,
+      serviceFeePolicyVersion: serviceFeePolicy.version,
+      serviceFeeBasisPoints: serviceFeePolicy.feeBasisPoints,
       costBasis: "released_failure",
       attempts,
     });
@@ -225,6 +241,7 @@ export async function executePartnerRoute(
     selection: selectedRoute,
     inputTokens: result.usage.inputTokens,
     outputTokens: result.usage.outputTokens,
+    feeBasisPoints: serviceFeePolicy.feeBasisPoints,
   });
   const finalization = await writeRouteReceipt(admin, {
     requestId,
@@ -232,7 +249,12 @@ export async function executePartnerRoute(
     resultState: "completed",
     inputTokens: result.usage.inputTokens,
     outputTokens: result.usage.outputTokens,
-    actualCostMinor: settlement.actualCostMinor,
+    customerChargeMinor: settlement.customerChargeMinor,
+    providerCostNanos: settlement.providerCostNanos,
+    serviceFeeNanos: settlement.serviceFeeNanos,
+    customerChargeNanos: settlement.customerChargeNanos,
+    serviceFeePolicyVersion: serviceFeePolicy.version,
+    serviceFeeBasisPoints: serviceFeePolicy.feeBasisPoints,
     costBasis: settlement.costBasis,
     attempts,
   });
@@ -251,6 +273,10 @@ export async function executePartnerRoute(
       input_tokens: result.usage.inputTokens ?? null,
       output_tokens: result.usage.outputTokens ?? null,
       settled_minor: finalization.settledMinor,
+      provider_cost_nanos: settlement.providerCostNanos,
+      service_fee_nanos: settlement.serviceFeeNanos,
+      customer_charge_nanos: settlement.customerChargeNanos,
+      service_fee_basis_points: serviceFeePolicy.feeBasisPoints,
       released_minor: finalization.releasedMinor,
       currency: finalization.currencyCode,
       cost_basis: settlement.costBasis,
@@ -282,6 +308,10 @@ export async function executePartnerRoute(
       currencyCode: selectedRoute.connection.currencyCode,
       settledMinor: finalization.settledMinor,
       releasedMinor: finalization.releasedMinor,
+      providerCostNanos: settlement.providerCostNanos,
+      serviceFeeNanos: settlement.serviceFeeNanos,
+      customerChargeNanos: settlement.customerChargeNanos,
+      serviceFeeBasisPoints: serviceFeePolicy.feeBasisPoints,
       costBasis: settlement.costBasis,
       fallbackCount: Math.max(0, attempts.length - 1),
     },

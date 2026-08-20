@@ -409,7 +409,9 @@ export function IoOverview() {
     { label: "Endpoint health", value: "Circuit protected", icon: Globe2 },
     { label: "Retention evidence", value: "Receipt bound", icon: ShieldCheck },
   ];
-  const ioApiBaseUrl = `${(import.meta.env.VITE_SUPABASE_URL ?? "").replace(/\/$/, "")}/functions/v1/io-openai/v1`;
+  const ioApiBaseUrl =
+    import.meta.env.VITE_IO_API_BASE_URL?.trim().replace(/\/$/, "") ||
+    `${(import.meta.env.VITE_SUPABASE_URL ?? "").replace(/\/$/, "")}/functions/v1/io-openai/v1`;
 
   return (
     <div className="min-w-0 space-y-4 p-3 sm:p-4 lg:p-5">
@@ -765,7 +767,8 @@ export function IoOverview() {
               <h2 className="text-base font-semibold text-[var(--indigo-night)]">I/O API keys</h2>
             </div>
             <p className="mt-1 text-[11px] text-muted-foreground">
-              OpenAI-compatible, workspace-scoped test access. Provider secrets never leave I/O.
+              OpenAI-compatible, workspace-scoped test access for servers, CLIs and local agents.
+              Provider secrets never leave I/O.
             </p>
           </div>
           <Badge variant="outline" className="w-fit text-[9px]">
@@ -795,7 +798,8 @@ export function IoOverview() {
             </div>
             <p className="text-[10px] leading-4 text-muted-foreground">
               Workspace owners and admins can create keys. New keys receive model-list and inference
-              scopes, expire automatically, and are limited per minute at the server boundary.
+              scopes, expire automatically, and are limited per minute at the server boundary. Do
+              not put an I/O key in browser JavaScript; use the signed-in I/O web workspace instead.
             </p>
 
             {newRawApiKey ? (
@@ -1347,7 +1351,7 @@ function RunResult({
         {partner?.content ?? terminal?.content}
       </p>
       {partner ? (
-        <div className="mt-3 grid gap-2 border-t border-emerald-200/80 pt-2.5 text-[10px] text-emerald-950/80 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="mt-3 grid gap-2 border-t border-emerald-200/80 pt-2.5 text-[10px] text-emerald-950/80 sm:grid-cols-2 lg:grid-cols-7">
           <RouteFact label="Receipt" value={partner.receiptId} />
           <RouteFact
             label="Selection"
@@ -1365,8 +1369,16 @@ function RunResult({
           />
           <RouteFact label="Fallbacks" value={String(partner.route.fallbackCount)} />
           <RouteFact
-            label="Settled cost"
-            value={`${formatMinor(partner.route.settledMinor, partner.route.currencyCode)} · ${partner.route.costBasis === "provider_usage" ? "provider usage" : "estimated usage"}`}
+            label="Provider cost"
+            value={`${formatNanos(partner.route.providerCostNanos, partner.route.currencyCode)} · ${partner.route.costBasis === "provider_usage" ? "metered" : "estimated"}`}
+          />
+          <RouteFact
+            label={`I/O fee · ${partner.route.serviceFeeBasisPoints / 100}%`}
+            value={formatNanos(partner.route.serviceFeeNanos, partner.route.currencyCode)}
+          />
+          <RouteFact
+            label="Customer charge"
+            value={formatMinor(partner.route.settledMinor, partner.route.currencyCode)}
           />
         </div>
       ) : null}

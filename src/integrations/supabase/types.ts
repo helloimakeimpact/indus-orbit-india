@@ -2529,6 +2529,10 @@ export type Database = {
       io_providers: {
         Row: {
           catalogue_visibility: string;
+          commercial_access_state: string;
+          commercial_terms_evidence_url: string | null;
+          commercial_terms_reviewed_at: string | null;
+          commercial_terms_reviewed_by: string | null;
           created_at: string;
           created_by: string;
           data_retention_class: string;
@@ -2542,6 +2546,7 @@ export type Database = {
           provider_key: string;
           provider_kind: string;
           public_summary: string | null;
+          resale_authorized: boolean;
           terms_evidence_url: string | null;
           terms_version: string | null;
           training_use_class: string;
@@ -2549,6 +2554,10 @@ export type Database = {
         };
         Insert: {
           catalogue_visibility?: string;
+          commercial_access_state?: string;
+          commercial_terms_evidence_url?: string | null;
+          commercial_terms_reviewed_at?: string | null;
+          commercial_terms_reviewed_by?: string | null;
           created_at?: string;
           created_by?: string;
           data_retention_class?: string;
@@ -2562,6 +2571,7 @@ export type Database = {
           provider_key: string;
           provider_kind: string;
           public_summary?: string | null;
+          resale_authorized?: boolean;
           terms_evidence_url?: string | null;
           terms_version?: string | null;
           training_use_class?: string;
@@ -2569,6 +2579,10 @@ export type Database = {
         };
         Update: {
           catalogue_visibility?: string;
+          commercial_access_state?: string;
+          commercial_terms_evidence_url?: string | null;
+          commercial_terms_reviewed_at?: string | null;
+          commercial_terms_reviewed_by?: string | null;
           created_at?: string;
           created_by?: string;
           data_retention_class?: string;
@@ -2582,6 +2596,7 @@ export type Database = {
           provider_key?: string;
           provider_kind?: string;
           public_summary?: string | null;
+          resale_authorized?: boolean;
           terms_evidence_url?: string | null;
           terms_version?: string | null;
           training_use_class?: string;
@@ -2660,6 +2675,7 @@ export type Database = {
           capability_version: number | null;
           completed_at: string;
           created_at: string;
+          customer_charge_nanos: number | null;
           estimated_cost_nanos: number | null;
           fallback_count: number;
           id: string;
@@ -2667,6 +2683,7 @@ export type Database = {
           output_tokens: number | null;
           policy_snapshot: Json;
           price_version: number | null;
+          provider_cost_nanos: number | null;
           request_id: string;
           result_state: string;
           route_strategy: string;
@@ -2681,6 +2698,9 @@ export type Database = {
           selected_region_code: string | null;
           selected_residency_country_code: string | null;
           selected_retention_class: string | null;
+          service_fee_basis_points: number | null;
+          service_fee_nanos: number | null;
+          service_fee_policy_version: number | null;
           workspace_id: string;
         };
         Insert: {
@@ -2690,6 +2710,7 @@ export type Database = {
           capability_version?: number | null;
           completed_at?: string;
           created_at?: string;
+          customer_charge_nanos?: number | null;
           estimated_cost_nanos?: number | null;
           fallback_count?: number;
           id?: string;
@@ -2697,6 +2718,7 @@ export type Database = {
           output_tokens?: number | null;
           policy_snapshot?: Json;
           price_version?: number | null;
+          provider_cost_nanos?: number | null;
           request_id: string;
           result_state: string;
           route_strategy: string;
@@ -2711,6 +2733,9 @@ export type Database = {
           selected_region_code?: string | null;
           selected_residency_country_code?: string | null;
           selected_retention_class?: string | null;
+          service_fee_basis_points?: number | null;
+          service_fee_nanos?: number | null;
+          service_fee_policy_version?: number | null;
           workspace_id: string;
         };
         Update: {
@@ -2720,6 +2745,7 @@ export type Database = {
           capability_version?: number | null;
           completed_at?: string;
           created_at?: string;
+          customer_charge_nanos?: number | null;
           estimated_cost_nanos?: number | null;
           fallback_count?: number;
           id?: string;
@@ -2727,6 +2753,7 @@ export type Database = {
           output_tokens?: number | null;
           policy_snapshot?: Json;
           price_version?: number | null;
+          provider_cost_nanos?: number | null;
           request_id?: string;
           result_state?: string;
           route_strategy?: string;
@@ -2741,6 +2768,9 @@ export type Database = {
           selected_region_code?: string | null;
           selected_residency_country_code?: string | null;
           selected_retention_class?: string | null;
+          service_fee_basis_points?: number | null;
+          service_fee_nanos?: number | null;
+          service_fee_policy_version?: number | null;
           workspace_id?: string;
         };
         Relationships: [
@@ -4582,6 +4612,31 @@ export type Database = {
       };
     };
     Functions: {
+      io_get_active_service_fee_policy: { Args: never; Returns: Json };
+      io_finalize_priced_route_request: {
+        Args: {
+          _request_id: string;
+          _result_state: string;
+          _route_strategy: string;
+          _selection: Json;
+          _attempts: Json;
+          _candidate_count: number;
+          _fallback_count: number;
+          _estimated_cost_nanos: number;
+          _currency_code: string;
+          _input_tokens: number | null;
+          _output_tokens: number | null;
+          _customer_charge_minor: number;
+          _provider_cost_nanos: number;
+          _service_fee_nanos: number;
+          _customer_charge_nanos: number;
+          _service_fee_policy_version: number;
+          _service_fee_basis_points: number;
+          _policy_snapshot: Json;
+          _candidate_summary: Json;
+        };
+        Returns: Json;
+      };
       admin_io_evidence_summary: { Args: never; Returns: Json };
       admin_io_operational_snapshot: {
         Args: never;
@@ -4606,6 +4661,17 @@ export type Database = {
           routing_enabled: boolean;
           supports_chat: boolean;
           updated_at: string;
+        }[];
+      };
+      admin_io_provider_commercial_snapshot: {
+        Args: never;
+        Returns: {
+          commercial_access_state: string;
+          commercial_terms_evidence_url: string | null;
+          commercial_terms_reviewed_at: string | null;
+          provider_id: string;
+          provider_key: string;
+          resale_authorized: boolean;
         }[];
       };
       admin_io_recent_route_receipts: {

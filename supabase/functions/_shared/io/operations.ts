@@ -14,6 +14,11 @@ export type RouteReservation = {
   currencyCode: string;
 };
 
+export type ServiceFeePolicy = {
+  version: number;
+  feeBasisPoints: number;
+};
+
 function asRecord(value: unknown): JsonRecord | null {
   return value !== null && typeof value === "object" && !Array.isArray(value)
     ? (value as JsonRecord)
@@ -68,6 +73,42 @@ export function nanosToMinorUnits(costNanos: number, currencyCode: string) {
   return safeNumber(divideRoundUp(BigInt(costNanos) * scale, 1_000_000_000n), "Minor-unit cost");
 }
 
+export function calculateUsageChargeNanos(providerCostNanos: number, feeBasisPoints: number) {
+  if (!Number.isSafeInteger(providerCostNanos) || providerCostNanos < 0) {
+    throw new GatewayError("internal_error", 500, "The provider cost is outside the safe range.");
+  }
+  if (!Number.isInteger(feeBasisPoints) || feeBasisPoints < 0 || feeBasisPoints > 10_000) {
+    throw new GatewayError("internal_error", 500, "The I/O service fee policy is invalid.");
+  }
+  const serviceFeeNanos = safeNumber(
+    divideRoundUp(BigInt(providerCostNanos) * BigInt(feeBasisPoints), 10_000n),
+    "I/O service fee",
+  );
+  return {
+    providerCostNanos,
+    serviceFeeNanos,
+    customerChargeNanos: safeNumber(
+      BigInt(providerCostNanos) + BigInt(serviceFeeNanos),
+      "Customer usage charge",
+    ),
+    feeBasisPoints,
+  };
+}
+
+export async function loadActiveServiceFeePolicy(admin: SupabaseClient): Promise<ServiceFeePolicy> {
+  const { data, error } = await admin.rpc("io_get_active_service_fee_policy");
+  if (error) {
+    throw new GatewayError("not_configured", 503, "The I/O service fee is not configured.");
+  }
+  const result = asRecord(data);
+  const version = result ? readSafeInteger(result, "version") : 0;
+  const feeBasisPoints = result ? readSafeInteger(result, "feeBasisPoints", -1) : -1;
+  if (version < 1 || feeBasisPoints < 0 || feeBasisPoints > 10_000) {
+    throw new GatewayError("internal_error", 500, "The I/O service fee policy is invalid.");
+  }
+  return { version, feeBasisPoints };
+}
+
 export function calculateCostNanos(
   connection: ProviderConnection,
   inputTokens: number,
@@ -100,36 +141,54 @@ export function calculateReservationMinor(
   attempts: Array<{ connection: ProviderConnection }>,
   messages: GatewayMessage[],
   outputTokenLimit = 1_024,
+  feeBasisPoints = 0,
 ) {
   if (attempts.length === 0) {
     throw new GatewayError("not_configured", 503, "No provider attempt is available to reserve.");
   }
+  const currencyCode = attempts[0].connection.currencyCode;
+  if (attempts.some(({ connection }) => connection.currencyCode !== currencyCode)) {
+    throw new GatewayError(
+      "not_configured",
+      503,
+      "Cross-currency fallback requires an approved FX snapshot.",
+    );
+  }
   const inputTokenBound = conservativeInputTokenBound(messages);
-  const totalWorstCaseMinor = attempts.reduce(
+  const totalWorstCaseNanos = attempts.reduce(
     (total, { connection }) =>
       total +
       BigInt(
-        nanosToMinorUnits(
+        calculateUsageChargeNanos(
           calculateCostNanos(connection, inputTokenBound, outputTokenLimit),
-          connection.currencyCode,
-        ),
+          feeBasisPoints,
+        ).customerChargeNanos,
       ),
     0n,
   );
-  return safeNumber(totalWorstCaseMinor, "Worst-case attempt reservation");
+  return nanosToMinorUnits(
+    safeNumber(totalWorstCaseNanos, "Worst-case attempt reservation"),
+    currencyCode,
+  );
 }
 
 export function calculateSettlement(input: {
   selection: RouteSelection;
   inputTokens?: number;
   outputTokens?: number;
+  feeBasisPoints?: number;
 }) {
   const completeUsage = input.inputTokens !== undefined && input.outputTokens !== undefined;
   const costNanos = completeUsage
     ? calculateCostNanos(input.selection.connection, input.inputTokens!, input.outputTokens!)
     : input.selection.estimatedCostNanos;
+  const charge = calculateUsageChargeNanos(costNanos, input.feeBasisPoints ?? 0);
   return {
-    actualCostMinor: nanosToMinorUnits(costNanos, input.selection.connection.currencyCode),
+    ...charge,
+    customerChargeMinor: nanosToMinorUnits(
+      charge.customerChargeNanos,
+      input.selection.connection.currencyCode,
+    ),
     costBasis: completeUsage ? "provider_usage" : "route_estimate_missing_usage",
   } as const;
 }

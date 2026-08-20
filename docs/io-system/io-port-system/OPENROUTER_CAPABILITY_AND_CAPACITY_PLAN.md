@@ -1,6 +1,15 @@
 # OpenRouter capability and capacity plan for I/O Port
 
-Status: researched capability gap and adoption decision, 1 August 2026. Official OpenRouter documentation was rechecked on this date.
+Status: researched capability gap and adoption decision, updated 20 August 2026. Official OpenRouter documentation, pricing, OAuth and current terms were rechecked on this date.
+
+## 20 August commercial and browser-key correction
+
+- OpenRouter's current FAQ describes provider inference price pass-through and a 5.5% fee, subject to a minimum, when credits are purchased. I/O's owner-approved 5.5% therefore has the same headline rate; the I/O difference is a separately recorded fee on settled provider usage, not a claim of undercutting a larger OpenRouter inference markup.
+- OpenRouter OAuth PKCE can issue a user-controlled OpenRouter key to a browser-oriented application. This is not an upstream provider key and the documented bearer-key controls are not an origin-bound security boundary. I/O persistent keys remain server/CLI/local-agent only; browser web access uses the signed-in JWT gateway.
+- OpenRouter's current standard terms prohibit using the service to resell API access or build a competing service. Its current enterprise terms allow product functionality for end customers but remain non-sublicensable and restrict rent/resale/third-party access. Consequently OpenRouter must not be added as a raw I/O upstream without bespoke written authorization.
+- The 20 August database release encodes that rule generally: a provider cannot become endpoint-eligible or routing-enabled until `resale_authorized=true` is backed by reviewed evidence.
+
+Sources: [FAQ](https://openrouter.ai/docs/faq), [OAuth PKCE](https://openrouter.ai/docs/guides/overview/auth/oauth), [API keys](https://openrouter.ai/docs/api/api-reference/api-keys/create-keys), [standard terms](https://openrouter.ai/terms), [enterprise terms](https://openrouter.ai/terms-of-service-enterprise). Full first-provider evidence is in `PRODUCTION_API_COMMERCIAL_AND_PROVIDER_POLICY.md`.
 
 ## The important distinction
 

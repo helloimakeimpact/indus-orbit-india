@@ -1,6 +1,6 @@
 # Indus Orbit admin system
 
-Status: separate application foundation; provider/evidence/budget/circuit database controls Released to demo, 12 August 2026.
+Status: separate application foundation; provider/evidence/budget/circuit/commercial database controls Released to demo, updated 20 August 2026.
 
 ## Ownership boundary
 
@@ -28,7 +28,7 @@ Assignments, capability mappings and assignment events live in the non-exposed `
 
 ## I/O operator boundary
 
-The admin application can read a safe provider snapshot and operate the independent runtime switch through capability-checked RPCs. Enabling fails unless an endpoint has active provider/model/endpoint states, a ready connection, verified chat capability, effective published price and a passed conformance run. The gateway's service-only resolver also joins the runtime switch, so UI state cannot bypass it.
+The admin application can read safe operational and commercial provider snapshots and operate the independent runtime switch through capability-checked RPCs. Enabling fails unless an endpoint has active provider/model/endpoint states, a ready connection, verified chat capability, effective published price, a passed conformance run and reviewed written onward-access authorization. The gateway's service-only resolver and a database trigger enforce the same rule, so UI state cannot bypass it.
 
 Current demo facts:
 
@@ -37,6 +37,7 @@ Current demo facts:
 - 0 enabled runtime controls;
 - 0 passed conformance runs;
 - 0 ready routes;
+- OpenAI and DeepSeek marked `resale_pending` with `resale_authorized=false`;
 - 0 scoped team assignments (the two existing admins remain super-admins).
 
 No provider call or credit was consumed by this work.
@@ -47,9 +48,9 @@ The locally Verified operational-core migration and admin build additionally pro
 - immutable integer-minor-unit budget-version creation with an operator reason;
 - endpoint health/circuit snapshots;
 - reasoned manual circuit open/close controls;
-- 11 passing browser contract tests and the shared 541-assertion database replay.
+- 12 passing browser contract tests and the last shared 550-assertion local database baseline.
 
-This shared schema slice is Released through migration `20260810002754_create_io_operational_core.sql`. The separate admin browser application remains local-source verified until it is built and hosted against the shared project.
+The operational slice is Released through `20260810002754_create_io_operational_core.sql`; the commercial projection/gate is Released through `20260820001339_add_io_transparent_service_fee.sql`. The separate admin browser application remains local-source verified until it is hosted against the shared project.
 
 ## Code complete versus left
 
@@ -58,6 +59,7 @@ Implemented:
 - standalone branded shell and sign-in;
 - desktop and 390px mobile runtime verification;
 - control overview, team assignment/revocation and I/O operations pages;
+- provider commercial state, onward-access activation gate and terms-evidence link;
 - safe unconfigured state and environment contract;
 - typed/build verification in both repositories;
 - demo database migrations and post-apply checks;
@@ -70,7 +72,7 @@ Left before production:
 3. replace legacy trust/report, member, content and programme direct-table mutations with transactional capability-checked RPCs;
 4. add optimistic concurrency, mandatory decision reasons, immutable/redacted events, appeals and negative role-matrix tests;
 5. add paginated audit search/export with retention and redaction policy;
-6. add I/O conformance approval, scheduled health and ledger reconciliation before paid traffic;
+6. add commercial evidence mutation/expiry workflow, I/O conformance approval, scheduled health and ledger reconciliation before paid traffic;
 7. create staging/production separation, SLOs, alerts, incident response and rollback proof.
 
 ## Security-advisor interpretation

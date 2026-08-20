@@ -7,6 +7,16 @@ export type OpenAiChatRequest = {
   messages: GatewayMessage[];
 };
 
+export function rejectBrowserApiKeyRequest(origin: string | null) {
+  if (origin !== null) {
+    throw new GatewayError(
+      "forbidden",
+      403,
+      "I/O API keys are for server, CLI, and local-agent use only. Use the signed-in I/O web application from a browser.",
+    );
+  }
+}
+
 function asRecord(value: unknown) {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     throw new GatewayError("bad_request", 400, "Request body must be a JSON object.");

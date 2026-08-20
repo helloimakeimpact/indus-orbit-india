@@ -3,10 +3,19 @@ import test from "node:test";
 import { GatewayError } from "./errors.ts";
 import {
   parseOpenAiChatRequest,
+  rejectBrowserApiKeyRequest,
   requireApiKeyAuthorization,
   requireClientIdempotencyKey,
   sha256Hex,
 } from "./openai-api.ts";
+
+test("rejects browser-origin API-key requests", () => {
+  assert.doesNotThrow(() => rejectBrowserApiKeyRequest(null));
+  assert.throws(
+    () => rejectBrowserApiKeyRequest("https://indusorbit.com"),
+    (error) => error instanceof GatewayError && error.code === "forbidden" && error.status === 403,
+  );
+});
 
 test("parses the supported non-streaming OpenAI chat subset", () => {
   assert.deepEqual(

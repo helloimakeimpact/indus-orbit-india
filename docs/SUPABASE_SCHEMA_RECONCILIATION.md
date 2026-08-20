@@ -1,6 +1,6 @@
 # Supabase schema-reconciliation record
 
-Status: all 69 source migrations are present in the linked Indus Orbit demo. Migrations 68–69 were applied atomically through the connected Supabase project API and verified there. The last clean local baseline is 68 migrations with 550/550 assertions; the local Docker database became unhealthy before the new 24-check API-key file could run. Historical aliases remain, updated 20 August 2026.
+Status: all 71 source migrations are present in the linked Indus Orbit demo. Migrations 68–71 were applied through the connected Supabase project API and verified there. The last clean local baseline is 68 migrations with 550/550 assertions; local Docker currently fails during managed-service bootstrap before product migrations run. Historical aliases remain, updated 20 August 2026.
 
 ## Current addendum — exact hosted/local boundary
 
@@ -20,8 +20,12 @@ The connected project migration API then released:
 
 - `20260819225550_add_direct_message_pagination_rpc.sql` — caller-bound, 50-row maximum keyset pagination. Hosted checks prove the function, definer/empty-search-path contract, authenticated-only execution, no authenticated direct insert and the conversation index.
 - `20260819232624_add_io_openai_api_foundation.sql` — owner/admin test-key issuance, revocation, service-only hash authentication, scope enforcement and atomic fixed-minute counters. Hosted grants and a rolled-back functional transaction proved key shape/hash, first-request allow, rate rejection, bounded counter, revocation and exactly-once audits.
+- `20260820001339_add_io_transparent_service_fee.sql` — versioned 550-basis-point pricing, provider-cost/fee/customer-total evidence, atomic priced finalization, provider commercial states, written-evidence eligibility and the separate admin commercial projection.
+- `20260820023501_add_io_commercial_fk_indexes.sql` — covering indexes for both new reviewer/creator foreign-key paths identified by Performance Advisor.
 
-The clean local database previously replayed 68 migrations and passed 550 assertions across 14 pgTAP files. Source now contains a 15th pgTAP file with 24 API-key checks. A local rebuild failed because the Supabase database container remained unhealthy during managed-schema bootstrap, before product migrations ran; this is not recorded as a SQL failure and no 69-migration local pass is claimed.
+The connected API recorded the two source files at hosted apply versions `20260820023411` and `20260820023513`. This is another documented local-file/hosted-ledger timestamp mapping; no migration history was repaired or rewritten.
+
+The clean local database previously replayed 68 migrations and passed 550 assertions across 14 pgTAP files. Source includes API-key and 26-check commercial pgTAP contracts. A local rebuild failed because the Supabase database container's managed `_supabase` database and internal role credentials did not match during service bootstrap, before product migrations ran; this is not recorded as a product SQL failure and no 71-migration local pass is claimed. The unhealthy local stack was stopped with backup; the hosted Indus Orbit project was not reset or replaced.
 
 The hosted I/O inventory is not empty. The latest read-only inventory has 5 providers, 5 models, 5 endpoints, 5 endpoint capability versions, 5 price versions, 5 runtime controls, 5 endpoint connections, 3 capacity sources and 3 workspace capacity grants. It has 0 route receipts and 0 provider attempts. Inventory or stored secret-reference names are not proof of provider conformance or permission to create paid traffic.
 
@@ -44,7 +48,9 @@ The read-only `chapter_mission_space_release_contract.sql` result is:
 - I/O evidence release: migration/column/index/two functions present; anonymous execution false and authenticated execution true.
 - I/O operational/terminal release: the three migrations are present; all fourteen expected new I/O tables have RLS; direct authenticated writes to terminal events/reservations are false; anonymous execution of terminal RPCs is false; authenticated execution is true; private ledger/idempotency tables are not browser-readable; expected indexes are present; usage/session/event/approval counts are `0`.
 
-`io-gateway` is active at version `21` with JWT verification and a shared route-execution core. `io-openai` is active at version `1` with custom API-key authentication and JWT interception disabled only for that boundary. A deliberately invalid key returned an OpenAI-shaped `401`; a temporary valid, model-read-only key returned `200`, an entitlement-filtered empty catalogue and rate-limit headers, then was deleted. No provider key was read and no provider traffic was created.
+`io-gateway` is active at version `22` with JWT verification and a shared priced route-execution core. `io-openai` is active at version `3` with custom API-key authentication, browser-origin rejection and JWT interception disabled only for that boundary. A browser-origin invalid-key probe returned `403`; a server-shaped invalid key returned `401`. The active fee policy returned version 1 / 550 basis points; both provider commercial states are `resale_pending`; the routing trigger blocked OpenAI activation; OpenAI price v2 and DeepSeek CN disclosures are present. No provider key was read and no provider traffic was created.
+
+The new Advisor findings are bounded: `private.io_service_fee_policies` has RLS with no policies because it is explicitly service-role-only, and `admin_io_provider_commercial_snapshot()` is an authenticated `SECURITY DEFINER` boundary because it performs a private `io.read` capability check. The two new unindexed-FK notices were closed by migration 71. See the [Supabase database linter remediation index](https://supabase.com/docs/guides/database/database-linter).
 
 Hosted `supabase db lint --level warning --schema public` reports no schema errors. Security Advisor reports 79 inherited notices (61 warnings, 18 information) and Performance Advisor reports 345 inherited notices (166 warnings, 179 information); neither contains a warning attached to a new `conversation_*` object. Advisor remediation remains tracked through the [Supabase database linter](https://supabase.com/docs/guides/database/database-advisors).
 

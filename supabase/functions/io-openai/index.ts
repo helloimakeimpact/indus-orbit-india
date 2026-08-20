@@ -3,6 +3,7 @@ import { createGatewayAdminClient } from "../_shared/io/auth.ts";
 import { asGatewayError, GatewayError } from "../_shared/io/errors.ts";
 import {
   parseOpenAiChatRequest,
+  rejectBrowserApiKeyRequest,
   requireApiKeyAuthorization,
   requireClientIdempotencyKey,
   sha256Hex,
@@ -150,6 +151,7 @@ async function parseJson(request: Request) {
 Deno.serve(async (request) => {
   const pathname = new URL(request.url).pathname.replace(/\/+$/, "");
   try {
+    rejectBrowserApiKeyRequest(request.headers.get("Origin"));
     const admin = createGatewayAdminClient();
     if (request.method === "GET" && pathname.endsWith("/v1/models")) {
       const actor = await authenticateApiKey(admin, request, "models:read");
@@ -237,6 +239,7 @@ Deno.serve(async (request) => {
           "x-io-receipt-id": result.receiptId,
           "x-io-provider": result.route.providerKey,
           "x-io-capacity-source": result.capacitySource,
+          "x-io-service-fee-bps": String(result.route.serviceFeeBasisPoints),
         },
       );
     }

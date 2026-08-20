@@ -4,11 +4,21 @@ Status: completed 19 August 2026, with a code/release addendum on 20 August 2026
 
 ## 20 August release addendum
 
+Commercial/provider release completed later on 20 August:
+
+- Hosted ledger advanced to 71 migrations with `20260820001339_add_io_transparent_service_fee.sql` and `20260820023501_add_io_commercial_fk_indexes.sql`.
+- `io-gateway` v22 and `io-openai` v3 are active. The route core now reserves and settles provider cost plus the exact versioned 5.5% I/O fee, and stores provider/fee/customer totals separately.
+- OpenAI and DeepSeek are `resale_pending`; a shared database gate blocks endpoint eligibility and operator route enablement until reviewed written onward-access evidence exists.
+- Persistent I/O API keys are now rejected for browser-origin requests. Live probes returned `403` for browser-origin use and `401` for an invalid server-shaped key with no inference traffic.
+- The separate admin app now shows provider commercial state/evidence and fails closed when it is absent.
+- Member checks pass 52/52 plus format/type/build; admin checks pass 12/12 plus format/type/build.
+- Production domain, browser-key, fee and provider research is filed in `io-port-system/PRODUCTION_API_COMMERCIAL_AND_PROVIDER_POLICY.md`.
+
 - Direct-message pagination migration 68 is Released and verified on the hosted Indus Orbit project as version `20260819225550`.
 - Migration 69 (`20260819232624_add_io_openai_api_foundation.sql`) is Released with one-time hash-only test keys, revocation, scopes, membership revalidation and atomic minute limits.
-- `io-gateway` v21 and `io-openai` v2 are active. Both browser and public chat requests use the same entitlement, idempotency, budget, fallback, receipt, settlement and audit core.
+- `io-gateway` v22 and `io-openai` v3 are active. Both browser and public chat requests use the same entitlement, idempotency, budget, fallback, priced receipt, settlement and audit core.
 - `/v1/models` and a strict non-streaming `/v1/chat/completions` subset are Released. An invalid-key `401` and valid-key empty-catalogue `200` were verified without provider traffic; the temporary key was removed.
-- Member unit coverage is 50/50. The new database file has 24 checks, but the local Docker database became unhealthy during managed-schema bootstrap; the last full local DB baseline remains 68 migrations/550 assertions, while migration 69 has hosted grant and rolled-back functional evidence.
+- Member unit coverage is now 52/52 and admin coverage is 12/12. The local Docker database remains unhealthy during managed-service bootstrap; the last full local DB baseline remains 68 migrations/550 assertions, while migrations 69–71 have hosted contract evidence.
 
 The words in this record are deliberate:
 
@@ -50,7 +60,7 @@ No paid provider request, provider activation, secret read or destructive hosted
 | OpenAI-compatible public API    | Partial  | Hosted v1 has scoped expiring test keys, atomic limits, `/v1/models` and strict non-streaming chat through the shared accounting/receipt core.                         | SSE, Responses, SDK/CLI, production quotas/abuse controls and capability-specific conformance.                                                   |
 | Hosted runners                  | Planned  | Architecture and isolation principles are documented.                                                                                                                  | Scheduler, workload identity, outbound attach, filesystem/network/secrets isolation, quotas, artifact storage and funded operations.             |
 | Separate admin app              | Partial  | Shared identity, scoped duties, fail-closed paths, provider/evidence, budgets and circuits exist; 11 contracts and CI pass.                                            | Hosting, authenticated role personas, MFA/re-auth/two-person root, conformance workflow and transactional trust/member/content/program commands. |
-| Supabase platform               | Partial  | Project `jpwvgpnbkrktipwhvqss` has 69 migrations; migrations 68–69 have hosted security/functional evidence. The last full local baseline is 68/550.                   | Repair local Docker, run the authored 24 API-key checks/full 69 replay, automate type drift and add staging/restore/persona evidence.            |
+| Supabase platform               | Partial  | Project `jpwvgpnbkrktipwhvqss` has 71 migrations; migrations 68–71 have hosted security/functional evidence. The last full local baseline is 68/550.                   | Repair local Docker, run the API/commercial contracts/full 71 replay, automate type drift and add staging/restore/persona evidence.              |
 | Release engineering             | Partial  | Member and admin dependency audits report zero vulnerabilities; type, unit, DB, lint, format and production builds pass.                                               | Required CI for the member app, component/Playwright/a11y/visual/load coverage, generated-type drift, staging, rollback and backup rehearsal.    |
 
 ## Security and correctness findings
@@ -75,23 +85,23 @@ No paid provider request, provider activation, secret read or destructive hosted
 
 ## Verification matrix
 
-| Check                                   | Result                                                            |
-| --------------------------------------- | ----------------------------------------------------------------- |
-| Member TypeScript                       | Passed                                                            |
-| Member unit contracts                   | 50 passed                                                         |
-| Member lint                             | Passed with zero errors                                           |
-| Member production build                 | Passed                                                            |
-| Member formatting                       | Passed                                                            |
-| Admin TypeScript/contracts/build/format | Passed; 11 tests                                                  |
-| Clean Supabase replay                   | Passed; 68 migrations                                             |
-| Database contracts                      | Passed; 14 files, 550 assertions                                  |
-| Public/private database lint            | Passed at error level                                             |
-| Member npm production audit             | Passed; 0 vulnerabilities                                         |
-| Admin npm production audit              | Passed; 0 vulnerabilities                                         |
-| Hosted migrations 68–69                 | Released; security and rolled-back functional contracts pass      |
-| Hosted gateway v21 / `io-openai` v2     | Released; JWT/custom-key boundaries and no-traffic catalogue pass |
-| Paid/live provider traffic              | Not run; explicit spend and conformance approval required         |
-| Authenticated browser personas          | Not run; hosting/accounts are owner work                          |
+| Check                                   | Result                                                             |
+| --------------------------------------- | ------------------------------------------------------------------ |
+| Member TypeScript                       | Passed                                                             |
+| Member unit contracts                   | 50 passed                                                          |
+| Member lint                             | Passed with zero errors                                            |
+| Member production build                 | Passed                                                             |
+| Member formatting                       | Passed                                                             |
+| Admin TypeScript/contracts/build/format | Passed; 11 tests                                                   |
+| Clean Supabase replay                   | Passed; 68 migrations                                              |
+| Database contracts                      | Passed; 14 files, 550 assertions                                   |
+| Public/private database lint            | Passed at error level                                              |
+| Member npm production audit             | Passed; 0 vulnerabilities                                          |
+| Admin npm production audit              | Passed; 0 vulnerabilities                                          |
+| Hosted migrations 68–69                 | Released; security and rolled-back functional contracts pass       |
+| Hosted gateway v22 / `io-openai` v3     | Released; JWT/custom-key/browser-origin/commercial boundaries pass |
+| Paid/live provider traffic              | Not run; explicit spend and conformance approval required          |
+| Authenticated browser personas          | Not run; hosting/accounts are owner work                           |
 
 ## Remaining code sequence
 

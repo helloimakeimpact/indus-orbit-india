@@ -12,9 +12,11 @@ I/O Port is **not operationally routing external provider traffic yet**. Its fir
 
 The deployed gateway resolves approved registry connections through a service-role-only resolver, allows only approved `IO_PROVIDER_*_API_KEY` secret references, evaluates entitled candidates across providers, supports provider-aware OpenAI-compatible and Gemini-native request adapters, performs bounded fallback for safe upstream failures, and writes redacted receipts/attempts. The browser can request latest-affordable, lowest-cost or an approved explicit model and display RLS-scoped receipt history.
 
-The activation-grade control-plane slice is **Released to the hosted demo**. Migration `20260810002754_create_io_operational_core.sql` and gateway v21 provide fingerprinted idempotency, hard budget reservation before dispatch, balanced settlement/release, health/circuits and bounded validated provider responses. Gateway v21 extracts that transaction into a shared execution core used by the browser and `io-openai` v2. The terminal migrations add creator-only safe metadata and non-executable approval RPCs. Hosted release contracts pass; provider routing is still disabled.
+The activation-grade control-plane slice is **Released to the hosted demo**. Migration `20260810002754_create_io_operational_core.sql` and gateway v22 provide fingerprinted idempotency, hard budget reservation before dispatch, balanced settlement/release, health/circuits and bounded validated provider responses. Gateway v22 uses one route transaction for the browser and `io-openai` v3. The terminal migrations add creator-only safe metadata and non-executable approval RPCs. Hosted release contracts pass; provider routing is still disabled.
 
-The bounded OpenAI-compatible API foundation is also Released. Migration `20260819232624_add_io_openai_api_foundation.sql`, the member key-management UI and `io-openai` v2 provide one-time 30-day test keys, SHA-256-only storage, scopes/revocation, membership revalidation, atomic per-key rate limiting, entitlement-filtered `/v1/models` and strict non-streaming `/v1/chat/completions`. See `OPENAI_COMPATIBLE_API_STATUS.md`. This is a usable compatibility subset, not the complete OpenRouter capability set.
+The bounded OpenAI-compatible API foundation is also Released. Migration `20260819232624_add_io_openai_api_foundation.sql`, the member key-management UI and `io-openai` v3 provide one-time 30-day test keys, SHA-256-only storage, scopes/revocation, membership revalidation, atomic per-key rate limiting, browser-origin persistent-key rejection, entitlement-filtered `/v1/models` and strict non-streaming `/v1/chat/completions`. See `OPENAI_COMPATIBLE_API_STATUS.md`. This is a usable compatibility subset, not the complete OpenRouter capability set.
+
+Migrations `20260820001339_add_io_transparent_service_fee.sql` and `20260820023501_add_io_commercial_fk_indexes.sql` are Released. They add an exact versioned 5.5% fee, high-precision provider-cost/fee/customer-total evidence, atomic priced finalization, written onward-access provider states and a shared fail-closed commercial gate. OpenAI and DeepSeek are explicitly `resale_pending`, so neither can route. The separate admin app displays commercial state and evidence. See `PRODUCTION_API_COMMERCIAL_AND_PROVIDER_POLICY.md`.
 
 Provider API keys by themselves do not make a provider routable. The verified deployed cohort counts are:
 
@@ -34,7 +36,7 @@ Provider API keys by themselves do not make a provider routable. The verified de
 | capacity sources                       |     3 |
 | workspace capacity grants              |     3 |
 
-The demo deployment contains metadata and secret references, not key values. No provider completion or billable conformance call was made. The remaining critical work is trusted provider conformance and approval, one deliberately bounded live test, individual activation, scheduled health/operations, commercial accounting extensions, OpenRouter/other capacity partnerships and a fuller control room.
+The demo deployment contains metadata and secret references, not key values. No provider completion or billable conformance call was made. The remaining critical work is written onward-access approval, trusted provider conformance, one deliberately bounded live test, individual activation, scheduled health/operations, dimension-complete billing and reconciliation, direct/rented/donated capacity partnerships and a fuller control room.
 
 ## 2. What “I/O Port” must mean
 
@@ -132,7 +134,7 @@ The member must be able to understand which model, provider, serving region, dat
 | Hosted Space release contract          | Pass            | No missing migration/table/function; 19/19 Space tables use RLS; direct protected writes are false; Realtime publication is true.              |
 | Hosted public generated types          | Partial         | Checked-in types match clean local schema; repeatable hosted drift automation remains.                                                         |
 | Provider conformance tests             | None recorded   | No provider is operationally certified.                                                                                                        |
-| Hosted migrations 65–69 / functions    | Released        | Hosted I/O contracts pass; `io-gateway` v21 preserves JWT protection and `io-openai` v2 enforces the custom-key boundary.                      |
+| Hosted migrations 65–71 / functions    | Released        | Hosted I/O contracts pass; `io-gateway` v22 preserves JWT protection and `io-openai` v3 enforces custom-key plus browser-origin boundaries.    |
 
 ## 4. Implemented, but requires improvement
 
@@ -368,7 +370,7 @@ Exit: a member can make an informed choice and inspect the result without operat
 
 ### Phase E — budgets, pricing, and capacity classes
 
-**Local source progress:** hard reserve-before-dispatch, settle/release-once, stale-hold expiry, usage evidence and balanced integer-minor-unit route ledger are Verified. Commercial extensions are not implemented.
+**Released progress:** hard reserve-before-dispatch, settle/release-once, stale-hold expiry, usage evidence, balanced integer-minor-unit route ledger and exact 5.5% provider-cost/fee/customer-total evidence are Released. Cached/cache-write token parsing, tools/media/storage/regional dimensions, credits, FX, tax, invoices, refunds and provider reconciliation remain Partial/Planned.
 
 1. Release and concurrency-test the core reserve-and-settle system; add reviewed upstream price snapshots, FX, I/O fee, credits and tax lines.
 2. Add BYOK ownership and isolation.
