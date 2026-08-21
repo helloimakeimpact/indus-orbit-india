@@ -81,6 +81,11 @@ insert into public.io_providers (
   lifecycle_state,
   catalogue_visibility,
   operator_name,
+  commercial_access_state,
+  resale_authorized,
+  commercial_terms_evidence_url,
+  commercial_terms_reviewed_at,
+  commercial_terms_reviewed_by,
   created_by
 ) values (
   '30000000-0000-4000-8000-000000000001',
@@ -91,6 +96,11 @@ insert into public.io_providers (
   'active',
   'listed',
   'Indus Orbit test operator',
+  'resale_authorized',
+  true,
+  'https://example.test/provider-written-authorization',
+  timestamptz '2026-01-01 00:00:00+00',
+  '10000000-0000-4000-8000-000000000001',
   '10000000-0000-4000-8000-000000000001'
 );
 

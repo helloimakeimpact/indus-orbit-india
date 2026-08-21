@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
-import { getConnections } from "@/server/messages.functions";
+import { getBlockedConnections, getConnections } from "@/server/messages.functions";
 import type { ConversationContact } from "@/features/conversations/types";
 
 export function useConversationContacts(enabled = true) {
   const [contacts, setContacts] = useState<ConversationContact[]>([]);
+  const [blockedContacts, setBlockedContacts] = useState<ConversationContact[]>([]);
   const [loading, setLoading] = useState(enabled);
   const [error, setError] = useState<string | null>(null);
 
@@ -11,9 +12,12 @@ export function useConversationContacts(enabled = true) {
     setLoading(true);
     setError(null);
     try {
-      setContacts(await getConnections());
+      const [available, blocked] = await Promise.all([getConnections(), getBlockedConnections()]);
+      setContacts(available);
+      setBlockedContacts(blocked);
     } catch (cause) {
       setContacts([]);
+      setBlockedContacts([]);
       setError(cause instanceof Error ? cause.message : "Could not load conversations.");
     } finally {
       setLoading(false);
@@ -25,5 +29,5 @@ export function useConversationContacts(enabled = true) {
     void Promise.resolve().then(refresh);
   }, [enabled, refresh]);
 
-  return { contacts, loading, error, refresh };
+  return { contacts, blockedContacts, loading, error, refresh };
 }

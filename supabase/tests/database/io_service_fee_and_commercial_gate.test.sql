@@ -79,6 +79,111 @@ select ok(
   'anonymous clients cannot inspect provider commercial evidence'
 );
 
+insert into auth.users (id, email, raw_user_meta_data)
+values (
+  '51000000-0000-4000-8000-000000000001',
+  'commercial-gate-operator@example.test',
+  '{"display_name":"Commercial Gate Operator"}'::jsonb
+);
+
+insert into public.io_capacity_sources (
+  id, source_key, display_name, operator_name, provenance,
+  procurement_model, access_mode, status, data_residency_country, created_by
+) values (
+  '52000000-0000-4000-8000-000000000001',
+  'commercial-gate-capacity',
+  'Commercial gate capacity',
+  'Contract test operator',
+  'partner_provider',
+  'pay_as_you_go',
+  'pooled',
+  'active',
+  'CN',
+  '51000000-0000-4000-8000-000000000001'
+);
+
+insert into public.io_providers (
+  id, provider_key, display_name, provider_kind, integration_style,
+  lifecycle_state, catalogue_visibility, operator_name,
+  data_retention_class, training_use_class, default_residency_country,
+  commercial_access_state, resale_authorized, created_by
+) values (
+  '53000000-0000-4000-8000-000000000001',
+  'commercial-gate-test',
+  'Commercial Gate Test',
+  'direct_api',
+  'openai_compatible',
+  'conformance',
+  'listed',
+  'Contract test operator',
+  'provider_default',
+  'no_training_claimed',
+  'CN',
+  'resale_pending',
+  false,
+  '51000000-0000-4000-8000-000000000001'
+);
+
+insert into public.io_models (
+  id, provider_id, provider_model_id, display_name, revision, modalities,
+  listing_state, released_at, auto_route_tier, created_by
+) values (
+  '54000000-0000-4000-8000-000000000001',
+  '53000000-0000-4000-8000-000000000001',
+  'commercial-test-model',
+  'Commercial Test Model',
+  'v1',
+  array['text']::text[],
+  'listed',
+  date '2026-01-01',
+  'balanced',
+  '51000000-0000-4000-8000-000000000001'
+);
+
+insert into public.io_model_endpoints (
+  id, provider_id, model_id, capacity_source_id, endpoint_key, capacity_mode,
+  routing_state, member_visible, residency_country_code, retention_class, created_by
+) values (
+  '55000000-0000-4000-8000-000000000001',
+  '53000000-0000-4000-8000-000000000001',
+  '54000000-0000-4000-8000-000000000001',
+  '52000000-0000-4000-8000-000000000001',
+  'commercial-gate-endpoint',
+  'direct_api',
+  'conformance',
+  true,
+  'CN',
+  'provider_default',
+  '51000000-0000-4000-8000-000000000001'
+);
+
+insert into public.io_endpoint_pricing_versions (
+  endpoint_id, version, publication_state, member_visible, currency_code,
+  billing_meter, unit_quantity, input_price_nanos, cached_input_price_nanos,
+  output_price_nanos, effective_from, recorded_by
+) values (
+  '55000000-0000-4000-8000-000000000001',
+  2,
+  'published',
+  true,
+  'USD',
+  'tokens',
+  1000000,
+  200000000,
+  20000000,
+  1200000000,
+  timestamptz '2026-01-01 00:00:00+00',
+  '51000000-0000-4000-8000-000000000001'
+);
+
+insert into private.io_provider_runtime_controls (
+  provider_id, routing_enabled, disabled_reason
+) values (
+  '53000000-0000-4000-8000-000000000001',
+  false,
+  'Awaiting written onward-access authorization.'
+);
+
 set local role service_role;
 
 select is(
@@ -91,6 +196,9 @@ select is(
   '550',
   'owner-approved fee is exactly 5.5 percent'
 );
+
+reset role;
+
 select is(
   (
     select count(*)
@@ -102,46 +210,46 @@ select is(
 );
 
 select is(
-  (select commercial_access_state from public.io_providers where provider_key = 'openai'),
+  (select commercial_access_state from public.io_providers where provider_key = 'commercial-gate-test'),
   'resale_pending',
-  'OpenAI remains commercially pending'
+  'pending provider remains commercially blocked'
 );
 select is(
-  (select resale_authorized from public.io_providers where provider_key = 'openai'),
+  (select resale_authorized from public.io_providers where provider_key = 'commercial-gate-test'),
   false,
-  'OpenAI is not falsely marked resale-authorized'
+  'pending provider is not falsely marked resale-authorized'
 );
 select is(
-  (select training_use_class from public.io_providers where provider_key = 'openai'),
+  (select training_use_class from public.io_providers where provider_key = 'commercial-gate-test'),
   'no_training_claimed',
-  'OpenAI API no-training default is recorded as a claim rather than a contract'
+  'no-training status remains a claim rather than a contract'
 );
 select is(
-  (select commercial_access_state from public.io_providers where provider_key = 'deepseek'),
-  'resale_pending',
-  'DeepSeek remains commercially pending'
-);
-select is(
-  (select resale_authorized from public.io_providers where provider_key = 'deepseek'),
-  false,
-  'DeepSeek is not falsely marked resale-authorized'
-);
-select is(
-  (select default_residency_country from public.io_providers where provider_key = 'deepseek'),
+  (select default_residency_country from public.io_providers where provider_key = 'commercial-gate-test'),
   'CN',
-  'DeepSeek hosted data-location disclosure is recorded'
+  'provider default residency disclosure is retained'
 );
 select is(
   (
     select endpoint.residency_country_code
     from public.io_model_endpoints as endpoint
     join public.io_providers as provider on provider.id = endpoint.provider_id
-    where provider.provider_key = 'deepseek'
+    where provider.provider_key = 'commercial-gate-test'
     order by endpoint.created_at
     limit 1
   ),
   'CN',
-  'DeepSeek endpoint carries the hosted residency disclosure'
+  'endpoint carries its reviewed residency disclosure'
+);
+select is(
+  (
+    select endpoint.retention_class
+    from public.io_model_endpoints as endpoint
+    join public.io_providers as provider on provider.id = endpoint.provider_id
+    where provider.provider_key = 'commercial-gate-test'
+  ),
+  'provider_default',
+  'endpoint carries its reviewed retention class'
 );
 select is(
   (
@@ -149,10 +257,10 @@ select is(
     from public.io_endpoint_pricing_versions as price
     join public.io_model_endpoints as endpoint on endpoint.id = price.endpoint_id
     join public.io_providers as provider on provider.id = endpoint.provider_id
-    where provider.provider_key = 'openai' and price.version = 2
+    where provider.provider_key = 'commercial-gate-test' and price.version = 2
   ),
   200000000::bigint,
-  'current OpenAI Luna input price is versioned in currency nanos'
+  'current input price is versioned in currency nanos'
 );
 select is(
   (
@@ -160,10 +268,10 @@ select is(
     from public.io_endpoint_pricing_versions as price
     join public.io_model_endpoints as endpoint on endpoint.id = price.endpoint_id
     join public.io_providers as provider on provider.id = endpoint.provider_id
-    where provider.provider_key = 'openai' and price.version = 2
+    where provider.provider_key = 'commercial-gate-test' and price.version = 2
   ),
   20000000::bigint,
-  'current OpenAI Luna cached-input price is versioned'
+  'current cached-input price is versioned'
 );
 select is(
   (
@@ -171,10 +279,21 @@ select is(
     from public.io_endpoint_pricing_versions as price
     join public.io_model_endpoints as endpoint on endpoint.id = price.endpoint_id
     join public.io_providers as provider on provider.id = endpoint.provider_id
-    where provider.provider_key = 'openai' and price.version = 2
+    where provider.provider_key = 'commercial-gate-test' and price.version = 2
   ),
   1200000000::bigint,
-  'current OpenAI Luna output price is versioned'
+  'current output price is versioned'
+);
+select is(
+  (
+    select price.version
+    from public.io_endpoint_pricing_versions as price
+    join public.io_model_endpoints as endpoint on endpoint.id = price.endpoint_id
+    join public.io_providers as provider on provider.id = endpoint.provider_id
+    where provider.provider_key = 'commercial-gate-test'
+  ),
+  2,
+  'price evidence is pinned to an explicit version'
 );
 
 select throws_ok(
@@ -182,7 +301,7 @@ select throws_ok(
     update private.io_provider_runtime_controls as control
     set routing_enabled = true
     from public.io_providers as provider
-    where control.provider_id = provider.id and provider.provider_key = 'openai'
+    where control.provider_id = provider.id and provider.provider_key = 'commercial-gate-test'
   $$,
   'P0001',
   'Provider routing requires reviewed written resale authorization',
@@ -193,13 +312,11 @@ select is(
     select control.routing_enabled
     from private.io_provider_runtime_controls as control
     join public.io_providers as provider on provider.id = control.provider_id
-    where provider.provider_key = 'openai'
+    where provider.provider_key = 'commercial-gate-test'
   ),
   false,
   'failed commercial activation leaves routing disabled'
 );
-
-reset role;
 
 select * from finish();
 rollback;

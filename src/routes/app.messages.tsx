@@ -1,15 +1,26 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { MessageSquare, Send, ArrowLeft, Search } from "lucide-react";
+import { MessageSquare, Send, ArrowLeft, Search, Ban, Undo2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { useConversationContacts } from "@/features/conversations/useConversationContacts";
 import { useDirectConversation } from "@/features/conversations/useDirectConversation";
 import type { ConversationContact } from "@/features/conversations/types";
+import { blockMember, unblockMember } from "@/server/messages.functions";
 import { z } from "zod";
 
 const searchSchema = z.object({ user: z.string().optional() });
@@ -29,10 +40,14 @@ function MessagesPage() {
 
   const {
     contacts: connections,
+    blockedContacts,
     loading: loadingConns,
     error: connectionsError,
+    refresh: refreshContacts,
   } = useConversationContacts();
   const [activeContact, setActiveContact] = useState<ConversationContact | null>(null);
+  const [blockTarget, setBlockTarget] = useState<ConversationContact | null>(null);
+  const [blockSaving, setBlockSaving] = useState(false);
   const [newMessage, setNewMessage] = useState("");
   const [search, setSearch] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -81,6 +96,32 @@ function MessagesPage() {
       setNewMessage("");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not send message.");
+    }
+  }
+
+  async function handleBlock() {
+    if (!blockTarget) return;
+    setBlockSaving(true);
+    try {
+      await blockMember(blockTarget.user_id);
+      if (activeContact?.user_id === blockTarget.user_id) setActiveContact(null);
+      setBlockTarget(null);
+      await refreshContacts();
+      toast.success("Member blocked. Direct messages are no longer available in either direction.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not block this member.");
+    } finally {
+      setBlockSaving(false);
+    }
+  }
+
+  async function handleUnblock(contact: ConversationContact) {
+    try {
+      await unblockMember(contact.user_id);
+      await refreshContacts();
+      toast.success("Member unblocked.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not unblock this member.");
     }
   }
 
@@ -151,6 +192,35 @@ function MessagesPage() {
               </button>
             ))
           )}
+          {blockedContacts.length ? (
+            <div className="border-t border-border p-3">
+              <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                Blocked by you
+              </p>
+              <div className="space-y-1.5">
+                {blockedContacts.map((contact) => (
+                  <div
+                    key={contact.user_id}
+                    className="flex items-center justify-between gap-2 rounded-xl bg-muted/45 px-3 py-2"
+                  >
+                    <span className="truncate text-xs font-medium">
+                      {contact.display_name ?? "Member"}
+                    </span>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 gap-1 px-2 text-xs"
+                      onClick={() => void handleUnblock(contact)}
+                    >
+                      <Undo2 className="h-3.5 w-3.5" />
+                      Unblock
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </div>
       </div>
 
@@ -175,6 +245,16 @@ function MessagesPage() {
               <p className="font-semibold text-sm">{activeContact.display_name}</p>
               <p className="text-xs text-muted-foreground">{activeContact.headline}</p>
             </div>
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              className="ml-auto text-muted-foreground hover:text-destructive"
+              aria-label={`Block ${activeContact.display_name ?? "member"}`}
+              onClick={() => setBlockTarget(activeContact)}
+            >
+              <Ban className="h-4 w-4" />
+            </Button>
           </div>
 
           {/* Messages */}
@@ -278,6 +358,33 @@ function MessagesPage() {
           </div>
         </div>
       )}
+      <AlertDialog
+        open={blockTarget !== null}
+        onOpenChange={(open) => !open && setBlockTarget(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Block {blockTarget?.display_name ?? "this member"}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Neither of you will be able to send, read, or receive new direct messages in this
+              conversation. You can unblock them later from the Messages sidebar.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={blockSaving}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={blockSaving}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={(event) => {
+                event.preventDefault();
+                void handleBlock();
+              }}
+            >
+              {blockSaving ? "Blocking…" : "Block member"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -71,7 +71,7 @@ select ok(
 select ok(
   not has_function_privilege(
     'authenticated',
-    'public.io_consume_api_key_request(text,text)',
+    'public.io_consume_api_key_request(text,text,integer)',
     'execute'
   ),
   'browser users cannot authenticate or meter an API key directly'
@@ -80,7 +80,7 @@ select ok(
 select ok(
   has_function_privilege(
     'service_role',
-    'public.io_consume_api_key_request(text,text)',
+    'public.io_consume_api_key_request(text,text,integer)',
     'execute'
   ),
   'service role can use the API-key authentication boundary'
@@ -110,6 +110,7 @@ select is(
 
 create temp table api_key_result (payload jsonb);
 grant select, insert on table pg_temp.api_key_result to authenticated;
+grant select on table pg_temp.api_key_result to service_role;
 
 set local "request.jwt.claim.sub" = '31000000-0000-4000-8000-000000000001';
 set local "request.jwt.claim.role" = 'authenticated';
@@ -138,6 +139,8 @@ select is(
   2,
   'default test API key has exactly the model and inference scopes'
 );
+
+reset role;
 
 select is(
   (
@@ -173,6 +176,7 @@ select is(
 );
 
 set local "request.jwt.claim.sub" = '31000000-0000-4000-8000-000000000002';
+set local role authenticated;
 
 select throws_ok(
   $$
@@ -187,11 +191,12 @@ select throws_ok(
 );
 
 reset role;
-set local role service_role;
 
 update public.io_api_keys
 set requests_per_minute = 1
 where id = ((select payload ->> 'id' from pg_temp.api_key_result))::uuid;
+
+set local role service_role;
 
 select is(
   public.io_consume_api_key_request(

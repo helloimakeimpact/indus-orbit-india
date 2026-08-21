@@ -14,7 +14,15 @@ export async function getConnections() {
 
   if (error) throw new Error(error.message);
 
-  const otherIds = (data ?? []).map((r) => (r.sender_id === userId ? r.recipient_id : r.sender_id));
+  const { data: blockRows, error: blockError } = await supabase
+    .from("member_blocks")
+    .select("blocked_user_id");
+  if (blockError) throw new Error(blockError.message);
+  const blockedIds = new Set((blockRows ?? []).map((row) => row.blocked_user_id));
+
+  const otherIds = (data ?? [])
+    .map((r) => (r.sender_id === userId ? r.recipient_id : r.sender_id))
+    .filter((id) => !blockedIds.has(id));
   if (!otherIds.length) return [];
 
   const { data: profiles, error: profilesError } = await supabase
@@ -24,6 +32,37 @@ export async function getConnections() {
   if (profilesError) throw new Error(profilesError.message);
 
   return profiles ?? [];
+}
+
+export async function getBlockedConnections() {
+  const { data: blockRows, error: blockError } = await supabase
+    .from("member_blocks")
+    .select("blocked_user_id")
+    .order("created_at", { ascending: false });
+  if (blockError) throw new Error(blockError.message);
+  const ids = (blockRows ?? []).map((row) => row.blocked_user_id);
+  if (!ids.length) return [];
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("user_id, display_name, avatar_url, headline")
+    .in("user_id", ids);
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
+
+export async function blockMember(userId: string, reasonCategory = "member_choice") {
+  const { error } = await supabase.rpc("block_my_member", {
+    _blocked_user_id: userId,
+    _reason_category: reasonCategory,
+  });
+  if (error) throw new Error(error.message);
+}
+
+export async function unblockMember(userId: string) {
+  const { error } = await supabase.rpc("unblock_my_member", {
+    _blocked_user_id: userId,
+  });
+  if (error) throw new Error(error.message);
 }
 
 export type DirectConversationCursor = { createdAt: string; id: string };

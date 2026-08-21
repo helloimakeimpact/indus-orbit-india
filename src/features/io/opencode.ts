@@ -268,7 +268,7 @@ export async function runOpenCodeSession(input: {
   });
 
   let content: string;
-  let changedFileCount: number | null = null;
+  let changedFileCount: number | null;
   try {
     const message = await requestOpenCode(
       `${baseUrl}/session/${encodeURIComponent(sessionId)}/message`,

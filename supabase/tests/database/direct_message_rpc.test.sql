@@ -153,7 +153,7 @@ SELECT ok(
     ) > 0
     FROM pg_catalog.pg_policy AS policy
     WHERE policy.polrelid = 'public.direct_messages'::regclass
-      AND policy.polname = 'Members view own direct messages'
+      AND policy.polname = 'Members view unblocked direct messages'
   ),
   'message read policy caches caller identity with a scalar subquery'
 );

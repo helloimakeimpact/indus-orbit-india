@@ -1,6 +1,6 @@
 # Conversation and branded spatial system record
 
-Status: direct messages, bounded direct-history pagination and the Chapter/Mission Space foundation are Released to demo, updated 20 August 2026.
+Status: direct messages, caller-owned blocking, private Broadcast, bounded direct-history pagination and the Chapter/Mission Space foundation are Released to demo, updated 21 August 2026.
 
 ## Current truth
 
@@ -11,12 +11,13 @@ Implemented:
 - existing notification records and application notification surface;
 - shared contacts, direct-conversation and unread hooks;
 - caller-bound 50-row keyset history with deterministic `(created_at, id)` cursors and Load earlier controls in both message surfaces;
-- event-driven realtime reconciliation and message-ID deduplication;
+- participant-authorized private Realtime Broadcast reconciliation and message-ID deduplication; the database suppresses blocked-pair broadcasts;
 - demo RLS requiring an accepted connection for send;
 - recipient-only `read_at` update privilege and content-length validation;
 - remotely Verified caller-bound send/read RPCs; direct browser message INSERT/UPDATE/DELETE and write policies are revoked;
 - sender-scoped idempotency, accepted-connection and suspension checks, a deterministic 30-per-minute sender limit, and fixed content-free notification creation in the send transaction;
-- 47 focused pgTAP assertions covering grants, optimized RLS isolation, retries, notification privacy, invalid relationships, suspension, rate limiting, read ownership and history pagination;
+- caller-owned block/unblock UI and RPCs, symmetric immediate send/history/read-receipt denial, owner-only block-list visibility and reversible access;
+- 73 focused direct-message/block pgTAP assertions covering grants, optimized RLS isolation, retries, notification privacy, private-topic authorization, invalid relationships, blocking, suspension, rate limiting, read ownership and history pagination;
 - atomic connection, mentorship, mission-update, vouch-request and Chapter-decision RPCs with server-derived notification recipients/content;
 - retired authenticated `send_notification` execution and no remaining browser call to the former arbitrary email dispatcher;
 - private email delivery outbox with idempotency, leases, bounded retry/dead-letter state and locally Verified fixed-template worker source;
@@ -33,9 +34,7 @@ Implemented:
 Still left:
 
 - configure an approved sender domain, deploy/schedule the fixed-template email worker and add redacted operator/dead-letter controls;
-- add an explicit block relationship and safe metadata-only audit where operationally necessary;
 - retain the Released `20260819225550_add_direct_message_pagination_rpc.sql`, then add one cross-surface conversation store, retry/offline/reconnect and multi-device conflict handling;
-- authorized private Realtime Broadcast topics;
 - run hosted authenticated browser personas across proposal/approval, Chapter/Mission lifecycle, membership, Room send/read and outsider privacy;
 - Threads UI, Thread membership/read behavior, Boards/forums and administrative Room/role configuration;
 - presence, typing, reaction/mention UI, pins, bookmarks, attachment storage/scanning, search and notification controls;
@@ -43,4 +42,4 @@ Still left:
 - one reusable Indus Orbit rail/sidebar/workspace/inspector shell across product systems;
 - I/O session collaboration that never leaks prompts, terminal output, files or tools through human messaging.
 
-The pagination migration and its nine assertions pass in the clean 68-migration/550-assertion local replay and are Released as hosted version `20260819225550`. The exact delivered Space slice, deployment order and owner/code split are in `CHAPTER_MISSION_SPACE_SYSTEM_PLAN.md`. The complete feature comparison is in `DISCORD_LIKE_CAPABILITY_PLAN.md`; the wider engineering plan remains in `CONVERSATION_SYSTEM_IMPLEMENTATION_PLAN.md`; the released delivery contract is in `TRUSTED_NOTIFICATION_AND_EMAIL_BOUNDARY.md`.
+The complete 75-migration local replay passes 676 assertions. `20260820230351_add_member_block_and_private_dm_broadcast.sql` and its exact-policy hardening successor are Released to hosted Indus Orbit with RLS, explicit grants and generated client types synchronized. The exact delivered Space slice, deployment order and owner/code split are in `CHAPTER_MISSION_SPACE_SYSTEM_PLAN.md`. The complete feature comparison is in `DISCORD_LIKE_CAPABILITY_PLAN.md`; the wider engineering plan remains in `CONVERSATION_SYSTEM_IMPLEMENTATION_PLAN.md`; the released delivery contract is in `TRUSTED_NOTIFICATION_AND_EMAIL_BOUNDARY.md`.

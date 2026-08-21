@@ -83,13 +83,13 @@ select is(
   array['_key_hash_hex', '_required_scope', '_limit']::text[],
   'the deployed compatibility overload preserves its existing parameter names'
 );
-select like(
+select matches(
   (
     select pg_get_function_arguments(oid)
     from pg_proc
     where oid = 'public.io_consume_api_key_request(text,text,integer)'::regprocedure
   ),
-  '%_limit integer DEFAULT 60%',
+  '_limit integer DEFAULT 60',
   'the deployed RPC preserves its default argument for two-argument callers'
 );
 select ok(

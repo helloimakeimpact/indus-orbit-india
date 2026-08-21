@@ -1,11 +1,6 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.5";
-  };
   graphql_public: {
     Tables: {
       [_ in never]: never;
@@ -300,13 +295,6 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "geo_places";
             referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "chapter_proposals_proposer_id_fkey";
-            columns: ["proposer_id"];
-            isOneToOne: false;
-            referencedRelation: "profiles";
-            referencedColumns: ["user_id"];
           },
           {
             foreignKeyName: "chapter_proposals_region_id_fkey";
@@ -3741,6 +3729,42 @@ export type Database = {
         };
         Relationships: [];
       };
+      member_blocks: {
+        Row: {
+          blocked_user_id: string;
+          blocker_id: string;
+          created_at: string;
+          reason_category: string;
+        };
+        Insert: {
+          blocked_user_id: string;
+          blocker_id: string;
+          created_at?: string;
+          reason_category?: string;
+        };
+        Update: {
+          blocked_user_id?: string;
+          blocker_id?: string;
+          created_at?: string;
+          reason_category?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "member_blocks_blocked_user_id_fkey";
+            columns: ["blocked_user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["user_id"];
+          },
+          {
+            foreignKeyName: "member_blocks_blocker_id_fkey";
+            columns: ["blocker_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["user_id"];
+          },
+        ];
+      };
       member_location_shares: {
         Row: {
           audience: string;
@@ -5382,6 +5406,21 @@ export type Database = {
         Args: { _proposal_id: string };
         Returns: string;
       };
+      block_my_member: {
+        Args: { _blocked_user_id: string; _reason_category?: string };
+        Returns: {
+          blocked_user_id: string;
+          blocker_id: string;
+          created_at: string;
+          reason_category: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "member_blocks";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       can_author_education: { Args: { _user_id: string }; Returns: boolean };
       claim_email_delivery_batch: {
         Args: { _limit?: number };
@@ -5989,14 +6028,6 @@ export type Database = {
         Args: { _reason?: string; _story_id: string };
         Returns: undefined;
       };
-      lead_remove_chapter_member: {
-        Args: { _chapter_id: string; _target_user_id: string };
-        Returns: undefined;
-      };
-      lead_remove_mission_member: {
-        Args: { _mission_id: string; _target_user_id: string };
-        Returns: undefined;
-      };
       leave_my_conversation_space: {
         Args: { _expected_version: number; _space_id: string };
         Returns: undefined;
@@ -6415,6 +6446,10 @@ export type Database = {
           isOneToOne: true;
           isSetofReturn: false;
         };
+      };
+      unblock_my_member: {
+        Args: { _blocked_user_id: string };
+        Returns: boolean;
       };
       update_my_chapter_details: {
         Args: {

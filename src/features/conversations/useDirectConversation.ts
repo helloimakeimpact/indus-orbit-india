@@ -10,6 +10,7 @@ import type { DirectMessage } from "@/features/conversations/types";
 import {
   isConversationMessage,
   mergeConversationMessages,
+  parseDirectMessageBroadcast,
 } from "@/features/conversations/conversation-state";
 
 function mergeMessage(messages: DirectMessage[], incoming: DirectMessage) {
@@ -57,7 +58,7 @@ export function useDirectConversation(userId: string | undefined, otherUserId: s
     let active = true;
     let channel: ReturnType<typeof supabase.channel> | null = null;
 
-    void Promise.resolve().then(() => {
+    void Promise.resolve().then(async () => {
       if (!active) return;
 
       conversationRequestSequence.current += 1;
@@ -76,21 +77,22 @@ export function useDirectConversation(userId: string | undefined, otherUserId: s
       setNextCursor(null);
       setLoading(true);
       setError(null);
-      channel = supabase
-        .channel(topic)
-        .on(
-          "postgres_changes",
-          { event: "*", schema: "public", table: "direct_messages" },
-          (payload) => {
-            const incoming = payload.new as DirectMessage;
-            if (!incoming?.id || !isConversationMessage(incoming, userId, otherUserId)) return;
+      await supabase.realtime.setAuth();
+      if (!active) return;
 
-            if (active) setMessages((current) => mergeMessage(current, incoming));
-            if (incoming.sender_id === otherUserId && incoming.recipient_id === userId) {
-              void markConversationRead(otherUserId).catch(() => undefined);
-            }
-          },
-        )
+      const receiveBroadcast = (payload: unknown) => {
+        const incoming = parseDirectMessageBroadcast(payload);
+        if (!incoming || !isConversationMessage(incoming, userId, otherUserId)) return;
+        if (active) setMessages((current) => mergeMessage(current, incoming));
+        if (incoming.sender_id === otherUserId && incoming.recipient_id === userId) {
+          void markConversationRead(otherUserId).catch(() => undefined);
+        }
+      };
+
+      channel = supabase
+        .channel(topic, { config: { private: true } })
+        .on("broadcast", { event: "INSERT" }, receiveBroadcast)
+        .on("broadcast", { event: "UPDATE" }, receiveBroadcast)
         .subscribe();
 
       void getConversation(otherUserId)

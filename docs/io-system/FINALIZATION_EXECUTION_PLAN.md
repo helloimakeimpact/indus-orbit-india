@@ -105,8 +105,8 @@ Deliverables:
 
 1. Extract one branded Orbit rail/context sidebar/workspace/inspector shell for Messages, Missions, Chapters and I/O.
 2. Add a shared conversation cache/store, cursor pagination, deterministic retries, reconnect and multi-device unread resolution.
-3. Implement explicit block/unblock state and make it revoke messaging and realtime immediately.
-4. Replace Postgres Changes proof subscriptions with authorized private Broadcast topics.
+3. **Released:** explicit caller-owned block/unblock state revokes direct-message history, send/read mutations and future broadcasts in both directions while exposing the block list only to its owner.
+4. **Released:** direct-message Postgres Changes subscriptions are replaced by participant-authorized private Broadcast topics with database-side blocked-pair suppression.
 5. **Released foundation:** Chapter/Mission Spaces, grouped Rooms, role-aware membership projection, Threads/message/read schema and first branded web surface exist. Complete Thread/role/Room administration, Boards and hosted browser personas without copying Discord branding or engagement mechanics.
 6. Add presence, typing, mentions, reactions, pins, bookmarks, attachments, search, retention/export/deletion, reports and moderation in evidence-gated slices.
 7. Keep prompts, terminal output, files and tools outside human-message storage; handoffs carry permissioned references only.
