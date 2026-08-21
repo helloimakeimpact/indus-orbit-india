@@ -397,6 +397,9 @@ const MODELS: ModelRow[] = [
 
 // USD → INR reference rate for pricing display.
 const USD_TO_INR = 83.5;
+export const MODELS_TRACKED = 28;
+export const INDIAN_LABS_TRACKED = 3;
+export const MODELS_LAST_UPDATED = "21 August 2026";
 const fmtUSD = (n: number) => `$${n.toFixed(2)}`;
 const fmtINR = (n: number) => {
   const inr = n * USD_TO_INR;
