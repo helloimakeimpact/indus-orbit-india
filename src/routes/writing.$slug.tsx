@@ -3,6 +3,7 @@ import { SiteShell } from "@/components/site/SiteShell";
 import { ArrowLeft, Clock, Mail } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { findPostBySlug, posts, tagImage } from "@/data/writing-posts";
+import { canonical, siteUrl } from "@/lib/seo";
 
 export const Route = createFileRoute("/writing/$slug")({
   head: ({ params }) => {
@@ -10,7 +11,9 @@ export const Route = createFileRoute("/writing/$slug")({
     const title = post ? `${post.title} — Indus Orbit` : "Essay — Indus Orbit";
     const description = post?.excerpt ?? "Writing from Indus Orbit.";
     return {
+      links: canonical(`/writing/${params.slug}`),
       meta: [
+        { property: "og:url", content: siteUrl(`/writing/${params.slug}`) },
         { title },
         { name: "description", content: description },
         { property: "og:title", content: title },
