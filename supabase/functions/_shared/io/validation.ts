@@ -7,7 +7,7 @@ import type {
   RouteStrategy,
 } from "./types.ts";
 
-const actions = new Set<GatewayAction>(["partner_chat", "catalog", "status"]);
+const actions = new Set<GatewayAction>(["partner_chat", "preflight", "catalog", "status"]);
 const modes = new Set<GatewayMode>(["observe", "plan", "build", "run"]);
 const routeStrategies = new Set<RouteStrategy>([
   "latest_affordable",
@@ -125,8 +125,10 @@ export function parseGatewayRequest(value: unknown): GatewayRequest {
     requestedModelId: readRequestedModelId(body.requested_model_id),
   };
 
-  if (action === "partner_chat") {
-    request.idempotencyKey = requireIdempotencyKey(body.idempotency_key);
+  if (action === "partner_chat" || action === "preflight") {
+    if (action === "partner_chat") {
+      request.idempotencyKey = requireIdempotencyKey(body.idempotency_key);
+    }
     request.messages = requireMessages(body.messages);
     if (request.routeStrategy === "explicit_model" && !request.requestedModelId) {
       throw new GatewayError(

@@ -1,6 +1,6 @@
 # Indus Orbit full finalization execution plan
 
-Status: active, evidence-gated plan updated 20 August 2026. The hosted project has 73 migrations with `io-gateway` v23, bounded `io-openai` v4 and `io-provider-conformance` v1 Released. The residency/key/conformance slice and follow-up indexes are hosted; routes, active API keys, approvals and conformance runs remain zero. Production readiness is not claimed.
+Status: active, evidence-gated plan updated 21 August 2026. The hosted project has 75 migrations with `io-gateway` v24, bounded `io-openai` v4 and `io-provider-conformance` v1 Released. The residency/key/conformance and private-conversation slices are hosted; routes, active API keys, approvals and conformance runs remain zero. Production readiness is not claimed.
 
 This plan covers the whole product: public brand site, identity, Community, conversation, I/O Port, terminal/OpenCode, admin, data, operations and commercial readiness. “Done” means code, authorization, data migration, browser behavior, deployment and operating evidence all agree. A source file or attractive UI alone is not completion.
 
@@ -10,7 +10,7 @@ Execution update, 19 August 2026: the Released I/O controls remain unchanged. Di
 
 Completed in the demo environment:
 
-- provider registry/control-plane foundation and Released `io-gateway` v23;
+- provider registry/control-plane foundation and Released `io-gateway` v24, including no-dispatch route preflight;
 - latest endpoint-bound eligibility enforcement;
 - notification table containment and vouch contract repairs;
 - complete Loops browser retirement with service-only archive access;
@@ -20,7 +20,7 @@ Completed in the demo environment:
 - removal of anonymous access to eight privileged functions;
 - caller-bound domain mutations, retirement of generic notification execution and a private service-leased email outbox;
 - Chapter/Mission Space schema, deterministic Room blueprints, membership projection and caller-bound lifecycle/message/read operations;
-- last clean local 68-migration replay with 550/550 assertions; the hosted project has 73 migrations with direct-pagination, I/O API-key, transparent-fee, commercial-gate, workspace/key-policy and provider-conformance contracts, while the complete local rerun awaits Docker repair;
+- clean local 75-migration replay with 676/676 assertions; the hosted project has the matching 75 migrations with direct-pagination, I/O API-key, transparent-fee, commercial-gate, workspace/key-policy, provider-conformance and private-conversation contracts;
 - exact 5.5% provider-cost/fee/customer-total evidence, browser-origin persistent-key rejection and fail-closed written onward-access gates; OpenAI and DeepSeek remain `resale_pending`;
 - five-provider/model/endpoint inventory with three capacity sources/grants, while route receipts and provider attempts remain zero.
 
@@ -130,6 +130,7 @@ Deliverables:
 4. Validate and expand the live five-provider registry toward the reviewed 20-provider inventory using partnership, owned/rented and donated-capacity adapters.
 5. Add OpenAI-compatible partner and local endpoints while preserving provider-specific adapters where semantics differ.
 6. Add member usage, credit, sponsorship, estimate, receipt and failure/offline UI.
+   **Released slice:** authenticated users can run a no-dispatch preflight that returns the chosen route, candidate evidence, capability/price versions, residency and provider-cost plus 5.5% estimate without reserving budget or contacting a provider.
 7. Activate one provider at a time only after contract tests; the first live conformance call requires an explicit admin reason/confirmation and is capped at USD 0.01.
 8. **Released foundation:** versioned 5.5% fee settlement and written onward-access activation gates. Still required: cached/tools/media/storage/regional billing dimensions, credits/FX/tax/invoices/refunds and provider reconciliation.
 

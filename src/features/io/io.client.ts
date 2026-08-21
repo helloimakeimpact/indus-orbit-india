@@ -132,6 +132,42 @@ export type IoRouteCatalog = {
   models: IoRoutableModel[];
 };
 
+export type IoRoutePreflight = {
+  strategy: IoRouteStrategy;
+  tier: "economy" | "balanced" | "premium";
+  candidateCount: number;
+  selected: {
+    providerKey: string;
+    providerDisplayName: string;
+    modelId: string;
+    modelDisplayName: string;
+    providerModelId: string;
+    endpointKey: string;
+    capacityMode: string;
+    regionCode: string | null;
+    residencyCountryCode: string | null;
+    retentionClass: string;
+    healthState: "healthy" | "degraded" | "unknown";
+    circuitState: "closed" | "half_open";
+    capabilityVersion: number;
+    priceVersion: number;
+    currencyCode: string;
+  };
+  estimate: {
+    providerCostNanos: number;
+    serviceFeeNanos: number;
+    customerChargeNanos: number;
+    serviceFeeBasisPoints: number;
+  };
+  candidates: Array<{
+    providerKey: string;
+    modelId: string;
+    endpointKey: string;
+    estimatedCostNanos: number;
+    currencyCode: string;
+  }>;
+};
+
 export type IoRouteDisclosure = {
   providerKey: string;
   modelId: string;
@@ -390,6 +426,117 @@ function parseRouteCatalog(value: unknown): IoRouteCatalog {
   return {
     routeStrategies: [...new Set(parsedStrategies)],
     models: [...new Map(models.map((model) => [model.modelId, model])).values()],
+  };
+}
+
+function parseRoutePreflight(value: unknown): IoRoutePreflight {
+  const response = asRecord(value);
+  const selected = response ? asRecord(response.selected) : null;
+  const estimate = response ? asRecord(response.estimate) : null;
+  const strategy = response ? parseRouteStrategy(response.strategy) : null;
+  const tier = response ? readString(response, "tier") : null;
+  const candidateCount = response ? readNonNegativeInteger(response, "candidateCount") : null;
+  if (
+    !response ||
+    response.ok !== true ||
+    !selected ||
+    !estimate ||
+    !strategy ||
+    (tier !== "economy" && tier !== "balanced" && tier !== "premium") ||
+    candidateCount === null ||
+    candidateCount < 1
+  ) {
+    throw new Error(responseError(value, "The route preflight could not complete."));
+  }
+
+  const requiredSelected = [
+    "providerKey",
+    "providerDisplayName",
+    "modelId",
+    "modelDisplayName",
+    "providerModelId",
+    "endpointKey",
+    "capacityMode",
+    "retentionClass",
+    "healthState",
+    "circuitState",
+    "currencyCode",
+  ].map((key) => readString(selected, key));
+  const capabilityVersion = readNonNegativeInteger(selected, "capabilityVersion");
+  const priceVersion = readNonNegativeInteger(selected, "priceVersion");
+  const regionCode = readNullableString(selected, "regionCode");
+  const residencyCountryCode = readNullableString(selected, "residencyCountryCode");
+  const providerCostNanos = readNonNegativeInteger(estimate, "providerCostNanos");
+  const serviceFeeNanos = readNonNegativeInteger(estimate, "serviceFeeNanos");
+  const customerChargeNanos = readNonNegativeInteger(estimate, "customerChargeNanos");
+  const serviceFeeBasisPoints = readNonNegativeInteger(estimate, "serviceFeeBasisPoints");
+  const healthState = requiredSelected[8];
+  const circuitState = requiredSelected[9];
+  if (
+    requiredSelected.some((item) => !item) ||
+    capabilityVersion === null ||
+    capabilityVersion < 1 ||
+    priceVersion === null ||
+    priceVersion < 1 ||
+    (regionCode === null && selected.regionCode !== null) ||
+    (residencyCountryCode === null && selected.residencyCountryCode !== null) ||
+    (healthState !== "healthy" && healthState !== "degraded" && healthState !== "unknown") ||
+    (circuitState !== "closed" && circuitState !== "half_open") ||
+    providerCostNanos === null ||
+    serviceFeeNanos === null ||
+    customerChargeNanos === null ||
+    customerChargeNanos !== providerCostNanos + serviceFeeNanos ||
+    serviceFeeBasisPoints === null ||
+    serviceFeeBasisPoints > 10_000
+  ) {
+    throw new Error("The I/O gateway returned an invalid preflight contract.");
+  }
+
+  const rawCandidates = Array.isArray(response.candidates) ? response.candidates : [];
+  const candidates = rawCandidates.flatMap((value) => {
+    const candidate = asRecord(value);
+    if (!candidate) return [];
+    const providerKey = readString(candidate, "providerKey");
+    const modelId = readString(candidate, "modelId");
+    const endpointKey = readString(candidate, "endpointKey");
+    const estimatedCostNanos = readNonNegativeInteger(candidate, "estimatedCostNanos");
+    const currencyCode = readString(candidate, "currencyCode");
+    return providerKey && modelId && endpointKey && estimatedCostNanos !== null && currencyCode
+      ? [{ providerKey, modelId, endpointKey, estimatedCostNanos, currencyCode }]
+      : [];
+  });
+  if (candidates.length !== candidateCount) {
+    throw new Error("The I/O gateway returned incomplete candidate evidence.");
+  }
+
+  return {
+    strategy,
+    tier,
+    candidateCount,
+    selected: {
+      providerKey: requiredSelected[0]!,
+      providerDisplayName: requiredSelected[1]!,
+      modelId: requiredSelected[2]!,
+      modelDisplayName: requiredSelected[3]!,
+      providerModelId: requiredSelected[4]!,
+      endpointKey: requiredSelected[5]!,
+      capacityMode: requiredSelected[6]!,
+      regionCode,
+      residencyCountryCode,
+      retentionClass: requiredSelected[7]!,
+      healthState,
+      circuitState,
+      capabilityVersion,
+      priceVersion,
+      currencyCode: requiredSelected[10]!,
+    },
+    estimate: {
+      providerCostNanos,
+      serviceFeeNanos,
+      customerChargeNanos,
+      serviceFeeBasisPoints,
+    },
+    candidates,
   };
 }
 
@@ -717,6 +864,29 @@ export async function runPartnerRoute(input: {
 
   if (error) throw new Error(error.message);
   return parsePartnerRunResult(data);
+}
+
+export async function preflightPartnerRoute(input: {
+  workspaceId: string;
+  prompt: string;
+  mode: "observe" | "plan" | "build" | "run";
+  routeStrategy: IoRouteStrategy;
+  requestedModelId?: string;
+}): Promise<IoRoutePreflight> {
+  const { data, error } = await supabase.functions.invoke("io-gateway", {
+    body: {
+      action: "preflight",
+      workspace_id: input.workspaceId,
+      mode: input.mode,
+      messages: [{ role: "user", content: input.prompt }],
+      route_strategy: input.routeStrategy,
+      ...(input.routeStrategy === "explicit_model"
+        ? { requested_model_id: input.requestedModelId }
+        : {}),
+    },
+  });
+  if (error) throw new Error(error.message);
+  return parseRoutePreflight(data);
 }
 
 export async function getMyIoBudgetStatus(workspaceId: string): Promise<IoBudgetStatus[]> {

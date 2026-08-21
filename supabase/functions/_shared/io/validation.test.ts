@@ -15,6 +15,17 @@ describe("gateway request validation", () => {
       messages: [{ role: "user", content: "  Plan safely.  " }],
     });
     assert.equal(result.messages?.[0].content, "Plan safely.");
+
+    const preflight = parseGatewayRequest({
+      action: "preflight",
+      workspace_id: workspaceId,
+      mode: "plan",
+      messages: [{ role: "user", content: "Explain the route." }],
+      route_strategy: "lowest_cost",
+    });
+    assert.equal(preflight.action, "preflight");
+    assert.equal(preflight.idempotencyKey, undefined);
+    assert.equal(preflight.messages?.[0].content, "Explain the route.");
   });
 
   it("rejects malformed actions, workspaces, modes and explicit routes", () => {

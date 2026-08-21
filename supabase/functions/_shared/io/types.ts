@@ -1,4 +1,4 @@
-export type GatewayAction = "partner_chat" | "catalog" | "status";
+export type GatewayAction = "partner_chat" | "preflight" | "catalog" | "status";
 export type GatewayMode = "observe" | "plan" | "build" | "run";
 export type RouteStrategy = "latest_affordable" | "lowest_cost" | "explicit_model";
 

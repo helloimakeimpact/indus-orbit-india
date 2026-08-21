@@ -55,6 +55,7 @@ import {
   listMyIoApiKeys,
   listMyIoTerminalSessions,
   listMyIoTerminalEvents,
+  preflightPartnerRoute,
   runPartnerRoute,
   setMyIoWorkspaceProviderPolicy,
   revokeMyIoApiKey,
@@ -63,6 +64,7 @@ import {
   type IoCapacitySource,
   type IoBudgetStatus,
   type IoRouteCatalog,
+  type IoRoutePreflight,
   type IoRouteReceipt,
   type IoRouteStrategy,
   type IoTerminalSession,
@@ -98,6 +100,8 @@ export function IoOverview() {
   const [selectedTerminalSessionId, setSelectedTerminalSessionId] = useState<string | null>(null);
   const [terminalTimelineLoading, setTerminalTimelineLoading] = useState(false);
   const [routeCatalogError, setRouteCatalogError] = useState<string | null>(null);
+  const [routePreflight, setRoutePreflight] = useState<IoRoutePreflight | null>(null);
+  const [preflightLoading, setPreflightLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [catalogLoading, setCatalogLoading] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -186,6 +190,7 @@ export function IoOverview() {
       setNewRawApiKey(null);
       setTerminalSessions(terminalSessionsResult.value);
       setProviderPolicy(providerPolicyResult.value);
+      setRoutePreflight(null);
       setTerminalTimeline([]);
       setSelectedTerminalSessionId(null);
       if (catalogResult.status === "fulfilled") {
@@ -415,6 +420,27 @@ export function IoOverview() {
         terminalAbortController.current = null;
       }
       setRunning(false);
+    }
+  }
+
+  async function explainPartnerRoute() {
+    if (!workspace || !prompt.trim() || !canRunPartner || preflightLoading) return;
+    setPreflightLoading(true);
+    setRoutePreflight(null);
+    try {
+      const result = await preflightPartnerRoute({
+        workspaceId: workspace.id,
+        prompt: prompt.trim(),
+        mode,
+        routeStrategy,
+        requestedModelId: routeStrategy === "explicit_model" ? requestedModelId : undefined,
+      });
+      setRoutePreflight(result);
+      toast.success("Route checked without sending a provider request.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "The route preflight could not run.");
+    } finally {
+      setPreflightLoading(false);
     }
   }
 
@@ -652,7 +678,10 @@ export function IoOverview() {
                       disabled={
                         routeCatalog ? !routeCatalog.routeStrategies.includes(strategy) : false
                       }
-                      onClick={() => setRouteStrategy(strategy)}
+                      onClick={() => {
+                        setRouteStrategy(strategy);
+                        setRoutePreflight(null);
+                      }}
                     >
                       {label}
                     </button>
@@ -664,7 +693,10 @@ export function IoOverview() {
                     <select
                       value={requestedModelId}
                       disabled={!hasRoutableModels || catalogLoading}
-                      onChange={(event) => setRequestedModelId(event.target.value)}
+                      onChange={(event) => {
+                        setRequestedModelId(event.target.value);
+                        setRoutePreflight(null);
+                      }}
                       className="mt-1.5 h-9 w-full rounded-lg border border-sky-200 bg-background px-2 text-xs font-medium text-foreground outline-none focus-visible:ring-2 focus-visible:ring-[var(--saffron)]"
                     >
                       {!hasRoutableModels ? (
@@ -698,13 +730,70 @@ export function IoOverview() {
                     Catalogue status: {routeCatalogError}
                   </p>
                 ) : null}
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    disabled={!canRunPartner || !prompt.trim() || preflightLoading || running}
+                    onClick={() => void explainPartnerRoute()}
+                  >
+                    {preflightLoading ? <LoaderCircle className="animate-spin" /> : <FileCheck2 />}
+                    Explain route first
+                  </Button>
+                  <p className="text-[10px] text-sky-900/70">
+                    No provider request, token usage or charge is created by preflight.
+                  </p>
+                </div>
+                {routePreflight ? (
+                  <div className="grid gap-2 rounded-lg border border-sky-200 bg-white/70 p-2.5 sm:grid-cols-2">
+                    <div>
+                      <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-sky-900/60">
+                        Selected route
+                      </p>
+                      <p className="mt-1 text-xs font-semibold">
+                        {routePreflight.selected.providerDisplayName} ·{" "}
+                        {routePreflight.selected.modelDisplayName}
+                      </p>
+                      <p className="mt-1 text-[10px] text-sky-900/70">
+                        {routePreflight.candidateCount} eligible candidate
+                        {routePreflight.candidateCount === 1 ? "" : "s"} · capability v
+                        {routePreflight.selected.capabilityVersion} · price v
+                        {routePreflight.selected.priceVersion}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-sky-900/60">
+                        Conservative estimate
+                      </p>
+                      <p className="mt-1 text-xs font-semibold">
+                        {formatNanos(
+                          routePreflight.estimate.customerChargeNanos,
+                          routePreflight.selected.currencyCode,
+                        )}
+                      </p>
+                      <p className="mt-1 text-[10px] text-sky-900/70">
+                        Provider{" "}
+                        {formatNanos(
+                          routePreflight.estimate.providerCostNanos,
+                          routePreflight.selected.currencyCode,
+                        )}{" "}
+                        + {routePreflight.estimate.serviceFeeBasisPoints / 100}% I/O fee ·{" "}
+                        {routePreflight.selected.residencyCountryCode ?? "residency not claimed"}
+                      </p>
+                    </div>
+                  </div>
+                ) : null}
               </div>
             )}
 
             <div className="relative">
               <Textarea
                 value={prompt}
-                onChange={(event) => setPrompt(event.target.value)}
+                onChange={(event) => {
+                  setPrompt(event.target.value);
+                  setRoutePreflight(null);
+                }}
                 placeholder="Describe what you want to understand, plan, build or run…"
                 aria-label="Session prompt"
                 className="min-h-28 resize-none rounded-xl border-border/70 pb-12 text-sm"

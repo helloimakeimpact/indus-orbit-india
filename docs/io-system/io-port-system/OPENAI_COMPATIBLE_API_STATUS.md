@@ -42,7 +42,7 @@ Migration `20260819232624_add_io_openai_api_foundation.sql` provides:
 
 `io-openai` has Supabase JWT verification disabled because an I/O API key is not a Supabase JWT. The function itself rejects any request carrying a browser `Origin`, validates the exact Bearer-key shape, hashes the supplied value, calls the service-only authentication/rate RPC and checks the required scope before loading any catalogue or route. Persistent I/O keys are only for servers, CLIs and local agents. The signed-in web product uses the JWT-protected gateway instead.
 
-Every chat request uses `executePartnerRoute`, shared with `io-gateway` v23. The common path performs:
+Every chat request uses `executePartnerRoute`, shared with `io-gateway` v24. The signed-in member gateway also exposes a no-dispatch preflight for route/cost explanation; the API-key surface remains unchanged. The common execution path performs:
 
 1. active workspace capacity-entitlement lookup;
 2. ready/provider/model/capability/price/health/circuit filtering;
@@ -67,10 +67,10 @@ This boundary prevents a broad “OpenAI-compatible” claim from hiding semanti
 
 ## Verification evidence
 
-- hosted migration ledger contains 73 entries, including `20260820191501` (workspace/key policy), `20260820191544` (provider conformance) and `20260820191815` (conformance FK indexes);
+- hosted migration ledger contains 75 entries, including `20260820191501` (workspace/key policy), `20260820191544` (provider conformance), `20260820191815` (conformance FK indexes) and the private-conversation hardening releases;
 - function grants, private-table containment, security-definer and empty-search-path contracts passed on the hosted project;
 - a rolled-back hosted functional transaction passed raw-key shape, hash-only storage, allow/rate-limit behavior, counter bound, revocation and exactly-once audit checks;
-- `io-gateway` v23 is active with JWT verification;
+- `io-gateway` v24 is active with JWT verification and no-dispatch route preflight;
 - `io-openai` v4 is active with custom-key verification and browser-origin key rejection;
 - `io-provider-conformance` v1 is active with JWT verification, while approvals/runs remain zero;
 - a live browser-origin invalid-key probe returned `403`; the equivalent server-shaped invalid-key probe returned `401`; neither loaded provider capacity or made inference traffic;
@@ -78,8 +78,8 @@ This boundary prevents a broad “OpenAI-compatible” claim from hiding semanti
 - an invalid test key returned `401` with an OpenAI-shaped authentication error;
 - a temporary valid `models:read` key returned `200`, rate headers and an empty entitled catalogue, then was deleted;
 - provider receipts/attempts remain zero and no provider call was made;
-- 54/54 TypeScript unit tests pass in the release candidate, including API parser/key/idempotency, browser-origin, precise-fee, provider discovery, safety-identifier and CN-policy tests;
-- the authored local commercial pgTAP file contains 26 checks, but the local Docker database remains unhealthy before product migrations run. Hosted evidence is Released; the local full-suite rerun remains open.
+- 55/55 TypeScript unit tests pass in the release candidate, including API parser/key/idempotency, preflight validation, browser-origin, precise-fee, provider discovery, safety-identifier and CN-policy tests;
+- a clean 75-migration local replay passes all 676 pgTAP assertions.
 
 The post-migration Security Advisor reports expected notices on private deny-by-default tables and authenticated `SECURITY DEFINER` boundaries whose bodies enforce caller membership/capability and use empty search paths. Explicit grants were verified. Four new conformance foreign-key notices were closed by hosted migration `20260820191815`. Re-evaluate these intentional notices whenever the boundary changes; see the [Supabase database linter guidance](https://supabase.com/docs/guides/database/database-linter).
 

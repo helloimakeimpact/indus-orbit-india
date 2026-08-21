@@ -5,12 +5,16 @@ import {
   requireWorkspaceMembership,
 } from "../_shared/io/auth.ts";
 import { asGatewayError, GatewayError } from "../_shared/io/errors.ts";
+import { calculateUsageChargeNanos, loadActiveServiceFeePolicy } from "../_shared/io/operations.ts";
 import {
   getActiveCapacityEntitlements,
   getWorkspaceProviderPolicy,
   workspaceAllowsProvider,
 } from "../_shared/io/policy.ts";
-import { loadReadyProviderConnections } from "../_shared/io/provider-adapter.ts";
+import {
+  loadReadyProviderConnections,
+  resolveProviderRoute,
+} from "../_shared/io/provider-adapter.ts";
 import { executePartnerRoute } from "../_shared/io/route-execution.ts";
 import { parseGatewayRequest } from "../_shared/io/validation.ts";
 
@@ -109,6 +113,50 @@ Deno.serve(async (request) => {
           capabilityVersion: connection.capabilityVersion,
           priceVersion: connection.priceVersion,
         })),
+      });
+    }
+
+    if (body.action === "preflight") {
+      const selection = await resolveProviderRoute(admin, body.messages!, {
+        strategy: body.routeStrategy,
+        requestedModelId: body.requestedModelId,
+        entitledCapacitySourceIds: entitledSourceIds,
+        connectionFilter: (connection) => workspaceAllowsProvider(providerPolicy, connection),
+      });
+      const feePolicy = await loadActiveServiceFeePolicy(admin);
+      const estimate = calculateUsageChargeNanos(
+        selection.estimatedCostNanos,
+        feePolicy.feeBasisPoints,
+      );
+      return json(request, {
+        ok: true,
+        strategy: selection.strategy,
+        tier: selection.tier,
+        candidateCount: selection.candidateCount,
+        selected: {
+          providerKey: selection.connection.providerKey,
+          providerDisplayName: selection.connection.providerDisplayName,
+          modelId: selection.connection.modelId,
+          modelDisplayName: selection.connection.modelDisplayName,
+          providerModelId: selection.connection.providerModelId,
+          endpointKey: selection.connection.endpointKey,
+          capacityMode: selection.connection.capacityMode,
+          regionCode: selection.connection.regionCode,
+          residencyCountryCode: selection.connection.residencyCountryCode,
+          retentionClass: selection.connection.retentionClass,
+          healthState: selection.connection.healthState,
+          circuitState: selection.connection.circuitState,
+          capabilityVersion: selection.connection.capabilityVersion,
+          priceVersion: selection.connection.priceVersion,
+          currencyCode: selection.connection.currencyCode,
+        },
+        estimate: {
+          providerCostNanos: estimate.providerCostNanos,
+          serviceFeeNanos: estimate.serviceFeeNanos,
+          customerChargeNanos: estimate.customerChargeNanos,
+          serviceFeeBasisPoints: estimate.feeBasisPoints,
+        },
+        candidates: selection.candidateSummary,
       });
     }
 
