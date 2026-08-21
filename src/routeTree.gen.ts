@@ -9,7 +9,6 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as WritingRouteImport } from './routes/writing'
 import { Route as WhatIsIndusOrbitRouteImport } from './routes/what-is-indus-orbit'
 import { Route as SodaRouteImport } from './routes/soda'
 import { Route as SkillsRouteImport } from './routes/skills'
@@ -26,6 +25,7 @@ import { Route as AppRouteImport } from './routes/app'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as WritingIndexRouteImport } from './routes/writing.index'
 import { Route as IoIndexRouteImport } from './routes/io.index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as WritingSlugRouteImport } from './routes/writing.$slug'
@@ -83,11 +83,6 @@ import { Route as AppAdminAuditRouteImport } from './routes/app.admin.audit'
 import { Route as AppEducationCourseSlugIndexRouteImport } from './routes/app.education.$courseSlug.index'
 import { Route as AppEducationCourseSlugLessonSlugRouteImport } from './routes/app.education.$courseSlug.$lessonSlug'
 
-const WritingRoute = WritingRouteImport.update({
-  id: '/writing',
-  path: '/writing',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const WhatIsIndusOrbitRoute = WhatIsIndusOrbitRouteImport.update({
   id: '/what-is-indus-orbit',
   path: '/what-is-indus-orbit',
@@ -166,6 +161,11 @@ const AboutRoute = AboutRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WritingIndexRoute = WritingIndexRouteImport.update({
+  id: '/writing/',
+  path: '/writing/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IoIndexRoute = IoIndexRouteImport.update({
@@ -468,7 +468,6 @@ export interface FileRoutesByFullPath {
   '/skills': typeof SkillsRoute
   '/soda': typeof SodaRoute
   '/what-is-indus-orbit': typeof WhatIsIndusOrbitRoute
-  '/writing': typeof WritingRouteWithChildren
   '/app/admin': typeof AppAdminRouteWithChildren
   '/app/board': typeof AppBoardRoute
   '/app/chapter-admin': typeof AppChapterAdminRoute
@@ -493,6 +492,7 @@ export interface FileRoutesByFullPath {
   '/writing/$slug': typeof WritingSlugRoute
   '/app/': typeof AppIndexRoute
   '/io/': typeof IoIndexRoute
+  '/writing/': typeof WritingIndexRoute
   '/app/admin/audit': typeof AppAdminAuditRoute
   '/app/admin/content': typeof AppAdminContentRoute
   '/app/admin/education': typeof AppAdminEducationRoute
@@ -541,7 +541,6 @@ export interface FileRoutesByTo {
   '/skills': typeof SkillsRoute
   '/soda': typeof SodaRoute
   '/what-is-indus-orbit': typeof WhatIsIndusOrbitRoute
-  '/writing': typeof WritingRouteWithChildren
   '/app/board': typeof AppBoardRoute
   '/app/chapter-admin': typeof AppChapterAdminRoute
   '/app/directory': typeof AppDirectoryRoute
@@ -559,6 +558,7 @@ export interface FileRoutesByTo {
   '/writing/$slug': typeof WritingSlugRoute
   '/app': typeof AppIndexRoute
   '/io': typeof IoIndexRoute
+  '/writing': typeof WritingIndexRoute
   '/app/admin/audit': typeof AppAdminAuditRoute
   '/app/admin/content': typeof AppAdminContentRoute
   '/app/admin/education': typeof AppAdminEducationRoute
@@ -609,7 +609,6 @@ export interface FileRoutesById {
   '/skills': typeof SkillsRoute
   '/soda': typeof SodaRoute
   '/what-is-indus-orbit': typeof WhatIsIndusOrbitRoute
-  '/writing': typeof WritingRouteWithChildren
   '/app/admin': typeof AppAdminRouteWithChildren
   '/app/board': typeof AppBoardRoute
   '/app/chapter-admin': typeof AppChapterAdminRoute
@@ -634,6 +633,7 @@ export interface FileRoutesById {
   '/writing/$slug': typeof WritingSlugRoute
   '/app/': typeof AppIndexRoute
   '/io/': typeof IoIndexRoute
+  '/writing/': typeof WritingIndexRoute
   '/app/admin/audit': typeof AppAdminAuditRoute
   '/app/admin/content': typeof AppAdminContentRoute
   '/app/admin/education': typeof AppAdminEducationRoute
@@ -686,7 +686,6 @@ export interface FileRouteTypes {
     | '/skills'
     | '/soda'
     | '/what-is-indus-orbit'
-    | '/writing'
     | '/app/admin'
     | '/app/board'
     | '/app/chapter-admin'
@@ -711,6 +710,7 @@ export interface FileRouteTypes {
     | '/writing/$slug'
     | '/app/'
     | '/io/'
+    | '/writing/'
     | '/app/admin/audit'
     | '/app/admin/content'
     | '/app/admin/education'
@@ -759,7 +759,6 @@ export interface FileRouteTypes {
     | '/skills'
     | '/soda'
     | '/what-is-indus-orbit'
-    | '/writing'
     | '/app/board'
     | '/app/chapter-admin'
     | '/app/directory'
@@ -777,6 +776,7 @@ export interface FileRouteTypes {
     | '/writing/$slug'
     | '/app'
     | '/io'
+    | '/writing'
     | '/app/admin/audit'
     | '/app/admin/content'
     | '/app/admin/education'
@@ -826,7 +826,6 @@ export interface FileRouteTypes {
     | '/skills'
     | '/soda'
     | '/what-is-indus-orbit'
-    | '/writing'
     | '/app/admin'
     | '/app/board'
     | '/app/chapter-admin'
@@ -851,6 +850,7 @@ export interface FileRouteTypes {
     | '/writing/$slug'
     | '/app/'
     | '/io/'
+    | '/writing/'
     | '/app/admin/audit'
     | '/app/admin/content'
     | '/app/admin/education'
@@ -902,20 +902,13 @@ export interface RootRouteChildren {
   SkillsRoute: typeof SkillsRoute
   SodaRoute: typeof SodaRoute
   WhatIsIndusOrbitRoute: typeof WhatIsIndusOrbitRoute
-  WritingRoute: typeof WritingRouteWithChildren
   ProfileIdRoute: typeof ProfileIdRoute
   RedeemCodeRoute: typeof RedeemCodeRoute
+  WritingIndexRoute: typeof WritingIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/writing': {
-      id: '/writing'
-      path: '/writing'
-      fullPath: '/writing'
-      preLoaderRoute: typeof WritingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/what-is-indus-orbit': {
       id: '/what-is-indus-orbit'
       path: '/what-is-indus-orbit'
@@ -1026,6 +1019,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/writing/': {
+      id: '/writing/'
+      path: '/writing'
+      fullPath: '/writing/'
+      preLoaderRoute: typeof WritingIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/io/': {
@@ -1627,17 +1627,6 @@ const IoRouteChildren: IoRouteChildren = {
 
 const IoRouteWithChildren = IoRoute._addFileChildren(IoRouteChildren)
 
-interface WritingRouteChildren {
-  WritingSlugRoute: typeof WritingSlugRoute
-}
-
-const WritingRouteChildren: WritingRouteChildren = {
-  WritingSlugRoute: WritingSlugRoute,
-}
-
-const WritingRouteWithChildren =
-  WritingRoute._addFileChildren(WritingRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
@@ -1655,9 +1644,9 @@ const rootRouteChildren: RootRouteChildren = {
   SkillsRoute: SkillsRoute,
   SodaRoute: SodaRoute,
   WhatIsIndusOrbitRoute: WhatIsIndusOrbitRoute,
-  WritingRoute: WritingRouteWithChildren,
   ProfileIdRoute: ProfileIdRoute,
   RedeemCodeRoute: RedeemCodeRoute,
+  WritingIndexRoute: WritingIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
