@@ -8,7 +8,7 @@ import { getPublishedStories } from "@/server/society.functions";
 import { ArrowRight, Clock, Mail } from "lucide-react";
 import { posts, tagImage, slugify, type Post, type Tag } from "@/data/writing-posts";
 
-export const Route = createFileRoute("/writing")({
+export const Route = createFileRoute("/writing/")({
   head: () => ({
     meta: [
       { title: "Writing — Indus Orbit" },
