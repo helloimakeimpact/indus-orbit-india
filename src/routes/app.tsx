@@ -33,7 +33,11 @@ function AppLayout() {
       setChecked(false);
       setAccessError(null);
       if (!user) {
-        navigate({ to: "/auth" });
+        navigate({
+          to: "/auth",
+          search: { tab: "signin", intent: "community", next: "/app" },
+          replace: true,
+        });
         return;
       }
 

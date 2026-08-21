@@ -29,10 +29,13 @@ import {
   Compass,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { canonical, siteUrl } from "@/lib/seo";
 
 export const Route = createFileRoute("/soda")({
   head: () => ({
+    links: canonical("/soda"),
     meta: [
+      { property: "og:url", content: siteUrl("/soda") },
       { title: "S.O.D.A — Startup Opportunities, Development & Action | Indus Orbit" },
       {
         name: "description",
@@ -54,7 +57,6 @@ export const Route = createFileRoute("/soda")({
       },
       { property: "og:image", content: sodaHero },
     ],
-    links: [{ rel: "canonical", href: "https://indus-spark-connect.lovable.app/soda" }],
   }),
   component: SodaPage,
 });

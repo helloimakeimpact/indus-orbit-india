@@ -11,9 +11,24 @@
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://indus-spark-connect.lovable.app/skills</loc>
+    <loc>https://indus-spark-connect.lovable.app/models</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://indus-spark-connect.lovable.app/io-port</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://indus-spark-connect.lovable.app/soda</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://indus-spark-connect.lovable.app/skills</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://indus-spark-connect.lovable.app/about</loc>
@@ -31,13 +46,108 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://indus-spark-connect.lovable.app/members</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://indus-spark-connect.lovable.app/contact</loc>
     <changefreq>yearly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://indus-spark-connect.lovable.app/members</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
+    <loc>https://indus-spark-connect.lovable.app/writing/announcing-indus-orbit</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://indus-spark-connect.lovable.app/writing/an-orbit-not-a-pyramid</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://indus-spark-connect.lovable.app/writing/what-indian-smbs-actually-want-from-agents</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://indus-spark-connect.lovable.app/writing/the-diaspora-as-an-engine-not-an-audience</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://indus-spark-connect.lovable.app/writing/vernacular-first-english-second</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://indus-spark-connect.lovable.app/writing/build-the-loop-not-the-agent</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://indus-spark-connect.lovable.app/writing/kirana-scale-ai-five-patterns-that-actually-stick</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://indus-spark-connect.lovable.app/writing/the-tier-2-founder-is-the-story-of-this-decade</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://indus-spark-connect.lovable.app/writing/the-model-observatory-why-we-built-it</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://indus-spark-connect.lovable.app/writing/trust-travels-through-relationships</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://indus-spark-connect.lovable.app/writing/a-playbook-for-shipping-in-a-language-you-dont-speak</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://indus-spark-connect.lovable.app/writing/we-are-hiring-across-product-research-and-partnerships</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://indus-spark-connect.lovable.app/writing/the-context-window-is-the-new-office</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://indus-spark-connect.lovable.app/writing/evals-are-the-new-prds</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://indus-spark-connect.lovable.app/writing/small-models-big-bharat</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://indus-spark-connect.lovable.app/writing/from-prompt-engineering-to-system-engineering</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://indus-spark-connect.lovable.app/writing/the-agent-is-not-the-moat-the-workflow-is</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://indus-spark-connect.lovable.app/writing/how-indian-teams-should-think-about-gpu-spend-in-2026</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://indus-spark-connect.lovable.app/writing/the-founder-archetypes-of-indus-orbit</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
   </url>
 </urlset>

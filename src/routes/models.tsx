@@ -15,10 +15,13 @@ import {
   TrendingUp,
   Star,
 } from "lucide-react";
+import { canonical, siteUrl } from "@/lib/seo";
 
 export const Route = createFileRoute("/models")({
   head: () => ({
+    links: canonical("/models"),
     meta: [
+      { property: "og:url", content: siteUrl("/models") },
       { title: "Model Observatory — AI Model Intelligence, Speed & Price | Indus Orbit" },
       {
         name: "description",
@@ -34,7 +37,6 @@ export const Route = createFileRoute("/models")({
       { property: "og:image", content: modelsHero },
       { name: "twitter:card", content: "summary_large_image" },
     ],
-    links: [{ rel: "canonical", href: "https://indusorbit.com/models" }],
   }),
   component: ModelsPage,
 });
@@ -397,6 +399,9 @@ const MODELS: ModelRow[] = [
 
 // USD → INR reference rate for pricing display.
 const USD_TO_INR = 83.5;
+export const MODELS_TRACKED = 28;
+export const INDIAN_LABS_TRACKED = 3;
+export const MODELS_LAST_UPDATED = "21 August 2026";
 const fmtUSD = (n: number) => `$${n.toFixed(2)}`;
 const fmtINR = (n: number) => {
   const inr = n * USD_TO_INR;
@@ -938,7 +943,7 @@ function ModelsPage() {
             >
               artificialanalysis.ai/models
             </a>{" "}
-            (latest pass) and public vendor pricing. INR converted at ₹{USD_TO_INR}/USD. Treat as a
+            (last reviewed {MODELS_LAST_UPDATED}) and public vendor pricing. INR converted at ₹{USD_TO_INR}/USD. Treat as a
             starting map, not a stopwatch.
           </p>
         </div>

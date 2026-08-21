@@ -2,10 +2,13 @@ import { createFileRoute } from "@tanstack/react-router";
 import { SiteShell } from "@/components/site/SiteShell";
 import workImg from "@/assets/work-citylights.jpg";
 import { cn } from "@/lib/utils";
+import { canonical, siteUrl } from "@/lib/seo";
 
 export const Route = createFileRoute("/our-work")({
   head: () => ({
+    links: canonical("/our-work"),
     meta: [
+      { property: "og:url", content: siteUrl("/our-work") },
       { title: "Our Work — Indus Orbit" },
       {
         name: "description",

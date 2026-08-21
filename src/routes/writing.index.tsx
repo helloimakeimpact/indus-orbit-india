@@ -7,10 +7,13 @@ import { cn } from "@/lib/utils";
 import { getPublishedStories } from "@/server/society.functions";
 import { ArrowRight, Clock, Mail } from "lucide-react";
 import { posts, tagImage, slugify, type Post, type Tag } from "@/data/writing-posts";
+import { canonical, siteUrl } from "@/lib/seo";
 
-export const Route = createFileRoute("/writing")({
+export const Route = createFileRoute("/writing/")({
   head: () => ({
+    links: canonical("/writing"),
     meta: [
+      { property: "og:url", content: siteUrl("/writing") },
       { title: "Writing — Indus Orbit" },
       {
         name: "description",

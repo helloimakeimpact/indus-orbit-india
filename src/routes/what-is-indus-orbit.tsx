@@ -16,9 +16,16 @@ import {
   Crown,
   Award,
 } from "lucide-react";
+import { canonical, siteUrl } from "@/lib/seo";
 
 export const Route = createFileRoute("/what-is-indus-orbit")({
-  head: () => ({ meta: [{ title: "What is Indus Orbit? — Guide & Wiki" }] }),
+  head: () => ({
+    meta: [
+      { title: "What is Indus Orbit? — Guide & Wiki" },
+      { property: "og:url", content: siteUrl("/what-is-indus-orbit") },
+    ],
+    links: canonical("/what-is-indus-orbit"),
+  }),
   component: WhatIsIndusOrbitPage,
 });
 

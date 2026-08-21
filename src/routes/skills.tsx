@@ -3,10 +3,13 @@ import { useEffect, useMemo, useState } from "react";
 import { SiteShell } from "@/components/site/SiteShell";
 import { listPublishedSkills, type Skill } from "@/server/skill.functions";
 import { ArrowRight, Sparkles, Search, GraduationCap, Compass, Flame } from "lucide-react";
+import { canonical, siteUrl } from "@/lib/seo";
 
 export const Route = createFileRoute("/skills")({
   head: () => ({
+    links: canonical("/skills"),
     meta: [
+      { property: "og:url", content: siteUrl("/skills") },
       { title: "Skills — India's reusable founder playbooks | Indus Orbit" },
       {
         name: "description",
@@ -19,7 +22,6 @@ export const Route = createFileRoute("/skills")({
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
-    links: [{ rel: "canonical", href: "https://indus-spark-connect.lovable.app/skills" }],
   }),
   component: SkillsPublic,
 });

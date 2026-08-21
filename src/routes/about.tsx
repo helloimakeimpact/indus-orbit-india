@@ -2,10 +2,13 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteShell } from "@/components/site/SiteShell";
 import aboutImg from "@/assets/about-banyan.jpg";
 import { Link2, Sparkles, HeartHandshake } from "lucide-react";
+import { canonical, siteUrl } from "@/lib/seo";
 
 export const Route = createFileRoute("/about")({
   head: () => ({
+    links: canonical("/about"),
     meta: [
+      { property: "og:url", content: siteUrl("/about") },
       { title: "About — Indus Orbit" },
       {
         name: "description",
