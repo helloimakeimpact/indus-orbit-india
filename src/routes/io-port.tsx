@@ -42,7 +42,6 @@ export const Route = createFileRoute("/io-port")({
       },
       { name: "twitter:card", content: "summary" },
     ],
-    links: [{ rel: "canonical", href: "https://indusorbit.com/io-port" }],
   }),
   component: IOPortPage,
 });

@@ -37,7 +37,6 @@ export const Route = createFileRoute("/models")({
       { property: "og:image", content: modelsHero },
       { name: "twitter:card", content: "summary_large_image" },
     ],
-    links: [{ rel: "canonical", href: "https://indusorbit.com/models" }],
   }),
   component: ModelsPage,
 });

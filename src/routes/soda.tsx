@@ -57,7 +57,6 @@ export const Route = createFileRoute("/soda")({
       },
       { property: "og:image", content: sodaHero },
     ],
-    links: [{ rel: "canonical", href: "https://indus-spark-connect.lovable.app/soda" }],
   }),
   component: SodaPage,
 });
