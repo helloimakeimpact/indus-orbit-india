@@ -6,6 +6,7 @@ import { SiteShell } from "@/components/site/SiteShell";
 import contactImg from "@/assets/contact-rooftop.jpg";
 import { cn } from "@/lib/utils";
 import { getHumanCheck, nextHumanCheckIndex } from "@/lib/human-check";
+import { SEGMENT_LIST, SEGMENT_META, type Segment } from "@/components/auth/segments";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
@@ -29,10 +30,10 @@ export const Route = createFileRoute("/contact")({
   component: ContactPage,
 });
 
-type Role = "Youth" | "Expert" | "Investor" | "Partner";
+type Role = Segment;
 
 function ContactPage() {
-  const [role, setRole] = useState<Role>("Youth");
+  const [role, setRole] = useState<Role>("youth");
   const [submitting, setSubmitting] = useState(false);
   const [humanCheckIndex, setHumanCheckIndex] = useState(0);
   const [answer, setAnswer] = useState("");
@@ -57,7 +58,7 @@ function ContactPage() {
       {
         name,
         email,
-        role,
+        role: SEGMENT_META[role].label,
         message,
         source: "contact_page",
       },
@@ -153,7 +154,7 @@ function ContactPage() {
                 I am a…
               </label>
               <div className="mt-2 flex flex-wrap gap-2">
-                {(["Youth", "Expert", "Investor", "Partner"] as Role[]).map((r) => (
+                {SEGMENT_LIST.map((r) => (
                   <button
                     key={r}
                     type="button"
@@ -165,7 +166,7 @@ function ContactPage() {
                         : "border-border bg-background text-foreground/70 hover:bg-foreground/5",
                     )}
                   >
-                    {r}
+                    {SEGMENT_META[r].label}
                   </button>
                 ))}
               </div>
