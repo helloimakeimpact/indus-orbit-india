@@ -3,7 +3,6 @@ import { useMemo, useState } from "react";
 import { SiteShell } from "@/components/site/SiteShell";
 import modelsHero from "@/assets/models-hero.jpg";
 import {
-import { canonical, siteUrl } from "@/lib/seo";
   ArrowRight,
   Cpu,
   Gauge,
@@ -16,6 +15,7 @@ import { canonical, siteUrl } from "@/lib/seo";
   TrendingUp,
   Star,
 } from "lucide-react";
+import { canonical, siteUrl } from "@/lib/seo";
 
 export const Route = createFileRoute("/models")({
   head: () => ({

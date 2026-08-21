@@ -3,7 +3,6 @@ import { useState } from "react";
 import { SiteShell } from "@/components/site/SiteShell";
 import { SEGMENT_META, SEGMENT_LIST, type Segment } from "@/components/auth/segments";
 import {
-import { canonical, siteUrl } from "@/lib/seo";
   Users,
   Rocket,
   Zap,
@@ -17,6 +16,7 @@ import { canonical, siteUrl } from "@/lib/seo";
   Crown,
   Award,
 } from "lucide-react";
+import { canonical, siteUrl } from "@/lib/seo";
 
 export const Route = createFileRoute("/what-is-indus-orbit")({
   head: () => ({
