@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -290,16 +290,16 @@ function CourseEditor({ slug, onBack }: { slug: string; onBack: () => void }) {
   const [data, setData] = useState<CourseDetail | null>(null);
   const [editingLesson, setEditingLesson] = useState<CourseLesson | null>(null);
 
-  async function load() {
+  const load = useCallback(async () => {
     try {
       setData(await getCourseBySlug(slug));
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
-  }
+  }, [slug]);
   useEffect(() => {
     void Promise.resolve().then(load);
-  }, [slug]);
+  }, [load]);
 
   if (!data) return <p className="text-sm text-muted-foreground">Loading…</p>;
 
@@ -597,17 +597,17 @@ function LessonEditor({
   const [attachments, setAttachments] = useState<LessonAttachment[]>([]);
   const [quizData, setQuizData] = useState<QuizEditorData>({ quiz: null, questions: [] });
 
-  async function reload() {
+  const reload = useCallback(async () => {
     const { data: atts } = await supabase
       .from("lesson_attachments")
       .select("*")
       .eq("lesson_id", lesson.id);
     setAttachments(atts ?? []);
     setQuizData(await getQuizForEditing(lesson.id));
-  }
+  }, [lesson.id]);
   useEffect(() => {
     void Promise.resolve().then(reload);
-  }, [lesson.id]);
+  }, [reload]);
 
   async function save() {
     try {
@@ -738,7 +738,7 @@ function QuizEditor({
       setTitle(data.quiz?.title ?? "Knowledge check");
       setPassing(data.quiz?.passing_score ?? 70);
     });
-  }, [data.quiz?.id]);
+  }, [data.quiz?.id, data.quiz?.passing_score, data.quiz?.title]);
 
   async function saveMeta() {
     try {

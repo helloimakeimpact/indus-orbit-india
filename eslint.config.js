@@ -26,5 +26,22 @@ export default tseslint.config(
       "@typescript-eslint/no-unused-vars": "off",
     },
   },
+  {
+    files: ["src/routes/**/*.tsx", "src/router.tsx", "src/components/ui/**/*.tsx"],
+    rules: {
+      // TanStack route modules and reusable UI modules intentionally co-export
+      // route definitions, variants or hooks alongside their components.
+      "react-refresh/only-export-components": "off",
+    },
+  },
+  {
+    files: ["src/contexts/AuthContext.tsx"],
+    rules: {
+      "react-refresh/only-export-components": [
+        "warn",
+        { allowConstantExport: true, allowExportNames: ["useAuth"] },
+      ],
+    },
+  },
   eslintPluginPrettier,
 );

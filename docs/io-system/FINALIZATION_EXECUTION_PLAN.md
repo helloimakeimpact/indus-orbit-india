@@ -190,7 +190,7 @@ Deliverables:
 
 1. Complete state/permission/concurrency contracts for profiles, connections, mentorship, Missions, Chapters, events, learning, skills, S.O.D.A. and stories.
 2. Replace hard-coded/public claims with approved, evidence-backed content and correct canonical metadata.
-3. Resolve the 147 lint warnings, beginning with missing Hook dependencies; split component-only exports where it improves reliability.
+3. **Verified:** member ESLint now passes with zero errors and zero warnings. Missing Hook dependencies were repaired with stable callbacks; TanStack route and reusable UI modules are classified explicitly instead of producing structurally false Fast Refresh warnings.
 4. Split the 645.31 kB chunk and set measured Core Web Vitals and bundle budgets.
 5. Add component, Playwright, accessibility, visual, load and recovery coverage.
 6. Decide Loops archive retention/export/deletion with backup evidence; do not restore it as a product surface.

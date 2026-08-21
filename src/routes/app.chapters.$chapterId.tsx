@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
   MapPin,
@@ -106,7 +106,7 @@ function ChapterWorkspace() {
 
   const navigate = useNavigate();
 
-  async function load() {
+  const load = useCallback(async () => {
     setBusy(true);
     try {
       const [chapterRes, missionsRes, storiesRes, eventsRes, resolvedSpaceId] = await Promise.all([
@@ -147,11 +147,11 @@ function ChapterWorkspace() {
     } finally {
       setBusy(false);
     }
-  }
+  }, [chapterId]);
 
   useEffect(() => {
     void Promise.resolve().then(load);
-  }, [chapterId]);
+  }, [load]);
 
   if (busy) return <p className="mt-8 text-muted-foreground px-4">Loading chapter…</p>;
   if (!chapter) return <p className="mt-8 text-muted-foreground px-4">Chapter not found.</p>;

@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
   Globe2,
@@ -58,7 +58,7 @@ function MissionDetailPage() {
   const [memberToRemove, setMemberToRemove] = useState<{ id: string; name: string } | null>(null);
   const [spaceId, setSpaceId] = useState<string | null>(null);
 
-  async function load() {
+  const load = useCallback(async () => {
     try {
       const [data, resolvedSpaceId] = await Promise.all([
         getMission(missionId),
@@ -71,11 +71,11 @@ function MissionDetailPage() {
     } finally {
       setBusy(false);
     }
-  }
+  }, [missionId]);
 
   useEffect(() => {
     void Promise.resolve().then(load);
-  }, [missionId]);
+  }, [load]);
 
   async function handlePostUpdate() {
     if (!updateText.trim()) return;

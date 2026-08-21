@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -77,7 +77,7 @@ function ReportsPage() {
     }
   }, [isAdmin, loading, navigate]);
 
-  async function load() {
+  const load = useCallback(async () => {
     setBusy(true);
     const { data } = await supabase
       .from("reports")
@@ -86,11 +86,11 @@ function ReportsPage() {
       .order("created_at", { ascending: false });
     setRows((data as unknown as Report[] | null) ?? []);
     setBusy(false);
-  }
+  }, [tab]);
 
   useEffect(() => {
     if (isAdmin) void Promise.resolve().then(load);
-  }, [isAdmin, tab]);
+  }, [isAdmin, load]);
 
   async function resolve(r: Report, status: "actioned" | "dismissed") {
     if (!user) return;
