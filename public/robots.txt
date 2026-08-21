@@ -25,4 +25,4 @@ Allow: /
 User-agent: Applebot-Extended
 Allow: /
 
-Sitemap: https://yourdomain.com/sitemap.xml
+Sitemap: https://indus-spark-connect.lovable.app/sitemap.xml
