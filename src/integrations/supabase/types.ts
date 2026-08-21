@@ -5366,6 +5366,32 @@ export type Database = {
           user_id: string;
         }[];
       };
+      admin_report_queue: {
+        Args: {
+          _before_created_at?: string;
+          _before_id?: string;
+          _limit?: number;
+        };
+        Returns: {
+          created_at: string;
+          report_id: string;
+          report_reason: string;
+          report_status: string;
+          resolution_note: string;
+          resolved_at: string;
+          target_id: string;
+          target_type: string;
+        }[];
+      };
+      admin_resolve_report: {
+        Args: {
+          _expected_status?: string;
+          _outcome: string;
+          _reason: string;
+          _report_id: string;
+        };
+        Returns: Json;
+      };
       admin_resolve_vouch_request: {
         Args: { _approve: boolean; _reason?: string; _request_id: string };
         Returns: undefined;

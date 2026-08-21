@@ -1,6 +1,6 @@
 # Indus Orbit full finalization execution plan
 
-Status: active, evidence-gated plan updated 21 August 2026. The hosted project has 76 migrations with `io-gateway` v24, bounded `io-openai` v4 and `io-provider-conformance` v1 Released. The residency/key/conformance, private-conversation and terminal private-resume slices are hosted; routes, active API keys, approvals and conformance runs remain zero. Production readiness is not claimed.
+Status: active, evidence-gated plan updated 21 August 2026. The hosted project has 78 migrations with `io-gateway` v24, bounded `io-openai` v4 and `io-provider-conformance` v1 Released. The residency/key/conformance, private-conversation, terminal private-resume and transactional Trust slices are hosted; routes, active API keys, approvals and conformance runs remain zero. Production readiness is not claimed.
 
 This plan covers the whole product: public brand site, identity, Community, conversation, I/O Port, terminal/OpenCode, admin, data, operations and commercial readiness. “Done” means code, authorization, data migration, browser behavior, deployment and operating evidence all agree. A source file or attractive UI alone is not completion.
 
@@ -20,7 +20,7 @@ Completed in the demo environment:
 - removal of anonymous access to eight privileged functions;
 - caller-bound domain mutations, retirement of generic notification execution and a private service-leased email outbox;
 - Chapter/Mission Space schema, deterministic Room blueprints, membership projection and caller-bound lifecycle/message/read operations;
-- clean local 76-migration replay with 681/681 assertions; the hosted project has the matching 76 migrations with direct-pagination, I/O API-key, transparent-fee, commercial-gate, workspace/key-policy, provider-conformance, private-conversation and terminal private-Broadcast contracts;
+- clean local 78-migration replay with 700/700 assertions; the hosted project has the matching 78 migrations with direct-pagination, I/O API-key, transparent-fee, commercial-gate, workspace/key-policy, provider-conformance, private-conversation, terminal private-Broadcast and transactional Trust contracts;
 - exact 5.5% provider-cost/fee/customer-total evidence, browser-origin persistent-key rejection and fail-closed written onward-access gates; OpenAI and DeepSeek remain `resale_pending`;
 - five-provider/model/endpoint inventory with three capacity sources/grants, while route receipts and provider attempts remain zero.
 
@@ -34,7 +34,7 @@ Released after that checkpoint:
 - hosted `io-provider-conformance` v1 plus four covering foreign-key indexes; no approval or paid call was created;
 - hosted TypeScript schema contracts synchronized into the member repository;
 - the standalone 23-file admin application published to private GitHub `main`;
-- 54 member tests and 13 admin tests.
+- 57 member tests and 16 admin tests.
 
 The product is still a release candidate foundation, not a finished production system.
 
@@ -44,8 +44,8 @@ Deliverables:
 
 1. Preserve the hosted ledger and document or baseline the 26 timestamp aliases. Until a separately reviewed reconciliation, continue to use the exact-ledger temporary release view rather than ordinary linked `supabase db push`.
 2. Decide whether the separate builder/course/S.O.D.A. seed belongs in demo only; never mix that decision into schema deployment.
-3. **Verified:** all 76 migrations replay from an empty database.
-4. **Verified locally:** all 681 pgTAP assertions and public/private lint pass; keep these and the GitHub database workflow required in CI.
+3. **Verified:** all 78 migrations replay from an empty database.
+4. **Verified locally:** all 700 pgTAP assertions and public/private lint pass; keep these and the GitHub database workflow required in CI.
 5. Add an automated generated-public-types drift gate. The current hosted generation confirms the I/O terminal RPC contract; its file-wide generator-version diff is not yet an automated CI check.
 6. **Verified hosted:** managed `realtime.messages` has exact participant/member authorization for DM and terminal topics; the inherited permissive substring policy is removed.
 7. Prove an upgrade from a production-like snapshot, not only an empty reset.
@@ -170,7 +170,7 @@ Deliverables:
 
 1. Deploy and host `admin-indus-orbit` against the shared identity and capability projection.
 2. Add privileged MFA/re-auth, session review/revocation and two-person root-role changes.
-3. Replace legacy direct-table member/content/program mutations with capability-checked transactional RPCs.
+3. **Released Trust slice:** the separate app now uses a privacy-minimised cursor queue and a reasoned, row-locked, idempotent action/dismiss command with explicit browser denial and private append-only evidence. Still replace legacy member/content/program mutations and add Trust assignment, account/content actions and appeals.
 4. Add redacted cursor-paginated audit, queue assignment, reasons, confirmations and safe bulk-operation limits.
 5. Provider runtime/receipt/budget/circuit database controls are Released; still add evidence/conformance approval, scheduled health, reconciliation and incident workflows without exposing provider secrets. The separate admin browser app still needs hosting deployment.
 6. Remove or redirect obsolete member-app admin surfaces after parity and role-negative tests pass.
