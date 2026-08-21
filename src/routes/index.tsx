@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Cpu, Gauge, IndianRupee } from "lucide-react";
 import modelsHero from "@/assets/models-hero.jpg";
+import { INDIAN_LABS_TRACKED, MODELS_TRACKED } from "@/routes/models";
 import { useEffect, useState } from "react";
 import { getSpotlights } from "@/server/society.functions";
 
@@ -370,14 +371,14 @@ function HomePage() {
             </h3>
             <p className="mt-4 text-foreground/70">
               A living side-by-side chart of frontier models — intelligence, output speed, latency
-              and price. Independent. Refreshed as the sky moves. Adapted for what actually matters
+              and price. Independent. Last reviewed 21 August 2026. Adapted for what actually matters
               at India scale.
             </p>
             <ul className="mt-6 grid grid-cols-3 gap-3 text-center">
               {[
-                { k: "16", v: "Models tracked" },
+                { k: String(MODELS_TRACKED), v: "Models tracked" },
                 { k: "4", v: "Core metrics" },
-                { k: "3", v: "Indian labs" },
+                { k: String(INDIAN_LABS_TRACKED), v: "Indian labs" },
               ].map((s) => (
                 <li key={s.v} className="rounded-2xl bg-[var(--indigo-night)]/[0.04] p-3">
                   <div className="font-display text-2xl font-medium text-[var(--indigo-night)]">
