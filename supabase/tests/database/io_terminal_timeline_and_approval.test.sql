@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
 
-select plan(25);
+select plan(30);
 
 insert into auth.users (
   instance_id,
@@ -66,6 +66,23 @@ select ok(
   'browser users still cannot directly write terminal events'
 );
 
+select has_function(
+  'private',
+  'can_receive_io_terminal_broadcast',
+  array['text'],
+  'private terminal Broadcast authorization function exists'
+);
+
+select ok(
+  exists (
+    select 1
+    from pg_catalog.pg_policy
+    where polrelid = 'realtime.messages'::regclass
+      and polname = 'Terminal members receive private metadata broadcasts'
+  ),
+  'private terminal Broadcast policy exists'
+);
+
 select ok(
   has_function_privilege(
     'authenticated',
@@ -101,6 +118,18 @@ select is(
   ).last_event_sequence,
   1::bigint,
   'session starts with a created metadata event'
+);
+
+select ok(
+  private.can_receive_io_terminal_broadcast(
+    'io-terminal:' || (select id::text from public.io_terminal_sessions limit 1)
+  ),
+  'active terminal owner can receive the exact private session topic'
+);
+
+select ok(
+  not private.can_receive_io_terminal_broadcast('io-terminal:not-a-session'),
+  'malformed terminal topic is rejected'
 );
 
 select is(
@@ -317,6 +346,13 @@ reset role;
 set local "request.jwt.claim.sub" = '31000000-0000-4000-8000-000000000002';
 set local "request.jwt.claim.role" = 'authenticated';
 set local role authenticated;
+
+select ok(
+  not private.can_receive_io_terminal_broadcast(
+    'io-terminal:' || (select id::text from public.io_terminal_sessions limit 1)
+  ),
+  'unrelated member cannot receive the private terminal topic'
+);
 
 select is(
   (select count(*) from public.io_terminal_session_events),

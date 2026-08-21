@@ -1,6 +1,6 @@
 # Indus Orbit full finalization execution plan
 
-Status: active, evidence-gated plan updated 21 August 2026. The hosted project has 75 migrations with `io-gateway` v24, bounded `io-openai` v4 and `io-provider-conformance` v1 Released. The residency/key/conformance and private-conversation slices are hosted; routes, active API keys, approvals and conformance runs remain zero. Production readiness is not claimed.
+Status: active, evidence-gated plan updated 21 August 2026. The hosted project has 76 migrations with `io-gateway` v24, bounded `io-openai` v4 and `io-provider-conformance` v1 Released. The residency/key/conformance, private-conversation and terminal private-resume slices are hosted; routes, active API keys, approvals and conformance runs remain zero. Production readiness is not claimed.
 
 This plan covers the whole product: public brand site, identity, Community, conversation, I/O Port, terminal/OpenCode, admin, data, operations and commercial readiness. “Done” means code, authorization, data migration, browser behavior, deployment and operating evidence all agree. A source file or attractive UI alone is not completion.
 
@@ -20,7 +20,7 @@ Completed in the demo environment:
 - removal of anonymous access to eight privileged functions;
 - caller-bound domain mutations, retirement of generic notification execution and a private service-leased email outbox;
 - Chapter/Mission Space schema, deterministic Room blueprints, membership projection and caller-bound lifecycle/message/read operations;
-- clean local 75-migration replay with 676/676 assertions; the hosted project has the matching 75 migrations with direct-pagination, I/O API-key, transparent-fee, commercial-gate, workspace/key-policy, provider-conformance and private-conversation contracts;
+- clean local 76-migration replay with 681/681 assertions; the hosted project has the matching 76 migrations with direct-pagination, I/O API-key, transparent-fee, commercial-gate, workspace/key-policy, provider-conformance, private-conversation and terminal private-Broadcast contracts;
 - exact 5.5% provider-cost/fee/customer-total evidence, browser-origin persistent-key rejection and fail-closed written onward-access gates; OpenAI and DeepSeek remain `resale_pending`;
 - five-provider/model/endpoint inventory with three capacity sources/grants, while route receipts and provider attempts remain zero.
 
@@ -44,10 +44,10 @@ Deliverables:
 
 1. Preserve the hosted ledger and document or baseline the 26 timestamp aliases. Until a separately reviewed reconciliation, continue to use the exact-ledger temporary release view rather than ordinary linked `supabase db push`.
 2. Decide whether the separate builder/course/S.O.D.A. seed belongs in demo only; never mix that decision into schema deployment.
-3. **Verified:** all 68 migrations replay from an empty database.
-4. **Verified locally:** all 550 pgTAP assertions and public/private lint pass; keep these and the GitHub database workflow required in CI.
+3. **Verified:** all 76 migrations replay from an empty database.
+4. **Verified locally:** all 681 pgTAP assertions and public/private lint pass; keep these and the GitHub database workflow required in CI.
 5. Add an automated generated-public-types drift gate. The current hosted generation confirms the I/O terminal RPC contract; its file-wide generator-version diff is not yet an automated CI check.
-6. Verify the owner-scoped managed `realtime.messages` policy in its real owner environment.
+6. **Verified hosted:** managed `realtime.messages` has exact participant/member authorization for DM and terminal topics; the inherited permissive substring policy is removed.
 7. Prove an upgrade from a production-like snapshot, not only an empty reset.
 
 Exit criteria:
@@ -149,7 +149,7 @@ User input needed: verify/add the safety-identifier secret, obtain written OpenA
 Deliverables:
 
 1. **Released to demo:** safe creator-only sessions, lifecycle, replay-safe ordered metadata events and non-executable request/owner-decision boundaries. Still required: realtime delivery, executable approval/tool contracts, artifacts and handoffs.
-2. **Verified locally:** browser cancellation propagates to OpenCode session abort and completed runs expose only a local changed-file count. Still add resumable streaming timelines, task trees, commands, full diff/revert, verified abort/recovery and daemon-enforced approval states.
+2. **Released/Verified slice:** browser cancellation propagates to OpenCode session abort; completed runs expose only a local changed-file count; private terminal metadata Broadcast resumes the safe timeline; and a validated device-local binding reconnects to the exact OpenCode session for status/task/diff counts. Still add OpenCode SSE ingestion, continued prompts, task trees, commands, full diff/revert, verified abort/recovery and daemon-enforced approval states.
 3. Authenticate the local daemon with short-lived pairing, origin binding and revocation instead of an in-memory password alone.
 4. Package the local client and define compatibility/version negotiation with OpenCode.
 5. Keep local execution local; the hosted service stores only deliberate, permissioned session metadata/artifacts.

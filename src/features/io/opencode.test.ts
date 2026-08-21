@@ -1,6 +1,13 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { normalizeOpenCodeOrigin, OpenCodeStoppedError, runOpenCodeSession } from "./opencode";
+import {
+  inspectOpenCodeLocalSession,
+  loadOpenCodeLocalBinding,
+  normalizeOpenCodeOrigin,
+  OpenCodeStoppedError,
+  runOpenCodeSession,
+  saveOpenCodeLocalBinding,
+} from "./opencode";
 
 describe("normalizeOpenCodeOrigin", () => {
   it("accepts only credential-free loopback root origins", () => {
@@ -13,6 +20,82 @@ describe("normalizeOpenCodeOrigin", () => {
       "http://example.com:4096",
     ]) {
       assert.throws(() => normalizeOpenCodeOrigin(value), /credential-free root HTTP origin/);
+    }
+  });
+});
+
+describe("local OpenCode continuity", { concurrency: false }, () => {
+  it("stores only a validated device-local session binding", () => {
+    const values = new Map<string, string>();
+    const storage: Storage = {
+      get length() {
+        return values.size;
+      },
+      clear: () => values.clear(),
+      getItem: (key: string) => values.get(key) ?? null,
+      key: (index: number) => [...values.keys()][index] ?? null,
+      removeItem: (key: string) => {
+        values.delete(key);
+      },
+      setItem: (key: string, value: string) => {
+        values.set(key, value);
+      },
+    };
+    const binding = {
+      durableSessionId: "018f7f5b-9c4c-4f1f-8b48-7b15108f1234",
+      connectorOrigin: "http://127.0.0.1:4096/",
+      sessionId: "local/session-one",
+      serverVersion: "1.2.3",
+      storedAt: "2026-08-21T00:00:00.000Z",
+    };
+    saveOpenCodeLocalBinding(storage, binding);
+    assert.deepEqual(loadOpenCodeLocalBinding(storage, binding.durableSessionId), {
+      ...binding,
+      connectorOrigin: "http://127.0.0.1:4096",
+    });
+    assert.equal(loadOpenCodeLocalBinding(storage, "not-a-session"), null);
+    assert.throws(
+      () =>
+        saveOpenCodeLocalBinding(storage, {
+          ...binding,
+          connectorOrigin: "https://remote.example",
+        }),
+      /binding is invalid/,
+    );
+  });
+
+  it("reconnects to the exact local session and returns metadata only", async () => {
+    const originalFetch = globalThis.fetch;
+    const urls: string[] = [];
+    globalThis.fetch = async (input) => {
+      const url = String(input);
+      urls.push(url);
+      if (url.endsWith("/global/health")) return Response.json({ healthy: true, version: "2.0" });
+      if (url.endsWith("/session/status")) {
+        return Response.json({ "local/session-one": { type: "idle" } });
+      }
+      if (url.endsWith("/todo")) return Response.json([{ id: "todo-1" }]);
+      if (url.endsWith("/diff")) return Response.json([{ file: "hidden locally" }]);
+      return Response.json({ id: "local/session-one", title: "Local continuation" });
+    };
+    try {
+      const result = await inspectOpenCodeLocalSession({
+        binding: {
+          durableSessionId: "018f7f5b-9c4c-4f1f-8b48-7b15108f1234",
+          connectorOrigin: "http://127.0.0.1:4096",
+          sessionId: "local/session-one",
+          serverVersion: null,
+          storedAt: "2026-08-21T00:00:00.000Z",
+        },
+        password: "",
+      });
+      assert.equal(result.status, "idle");
+      assert.equal(result.todoCount, 1);
+      assert.equal(result.changedFileCount, 1);
+      assert.ok(urls.some((url) => url.includes("/session/local%2Fsession-one")));
+      assert.equal("content" in result, false);
+    } finally {
+      globalThis.fetch = originalFetch;
     }
   });
 });

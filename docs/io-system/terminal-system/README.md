@@ -1,6 +1,6 @@
 # I/O Terminal and OpenCode system record
 
-Status: durable metadata, safe timeline and approval foundations are **Released**; cancellation, timeout and size bounds are **Verified locally**; advanced terminal operations remain open, audited 19 August 2026.
+Status: durable metadata, exact private live timeline and approval foundations are **Released**; cancellation, device-local reconnect, timeout and size bounds are **Verified**; advanced terminal operations remain open, audited 21 August 2026.
 
 ## Product boundary
 
@@ -16,6 +16,7 @@ The application does not embed a full fork of OpenCode. It uses a reviewed brows
 - keeps the optional OpenCode password in memory;
 - propagates cancellation to `POST /session/:id/abort` after cancelling the browser request;
 - reads `GET /session/:id/diff` after success only to display the local changed-file count; no diff body is uploaded;
+- retains a validated origin/session binding only in the creating browser and can reconnect to the exact session through `GET /session/:id`, `/session/status`, `/todo` and `/diff`; only status and counts are rendered, and the OpenCode password is never persisted;
 - checks server health, creates a runtime session and sends one prompt with a 45-second default request timeout;
 - validates returned health, session and message shapes;
 - bounds prompt/title/password/server metadata, streams responses through a 1 MiB limit and composes caller cancellation with its timeout;
@@ -40,10 +41,12 @@ Migration `20260812000100_add_io_terminal_timeline_and_approval_rpcs.sql` adds o
 
 The same migration adds caller-bound approval request and owner-decision RPCs with bounded expiry, risk/scope classification and idempotent replay. A decision is explicitly **not** an execution grant: no browser or database call can use it to run an OpenCode command. Step-up authentication, approval UI, daemon enforcement and tool/command controls remain required before any executable approval capability is exposed.
 
+Migration `20260821120706_add_private_terminal_timeline_broadcast.sql` adds an exact `io-terminal:<session UUID>` private Broadcast topic, active-session-member authorization on `realtime.messages` and an insert trigger for the already allow-listed metadata event row. The member timeline re-subscribes after refresh and re-reads the caller-bound RPC on each event. This is cloud metadata continuity, not OpenCode output streaming.
+
 ### Evidence
 
-- OpenCode lifecycle, daemon-abort propagation, local diff count, timeout and validation unit tests pass as part of the 54-test member suite.
-- The two terminal SQL contracts contribute 49 passing assertions to the 550-assertion fresh database replay.
+- OpenCode lifecycle, daemon-abort propagation, device-local binding/reconnect, local diff count, timeout and validation unit tests pass as part of the 57-test member suite.
+- The terminal SQL contracts contribute 54 passing assertions to the 681-assertion fresh 76-migration database replay.
 - Database lint reports no `public` or `private` schema errors.
 - Member typecheck, production build and formatting pass.
 
@@ -53,8 +56,8 @@ These facts are **Released** to hosted project `jpwvgpnbkrktipwhvqss`: the three
 
 The following capabilities are still **Planned** or **Partial**:
 
-1. realtime/SSE timeline delivery, runtime reconnect and bounded retention/compaction of the existing ordered metadata timeline;
-2. resume, reconnect, verified daemon-abort acknowledgement, fork, child sessions and task tree; Stop now invokes OpenCode abort, but its best-effort cleanup deliberately preserves the original failure and therefore does not yet prove process termination;
+1. OpenCode `/event` SSE ingestion and bounded retention/compaction of the existing ordered cloud metadata timeline; private Supabase Broadcast and safe device-local reconnect are Released;
+2. continued prompts, verified daemon-abort acknowledgement, fork, child sessions and task tree; Stop invokes OpenCode abort, but its best-effort cleanup deliberately preserves the original failure and therefore does not yet prove process termination;
 3. command, tool, MCP, LSP, formatter and repository-context UI;
 4. step-up, approval UI, daemon-side execution enforcement and revoke/expiry handling for the existing approval request/decision boundary;
 5. diff, review, revert, artifact and safe download flows;

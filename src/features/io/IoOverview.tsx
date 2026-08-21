@@ -33,10 +33,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import {
+  inspectOpenCodeLocalSession,
+  loadOpenCodeLocalBinding,
   OpenCodeStoppedError,
   runOpenCodeSession,
+  saveOpenCodeLocalBinding,
+  type OpenCodeReconnectSummary,
   type OpenCodeRunResult,
 } from "@/features/io/opencode";
 import {
@@ -84,6 +89,7 @@ export function IoOverview() {
   const selectedWorkspaceIdRef = useRef<string | null>(null);
   const workspaceLoadSequence = useRef(0);
   const terminalAbortController = useRef<AbortController | null>(null);
+  const terminalTimelineLoadSequence = useRef(0);
   const [sources, setSources] = useState<IoCapacitySource[]>([]);
   const [events, setEvents] = useState<IoAuditEvent[]>([]);
   const [receipts, setReceipts] = useState<IoRouteReceipt[]>([]);
@@ -99,6 +105,11 @@ export function IoOverview() {
   const [terminalTimeline, setTerminalTimeline] = useState<IoTerminalEvent[]>([]);
   const [selectedTerminalSessionId, setSelectedTerminalSessionId] = useState<string | null>(null);
   const [terminalTimelineLoading, setTerminalTimelineLoading] = useState(false);
+  const [terminalReconnectBusy, setTerminalReconnectBusy] = useState<string | null>(null);
+  const [terminalReconnect, setTerminalReconnect] = useState<{
+    durableSessionId: string;
+    summary: OpenCodeReconnectSummary;
+  } | null>(null);
   const [routeCatalogError, setRouteCatalogError] = useState<string | null>(null);
   const [routePreflight, setRoutePreflight] = useState<IoRoutePreflight | null>(null);
   const [preflightLoading, setPreflightLoading] = useState(false);
@@ -122,6 +133,43 @@ export function IoOverview() {
     },
     [],
   );
+
+  useEffect(() => {
+    const sessionId = selectedTerminalSessionId;
+    if (!sessionId) return;
+    let active = true;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
+    void (async () => {
+      await supabase.realtime.setAuth();
+      if (!active) return;
+      channel = supabase
+        .channel(`io-terminal:${sessionId}`, { config: { private: true } })
+        .on("broadcast", { event: "*" }, () => {
+          const loadSequence = ++terminalTimelineLoadSequence.current;
+          void listMyIoTerminalEvents(sessionId)
+            .then((timeline) => {
+              if (
+                active &&
+                selectedTerminalSessionId === sessionId &&
+                loadSequence === terminalTimelineLoadSequence.current
+              ) {
+                setTerminalTimeline(timeline);
+              }
+            })
+            .catch(() => {
+              // The next manual refresh remains available; never expose Realtime internals.
+            });
+        })
+        .subscribe();
+    })();
+
+    return () => {
+      active = false;
+      terminalTimelineLoadSequence.current += 1;
+      if (channel) void supabase.removeChannel(channel);
+    };
+  }, [selectedTerminalSessionId]);
 
   const loadWorkspace = useCallback(async (requestedWorkspaceId?: string) => {
     const loadSequence = ++workspaceLoadSequence.current;
@@ -244,13 +292,21 @@ export function IoOverview() {
     }
     setSelectedTerminalSessionId(sessionId);
     setTerminalTimelineLoading(true);
+    const loadSequence = ++terminalTimelineLoadSequence.current;
     try {
-      setTerminalTimeline(await listMyIoTerminalEvents(sessionId));
+      const timeline = await listMyIoTerminalEvents(sessionId);
+      if (loadSequence === terminalTimelineLoadSequence.current) {
+        setTerminalTimeline(timeline);
+      }
     } catch (error) {
-      setTerminalTimeline([]);
-      toast.error(error instanceof Error ? error.message : "Could not load terminal metadata.");
+      if (loadSequence === terminalTimelineLoadSequence.current) {
+        setTerminalTimeline([]);
+        toast.error(error instanceof Error ? error.message : "Could not load terminal metadata.");
+      }
     } finally {
-      setTerminalTimelineLoading(false);
+      if (loadSequence === terminalTimelineLoadSequence.current) {
+        setTerminalTimelineLoading(false);
+      }
     }
   }
 
@@ -357,6 +413,7 @@ export function IoOverview() {
       } else {
         let durableSessionId: string | null = null;
         let durableMetadataFailed = false;
+        let localBindingFailed = false;
         const result = await runOpenCodeSession({
           serverUrl: openCodeUrl,
           password: openCodePassword,
@@ -374,6 +431,19 @@ export function IoOverview() {
                 runtimeVersion: session.serverVersion,
               });
               durableSessionId = durable.id;
+              if (typeof window !== "undefined") {
+                try {
+                  saveOpenCodeLocalBinding(window.localStorage, {
+                    durableSessionId: durable.id,
+                    connectorOrigin: session.connectorOrigin,
+                    sessionId: session.sessionId,
+                    serverVersion: session.serverVersion,
+                    storedAt: new Date().toISOString(),
+                  });
+                } catch {
+                  localBindingFailed = true;
+                }
+              }
             } catch {
               durableMetadataFailed = true;
             }
@@ -401,8 +471,12 @@ export function IoOverview() {
         });
         setTerminalResult(result);
         await loadWorkspace(workspace.id);
-        if (!durableMetadataFailed) {
+        if (!durableMetadataFailed && !localBindingFailed) {
           toast.success("OpenCode session completed and its durable safe metadata was recorded.");
+        } else if (!durableMetadataFailed) {
+          toast.warning(
+            "OpenCode completed, but this browser could not retain its local-only reconnect binding.",
+          );
         } else {
           toast.warning(
             "OpenCode completed locally, but its durable metadata could not be fully recorded.",
@@ -446,6 +520,30 @@ export function IoOverview() {
 
   function stopTerminalSession() {
     terminalAbortController.current?.abort();
+  }
+
+  async function reconnectLocalTerminal(session: IoTerminalSession) {
+    if (typeof window === "undefined" || terminalReconnectBusy) return;
+    const binding = loadOpenCodeLocalBinding(window.localStorage, session.id);
+    if (!binding) {
+      toast.info(
+        "This browser has no local binding for that run. Reconnect is available only on the device that created it.",
+      );
+      return;
+    }
+    setTerminalReconnectBusy(session.id);
+    try {
+      const summary = await inspectOpenCodeLocalSession({
+        binding,
+        password: openCodePassword,
+      });
+      setTerminalReconnect({ durableSessionId: session.id, summary });
+      toast.success("Reconnected to the exact local OpenCode session.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Local OpenCode reconnect failed.");
+    } finally {
+      setTerminalReconnectBusy(null);
+    }
   }
 
   const readySources = sources.filter((source) => source.status === "active");
@@ -1072,7 +1170,7 @@ export function IoOverview() {
             {terminalSessions.map((session) => (
               <article
                 key={session.id}
-                className="grid gap-2 px-4 py-3 sm:grid-cols-[minmax(0,1fr)_auto_auto_auto] sm:items-center"
+                className="grid gap-2 px-4 py-3 sm:grid-cols-[minmax(0,1fr)_auto_auto_auto_auto] sm:items-center"
               >
                 <div className="min-w-0">
                   <p className="truncate text-xs font-semibold text-foreground">{session.title}</p>
@@ -1102,15 +1200,43 @@ export function IoOverview() {
                   variant="ghost"
                   size="sm"
                   className="h-7 px-2 text-[10px]"
+                  disabled={terminalReconnectBusy !== null}
+                  onClick={() => void reconnectLocalTerminal(session)}
+                >
+                  {terminalReconnectBusy === session.id ? (
+                    <LoaderCircle className="animate-spin" />
+                  ) : (
+                    <PlugZap />
+                  )}
+                  Reconnect local
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-[10px]"
                   aria-expanded={selectedTerminalSessionId === session.id}
                   onClick={() => void toggleTerminalTimeline(session.id)}
                 >
                   {selectedTerminalSessionId === session.id ? "Hide timeline" : "Timeline"}
                 </Button>
+                {terminalReconnect?.durableSessionId === session.id ? (
+                  <div className="sm:col-span-5 grid gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-[10px] text-emerald-950 sm:grid-cols-3">
+                    <span>
+                      Local status: <strong>{terminalReconnect.summary.status}</strong>
+                    </span>
+                    <span>
+                      Tasks: <strong>{terminalReconnect.summary.todoCount}</strong>
+                    </span>
+                    <span>
+                      Changed files: <strong>{terminalReconnect.summary.changedFileCount}</strong>
+                    </span>
+                  </div>
+                ) : null}
                 {selectedTerminalSessionId === session.id ? (
-                  <div className="sm:col-span-4 rounded-lg border border-border/60 bg-muted/25 px-3 py-2">
+                  <div className="sm:col-span-5 rounded-lg border border-border/60 bg-muted/25 px-3 py-2">
                     <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
-                      Safe metadata timeline · content remains local
+                      Safe metadata timeline · private live resume · content remains local
                     </p>
                     {terminalTimelineLoading ? (
                       <p className="mt-1 text-[10px] text-muted-foreground">Loading timeline…</p>

@@ -14,6 +14,24 @@ export type OpenCodeSessionReference = {
   serverVersion: string | null;
 };
 
+export type OpenCodeLocalBinding = {
+  durableSessionId: string;
+  connectorOrigin: string;
+  sessionId: string;
+  serverVersion: string | null;
+  storedAt: string;
+};
+
+export type OpenCodeReconnectSummary = {
+  connectorOrigin: string;
+  sessionId: string;
+  title: string | null;
+  serverVersion: string | null;
+  status: string;
+  todoCount: number;
+  changedFileCount: number;
+};
+
 export type OpenCodeMetadataEvent =
   | {
       type: "runtime.connected";
@@ -34,6 +52,9 @@ type UnknownRecord = Record<string, unknown>;
 const DEFAULT_REQUEST_TIMEOUT_MS = 45_000;
 const MAX_RESPONSE_BYTES = 1_048_576;
 const MAX_PROMPT_CHARACTERS = 24_000;
+const LOCAL_BINDING_PREFIX = "indus-orbit:io-terminal:";
+const durableSessionIdPattern =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export class OpenCodeStoppedError extends Error {
   constructor() {
@@ -65,6 +86,61 @@ export function normalizeOpenCodeOrigin(value: string) {
     );
   }
   return url.origin;
+}
+
+function validateLocalBinding(value: unknown): OpenCodeLocalBinding | null {
+  const binding = asRecord(value);
+  if (!binding) return null;
+  const durableSessionId = binding.durableSessionId;
+  const connectorOrigin = binding.connectorOrigin;
+  const sessionId = binding.sessionId;
+  const serverVersion = binding.serverVersion;
+  const storedAt = binding.storedAt;
+  if (
+    typeof durableSessionId !== "string" ||
+    !durableSessionIdPattern.test(durableSessionId) ||
+    typeof connectorOrigin !== "string" ||
+    typeof sessionId !== "string" ||
+    !sessionId.trim() ||
+    sessionId.length > 512 ||
+    (serverVersion !== null &&
+      (typeof serverVersion !== "string" || !serverVersion || serverVersion.length > 120)) ||
+    typeof storedAt !== "string" ||
+    !Number.isFinite(Date.parse(storedAt))
+  ) {
+    return null;
+  }
+  try {
+    return {
+      durableSessionId,
+      connectorOrigin: normalizeOpenCodeOrigin(connectorOrigin),
+      sessionId,
+      serverVersion,
+      storedAt,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export function saveOpenCodeLocalBinding(storage: Storage, binding: OpenCodeLocalBinding) {
+  const validated = validateLocalBinding(binding);
+  if (!validated) throw new Error("The local OpenCode session binding is invalid.");
+  storage.setItem(
+    `${LOCAL_BINDING_PREFIX}${validated.durableSessionId}`,
+    JSON.stringify(validated),
+  );
+}
+
+export function loadOpenCodeLocalBinding(storage: Storage, durableSessionId: string) {
+  if (!durableSessionIdPattern.test(durableSessionId)) return null;
+  const raw = storage.getItem(`${LOCAL_BINDING_PREFIX}${durableSessionId}`);
+  if (!raw) return null;
+  try {
+    return validateLocalBinding(JSON.parse(raw));
+  } catch {
+    return null;
+  }
 }
 
 function headers(password: string) {
@@ -189,6 +265,83 @@ async function parseResponse(response: Response) {
   }
   const detail = text.trim().slice(0, 500);
   throw new Error(detail || `OpenCode returned ${response.status}.`);
+}
+
+export async function inspectOpenCodeLocalSession(input: {
+  binding: OpenCodeLocalBinding;
+  password: string;
+  signal?: AbortSignal;
+  requestTimeoutMs?: number;
+}): Promise<OpenCodeReconnectSummary> {
+  const binding = validateLocalBinding(input.binding);
+  if (!binding) throw new Error("The local OpenCode session binding is invalid.");
+  if (input.password.length > 1_024) throw new Error("The local OpenCode password is too long.");
+  if (input.signal?.aborted) throw new OpenCodeStoppedError();
+  const timeoutMs = input.requestTimeoutMs ?? 10_000;
+  if (!Number.isInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 30_000) {
+    throw new Error("The OpenCode reconnect timeout is invalid.");
+  }
+  const encodedSessionId = encodeURIComponent(binding.sessionId);
+  const requestHeaders = headers(input.password);
+  const [health, session, statuses, todos, diffs] = await Promise.all([
+    requestOpenCode(
+      `${binding.connectorOrigin}/global/health`,
+      { headers: requestHeaders },
+      input.signal,
+      timeoutMs,
+    ),
+    requestOpenCode(
+      `${binding.connectorOrigin}/session/${encodedSessionId}`,
+      { headers: requestHeaders },
+      input.signal,
+      timeoutMs,
+    ),
+    requestOpenCode(
+      `${binding.connectorOrigin}/session/status`,
+      { headers: requestHeaders },
+      input.signal,
+      timeoutMs,
+    ),
+    requestOpenCode(
+      `${binding.connectorOrigin}/session/${encodedSessionId}/todo`,
+      { headers: requestHeaders },
+      input.signal,
+      timeoutMs,
+    ),
+    requestOpenCode(
+      `${binding.connectorOrigin}/session/${encodedSessionId}/diff`,
+      { headers: requestHeaders },
+      input.signal,
+      timeoutMs,
+    ),
+  ]);
+  const healthRecord = asRecord(health);
+  const sessionRecord = asRecord(session);
+  if (!sessionRecord || sessionRecord.id !== binding.sessionId) {
+    throw new Error("OpenCode returned a different local session.");
+  }
+  const statusRecord = asRecord(asRecord(statuses)?.[binding.sessionId]);
+  const statusValue = statusRecord?.type;
+  const status =
+    typeof statusValue === "string" && /^[a-z][a-z0-9_-]{0,31}$/i.test(statusValue)
+      ? statusValue
+      : "unknown";
+  const titleValue = sessionRecord.title;
+  return {
+    connectorOrigin: binding.connectorOrigin,
+    sessionId: binding.sessionId,
+    title:
+      typeof titleValue === "string" && titleValue.trim() && titleValue.length <= 120
+        ? titleValue.trim()
+        : null,
+    serverVersion:
+      typeof healthRecord?.version === "string" && healthRecord.version.length <= 120
+        ? healthRecord.version
+        : binding.serverVersion,
+    status,
+    todoCount: Array.isArray(todos) ? todos.length : 0,
+    changedFileCount: Array.isArray(diffs) ? diffs.length : 0,
+  };
 }
 
 export async function runOpenCodeSession(input: {
