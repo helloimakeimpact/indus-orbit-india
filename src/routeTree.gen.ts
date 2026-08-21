@@ -179,9 +179,9 @@ const AppIndexRoute = AppIndexRouteImport.update({
   getParentRoute: () => AppRoute,
 } as any)
 const WritingSlugRoute = WritingSlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
-  getParentRoute: () => WritingRoute,
+  id: '/writing/$slug',
+  path: '/writing/$slug',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const RedeemCodeRoute = RedeemCodeRouteImport.update({
   id: '/redeem/$code',
@@ -904,6 +904,7 @@ export interface RootRouteChildren {
   WhatIsIndusOrbitRoute: typeof WhatIsIndusOrbitRoute
   ProfileIdRoute: typeof ProfileIdRoute
   RedeemCodeRoute: typeof RedeemCodeRoute
+  WritingSlugRoute: typeof WritingSlugRoute
   WritingIndexRoute: typeof WritingIndexRoute
 }
 
@@ -1044,10 +1045,10 @@ declare module '@tanstack/react-router' {
     }
     '/writing/$slug': {
       id: '/writing/$slug'
-      path: '/$slug'
+      path: '/writing/$slug'
       fullPath: '/writing/$slug'
       preLoaderRoute: typeof WritingSlugRouteImport
-      parentRoute: typeof WritingRoute
+      parentRoute: typeof rootRouteImport
     }
     '/redeem/$code': {
       id: '/redeem/$code'
@@ -1646,6 +1647,7 @@ const rootRouteChildren: RootRouteChildren = {
   WhatIsIndusOrbitRoute: WhatIsIndusOrbitRoute,
   ProfileIdRoute: ProfileIdRoute,
   RedeemCodeRoute: RedeemCodeRoute,
+  WritingSlugRoute: WritingSlugRoute,
   WritingIndexRoute: WritingIndexRoute,
 }
 export const routeTree = rootRouteImport
