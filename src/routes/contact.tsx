@@ -7,10 +7,13 @@ import contactImg from "@/assets/contact-rooftop.jpg";
 import { cn } from "@/lib/utils";
 import { getHumanCheck, nextHumanCheckIndex } from "@/lib/human-check";
 import { SEGMENT_LIST, SEGMENT_META, type Segment } from "@/components/auth/segments";
+import { canonical, siteUrl } from "@/lib/seo";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
+    links: canonical("/contact"),
     meta: [
+      { property: "og:url", content: siteUrl("/contact") },
       { title: "Get in touch — Indus Orbit" },
       {
         name: "description",

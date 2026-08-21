@@ -9,10 +9,13 @@ import { VerifiedBadge } from "@/components/auth/VerifiedBadge";
 import { getSpotlights } from "@/server/society.functions";
 import { Sparkles } from "lucide-react";
 import { formatInlineProfileLocation } from "@/lib/location";
+import { canonical, siteUrl } from "@/lib/seo";
 
 export const Route = createFileRoute("/members")({
   head: () => ({
+    links: canonical("/members"),
     meta: [
+      { property: "og:url", content: siteUrl("/members") },
       { title: "Members — Indus Orbit" },
       {
         name: "description",

@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { SiteShell } from "@/components/site/SiteShell";
 import modelsHero from "@/assets/models-hero.jpg";
 import {
+import { canonical, siteUrl } from "@/lib/seo";
   ArrowRight,
   Cpu,
   Gauge,
@@ -18,7 +19,9 @@ import {
 
 export const Route = createFileRoute("/models")({
   head: () => ({
+    links: canonical("/models"),
     meta: [
+      { property: "og:url", content: siteUrl("/models") },
       { title: "Model Observatory — AI Model Intelligence, Speed & Price | Indus Orbit" },
       {
         name: "description",

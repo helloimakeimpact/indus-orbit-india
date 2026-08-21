@@ -21,10 +21,13 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { SiteShell } from "@/components/site/SiteShell";
 import { cn } from "@/lib/utils";
+import { canonical, siteUrl } from "@/lib/seo";
 
 export const Route = createFileRoute("/io-port")({
   head: () => ({
+    links: canonical("/io-port"),
     meta: [
+      { property: "og:url", content: siteUrl("/io-port") },
       { title: "I/O Port — India's People-Centred AI Gateway | Indus Orbit" },
       {
         name: "description",

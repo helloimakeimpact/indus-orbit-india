@@ -19,12 +19,15 @@ import modelsHero from "@/assets/models-hero.jpg";
 import { INDIAN_LABS_TRACKED, MODELS_TRACKED } from "@/routes/models";
 import { useEffect, useState } from "react";
 import { getSpotlights } from "@/server/society.functions";
+import { canonical, siteUrl } from "@/lib/seo";
 
 type Spotlight = Awaited<ReturnType<typeof getSpotlights>>[number];
 
 export const Route = createFileRoute("/")({
   head: () => ({
+    links: canonical("/"),
     meta: [
+      { property: "og:url", content: siteUrl("/") },
       { title: "Indus Orbit — A general intelligence company for India" },
       {
         name: "description",

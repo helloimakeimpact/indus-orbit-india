@@ -3,6 +3,7 @@ import { useState } from "react";
 import { SiteShell } from "@/components/site/SiteShell";
 import { SEGMENT_META, SEGMENT_LIST, type Segment } from "@/components/auth/segments";
 import {
+import { canonical, siteUrl } from "@/lib/seo";
   Users,
   Rocket,
   Zap,
@@ -18,7 +19,13 @@ import {
 } from "lucide-react";
 
 export const Route = createFileRoute("/what-is-indus-orbit")({
-  head: () => ({ meta: [{ title: "What is Indus Orbit? — Guide & Wiki" }] }),
+  head: () => ({
+    meta: [
+      { title: "What is Indus Orbit? — Guide & Wiki" },
+      { property: "og:url", content: siteUrl("/what-is-indus-orbit") },
+    ],
+    links: canonical("/what-is-indus-orbit"),
+  }),
   component: WhatIsIndusOrbitPage,
 });
 
