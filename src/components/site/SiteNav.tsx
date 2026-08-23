@@ -25,6 +25,7 @@ const links = [
   { to: "/about", label: "About" },
   { to: "/our-work", label: "Our Work" },
   { to: "/models", label: "Models" },
+  { to: "/cities", label: "Cities" },
   { to: "/io-port", label: "I/O Port" },
   { to: "/writing", label: "Writing" },
   { to: "/members", label: "Members" },
