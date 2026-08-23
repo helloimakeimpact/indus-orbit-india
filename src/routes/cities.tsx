@@ -890,9 +890,7 @@ function personalWeights(sector: Sector, priorities: PillarKey[]) {
 }
 
 function weightedScore(city: City, w: Record<PillarKey, number>) {
-  return (
-    (Object.keys(w) as PillarKey[]).reduce((sum, k) => sum + city.scores[k] * w[k], 0) / 100
-  );
+  return (Object.keys(w) as PillarKey[]).reduce((sum, k) => sum + city.scores[k] * w[k], 0) / 100;
 }
 
 function baseScore(city: City) {
@@ -951,7 +949,12 @@ function Radar({ city, overlay }: { city: City; overlay?: City }) {
     }).join(" ") + " Z";
 
   return (
-    <svg viewBox={`0 0 ${size} ${size}`} className="h-auto w-full" role="img" aria-label={`${city.name} pillar radar`}>
+    <svg
+      viewBox={`0 0 ${size} ${size}`}
+      className="h-auto w-full"
+      role="img"
+      aria-label={`${city.name} pillar radar`}
+    >
       {[0.25, 0.5, 0.75, 1].map((f) => (
         <circle
           key={f}
@@ -983,7 +986,12 @@ function Radar({ city, overlay }: { city: City; overlay?: City }) {
         );
       })}
       {overlay && (
-        <path d={path(overlay)} fill="rgba(26,31,77,0.10)" stroke="rgba(26,31,77,0.55)" strokeWidth={1.5} />
+        <path
+          d={path(overlay)}
+          fill="rgba(26,31,77,0.10)"
+          stroke="rgba(26,31,77,0.55)"
+          strokeWidth={1.5}
+        />
       )}
       <path
         d={path(city)}
@@ -1396,8 +1404,7 @@ function CityIntelligencePage() {
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filteredCities.map((c) => {
               const active = c.slug === selected;
-              const headline =
-                pillarFilter === "overall" ? baseScore(c) : c.scores[pillarFilter];
+              const headline = pillarFilter === "overall" ? baseScore(c) : c.scores[pillarFilter];
               return (
                 <button
                   key={c.slug}
@@ -1479,12 +1486,36 @@ function CityIntelligencePage() {
           {/* KPI strip */}
           <div className="mt-8 grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
             {[
-              { icon: <IndianRupee className="h-4 w-4" />, label: "Lean burn", value: `${inr(city.burn)}/mo` },
-              { icon: <Users className="h-4 w-4" />, label: "5-person burn", value: `${inr(city.teamBurn)}/mo` },
-              { icon: <Sparkles className="h-4 w-4" />, label: "Ecosystem", value: `${city.scores.capital}/100` },
-              { icon: <Landmark className="h-4 w-4" />, label: "Policy", value: `${city.scores.policy}/100` },
-              { icon: <Wind className="h-4 w-4" />, label: "PM2.5 annual", value: `${city.pm25} µg/m³` },
-              { icon: <Sun className="h-4 w-4" />, label: "Commercial power", value: `₹${city.tariff}/kWh` },
+              {
+                icon: <IndianRupee className="h-4 w-4" />,
+                label: "Lean burn",
+                value: `${inr(city.burn)}/mo`,
+              },
+              {
+                icon: <Users className="h-4 w-4" />,
+                label: "5-person burn",
+                value: `${inr(city.teamBurn)}/mo`,
+              },
+              {
+                icon: <Sparkles className="h-4 w-4" />,
+                label: "Ecosystem",
+                value: `${city.scores.capital}/100`,
+              },
+              {
+                icon: <Landmark className="h-4 w-4" />,
+                label: "Policy",
+                value: `${city.scores.policy}/100`,
+              },
+              {
+                icon: <Wind className="h-4 w-4" />,
+                label: "PM2.5 annual",
+                value: `${city.pm25} µg/m³`,
+              },
+              {
+                icon: <Sun className="h-4 w-4" />,
+                label: "Commercial power",
+                value: `₹${city.tariff}/kWh`,
+              },
             ].map((k) => (
               <div key={k.label} className="rounded-2xl bg-foreground/[0.04] p-4">
                 <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-foreground/50">
@@ -1535,9 +1566,9 @@ function CityIntelligencePage() {
                   <dt className="text-foreground/55">Policy score inputs</dt>
                   <dd className="text-foreground/85">
                     State startup policy incentives (SGST reimbursement, patent reimbursement,
-                    prototype and marketing assistance, procurement relaxations) plus national
-                    DPIIT recognition benefits. Eligibility conditions apply; verify on the official
-                    state portal before relying on any figure.
+                    prototype and marketing assistance, procurement relaxations) plus national DPIIT
+                    recognition benefits. Eligibility conditions apply; verify on the official state
+                    portal before relying on any figure.
                   </dd>
                 </div>
               </dl>
@@ -1650,7 +1681,9 @@ function CityIntelligencePage() {
       <section className="px-6 pb-20">
         <div className="mx-auto max-w-7xl">
           <Eyebrow>Who this is for</Eyebrow>
-          <h2 className="mt-2 font-display text-3xl font-light md:text-4xl">Five founders, five answers.</h2>
+          <h2 className="mt-2 font-display text-3xl font-light md:text-4xl">
+            Five founders, five answers.
+          </h2>
           <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {[
               {
@@ -1735,7 +1768,10 @@ function CityIntelligencePage() {
 
             <div className="mt-8 grid gap-3 sm:grid-cols-2">
               {[
-                ["A — High confidence", "Official government, regulator or international institution"],
+                [
+                  "A — High confidence",
+                  "Official government, regulator or international institution",
+                ],
                 ["B — Good", "Established commercial or global dataset"],
                 ["C — Indicative", "Crowdsourced or secondary data"],
                 ["D — Editorial", "Indus Orbit analysis, clearly labelled"],

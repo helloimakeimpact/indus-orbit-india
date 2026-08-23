@@ -374,8 +374,8 @@ function HomePage() {
             </h3>
             <p className="mt-4 text-foreground/70">
               A living side-by-side chart of frontier models — intelligence, output speed, latency
-              and price. Independent. Last reviewed 21 August 2026. Adapted for what actually matters
-              at India scale.
+              and price. Independent. Last reviewed 21 August 2026. Adapted for what actually
+              matters at India scale.
             </p>
             <ul className="mt-6 grid grid-cols-3 gap-3 text-center">
               {[

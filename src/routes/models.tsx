@@ -943,8 +943,8 @@ function ModelsPage() {
             >
               artificialanalysis.ai/models
             </a>{" "}
-            (last reviewed {MODELS_LAST_UPDATED}) and public vendor pricing. INR converted at ₹{USD_TO_INR}/USD. Treat as a
-            starting map, not a stopwatch.
+            (last reviewed {MODELS_LAST_UPDATED}) and public vendor pricing. INR converted at ₹
+            {USD_TO_INR}/USD. Treat as a starting map, not a stopwatch.
           </p>
         </div>
       </section>
