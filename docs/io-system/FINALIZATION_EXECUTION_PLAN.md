@@ -170,8 +170,8 @@ Deliverables:
 
 1. Deploy and host `admin-indus-orbit` against the shared identity and capability projection.
 2. Add privileged MFA/re-auth, session review/revocation and two-person root-role changes.
-3. **Released Trust slice:** the separate app now uses a privacy-minimised cursor queue and a reasoned, row-locked, idempotent action/dismiss command with explicit browser denial and private append-only evidence. Still replace legacy member/content/program mutations and add Trust assignment, account/content actions and appeals.
-4. Add redacted cursor-paginated audit, queue assignment, reasons, confirmations and safe bulk-operation limits.
+3. **Released Trust and Member Support slices:** the separate app uses a privacy-minimised cursor queue and a reasoned, row-locked, idempotent action/dismiss command with explicit browser denial and private append-only evidence. It now also has privacy-minimised member lookup, reasoned expected-state suspension/lift and verification, protected administrative targets, plus private operation evidence. Still add Trust assignment, account/content actions, appeals and legacy content/program replacements.
+4. **Released Audit slice:** `audit.read` receives a redacted cursor-paginated cross-domain queue with reviewed domain filters. Still add step-up-authorized export, retention, queue assignment, safe bulk-operation limits and authenticated browser role personas.
 5. Provider runtime/receipt/budget/circuit database controls are Released; still add evidence/conformance approval, scheduled health, reconciliation and incident workflows without exposing provider secrets. The separate admin browser app still needs hosting deployment.
 6. Remove or redirect obsolete member-app admin surfaces after parity and role-negative tests pass.
 
