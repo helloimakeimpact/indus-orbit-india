@@ -771,13 +771,9 @@ export async function getIoCapacitySources(workspaceId: string): Promise<IoCapac
 }
 
 export async function listMyIoApiKeys(workspaceId: string): Promise<IoApiKeyMetadata[]> {
-  const { data, error } = await supabase
-    .from("io_api_key_metadata")
-    .select(
-      "id, name, key_prefix, last_four, scopes, status, expires_at, last_used_at, created_at, limit_policy_version, requests_per_minute, requests_per_day, requests_per_month, spend_currency_code, spend_per_day_nanos, spend_per_month_nanos",
-    )
-    .eq("workspace_id", workspaceId)
-    .order("created_at", { ascending: false });
+  const { data, error } = await supabase.rpc("list_my_io_api_keys", {
+    _workspace_id: workspaceId,
+  });
   if (error) throw new Error(error.message);
   return (data ?? []).flatMap((value) => {
     if (

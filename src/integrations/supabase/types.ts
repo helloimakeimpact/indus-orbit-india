@@ -6119,6 +6119,27 @@ export type Database = {
         Args: { _limit?: number; _workspace_id: string };
         Returns: Json;
       };
+      list_my_io_api_keys: {
+        Args: { _workspace_id: string };
+        Returns: {
+          created_at: string;
+          expires_at: string;
+          id: string;
+          key_prefix: string;
+          last_four: string;
+          last_used_at: string | null;
+          limit_policy_version: number;
+          name: string;
+          requests_per_day: number;
+          requests_per_minute: number;
+          requests_per_month: number;
+          scopes: string[];
+          spend_currency_code: string;
+          spend_per_day_nanos: number;
+          spend_per_month_nanos: number;
+          status: string;
+        }[];
+      };
       list_my_io_invoices: {
         Args: { _limit?: number; _workspace_id: string };
         Returns: Json;

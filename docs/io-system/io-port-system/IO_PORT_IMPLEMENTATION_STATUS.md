@@ -53,6 +53,13 @@ The demo deployment contains metadata and secret references, not key values. No 
 - Provider statements reconcile immutable line evidence to route attempts by provider request ID, retaining unmatched, ambiguous, currency and amount exceptions.
 - The finance runtime stays fail-closed: zero approved tax policies and zero approved live processors; no payment function was deployed and no charge was attempted.
 
+### 1.2 Authenticated browser and member-read repair, 24 August 2026
+
+- A signed-in production-browser audit verified that Overview, Sessions, Terminal, Model routes, Capacity, Evidence, Usage ledger and Safety resolve to distinct `?view=` states with distinct working-surface headings. The active route survives refresh and the previous low-contrast workspace surface is no longer present.
+- Migration `20260824223000_fix_io_member_history_and_key_listing.sql` repairs the member usage-history query by giving joined usage totals unique internal aliases before constructing receipt JSON. This removes the hosted PostgreSQL `provider_cost_nanos is ambiguous` failure without changing the public response contract.
+- API-key listing now uses `list_my_io_api_keys(uuid)`, a caller-bound `SECURITY DEFINER` RPC that rechecks active workspace membership and returns only browser-safe metadata. The browser does not receive a raw key, key hash or a base-table grant.
+- The hosted migration and function ACLs are verified. The local member client and generated TypeScript contract use the new RPC; the web change still requires the normal GitHub-to-Netlify production deployment before the old bundle stops issuing its historical view request.
+
 ## 2. What “I/O Port” must mean
 
 A port is not one provider hidden behind one endpoint. It is a governed exchange with multiple possible capacity sources:

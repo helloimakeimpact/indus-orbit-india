@@ -26,6 +26,7 @@ function ModerationNoticesPage() {
   const [loading, setLoading] = useState(true);
   const [busyNoticeId, setBusyNoticeId] = useState<string | null>(null);
   const [appealReasons, setAppealReasons] = useState<Record<string, string>>({});
+  const [currentTime, setCurrentTime] = useState(() => Date.now());
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -38,7 +39,27 @@ function ModerationNoticesPage() {
     }
   }, []);
 
-  useEffect(() => void load(), [load]);
+  useEffect(() => {
+    let active = true;
+    void listMyModerationNotices()
+      .then((nextNotices) => {
+        if (active) setNotices(nextNotices);
+      })
+      .catch((error: unknown) => {
+        if (active) {
+          toast.error(error instanceof Error ? error.message : "Could not load safety notices.");
+        }
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    const clock = window.setInterval(() => setCurrentTime(Date.now()), 60_000);
+    return () => {
+      active = false;
+      window.clearInterval(clock);
+    };
+  }, []);
 
   async function submitAppeal(notice: MyModerationNotice) {
     const reason = appealReasons[notice.id]?.trim() ?? "";
@@ -92,7 +113,8 @@ function ModerationNoticesPage() {
       ) : (
         <div className="space-y-3">
           {notices.map((notice) => {
-            const appealOpen = !notice.reversedAt && Date.parse(notice.appealDeadline) > Date.now();
+            const appealOpen =
+              !notice.reversedAt && Date.parse(notice.appealDeadline) > currentTime;
             return (
               <article key={notice.id} className="app-glass rounded-3xl p-5">
                 <header className="flex flex-wrap items-start justify-between gap-3">
