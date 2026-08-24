@@ -124,13 +124,13 @@ The historical ledger still has timestamp aliases, so standard linked `db push` 
 
 ## Remaining code sequence
 
-1. Configure/verify the safety HMAC secret, then explicitly run one capped conformance check; activation still requires written commercial authorization.
-2. Add terminal event/resume/approval/tool/artifact/handoff slices.
-3. Extend the released OpenAI-compatible subset with streaming/Responses/SDK conformance, and add authenticated local daemon pairing.
-4. Complete shared conversation store/Threads/moderation/attachments and the reusable branded spatial shell.
-5. Replace remaining admin member/content/program/audit work with transactional capability-checked commands; extend Trust with assignment, bounded account/content actions and appeals.
-6. Add provider/capacity/credit/invoice/reconciliation operations and hosted runner foundations.
-7. Finish E2E/accessibility/performance/security/observability/staging/backup/commercial release gates.
+1. Verify the safety HMAC secret, written provider authorization and exact first route; explicitly run one capped conformance check before activating OpenAI or DeepSeek.
+2. Replace buffered compatible SSE with upstream token/cancellation propagation; complete cached/tool/media billing dimensions, full Responses/SDK conformance and provider-specific capability tests.
+3. Run the packaged OpenCode client against a pinned real daemon; add short-lived local pairing, step-up, verified abort, checkpoints/artifacts/handoff and signed OS installers.
+4. Connect a trusted attachment scanner and admin report/appeal queue; add the complete role editor, Thread follow/unread, mentions/search/pins/preferences and refactor the proven Messages/Space/I/O geometry onto reusable Orbit frame/store primitives.
+5. Finish the separate admin app's remaining programme/content/report operations with transactional capability checks, assignment, bounded actions and appeals.
+6. Approve and implement tax/FX/invoice issuance/payment/refund/provider-reconciliation rules; draft invoice and non-cash credit evidence are already Released.
+7. Deploy both web builds and complete authenticated personas, accessibility/visual/mobile, real-provider/daemon, load/soak, observability, staging, backup/restore and commercial release gates.
 
 ## Decisions and access required from the owner
 
