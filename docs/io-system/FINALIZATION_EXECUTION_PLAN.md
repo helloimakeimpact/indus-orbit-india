@@ -12,11 +12,13 @@ Execution update, 24 August 2026 (Trust and finance): the hosted database now in
 
 Execution update, 24 August 2026 (authenticated I/O audit): the signed-in production app now passes an eight-destination sidebar and refresh-continuity audit, and the visibility repair is observable on the deployed surface. Hosted migration `20260824223000_fix_io_member_history_and_key_listing.sql` removes an ambiguous joined `provider_cost_nanos` reference from member usage history. The corresponding member API-key read is moved from a security-invoker view to a caller-bound, membership-checked RPC with no browser grant on the credential table. This is migration 89; the database repair is active and the client RPC switch follows the normal GitHub-to-Netlify deployment.
 
+Execution update, 24 August 2026 (request cancellation and web delivery): client cancellation now propagates through Released `io-gateway` v27 and `io-openai` v9 to the upstream provider fetch. A cancelled request releases its reservation and stops fallback without recording a provider failure, preventing abandoned work from charging the customer or degrading circuit health. Both active functions returned the expected unauthenticated `401` after deployment; no provider route or billing path was entered. The member suite passes 68/68. Route/vendor splitting reduces the main application chunk to 142.48 kB, and CI now enforces 500 KiB JavaScript and 250 KiB CSS chunk ceilings. Direct upstream token streaming and authenticated field Core Web Vitals remain separate release work.
+
 ## Current release checkpoint
 
 Completed in the demo environment:
 
-- provider registry/control-plane foundation and Released `io-gateway` v24, including no-dispatch route preflight;
+- provider registry/control-plane foundation and Released `io-gateway` v27, including no-dispatch route preflight and provider-fetch cancellation;
 - latest endpoint-bound eligibility enforcement;
 - notification table containment and vouch contract repairs;
 - complete Loops browser retirement with service-only archive access;
@@ -198,7 +200,7 @@ Deliverables:
 1. Complete state/permission/concurrency contracts for profiles, connections, mentorship, Missions, Chapters, events, learning, skills, S.O.D.A. and stories.
 2. Replace hard-coded/public claims with approved, evidence-backed content and correct canonical metadata.
 3. **Verified:** member ESLint now passes with zero errors and zero warnings. Missing Hook dependencies were repaired with stable callbacks; TanStack route and reusable UI modules are classified explicitly instead of producing structurally false Fast Refresh warnings.
-4. Split the 645.31 kB chunk and set measured Core Web Vitals and bundle budgets.
+4. **Verified:** split the former 645.31 kB application chunk; the main chunk is now 142.48 kB and CI enforces 500 KiB JavaScript and 250 KiB CSS chunk budgets. Measure authenticated Core Web Vitals and journey performance before release approval.
 5. Add component, Playwright, accessibility, visual, load and recovery coverage.
 6. Decide Loops archive retention/export/deletion with backup evidence; do not restore it as a product surface.
 

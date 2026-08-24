@@ -169,6 +169,7 @@ Deno.serve(async (request) => {
       mode: body.mode,
       routeStrategy: body.routeStrategy,
       requestedModelId: body.requestedModelId,
+      abortSignal: request.signal,
     });
 
     if (result.replayed) {

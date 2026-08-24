@@ -20,6 +20,7 @@
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
+    "check:bundle": "node scripts/check-bundle-size.mjs",
     "build:opencode-client": "npm --prefix packages/io-opencode-client run build",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",

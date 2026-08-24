@@ -44,11 +44,12 @@ type CapturedRequest = {
   url: string;
   headers: Headers;
   body: Record<string, unknown>;
+  signal: AbortSignal | null;
 };
 
 async function captureProviderRequests(
   run: (requests: CapturedRequest[]) => Promise<void>,
-  responseFactory: () => Response = () =>
+  responseFactory: (request: CapturedRequest) => Response | Promise<Response> = () =>
     new Response(
       JSON.stringify({
         choices: [{ message: { content: "Fixture response" } }],
@@ -74,12 +75,14 @@ async function captureProviderRequests(
     },
   };
   globalThis.fetch = async (input, init) => {
-    requests.push({
+    const request = {
       url: String(input),
       headers: new Headers(init?.headers),
       body: init?.body ? (JSON.parse(String(init.body)) as Record<string, unknown>) : {},
-    });
-    return responseFactory();
+      signal: init?.signal ?? null,
+    };
+    requests.push(request);
+    return responseFactory(request);
   };
 
   try {
@@ -219,6 +222,32 @@ describe("sendProviderChat request contracts", { concurrency: false }, () => {
         () => Response.json({ error: "provider-secret-detail" }, { status }),
       );
     }
+  });
+
+  it("propagates client cancellation to the upstream provider request", async () => {
+    const controller = new AbortController();
+    await captureProviderRequests(
+      async (requests) => {
+        const pending = sendProviderChat(connection({}), messages, {
+          abortSignal: controller.signal,
+        });
+        controller.abort();
+        await assert.rejects(
+          pending,
+          (error: unknown) =>
+            error instanceof GatewayError &&
+            error.code === "request_cancelled" &&
+            error.status === 499,
+        );
+        assert.equal(requests[0].signal?.aborted, true);
+      },
+      (request) =>
+        new Promise<Response>((_resolve, reject) => {
+          const rejectAbort = () => reject(new DOMException("Aborted", "AbortError"));
+          if (request.signal?.aborted) rejectAbort();
+          else request.signal?.addEventListener("abort", rejectAbort, { once: true });
+        }),
+    );
   });
 
   it("rejects oversized or invalid successful provider responses", async () => {

@@ -21,7 +21,29 @@ const maximumProviderResponseBytes = 2 * 1_024 * 1_024;
 
 export type ProviderChatOptions = GatewayInferenceOptions & {
   safetySubject?: string;
+  abortSignal?: AbortSignal;
 };
+
+function createProviderAbortBoundary(callerSignal: AbortSignal | undefined, timeoutMs: number) {
+  const controller = new AbortController();
+  let timedOut = false;
+  const abortFromCaller = () => controller.abort(callerSignal?.reason);
+  if (callerSignal?.aborted) abortFromCaller();
+  else callerSignal?.addEventListener("abort", abortFromCaller, { once: true });
+  const timeout = setTimeout(() => {
+    timedOut = true;
+    controller.abort(new DOMException("Provider request timed out.", "TimeoutError"));
+  }, timeoutMs);
+
+  return {
+    signal: controller.signal,
+    timedOut: () => timedOut,
+    cleanup() {
+      clearTimeout(timeout);
+      callerSignal?.removeEventListener("abort", abortFromCaller);
+    },
+  };
+}
 
 type RegistryRow = Record<string, unknown>;
 
@@ -589,37 +611,52 @@ export async function sendProviderChat(
     ? toGeminiRequest(messages, maxOutputTokens)
     : toOpenAiCompatibleRequest(connection, messages, maxOutputTokens, safetyIdentifier, options);
 
-  let upstream: Response;
+  const abortBoundary = createProviderAbortBoundary(options.abortSignal, 45_000);
   try {
-    upstream = await fetch(url, {
+    const upstream = await fetch(url, {
       method: "POST",
       headers,
       body: JSON.stringify(body),
-      signal: AbortSignal.timeout(45_000),
+      signal: abortBoundary.signal,
     });
-  } catch {
-    throw new GatewayError("upstream_failure", 502, "The provider could not be reached.");
-  }
+    if (!upstream.ok) {
+      throw new GatewayError(
+        upstream.status === 429 ? "rate_limited" : "upstream_failure",
+        upstream.status === 429 ? 429 : 502,
+        upstream.status === 429
+          ? "The selected provider is currently rate limited."
+          : "The provider did not accept this request.",
+        upstream.status,
+      );
+    }
 
-  if (!upstream.ok) {
+    const parsedBody = await readProviderJson(upstream);
+    const result = isGemini ? readGeminiResult(parsedBody) : readOpenAiResult(parsedBody);
+    if (
+      options.responseFormat?.type === "json_schema" &&
+      options.responseFormat.jsonSchema.strict &&
+      result.message.content
+    ) {
+      assertStructuredOutput(result.message.content, options.responseFormat.jsonSchema.schema);
+    }
+    return { ...result, providerRequestId: providerRequestId(upstream) };
+  } catch (error) {
+    if (error instanceof GatewayError) throw error;
+    if (options.abortSignal?.aborted) {
+      throw new GatewayError(
+        "request_cancelled",
+        499,
+        "The client cancelled the provider request.",
+      );
+    }
     throw new GatewayError(
-      upstream.status === 429 ? "rate_limited" : "upstream_failure",
-      upstream.status === 429 ? 429 : 502,
-      upstream.status === 429
-        ? "The selected provider is currently rate limited."
-        : "The provider did not accept this request.",
-      upstream.status,
+      "upstream_failure",
+      502,
+      abortBoundary.timedOut()
+        ? "The provider request timed out."
+        : "The provider could not be reached.",
     );
+  } finally {
+    abortBoundary.cleanup();
   }
-
-  const parsedBody = await readProviderJson(upstream);
-  const result = isGemini ? readGeminiResult(parsedBody) : readOpenAiResult(parsedBody);
-  if (
-    options.responseFormat?.type === "json_schema" &&
-    options.responseFormat.jsonSchema.strict &&
-    result.message.content
-  ) {
-    assertStructuredOutput(result.message.content, options.responseFormat.jsonSchema.schema);
-  }
-  return { ...result, providerRequestId: providerRequestId(upstream) };
 }

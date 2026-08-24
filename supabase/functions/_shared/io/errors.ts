@@ -10,6 +10,7 @@ export class GatewayError extends Error {
       | "budget_exceeded"
       | "idempotency_conflict"
       | "request_in_progress"
+      | "request_cancelled"
       | "internal_error",
     readonly status: number,
     message: string,

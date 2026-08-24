@@ -38,6 +38,7 @@ export type RouteExecutionInput = {
   routeStrategy?: RouteStrategy;
   requestedModelId?: string;
   inferenceOptions?: GatewayInferenceOptions;
+  abortSignal?: AbortSignal;
 };
 
 export type RouteExecutionReplay = {
@@ -192,6 +193,7 @@ export async function executePartnerRoute(
     try {
       const candidateResult = await sendProviderChat(candidate.connection, input.messages, {
         safetySubject: input.actorUserId,
+        abortSignal: input.abortSignal,
         ...input.inferenceOptions,
       });
       attempts.push({
@@ -225,12 +227,14 @@ export async function executePartnerRoute(
         errorCode: gatewayError.code,
         upstreamStatus: gatewayError.upstreamStatus,
       });
-      await recordEndpointOutcome(admin, {
-        endpointId: candidate.connection.endpointId,
-        succeeded: false,
-        latencyMs: performance.now() - startedAtMonotonic,
-        errorCode: gatewayError.code,
-      });
+      if (gatewayError.code !== "request_cancelled") {
+        await recordEndpointOutcome(admin, {
+          endpointId: candidate.connection.endpointId,
+          succeeded: false,
+          latencyMs: performance.now() - startedAtMonotonic,
+          errorCode: gatewayError.code,
+        });
+      }
       lastError = gatewayError;
       if (
         gatewayError.code !== "upstream_failure" &&

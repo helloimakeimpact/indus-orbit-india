@@ -2,7 +2,7 @@
 
 Status: active implementation roadmap, updated 24 August 2026 after the collaboration, Trust and finance releases. It distinguishes source work from deployed proof and from policy/provider work required before a private or paid beta. The current operational verdict is in `IO_PORT_IMPLEMENTATION_STATUS.md`.
 
-Latest code-level checkpoint: Chat JSON/SSE and the stateless Responses subset, capability-gated tools/structured output/HTTPS image input, richer usage/credit/invoice history, the packaged OpenCode client with global SSE/continued prompts/task trees/approval enforcement/full diffs/secure loopback pairing, and the member control-room views are implemented. The hosted finance schema now covers verified buyer identity, GST/tax/FX evidence, immutable issuance, payment/refund records, provider reconciliation and member invoice PDFs. The reviewed payment functions are deployed but remain inert: no approved tax policy or live processor exists, so collection still fails closed until policy and merchant approval.
+Latest code-level checkpoint: Chat JSON/SSE and the stateless Responses subset, capability-gated tools/structured output/HTTPS image input, client-to-provider cancellation propagation, richer usage/credit/invoice history, the packaged OpenCode client with global SSE/continued prompts/task trees/approval enforcement/full diffs/secure loopback pairing, and the member control-room views are implemented. The hosted finance schema now covers verified buyer identity, GST/tax/FX evidence, immutable issuance, payment/refund records, provider reconciliation and member invoice PDFs. The reviewed payment functions are deployed but remain inert: no approved tax policy or live processor exists, so collection still fails closed until policy and merchant approval.
 
 Related documents:
 
@@ -15,20 +15,20 @@ Related documents:
 
 ## 1. Current implemented proof
 
-The demo project has an RLS-protected I/O control plane, three clearly labelled demo capacity sources, custom-authenticated `io-gateway` v26, custom-key `io-openai` v8 and custom-authenticated `io-provider-conformance` v3. Released web source moves the authenticated product to `/io`; it uses its own shell and does not require Community onboarding. Provider traffic remains off.
+The demo project has an RLS-protected I/O control plane, three clearly labelled demo capacity sources, custom-authenticated `io-gateway` v27, custom-key `io-openai` v9 and custom-authenticated `io-provider-conformance` v3. Released web source moves the authenticated product to `/io`; it uses its own shell and does not require Community onboarding. Provider traffic remains off.
 
 The existing people-messaging system is also now hardened in the demo project: only accepted, non-suspended connections can insert a direct message, recipients can update only `read_at`, and new messages are capped at 4,000 characters.
 
 The shared-message client extraction in `src/features/conversations/` provides contacts, caller-bound cursor-paginated direct history and event-driven unread hooks for the full Messages route and quick chat. A common cache/store and private Broadcast remain deliberate follow-on work.
 
-| Concern                  | Current code                                                          | Truthful status                                                                                                                                             |
-| ------------------------ | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Web control room         | `src/features/io/IoOverview.tsx`                                      | Member UI with local/OpenCode, provider catalogue, route/model selection, budget status, settled cost and safe session/receipt history.                     |
-| Local terminal connector | `src/features/io/opencode.ts`                                         | Loopback-only health → session → prompt with durable lifecycle, cancellation, time/input/1 MiB response bounds. Daemon-confirmed abort and Realtime remain. |
-| Provider gateway         | `supabase/functions/io-gateway/index.ts`                              | Demo v26 is Released with bounded SSE/JSON transport, strict validation, transparent fee settlement and a shared execution core used by `io-openai` v8.     |
-| Browser data access      | `src/features/io/io.client.ts`                                        | Browser-facing I/O data access, explicitly separated from privileged Edge/RPC work.                                                                         |
-| Control-plane schema     | `supabase/migrations/20260730155210_create_io_port_control_plane.sql` | Workspaces, memberships, sources, grants, policy records, key metadata and safe audit events.                                                               |
-| I/O nested shell         | `src/features/io/IoWorkspaceShell.tsx`                                | Working in-page context navigation and evidence guide; preview-only workspace/health/activity claims are removed.                                           |
+| Concern                  | Current code                                                          | Truthful status                                                                                                                                                                          |
+| ------------------------ | --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Web control room         | `src/features/io/IoOverview.tsx`                                      | Member UI with local/OpenCode, provider catalogue, route/model selection, budget status, settled cost and safe session/receipt history.                                                  |
+| Local terminal connector | `src/features/io/opencode.ts`                                         | Loopback-only health → session → prompt with durable lifecycle, cancellation, time/input/1 MiB response bounds. Daemon-confirmed abort and Realtime remain.                              |
+| Provider gateway         | `supabase/functions/io-gateway/index.ts`                              | Demo v27 is Released with bounded SSE/JSON transport, strict validation, transparent fee settlement, client-to-provider cancellation and a shared execution core used by `io-openai` v9. |
+| Browser data access      | `src/features/io/io.client.ts`                                        | Browser-facing I/O data access, explicitly separated from privileged Edge/RPC work.                                                                                                      |
+| Control-plane schema     | `supabase/migrations/20260730155210_create_io_port_control_plane.sql` | Workspaces, memberships, sources, grants, policy records, key metadata and safe audit events.                                                                                            |
+| I/O nested shell         | `src/features/io/IoWorkspaceShell.tsx`                                | Working in-page context navigation and evidence guide; preview-only workspace/health/activity claims are removed.                                                                        |
 
 ## 2. Non-negotiable boundaries
 
@@ -76,7 +76,7 @@ The boundary validates request shape, workspace UUIDs, modes, route strategy/mod
 
 **Released after demo v18:** the client sends an idempotency key; `operations.ts` calls the reserve/finalize/outcome RPC boundary; the resolver excludes open circuits; and the gateway settles/releases exactly once. SQL tests cover budget isolation, idempotency, balanced ledger, stale holds and health/circuit behavior. The hosted release contract confirms the schema/grants; real provider concurrency is still untested.
 
-Chat JSON/SSE, the stateless Responses subset, function tools, strict structured output and HTTPS image input are implemented behind exact capability gates. Still required before broad provider rollout: formal route-policy activation/retirement commands, scheduled health/latency probes, distributed abuse/rate controls, upstream cancellation propagation and provider-specific conformance for every enabled advanced capability. Unsupported modalities continue to fail closed.
+Chat JSON/SSE, the stateless Responses subset, function tools, strict structured output and HTTPS image input are implemented behind exact capability gates. Released incoming-request cancellation aborts the provider fetch, releases the reserved accounting path, stops fallback and does not degrade provider health. Still required before broad provider rollout: formal route-policy activation/retirement commands, scheduled health/latency probes, distributed abuse/rate controls, direct upstream token streaming and provider-specific conformance for every enabled advanced capability. Unsupported modalities continue to fail closed.
 
 ### 4.2 Make workspace creation atomic
 
@@ -231,7 +231,7 @@ The data distinction is fixed:
 
 ## 10. P6 — privacy, testing and release gates
 
-The repository currently passes 67 unit/contract tests, TypeScript, formatting, production build and a zero-vulnerability high-severity dependency audit. The database release has its RLS/ACL and foreign-key-index evidence verified against the hosted project. Remaining beta evidence should add:
+The repository currently passes 68 unit/contract tests, TypeScript, formatting, production build and a zero-vulnerability high-severity dependency audit. The database release has its RLS/ACL and foreign-key-index evidence verified against the hosted project. Remaining beta evidence should add:
 
 ```text
 supabase/tests/io_rls.sql

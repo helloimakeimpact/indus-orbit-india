@@ -226,6 +226,7 @@ async function executeApiInference(input: {
     messages: input.messages,
     mode: "run",
     inferenceOptions: input.inferenceOptions,
+    abortSignal: input.request.signal,
     ...modelRoute,
   });
   if (result.replayed) {

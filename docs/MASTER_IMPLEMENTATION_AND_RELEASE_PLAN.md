@@ -76,7 +76,7 @@ Known release blockers include:
 - the education upload path expects an `education` storage bucket, but no storage bucket is deployed;
 - quiz correctness can currently be exposed to or evaluated by browser-facing code;
 - vouch issuance remains browser-initiated; Web Crypto reduces predictability, but authoritative server-side issuance, hashing, and rate limits are still required;
-- the production build contains a 645.31 kB minified JavaScript chunk; route/vendor splitting and measured performance budgets remain required;
+- route/vendor splitting now keeps the main application chunk at 142.48 kB and CI enforces 500 KiB JavaScript and 250 KiB CSS chunk ceilings; authenticated field Core Web Vitals and journey performance evidence remain required;
 - browser-facing feature data adapters are named `*.server.functions.ts`, obscuring the real trust boundary;
 - `/models` publishes hard-coded model, price, and exchange-rate facts without a versioned evidence process;
 - five provider/model/endpoint/runtime-control records and three capacity sources/grants exist, but keys and inventory alone cannot activate routing; secret-reference validation, conformance and spend approval remain required;
