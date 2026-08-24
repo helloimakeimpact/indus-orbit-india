@@ -1,6 +1,6 @@
 # I/O Port operating guide
 
-Operational truth, updated 20 August 2026: the registry-driven multi-provider foundation, latest-evidence resolver, `io-gateway` v23, scoped-key `io-openai` v4, single-use `io-provider-conformance` v1, top-level `/io` boundary, multi-window key/spend limits, budget/idempotency/ledger/health/circuit controls, transparent 5.5% fee, commercial provider gate, terminal metadata and safe-timeline/approval boundary are Released to the demo. Hosted contracts confirm RLS/grants/containment; the inventory has five staged provider/model/endpoint/capability/price/runtime-control/connection records, three capacity sources/grants and zero receipts/attempts. OpenAI and DeepSeek remain resale-pending. Secrets and inventory alone do not prove conformance or activate routing. Read `IO_PORT_IMPLEMENTATION_STATUS.md`, `OPENAI_COMPATIBLE_API_STATUS.md` and `PRODUCTION_API_COMMERCIAL_AND_PROVIDER_POLICY.md` before any inventory or traffic change.
+Operational truth, updated 24 August 2026: the registry-driven multi-provider foundation, latest-evidence resolver, `io-gateway` v23, scoped-key `io-openai` v4, single-use `io-provider-conformance` v1, top-level `/io` boundary, multi-window key/spend limits, budget/idempotency/ledger/health/circuit controls, transparent 5.5% fee, commercial provider gate, terminal metadata and safe-timeline/approval boundary are Released to the demo. The database now also contains fail-closed billing profiles, versioned GST/tax and FX evidence, immutable invoice issuance, payment/refund state, signed event deduplication and provider-statement reconciliation. The payment functions remain deliberately undeployed until reviewed tax and processor policies are approved. Hosted contracts confirm RLS/grants/containment; the inventory has five staged provider/model/endpoint/capability/price/runtime-control/connection records, three capacity sources/grants and zero receipts/attempts. OpenAI and DeepSeek remain resale-pending. Secrets and inventory alone do not prove conformance or activate routing. Read `IO_PORT_IMPLEMENTATION_STATUS.md`, `OPENAI_COMPATIBLE_API_STATUS.md` and `PRODUCTION_API_COMMERCIAL_AND_PROVIDER_POLICY.md` before any inventory or traffic change.
 
 ## What is live in the demo project
 
@@ -11,7 +11,7 @@ I/O Port is one web workspace with two execution boundaries:
 
 The canonical web surface is `/io`, with a distinct I/O Port shell and shared Indus Orbit identity. It does not require a Community segment, profile journey, location choice, vouch or verification. `/app/io` is compatibility-only and redirects before the Community gate. Shared visual primitives and product switching preserve the Indus Orbit system without collapsing I/O into the Community application.
 
-The nested I/O shell uses working anchors and authorized workspace/capacity/audit/receipt facts. The new local UI also reads real budget state and displays a durable safe terminal timeline. Preflight route explanations, detailed live health, credits/invoices, realtime terminal delivery and executable approval controls remain incomplete and must not be represented as live.
+The nested I/O shell uses URL-addressable views and authorized workspace/capacity/audit/receipt facts. The UI reads real budget state, displays a durable safe terminal timeline, manages verified buyer billing evidence, lists invoice snapshots, opens server-created Razorpay checkout and generates member invoice PDFs only from immutable issued records. Provider payment callbacks are never authoritative; signed webhooks finalize payment state.
 
 ## Data and control flow
 
@@ -81,7 +81,29 @@ API-key beta limits are no longer environment-variable controls. Each issued key
 
 For each request, I/O considers only models whose provider is active; model is listed, release-dated and not deprecated; endpoint is active/member-visible; capacity source is actively entitled; latest capability certificate verifies chat; and a published price card is effective. The local resolver also excludes open circuits. `latest_affordable` uses tier, freshness and affordability bands; `lowest_cost` selects the least costly eligible candidate; an explicit model must be in the reviewed catalogue. Mixed currencies fail closed until FX data is reviewed.
 
-The local operational core computes a conservative byte-based upper-bound when provider usage is not yet known, reserves the summed worst-case cost of all configured attempts before any dispatch, and settles provider-reported usage when complete or explicitly labelled estimated usage otherwise. Every settle/release transaction balances in integer minor units. This is an activation-grade route-cost core, not a complete invoicing/tax/payment system.
+The local operational core computes a conservative byte-based upper-bound when provider usage is not yet known, reserves the summed worst-case cost of all configured attempts before any dispatch, and settles provider-reported usage when complete or explicitly labelled estimated usage otherwise. Every settle/release transaction balances in integer minor units. The billing layer keeps exact amounts in integer USD nanos, freezes buyer, seller, tax and usage evidence at issue time, prevents draft PDFs from masquerading as tax invoices, separates tax/FX/processor draft creation from second-person approval, deduplicates payment events and requires evidence-bound provider-statement reconciliation.
+
+## Payment and attachment webhook secrets
+
+These values belong only in Supabase Edge Function secrets. Never prefix them with `VITE_`, store them in GitHub source, or expose them to browser JavaScript:
+
+```text
+RAZORPAY_KEY_ID
+RAZORPAY_KEY_SECRET
+RAZORPAY_WEBHOOK_SECRET
+ORBIT_ATTACHMENT_SCANNER_WEBHOOK_SECRET
+```
+
+`RAZORPAY_KEY_ID` may be returned by `io-payments` as part of a server-created checkout response, but the key secret and webhook secret never leave the server. The attachment scanner calls `orbit-attachment-scan-webhook` with `Authorization: Bearer <ORBIT_ATTACHMENT_SCANNER_WEBHOOK_SECRET>` and a redacted evidence payload; it must not send the attachment body, extracted content or scanner credentials.
+
+Activation order is intentionally strict:
+
+1. Verify the seller identity, GST registration, place-of-supply rules, SAC and invoice wording with a qualified tax adviser.
+2. Create a tax-policy draft in the admin app, then have a different super-admin approve it.
+3. Complete payment-provider onboarding and merchant due diligence; create a test processor configuration, then have a different super-admin approve it.
+4. Add test secrets, configure the exact signed webhook URL in Razorpay and deploy `io-payments` plus `io-payment-webhook`.
+5. Test order creation, successful capture, duplicate-event delivery, failed payment, partial refund and reconciliation using provider test mode.
+6. Approve and activate a separate live processor configuration only after the evidence and test record are reviewed.
 
 The deployed registry contains one staged record set for OpenAI, SpaceXAI/xAI, Gemini, DeepSeek and Groq. Before any route is activated, run and review provider conformance, verify current data/region terms, confirm the price card and model revision, then transition connection, capability, endpoint and provider states through an audited admin workflow. The gateway refuses to route while any condition is unmet.
 
@@ -115,6 +137,6 @@ Current release note: all three migrations and three function versions are Relea
 2. Extend the Released provider evidence/conformance boundary with reviewed secret-reference rotation and capacity/grant lifecycle workflows.
 3. Add provider-specific conformance, region/retention evidence, formal fallback policy and immutable route-policy snapshots before activating multiple routes.
 4. Add scheduled probes, distributed rate limits, streaming and cancellation before broad access.
-5. Add credits, fees, reviewed FX, tax, invoices, payments/refunds and provider-bill reconciliation before commercial launch.
+5. Complete a policy-approved test-mode payment exercise and accountant-reviewed GST invoice sample before enabling commercial collection; the code and database controls exist, but live activation remains deliberately blocked.
 6. Keep terminal content local; add trusted approval enforcement before exposing tools/commands and explicit sharing before handoffs.
 7. Run external security/privacy review and re-review every `SECURITY DEFINER` boundary whenever it changes.

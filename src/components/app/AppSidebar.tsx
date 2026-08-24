@@ -9,6 +9,7 @@ import {
   Megaphone,
   LayoutDashboard,
   ShieldCheck,
+  ShieldAlert,
   CalendarClock,
   TrendingUp,
   Globe2,
@@ -63,6 +64,7 @@ const BASE_GROUPS: NavGroup[] = [
     items: [
       { to: "/app/directory", label: "Network", icon: Users },
       { to: "/app/messages", label: "Messages", icon: MessageCircle },
+      { to: "/app/moderation", label: "Safety & appeals", icon: ShieldAlert },
       { to: "/app/vouch", label: "Vouch", icon: ShieldCheck },
       { to: "/app/mentor", label: "Mentorship", icon: CalendarClock },
       { to: "/app/profile", label: "My profile", icon: UserIcon },

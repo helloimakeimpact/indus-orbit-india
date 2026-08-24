@@ -110,13 +110,91 @@ export type IoInvoice = {
   subtotalNanos: string;
   creditAppliedNanos: string;
   taxNanos: string;
+  roundingNanos: string;
   totalNanos: string;
   amountDueNanos: string;
+  paidNanos: string;
+  refundedNanos: string;
+  paymentState:
+    | "not_due"
+    | "due"
+    | "partially_paid"
+    | "paid"
+    | "partially_refunded"
+    | "refunded"
+    | "disputed";
   taxStatus: "not_assessed" | "not_applicable" | "assessed";
+  supplyKind: string | null;
   createdAt: string;
   issuedAt: string | null;
   dueAt: string | null;
   lineCount: number;
+};
+
+export type IoBillingProfile = {
+  workspaceId: string;
+  legalName: string;
+  billingEmail: string;
+  customerType: "individual" | "business" | "government" | "nonprofit";
+  countryCode: string;
+  stateCode: string | null;
+  postalCode: string | null;
+  addressLines: string[];
+  gstin: string | null;
+  taxRegistrationName: string | null;
+  verifiedAt: string | null;
+  version: number;
+};
+
+export type IoPaymentCheckout = {
+  provider: "razorpay";
+  keyId: string;
+  orderId: string;
+  paymentIntentId: string;
+  amountMinor: number;
+  currencyCode: string;
+};
+
+export type IoInvoiceDocument = {
+  id: string;
+  invoiceNumber: string;
+  currencyCode: string;
+  periodStart: string;
+  periodEnd: string;
+  state: "issued" | "paid" | "void";
+  paymentState: IoInvoice["paymentState"];
+  providerCostNanos: string;
+  serviceFeeNanos: string;
+  subtotalNanos: string;
+  creditAppliedNanos: string;
+  taxNanos: string;
+  roundingNanos: string;
+  totalNanos: string;
+  amountDueNanos: string;
+  paidNanos: string;
+  refundedNanos: string;
+  taxStatus: IoInvoice["taxStatus"];
+  supplyKind: string | null;
+  seller: Record<string, unknown>;
+  buyer: Record<string, unknown>;
+  taxEvidenceUrl: string | null;
+  issuedAt: string;
+  dueAt: string;
+  voidedAt: string | null;
+  voidReason: string | null;
+  lines: Array<{
+    id: string;
+    providerKey: string;
+    modelKey: string;
+    providerCostNanos: string;
+    serviceFeeNanos: string;
+    customerChargeNanos: string;
+    creditAppliedNanos: string;
+    amountDueNanos: string;
+    inputTokens: number | null;
+    outputTokens: number | null;
+    usageRecordedAt: string;
+  }>;
 };
 
 export type PartnerRunResult = {
@@ -1201,6 +1279,7 @@ export async function listMyIoInvoices(workspaceId: string): Promise<IoInvoice[]
     const periodEnd = readString(invoice, "periodEnd");
     const state = readString(invoice, "state");
     const taxStatus = readString(invoice, "taxStatus");
+    const paymentState = readString(invoice, "paymentState");
     const createdAt = readString(invoice, "createdAt");
     const lineCount = readNonNegativeInteger(invoice, "lineCount");
     const providerCostNanos = readExactIntegerString(invoice, "providerCostNanos");
@@ -1208,8 +1287,11 @@ export async function listMyIoInvoices(workspaceId: string): Promise<IoInvoice[]
     const subtotalNanos = readExactIntegerString(invoice, "subtotalNanos");
     const creditAppliedNanos = readExactIntegerString(invoice, "creditAppliedNanos");
     const taxNanos = readExactIntegerString(invoice, "taxNanos");
+    const roundingNanos = readExactIntegerString(invoice, "roundingNanos", { signed: true });
     const totalNanos = readExactIntegerString(invoice, "totalNanos");
     const amountDueNanos = readExactIntegerString(invoice, "amountDueNanos");
+    const paidNanos = readExactIntegerString(invoice, "paidNanos");
+    const refundedNanos = readExactIntegerString(invoice, "refundedNanos");
     if (
       !id ||
       !invoiceNumber ||
@@ -1220,13 +1302,25 @@ export async function listMyIoInvoices(workspaceId: string): Promise<IoInvoice[]
       lineCount === null ||
       !["draft", "issued", "paid", "void"].includes(state ?? "") ||
       !["not_assessed", "not_applicable", "assessed"].includes(taxStatus ?? "") ||
+      ![
+        "not_due",
+        "due",
+        "partially_paid",
+        "paid",
+        "partially_refunded",
+        "refunded",
+        "disputed",
+      ].includes(paymentState ?? "") ||
       providerCostNanos === null ||
       serviceFeeNanos === null ||
       subtotalNanos === null ||
       creditAppliedNanos === null ||
       taxNanos === null ||
+      roundingNanos === null ||
       totalNanos === null ||
-      amountDueNanos === null
+      amountDueNanos === null ||
+      paidNanos === null ||
+      refundedNanos === null
     ) {
       return [];
     }
@@ -1243,9 +1337,14 @@ export async function listMyIoInvoices(workspaceId: string): Promise<IoInvoice[]
         subtotalNanos,
         creditAppliedNanos,
         taxNanos,
+        roundingNanos,
         totalNanos,
         amountDueNanos,
+        paidNanos,
+        refundedNanos,
+        paymentState: paymentState as IoInvoice["paymentState"],
         taxStatus: taxStatus as IoInvoice["taxStatus"],
+        supplyKind: readNullableString(invoice, "supplyKind"),
         createdAt,
         issuedAt: readNullableString(invoice, "issuedAt"),
         dueAt: readNullableString(invoice, "dueAt"),
@@ -1253,6 +1352,255 @@ export async function listMyIoInvoices(workspaceId: string): Promise<IoInvoice[]
       },
     ];
   });
+}
+
+export async function getMyIoBillingProfile(workspaceId: string): Promise<IoBillingProfile | null> {
+  const { data, error } = await supabase.rpc("get_my_io_billing_profile", {
+    _workspace_id: workspaceId,
+  });
+  if (error) throw new Error(error.message);
+  if (data === null) return null;
+  const profile = asRecord(data);
+  if (!profile) throw new Error("The I/O billing profile is invalid.");
+  const workspace = readString(profile, "workspaceId");
+  const legalName = readString(profile, "legalName");
+  const billingEmail = readString(profile, "billingEmail");
+  const customerType = readString(profile, "customerType");
+  const countryCode = readString(profile, "countryCode");
+  const version = readNonNegativeInteger(profile, "version");
+  const addressLines = Array.isArray(profile.addressLines)
+    ? profile.addressLines.filter(
+        (line): line is string => typeof line === "string" && Boolean(line.trim()),
+      )
+    : [];
+  if (
+    !workspace ||
+    !legalName ||
+    !billingEmail ||
+    !countryCode ||
+    version === null ||
+    !["individual", "business", "government", "nonprofit"].includes(customerType ?? "") ||
+    addressLines.length === 0
+  ) {
+    throw new Error("The I/O billing profile is incomplete.");
+  }
+  return {
+    workspaceId: workspace,
+    legalName,
+    billingEmail,
+    customerType: customerType as IoBillingProfile["customerType"],
+    countryCode,
+    stateCode: readNullableString(profile, "stateCode"),
+    postalCode: readNullableString(profile, "postalCode"),
+    addressLines,
+    gstin: readNullableString(profile, "gstin"),
+    taxRegistrationName: readNullableString(profile, "taxRegistrationName"),
+    verifiedAt: readNullableString(profile, "verifiedAt"),
+    version,
+  };
+}
+
+export async function upsertMyIoBillingProfile(input: {
+  workspaceId: string;
+  legalName: string;
+  billingEmail: string;
+  customerType: IoBillingProfile["customerType"];
+  countryCode: string;
+  stateCode?: string;
+  postalCode?: string;
+  addressLines: string[];
+  gstin?: string;
+  taxRegistrationName?: string;
+  expectedVersion: number;
+}) {
+  const { data, error } = await supabase.rpc("upsert_my_io_billing_profile", {
+    _workspace_id: input.workspaceId,
+    _legal_name: input.legalName,
+    _billing_email: input.billingEmail,
+    _customer_type: input.customerType,
+    _country_code: input.countryCode,
+    _state_code: input.stateCode ?? "",
+    _postal_code: input.postalCode ?? "",
+    _address_lines: input.addressLines,
+    _gstin: input.gstin ?? "",
+    _tax_registration_name: input.taxRegistrationName ?? "",
+    _expected_version: input.expectedVersion,
+  });
+  if (error) throw new Error(error.message);
+  const result = asRecord(data);
+  if (!result || result.ok !== true || readNonNegativeInteger(result, "version") === null) {
+    throw new Error("The billing-profile save returned invalid evidence.");
+  }
+}
+
+export async function createMyIoPaymentCheckout(invoiceId: string): Promise<IoPaymentCheckout> {
+  const { data, error } = await supabase.functions.invoke("io-payments", {
+    body: {
+      action: "create_checkout",
+      invoiceId,
+      clientRequestId: crypto.randomUUID(),
+    },
+  });
+  if (error) throw new Error(error.message);
+  const checkout = asRecord(data);
+  const amountMinor = checkout ? readNonNegativeInteger(checkout, "amountMinor") : null;
+  if (
+    !checkout ||
+    checkout.ok !== true ||
+    checkout.provider !== "razorpay" ||
+    !readString(checkout, "keyId") ||
+    !readString(checkout, "orderId") ||
+    !readString(checkout, "paymentIntentId") ||
+    !readString(checkout, "currencyCode") ||
+    amountMinor === null ||
+    amountMinor < 1
+  ) {
+    throw new Error("The payment checkout returned invalid evidence.");
+  }
+  return {
+    provider: "razorpay",
+    keyId: readString(checkout, "keyId")!,
+    orderId: readString(checkout, "orderId")!,
+    paymentIntentId: readString(checkout, "paymentIntentId")!,
+    amountMinor,
+    currencyCode: readString(checkout, "currencyCode")!,
+  };
+}
+
+export async function getMyIoInvoiceDocument(invoiceId: string): Promise<IoInvoiceDocument> {
+  const { data, error } = await supabase.rpc("get_my_io_invoice_document", {
+    _invoice_id: invoiceId,
+  });
+  if (error) throw new Error(error.message);
+  const document = asRecord(data);
+  const seller = document ? asRecord(document.seller) : null;
+  const buyer = document ? asRecord(document.buyer) : null;
+  const rawLines = document && Array.isArray(document.lines) ? document.lines : null;
+  if (!document || !seller || !buyer || !rawLines) {
+    throw new Error("The invoice document is invalid.");
+  }
+  const stringFields = [
+    "id",
+    "invoiceNumber",
+    "currencyCode",
+    "periodStart",
+    "periodEnd",
+    "state",
+    "paymentState",
+    "taxStatus",
+    "issuedAt",
+    "dueAt",
+  ] as const;
+  const fields = Object.fromEntries(
+    stringFields.map((key) => [key, readString(document, key)]),
+  ) as Record<(typeof stringFields)[number], string | null>;
+  const exactFields = [
+    "providerCostNanos",
+    "serviceFeeNanos",
+    "subtotalNanos",
+    "creditAppliedNanos",
+    "taxNanos",
+    "totalNanos",
+    "amountDueNanos",
+    "paidNanos",
+    "refundedNanos",
+  ] as const;
+  const exact = Object.fromEntries(
+    exactFields.map((key) => [key, readExactIntegerString(document, key)]),
+  ) as Record<(typeof exactFields)[number], string | null>;
+  const roundingNanos = readExactIntegerString(document, "roundingNanos", { signed: true });
+  if (
+    Object.values(fields).some((value) => !value) ||
+    Object.values(exact).some((value) => value === null) ||
+    roundingNanos === null ||
+    !["issued", "paid", "void"].includes(fields.state ?? "") ||
+    ![
+      "not_due",
+      "due",
+      "partially_paid",
+      "paid",
+      "partially_refunded",
+      "refunded",
+      "disputed",
+    ].includes(fields.paymentState ?? "") ||
+    !["not_assessed", "not_applicable", "assessed"].includes(fields.taxStatus ?? "")
+  ) {
+    throw new Error("The issued invoice evidence is incomplete.");
+  }
+  const lines = rawLines.flatMap((value): IoInvoiceDocument["lines"] => {
+    const line = asRecord(value);
+    if (!line) return [];
+    const id = readString(line, "id");
+    const providerKey = readString(line, "providerKey");
+    const modelKey = readString(line, "modelKey");
+    const usageRecordedAt = readString(line, "usageRecordedAt");
+    const providerCostNanos = readExactIntegerString(line, "providerCostNanos");
+    const serviceFeeNanos = readExactIntegerString(line, "serviceFeeNanos");
+    const customerChargeNanos = readExactIntegerString(line, "customerChargeNanos");
+    const creditAppliedNanos = readExactIntegerString(line, "creditAppliedNanos");
+    const amountDueNanos = readExactIntegerString(line, "amountDueNanos");
+    if (
+      !id ||
+      !providerKey ||
+      !modelKey ||
+      !usageRecordedAt ||
+      providerCostNanos === null ||
+      serviceFeeNanos === null ||
+      customerChargeNanos === null ||
+      creditAppliedNanos === null ||
+      amountDueNanos === null
+    ) {
+      return [];
+    }
+    return [
+      {
+        id,
+        providerKey,
+        modelKey,
+        providerCostNanos,
+        serviceFeeNanos,
+        customerChargeNanos,
+        creditAppliedNanos,
+        amountDueNanos,
+        inputTokens: line.inputTokens === null ? null : readNonNegativeInteger(line, "inputTokens"),
+        outputTokens:
+          line.outputTokens === null ? null : readNonNegativeInteger(line, "outputTokens"),
+        usageRecordedAt,
+      },
+    ];
+  });
+  if (lines.length !== rawLines.length) {
+    throw new Error("The invoice line evidence is incomplete.");
+  }
+  return {
+    id: fields.id!,
+    invoiceNumber: fields.invoiceNumber!,
+    currencyCode: fields.currencyCode!,
+    periodStart: fields.periodStart!,
+    periodEnd: fields.periodEnd!,
+    state: fields.state as IoInvoiceDocument["state"],
+    paymentState: fields.paymentState as IoInvoiceDocument["paymentState"],
+    providerCostNanos: exact.providerCostNanos!,
+    serviceFeeNanos: exact.serviceFeeNanos!,
+    subtotalNanos: exact.subtotalNanos!,
+    creditAppliedNanos: exact.creditAppliedNanos!,
+    taxNanos: exact.taxNanos!,
+    roundingNanos,
+    totalNanos: exact.totalNanos!,
+    amountDueNanos: exact.amountDueNanos!,
+    paidNanos: exact.paidNanos!,
+    refundedNanos: exact.refundedNanos!,
+    taxStatus: fields.taxStatus as IoInvoiceDocument["taxStatus"],
+    supplyKind: readNullableString(document, "supplyKind"),
+    seller,
+    buyer,
+    taxEvidenceUrl: readNullableString(document, "taxEvidenceUrl"),
+    issuedAt: fields.issuedAt!,
+    dueAt: fields.dueAt!,
+    voidedAt: readNullableString(document, "voidedAt"),
+    voidReason: readNullableString(document, "voidReason"),
+    lines,
+  };
 }
 
 function parseTerminalSession(value: unknown, idKey = "id"): IoTerminalSession | null {

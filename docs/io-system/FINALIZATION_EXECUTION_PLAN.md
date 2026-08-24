@@ -1,12 +1,14 @@
 # Indus Orbit full finalization execution plan
 
-Status: active, evidence-gated plan updated 21 August 2026. The hosted project has 78 migrations with `io-gateway` v24, bounded `io-openai` v4 and `io-provider-conformance` v1 Released. The residency/key/conformance, private-conversation, terminal private-resume and transactional Trust slices are hosted; routes, active API keys, approvals and conformance runs remain zero. Production readiness is not claimed.
+Status: active, evidence-gated plan updated 24 August 2026. The hosted project has 87 migrations. The router, OpenAI-compatible API, OpenCode client, collaboration controls, independent Trust operations and financial control-plane schema are Released; external provider and payment activation remain policy-gated. Production readiness is not claimed.
 
 This plan covers the whole product: public brand site, identity, Community, conversation, I/O Port, terminal/OpenCode, admin, data, operations and commercial readiness. “Done” means code, authorization, data migration, browser behavior, deployment and operating evidence all agree. A source file or attractive UI alone is not completion.
 
 Execution update, 19 August 2026: the Released I/O controls remain unchanged. Direct-history keyset pagination, terminal cancellation/time/size bounds, gateway response caps and strict admin route matching are **Verified locally**. A clean replay now passes 68 migrations and 550 assertions; member/admin checks and dependency audits pass. The alias-safe migration-68 dry run made no hosted change because direct database transport failed on the current IPv6 network. Provider routing remains disabled.
 
 Execution update, 24 August 2026: the member I/O shell navigation and visibility repair is **Verified locally** by typecheck and 59/59 unit tests. Overview, Sessions, Terminal, Model routes, Capacity, Evidence, Usage ledger and Safety are now distinct query-backed views with active navigation and refresh continuity; invalid view values fail to Overview. The light I/O workspace now establishes its own foreground/design-token scope, eliminating the inherited parchment-on-grey contrast failure. This is checked-in UI behavior, not hosted-production or provider-activation evidence; authenticated browser accessibility and visual-regression journeys remain an exit gate.
+
+Execution update, 24 August 2026 (Trust and finance): the hosted database now includes separate report triage, scanner-evidence attachment review and independent appeals; the member app has its own notice/appeal surface. The finance foundation now includes versioned buyer profiles, second-person GST/tax and FX policy approval, immutable invoice issuance, exact nanos/minor-unit accounting, payment/refund state, signed/deduplicated Razorpay adapters, provider-statement reconciliation and a downloadable issued-invoice representation. Twenty-one advisor-identified foreign-key indexes were added; no new release-table foreign key remains unindexed. `orbit-attachment-scan-webhook` v1 is active. Payment functions are reviewed but intentionally undeployed because there is no approved live processor or tax policy. The separate admin repository passes its 22-test/build gate and is pushed at `29de57e`.
 
 ## Current release checkpoint
 
@@ -135,7 +137,7 @@ Deliverables:
    **Released slice:** authenticated users can run a no-dispatch preflight that returns the chosen route, candidate evidence, capability/price versions, residency and provider-cost plus 5.5% estimate without reserving budget or contacting a provider.
    **Verified local slice:** the I/O rail resolves to eight focused, URL-backed views with refresh-safe state, active semantics and corrected light-surface contrast. Hosted visual/accessibility personas remain required before release.
 7. Activate one provider at a time only after contract tests; the first live conformance call requires an explicit admin reason/confirmation and is capped at USD 0.01.
-8. **Released foundation:** versioned 5.5% fee settlement and written onward-access activation gates. Still required: cached/tools/media/storage/regional billing dimensions, credits/FX/tax/invoices/refunds and provider reconciliation.
+8. **Released foundation:** versioned 5.5% fee settlement, non-cash credits, immutable invoice snapshots, verified billing identity, GST/tax/FX policy versions, payment/refund evidence, provider-invoice reconciliation and written onward-access activation gates. Still required: approved business policies, payment-provider activation, runtime reconciliation evidence and any provider-specific cached/tools/media/storage/regional billing dimensions not reported by upstream usage.
 
 Exit criteria:
 

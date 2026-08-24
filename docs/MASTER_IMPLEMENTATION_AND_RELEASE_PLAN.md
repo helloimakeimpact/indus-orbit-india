@@ -1,6 +1,6 @@
 # Indus Orbit master implementation and release plan
 
-Status: authoritative execution plan, updated 9 August 2026
+Status: authoritative execution plan, updated 24 August 2026
 
 Target: Indus Orbit Production v1, including the public site, member network, learning and action systems, administration, and I/O Port
 
@@ -56,6 +56,15 @@ The following baseline was inspected against the local repository and connected 
 | Supabase platform             | Active demo project; all 64 migrations, clean 446/446 local suite and hosted Space plus I/O evidence contracts pass                                                          | 26 historical aliases, snapshot-upgrade/remote CI, authenticated function audits and inherited performance-policy backlog remain                            |
 | Engineering quality           | Production build, TypeScript, formatting, repository lint, configuration unit tests and high-severity dependency audit pass locally; a GitHub quality workflow is configured | Feature/integration/database test coverage and an executed CI history remain incomplete                                                                     |
 | Deployment and operations     | Cloudflare configuration and Supabase project exist                                                                                                                          | Environment strategy, secret lifecycle, protected deployments, observability, load testing, backups/restore drills, and incident runbooks remain            |
+
+### 3.1 Latest verified implementation delta — 24 August 2026
+
+- The I/O navigation/contrast repair is checked in: eight URL-backed views preserve refresh state and no longer inherit unreadable outer-shell colours.
+- OpenAI-compatible Chat/SSE and Responses subsets, tools, strict structured output, HTTPS image input, exact usage history/credits/invoices and the packaged loopback-only OpenCode client are implemented and locally verified.
+- The Chapter/Mission Space surface contains rooms, threads, reactions, private attachments, read state, room administration, reporting and bounded moderation; the shared cross-product shell and the advanced timeout/slow-mode/search/retention layers remain programme work.
+- Hosted Trust operations provide separate report triage, attachment-review and independent-appeal contracts, plus a member Safety & Appeals page.
+- Hosted finance contracts provide verified billing identity, GST/tax/FX policy evidence, immutable invoice issuance, payment/refund records and provider-statement reconciliation. Payment execution remains disabled until policies and merchant credentials are approved.
+- The separate admin repository contains the matching operational interfaces and is pushed to GitHub at `29de57e`; production admin hosting is still a user-owned deployment action.
 
 Known release blockers include:
 

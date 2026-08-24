@@ -1,6 +1,6 @@
 # I/O Port implementation status and multi-provider readiness
 
-Status: local code, UI, database, admin and hosted-release assessment, updated 24 August 2026.
+Status: local code, UI, database, admin and hosted-release assessment, updated 24 August 2026 after the Trust/finance release.
 
 This is the operational source of truth for the current I/O Port implementation. It separates what exists from what is only represented in a plan or preview. Cross-product dependencies and release gates are governed by `../../MASTER_IMPLEMENTATION_AND_RELEASE_PLAN.md` and `../../RELEASE_READINESS_CHECKLIST.md`. Product direction remains in `IO_PORT_IMPLEMENTATION_PLAN.md`; the detailed delivery sequence remains in `IO_PORT_CODE_LEVEL_ROADMAP.md`; the OpenRouter comparison is in `OPENROUTER_CAPABILITY_AND_CAPACITY_PLAN.md`.
 
@@ -38,7 +38,20 @@ Provider API keys by themselves do not make a provider routable. The verified de
 | capacity sources                       |     3 |
 | workspace capacity grants              |     3 |
 
-The demo deployment contains metadata and secret references, not key values. No provider completion or billable conformance call was made. The remaining critical work is written onward-access approval, trusted provider conformance, one deliberately bounded live test, individual activation, scheduled health/operations, dimension-complete billing and provider reconciliation, direct/rented/donated capacity partnerships and a fuller control room. Hosted non-cash credits, exact member usage history and immutable draft invoice snapshots now exist; they are not payment or tax systems.
+The demo deployment contains metadata and secret references, not key values. No provider completion or billable conformance call was made. The remaining critical work is written onward-access approval, trusted provider conformance, one deliberately bounded live test, individual activation, scheduled health/operations and direct/rented/donated capacity partnerships. Billing is no longer only a draft snapshot: the hosted schema now has verified buyer identity, second-person tax/FX/payment policies, immutable issuance, payment/refund evidence, provider reconciliation and member PDF rendering. These paths remain inactive until policy owners approve them; the reviewed payment functions are deliberately undeployed and approved processor/tax-policy counts are zero.
+
+### 1.1 Trust and finance release, 24 August 2026
+
+- Separate admin routes now exist for report triage, attachment review, appeals and billing/finance.
+- Members have a Safety & Appeals route and can submit one bounded appeal before the recorded deadline.
+- Attachment scanner callbacks are HMAC-authenticated, idempotent and store normalized evidence rather than raw payloads. Humans cannot mark an attachment clean.
+- Billing profiles use optimistic versioning; changing legal/tax identity clears verification.
+- Tax, GST and FX are versioned evidence with effective dates and second-person approval; application code never invents a rate or place of supply.
+- Invoice issuance freezes seller, buyer and tax evidence and uses exact integer nanos plus explicit currency-minor-unit rounding.
+- Issued invoices can be downloaded by workspace members as a PDF derived from the immutable database representation; drafts cannot be represented as tax invoices.
+- Checkout receives only a public Razorpay key and a server-created order. Capture, failure, dispute and refund status remain signed-webhook authoritative.
+- Provider statements reconcile immutable line evidence to route attempts by provider request ID, retaining unmatched, ambiguous, currency and amount exceptions.
+- The finance runtime stays fail-closed: zero approved tax policies and zero approved live processors; no payment function was deployed and no charge was attempted.
 
 ## 2. What “I/O Port” must mean
 

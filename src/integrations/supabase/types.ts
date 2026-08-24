@@ -6080,6 +6080,14 @@ export type Database = {
         Args: { _expected_version: number; _space_id: string };
         Returns: undefined;
       };
+      get_my_io_billing_profile: {
+        Args: { _workspace_id: string };
+        Returns: Json;
+      };
+      get_my_io_invoice_document: {
+        Args: { _invoice_id: string };
+        Returns: Json;
+      };
       list_my_direct_conversation: {
         Args: {
           _before_created_at?: string;
@@ -6113,6 +6121,22 @@ export type Database = {
       };
       list_my_io_invoices: {
         Args: { _limit?: number; _workspace_id: string };
+        Returns: Json;
+      };
+      upsert_my_io_billing_profile: {
+        Args: {
+          _workspace_id: string;
+          _legal_name: string;
+          _billing_email: string;
+          _customer_type: string;
+          _country_code: string;
+          _state_code: string;
+          _postal_code: string;
+          _address_lines: Json;
+          _gstin: string;
+          _tax_registration_name: string;
+          _expected_version?: number;
+        };
         Returns: Json;
       };
       list_my_io_usage_history: {
@@ -6157,6 +6181,10 @@ export type Database = {
           title: string;
         }[];
       };
+      list_my_moderation_notices: {
+        Args: { _limit?: number };
+        Returns: Json;
+      };
       lookup_vouch_code: {
         Args: { _code: string };
         Returns: {
@@ -6181,6 +6209,14 @@ export type Database = {
           isOneToOne: true;
           isSetofReturn: false;
         };
+      };
+      submit_my_moderation_appeal: {
+        Args: {
+          _client_request_id: string;
+          _notice_id: string;
+          _reason: string;
+        };
+        Returns: Json;
       };
       mark_my_direct_conversation_read: {
         Args: { _other_user_id: string };

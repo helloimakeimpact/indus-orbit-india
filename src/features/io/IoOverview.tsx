@@ -7,6 +7,7 @@ import {
   CloudCog,
   Copy,
   FileCheck2,
+  FileDown,
   Globe2,
   HandHeart,
   IndianRupee,
@@ -25,6 +26,7 @@ import {
   TerminalSquare,
   Trash2,
   UsersRound,
+  WalletCards,
   Workflow,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
@@ -63,6 +65,8 @@ import {
   appendMyIoTerminalEvent,
   getIoAuditEvents,
   getMyIoBillingSummary,
+  getMyIoBillingProfile,
+  getMyIoInvoiceDocument,
   getMyIoBudgetStatus,
   getMyIoWorkspaceProviderPolicy,
   getIoCapacitySources,
@@ -71,6 +75,7 @@ import {
   listMyIoApiKeys,
   listMyIoCreditEntries,
   listMyIoInvoices,
+  createMyIoPaymentCheckout,
   listMyIoTerminalSessions,
   listMyIoTerminalEvents,
   listMyIoUsageHistory,
@@ -78,12 +83,14 @@ import {
   requestMyIoTerminalApproval,
   runPartnerRoute,
   setMyIoWorkspaceProviderPolicy,
+  upsertMyIoBillingProfile,
   revokeMyIoApiKey,
   type IoApiKeyMetadata,
   type IoAuditEvent,
   type IoCapacitySource,
   type IoBudgetStatus,
   type IoBillingSummary,
+  type IoBillingProfile,
   type IoRouteCatalog,
   type IoRoutePreflight,
   type IoRouteReceipt,
@@ -115,6 +122,115 @@ type TerminalLiveEvent = {
   type: string | null;
   receivedAt: string | null;
 };
+
+type BillingProfileDraft = {
+  legalName: string;
+  billingEmail: string;
+  customerType: IoBillingProfile["customerType"];
+  countryCode: string;
+  stateCode: string;
+  postalCode: string;
+  addressLine1: string;
+  addressLine2: string;
+  gstin: string;
+  taxRegistrationName: string;
+};
+
+const emptyBillingProfileDraft: BillingProfileDraft = {
+  legalName: "",
+  billingEmail: "",
+  customerType: "business",
+  countryCode: "IN",
+  stateCode: "",
+  postalCode: "",
+  addressLine1: "",
+  addressLine2: "",
+  gstin: "",
+  taxRegistrationName: "",
+};
+
+type RazorpayInstance = { open: () => void };
+type RazorpayConstructor = new (options: Record<string, unknown>) => RazorpayInstance;
+
+declare global {
+  interface Window {
+    Razorpay?: RazorpayConstructor;
+  }
+}
+
+async function loadRazorpayCheckout() {
+  if (window.Razorpay) return window.Razorpay;
+  await new Promise<void>((resolve, reject) => {
+    const existing = document.querySelector<HTMLScriptElement>(
+      'script[data-io-payment-provider="razorpay"]',
+    );
+    if (existing) {
+      if (existing.dataset.ioPaymentState === "loaded") {
+        resolve();
+        return;
+      }
+      if (existing.dataset.ioPaymentState === "failed") {
+        reject(new Error("Payment checkout could not load."));
+        return;
+      }
+      existing.addEventListener("load", () => resolve(), { once: true });
+      existing.addEventListener(
+        "error",
+        () => reject(new Error("Payment checkout could not load.")),
+        {
+          once: true,
+        },
+      );
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    script.dataset.ioPaymentProvider = "razorpay";
+    script.onload = () => {
+      script.dataset.ioPaymentState = "loaded";
+      resolve();
+    };
+    script.onerror = () => {
+      script.dataset.ioPaymentState = "failed";
+      reject(new Error("Payment checkout could not load."));
+    };
+    document.head.append(script);
+  });
+  if (!window.Razorpay) throw new Error("Payment checkout is unavailable.");
+  return window.Razorpay;
+}
+
+function invoiceSnapshotText(snapshot: Record<string, unknown>, key: string) {
+  const value = snapshot[key];
+  if (typeof value === "string" && value.trim()) return value;
+  if (Array.isArray(value)) {
+    const parts = value.filter(
+      (part): part is string => typeof part === "string" && Boolean(part.trim()),
+    );
+    return parts.join(", ");
+  }
+  return "—";
+}
+
+function invoiceSnapshotRecord(snapshot: Record<string, unknown>, key: string) {
+  const value = snapshot[key];
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+function invoiceSnapshotNanos(snapshot: Record<string, unknown>, key: string) {
+  const value = snapshot[key];
+  return typeof value === "string" && /^-?\d+$/.test(value) ? value : "0";
+}
+
+function basisPointsLabel(snapshot: Record<string, unknown>, key: string) {
+  const value = snapshot[key];
+  return typeof value === "number" && Number.isInteger(value) && value >= 0
+    ? `${(value / 100).toFixed(2)}%`
+    : "0.00%";
+}
 
 function classifyOpenCodePermission(
   permission: string,
@@ -156,6 +272,15 @@ export function IoOverview() {
   const [usageModelFilter, setUsageModelFilter] = useState("");
   const [budgets, setBudgets] = useState<IoBudgetStatus[]>([]);
   const [billingSummary, setBillingSummary] = useState<IoBillingSummary | null>(null);
+  const [billingProfile, setBillingProfile] = useState<IoBillingProfile | null>(null);
+  const [billingProfileDraft, setBillingProfileDraft] =
+    useState<BillingProfileDraft>(emptyBillingProfileDraft);
+  const [billingProfileAccess, setBillingProfileAccess] = useState<"available" | "restricted">(
+    "available",
+  );
+  const [billingProfileBusy, setBillingProfileBusy] = useState(false);
+  const [paymentBusy, setPaymentBusy] = useState<string | null>(null);
+  const [invoiceDocumentBusy, setInvoiceDocumentBusy] = useState<string | null>(null);
   const [creditEntries, setCreditEntries] = useState<IoCreditEntry[]>([]);
   const [invoices, setInvoices] = useState<IoInvoice[]>([]);
   const [apiKeys, setApiKeys] = useState<IoApiKeyMetadata[]>([]);
@@ -269,6 +394,9 @@ export function IoOverview() {
         setUsageHasMore(false);
         setBudgets([]);
         setBillingSummary(null);
+        setBillingProfile(null);
+        setBillingProfileDraft(emptyBillingProfileDraft);
+        setBillingProfileAccess("available");
         setCreditEntries([]);
         setInvoices([]);
         setApiKeys([]);
@@ -293,6 +421,7 @@ export function IoOverview() {
         providerPolicyResult,
         catalogResult,
         billingResult,
+        billingProfileResult,
         creditEntriesResult,
         invoicesResult,
       ] = await Promise.allSettled([
@@ -305,6 +434,7 @@ export function IoOverview() {
         getMyIoWorkspaceProviderPolicy(nextWorkspace.id),
         getIoRouteCatalog(nextWorkspace.id),
         getMyIoBillingSummary(nextWorkspace.id),
+        getMyIoBillingProfile(nextWorkspace.id),
         listMyIoCreditEntries(nextWorkspace.id),
         listMyIoInvoices(nextWorkspace.id),
       ]);
@@ -329,6 +459,31 @@ export function IoOverview() {
       setUsageModelFilter("");
       setBudgets(budgetResult.value);
       setBillingSummary(billingResult.value);
+      if (billingProfileResult.status === "fulfilled") {
+        const profile = billingProfileResult.value;
+        setBillingProfile(profile);
+        setBillingProfileAccess("available");
+        setBillingProfileDraft(
+          profile
+            ? {
+                legalName: profile.legalName,
+                billingEmail: profile.billingEmail,
+                customerType: profile.customerType,
+                countryCode: profile.countryCode,
+                stateCode: profile.stateCode ?? "",
+                postalCode: profile.postalCode ?? "",
+                addressLine1: profile.addressLines[0] ?? "",
+                addressLine2: profile.addressLines[1] ?? "",
+                gstin: profile.gstin ?? "",
+                taxRegistrationName: profile.taxRegistrationName ?? "",
+              }
+            : emptyBillingProfileDraft,
+        );
+      } else {
+        setBillingProfile(null);
+        setBillingProfileDraft(emptyBillingProfileDraft);
+        setBillingProfileAccess("restricted");
+      }
       setCreditEntries(creditEntriesResult.value);
       setInvoices(invoicesResult.value);
       setApiKeys(apiKeysResult.value);
@@ -514,6 +669,220 @@ export function IoOverview() {
       toast.success(`${label} copied.`);
     } catch {
       toast.error(`Could not copy ${label.toLowerCase()}.`);
+    }
+  }
+
+  async function saveBillingProfile() {
+    if (!workspace || billingProfileBusy || billingProfileAccess !== "available") return;
+    const addressLines = [
+      billingProfileDraft.addressLine1.trim(),
+      billingProfileDraft.addressLine2.trim(),
+    ].filter(Boolean);
+    if (
+      billingProfileDraft.legalName.trim().length < 2 ||
+      !billingProfileDraft.billingEmail.includes("@") ||
+      billingProfileDraft.countryCode.trim().length !== 2 ||
+      addressLines.length === 0
+    ) {
+      toast.error("Add a legal name, billing email, two-letter country code and billing address.");
+      return;
+    }
+    setBillingProfileBusy(true);
+    try {
+      await upsertMyIoBillingProfile({
+        workspaceId: workspace.id,
+        legalName: billingProfileDraft.legalName.trim(),
+        billingEmail: billingProfileDraft.billingEmail.trim(),
+        customerType: billingProfileDraft.customerType,
+        countryCode: billingProfileDraft.countryCode.trim().toUpperCase(),
+        stateCode: billingProfileDraft.stateCode.trim().toUpperCase(),
+        postalCode: billingProfileDraft.postalCode.trim(),
+        addressLines,
+        gstin: billingProfileDraft.gstin.trim().toUpperCase(),
+        taxRegistrationName: billingProfileDraft.taxRegistrationName.trim(),
+        expectedVersion: billingProfile?.version ?? 0,
+      });
+      toast.success("Billing identity saved. An operator must verify it before issuance.");
+      await loadWorkspace(workspace.id);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not save billing identity.");
+    } finally {
+      setBillingProfileBusy(false);
+    }
+  }
+
+  async function payInvoice(invoice: IoInvoice) {
+    if (!workspace || paymentBusy) return;
+    setPaymentBusy(invoice.id);
+    try {
+      const checkout = await createMyIoPaymentCheckout(invoice.id);
+      const Razorpay = await loadRazorpayCheckout();
+      const instance = new Razorpay({
+        key: checkout.keyId,
+        order_id: checkout.orderId,
+        amount: checkout.amountMinor,
+        currency: checkout.currencyCode,
+        name: "Indus Orbit I/O Port",
+        description: `Invoice ${invoice.invoiceNumber}`,
+        prefill: billingProfile?.billingEmail
+          ? { email: billingProfile.billingEmail, name: billingProfile.legalName }
+          : undefined,
+        notes: { payment_intent_id: checkout.paymentIntentId },
+        theme: { color: "#ff9c24" },
+        handler: () => {
+          setPaymentBusy(null);
+          toast.success("Payment submitted. Final status follows the signed provider webhook.");
+          void loadWorkspace(workspace.id);
+        },
+        modal: {
+          ondismiss: () => setPaymentBusy(null),
+        },
+      });
+      instance.open();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not open secure checkout.");
+      setPaymentBusy(null);
+    }
+  }
+
+  async function downloadInvoice(invoice: IoInvoice) {
+    if (invoiceDocumentBusy || invoice.state === "draft") return;
+    setInvoiceDocumentBusy(invoice.id);
+    try {
+      const evidence = await getMyIoInvoiceDocument(invoice.id);
+      const tax = invoiceSnapshotRecord(evidence.seller, "tax");
+      const { jsPDF } = await import("jspdf");
+      const pdf = new jsPDF({ unit: "pt", format: "a4" });
+      const left = 48;
+      const right = 547;
+      let y = 54;
+      const money = (nanos: string) => formatExactNanos(nanos, evidence.currencyCode);
+      const line = (label: string, value: string, size = 10) => {
+        pdf.setFontSize(size);
+        pdf.setTextColor(28, 36, 73);
+        pdf.text(label, left, y);
+        pdf.text(value, right, y, { align: "right" });
+        y += size + 8;
+      };
+      pdf.setFillColor(21, 27, 67);
+      pdf.rect(0, 0, 595, 92, "F");
+      pdf.setTextColor(255, 250, 238);
+      pdf.setFontSize(20);
+      pdf.text("INDUS ORBIT · I/O PORT", left, 42);
+      pdf.setFontSize(11);
+      pdf.text(evidence.state === "void" ? "VOID TAX INVOICE" : "TAX INVOICE", left, 66);
+      pdf.text(evidence.invoiceNumber, right, 42, { align: "right" });
+      pdf.text(`Issued ${new Date(evidence.issuedAt).toLocaleDateString()}`, right, 66, {
+        align: "right",
+      });
+      y = 124;
+      pdf.setFontSize(9);
+      pdf.setTextColor(92, 96, 112);
+      pdf.text("SUPPLIER", left, y);
+      pdf.text("BILL TO", 300, y);
+      y += 18;
+      pdf.setFontSize(11);
+      pdf.setTextColor(28, 36, 73);
+      pdf.text(invoiceSnapshotText(evidence.seller, "legalName"), left, y);
+      pdf.text(invoiceSnapshotText(evidence.buyer, "legalName"), 300, y);
+      y += 17;
+      pdf.setFontSize(9);
+      const sellerAddress = invoiceSnapshotText(evidence.seller, "address");
+      const buyerAddress = invoiceSnapshotText(evidence.buyer, "addressLines");
+      pdf.text(pdf.splitTextToSize(sellerAddress, 220), left, y);
+      pdf.text(pdf.splitTextToSize(buyerAddress, 220), 300, y);
+      y += 42;
+      pdf.text(`GSTIN: ${invoiceSnapshotText(evidence.seller, "gstin")}`, left, y);
+      pdf.text(`GSTIN: ${invoiceSnapshotText(evidence.buyer, "gstin")}`, 300, y);
+      y += 18;
+      pdf.text(`SAC: ${invoiceSnapshotText(evidence.seller, "serviceAccountingCode")}`, left, y);
+      pdf.text(`Place/state: ${invoiceSnapshotText(evidence.buyer, "stateCode")}`, 300, y);
+      y += 28;
+      pdf.setDrawColor(222, 217, 204);
+      pdf.line(left, y, right, y);
+      y += 24;
+      line(
+        "Service period",
+        `${new Date(evidence.periodStart).toLocaleDateString()} – ${new Date(evidence.periodEnd).toLocaleDateString()}`,
+      );
+      line("Provider usage", money(evidence.providerCostNanos));
+      line("I/O service fee", money(evidence.serviceFeeNanos));
+      line("Subtotal", money(evidence.subtotalNanos));
+      line("Credits applied", `− ${money(evidence.creditAppliedNanos)}`);
+      if (invoiceSnapshotNanos(tax, "cgstNanos") !== "0") {
+        line(
+          `CGST · ${basisPointsLabel(tax, "cgstBasisPoints")}`,
+          money(invoiceSnapshotNanos(tax, "cgstNanos")),
+        );
+      }
+      if (invoiceSnapshotNanos(tax, "sgstNanos") !== "0") {
+        line(
+          `SGST · ${basisPointsLabel(tax, "sgstBasisPoints")}`,
+          money(invoiceSnapshotNanos(tax, "sgstNanos")),
+        );
+      }
+      if (invoiceSnapshotNanos(tax, "igstNanos") !== "0") {
+        line(
+          `IGST · ${basisPointsLabel(tax, "igstBasisPoints")}`,
+          money(invoiceSnapshotNanos(tax, "igstNanos")),
+        );
+      }
+      if (evidence.taxNanos === "0") {
+        line(
+          `Tax · ${evidence.supplyKind?.replaceAll("_", " ") ?? evidence.taxStatus}`,
+          money(evidence.taxNanos),
+        );
+      }
+      line("Rounding", money(evidence.roundingNanos));
+      pdf.setDrawColor(255, 156, 36);
+      pdf.line(left, y, right, y);
+      y += 24;
+      line("Invoice total", money(evidence.totalNanos), 12);
+      line("Amount due", money(evidence.amountDueNanos), 12);
+      line("Paid", money(evidence.paidNanos));
+      line("Refunded", money(evidence.refundedNanos));
+      y += 12;
+      pdf.setFontSize(9);
+      pdf.setTextColor(92, 96, 112);
+      pdf.text(
+        `Payment status: ${evidence.paymentState.replaceAll("_", " ")} · Due ${new Date(evidence.dueAt).toLocaleDateString()}`,
+        left,
+        y,
+      );
+      y += 28;
+      pdf.setFontSize(10);
+      pdf.setTextColor(28, 36, 73);
+      pdf.text("Usage lines", left, y);
+      y += 18;
+      for (const item of evidence.lines) {
+        if (y > 780) {
+          pdf.addPage();
+          y = 54;
+        }
+        pdf.setFontSize(8);
+        pdf.text(`${item.providerKey} · ${item.modelKey}`, left, y);
+        pdf.text(money(item.amountDueNanos), right, y, { align: "right" });
+        y += 13;
+        pdf.setTextColor(92, 96, 112);
+        pdf.text(
+          `${new Date(item.usageRecordedAt).toLocaleString()} · ${item.inputTokens ?? "—"} input · ${item.outputTokens ?? "—"} output tokens`,
+          left,
+          y,
+        );
+        pdf.setTextColor(28, 36, 73);
+        y += 18;
+      }
+      if (evidence.state === "void" && evidence.voidReason) {
+        y += 8;
+        pdf.setTextColor(169, 52, 52);
+        pdf.text(`VOID: ${evidence.voidReason}`, left, y);
+      }
+      pdf.save(`${evidence.invoiceNumber}.pdf`);
+      toast.success("Invoice PDF generated from its immutable issued snapshot.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not generate the invoice.");
+    } finally {
+      setInvoiceDocumentBusy(null);
     }
   }
 
@@ -2005,6 +2374,178 @@ export function IoOverview() {
                   />
                 </div>
 
+                <div id="io-billing-profile" className="border-b border-border/55 p-4">
+                  <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                        Billing identity
+                      </p>
+                      <h3 className="mt-1 text-sm font-semibold text-foreground">
+                        Buyer details for invoice issuance
+                      </h3>
+                      <p className="mt-1 max-w-2xl text-[10px] leading-4 text-muted-foreground">
+                        Workspace owners, admins and billing members can maintain this versioned
+                        record. Saving changes removes verification; I/O never guesses GST status or
+                        place of supply.
+                      </p>
+                    </div>
+                    {billingProfileAccess === "available" && (
+                      <Badge variant="outline" className="capitalize">
+                        {billingProfile?.verifiedAt ? "verified" : "verification required"}
+                      </Badge>
+                    )}
+                  </div>
+                  {billingProfileAccess === "restricted" ? (
+                    <p className="rounded-xl border border-dashed border-border p-4 text-xs text-muted-foreground">
+                      Billing identity is restricted to workspace owners, admins and billing
+                      members.
+                    </p>
+                  ) : (
+                    <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-4">
+                      <Input
+                        value={billingProfileDraft.legalName}
+                        onChange={(event) =>
+                          setBillingProfileDraft((current) => ({
+                            ...current,
+                            legalName: event.target.value,
+                          }))
+                        }
+                        placeholder="Legal name"
+                        maxLength={160}
+                        aria-label="Billing legal name"
+                      />
+                      <Input
+                        type="email"
+                        value={billingProfileDraft.billingEmail}
+                        onChange={(event) =>
+                          setBillingProfileDraft((current) => ({
+                            ...current,
+                            billingEmail: event.target.value,
+                          }))
+                        }
+                        placeholder="Billing email"
+                        maxLength={254}
+                        aria-label="Billing email"
+                      />
+                      <select
+                        value={billingProfileDraft.customerType}
+                        onChange={(event) =>
+                          setBillingProfileDraft((current) => ({
+                            ...current,
+                            customerType: event.target.value as BillingProfileDraft["customerType"],
+                          }))
+                        }
+                        className="h-9 rounded-md border border-input bg-background px-3 text-xs"
+                        aria-label="Billing customer type"
+                      >
+                        <option value="business">Business</option>
+                        <option value="individual">Individual</option>
+                        <option value="government">Government</option>
+                        <option value="nonprofit">Nonprofit</option>
+                      </select>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Input
+                          value={billingProfileDraft.countryCode}
+                          onChange={(event) =>
+                            setBillingProfileDraft((current) => ({
+                              ...current,
+                              countryCode: event.target.value.toUpperCase(),
+                            }))
+                          }
+                          placeholder="Country"
+                          maxLength={2}
+                          aria-label="Billing country code"
+                        />
+                        <Input
+                          value={billingProfileDraft.stateCode}
+                          onChange={(event) =>
+                            setBillingProfileDraft((current) => ({
+                              ...current,
+                              stateCode: event.target.value.toUpperCase(),
+                            }))
+                          }
+                          placeholder="State"
+                          maxLength={8}
+                          aria-label="Billing state code"
+                        />
+                      </div>
+                      <Input
+                        value={billingProfileDraft.addressLine1}
+                        onChange={(event) =>
+                          setBillingProfileDraft((current) => ({
+                            ...current,
+                            addressLine1: event.target.value,
+                          }))
+                        }
+                        placeholder="Billing address"
+                        maxLength={240}
+                        aria-label="Billing address line one"
+                        className="md:col-span-2"
+                      />
+                      <Input
+                        value={billingProfileDraft.addressLine2}
+                        onChange={(event) =>
+                          setBillingProfileDraft((current) => ({
+                            ...current,
+                            addressLine2: event.target.value,
+                          }))
+                        }
+                        placeholder="Address line 2 (optional)"
+                        maxLength={240}
+                        aria-label="Billing address line two"
+                      />
+                      <Input
+                        value={billingProfileDraft.postalCode}
+                        onChange={(event) =>
+                          setBillingProfileDraft((current) => ({
+                            ...current,
+                            postalCode: event.target.value,
+                          }))
+                        }
+                        placeholder="Postal code"
+                        maxLength={24}
+                        aria-label="Billing postal code"
+                      />
+                      <Input
+                        value={billingProfileDraft.gstin}
+                        onChange={(event) =>
+                          setBillingProfileDraft((current) => ({
+                            ...current,
+                            gstin: event.target.value.toUpperCase(),
+                          }))
+                        }
+                        placeholder="GSTIN (if registered)"
+                        maxLength={15}
+                        aria-label="GSTIN"
+                      />
+                      <Input
+                        value={billingProfileDraft.taxRegistrationName}
+                        onChange={(event) =>
+                          setBillingProfileDraft((current) => ({
+                            ...current,
+                            taxRegistrationName: event.target.value,
+                          }))
+                        }
+                        placeholder="GST registration name"
+                        maxLength={160}
+                        aria-label="Tax registration name"
+                      />
+                      <Button
+                        type="button"
+                        disabled={billingProfileBusy}
+                        onClick={() => void saveBillingProfile()}
+                      >
+                        {billingProfileBusy ? (
+                          <LoaderCircle className="animate-spin" />
+                        ) : (
+                          <WalletCards />
+                        )}
+                        Save billing identity
+                      </Button>
+                    </div>
+                  )}
+                </div>
+
                 <div className="grid gap-3 border-b border-border/55 p-4 xl:grid-cols-2">
                   <div className="rounded-xl border border-border/60 bg-background/60 p-3">
                     <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
@@ -2072,6 +2613,40 @@ export function IoOverview() {
                               <p className="mt-1 font-mono font-semibold">
                                 {formatExactNanos(invoice.amountDueNanos, invoice.currencyCode)}
                               </p>
+                              {(invoice.paymentState === "due" ||
+                                invoice.paymentState === "partially_paid") && (
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  className="mt-2 h-7 text-[9px]"
+                                  disabled={paymentBusy === invoice.id}
+                                  onClick={() => void payInvoice(invoice)}
+                                >
+                                  {paymentBusy === invoice.id ? (
+                                    <LoaderCircle className="animate-spin" />
+                                  ) : (
+                                    <WalletCards />
+                                  )}
+                                  Pay securely
+                                </Button>
+                              )}
+                              {invoice.state !== "draft" && (
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="ghost"
+                                  className="mt-1 h-7 text-[9px]"
+                                  disabled={invoiceDocumentBusy === invoice.id}
+                                  onClick={() => void downloadInvoice(invoice)}
+                                >
+                                  {invoiceDocumentBusy === invoice.id ? (
+                                    <LoaderCircle className="animate-spin" />
+                                  ) : (
+                                    <FileDown />
+                                  )}
+                                  Download PDF
+                                </Button>
+                              )}
                             </div>
                           </div>
                         ))}

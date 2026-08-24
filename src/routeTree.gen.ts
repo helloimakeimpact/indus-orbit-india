@@ -39,6 +39,7 @@ import { Route as AppMentorRouteImport } from './routes/app.mentor'
 import { Route as AppMessagesRouteImport } from './routes/app.messages'
 import { Route as AppMissionAdminRouteImport } from './routes/app.mission-admin'
 import { Route as AppMissionsRouteImport } from './routes/app.missions'
+import { Route as AppModerationRouteImport } from './routes/app.moderation'
 import { Route as AppNotificationsRouteImport } from './routes/app.notifications'
 import { Route as AppProfileRouteImport } from './routes/app.profile'
 import { Route as AppSettingsRouteImport } from './routes/app.settings'
@@ -232,6 +233,11 @@ const AppMissionAdminRoute = AppMissionAdminRouteImport.update({
 const AppMissionsRoute = AppMissionsRouteImport.update({
   id: '/missions',
   path: '/missions',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppModerationRoute = AppModerationRouteImport.update({
+  id: '/moderation',
+  path: '/moderation',
   getParentRoute: () => AppRoute,
 } as any)
 const AppNotificationsRoute = AppNotificationsRouteImport.update({
@@ -487,6 +493,7 @@ export interface FileRoutesByFullPath {
   '/app/messages': typeof AppMessagesRoute
   '/app/mission-admin': typeof AppMissionAdminRoute
   '/app/missions': typeof AppMissionsRouteWithChildren
+  '/app/moderation': typeof AppModerationRoute
   '/app/notifications': typeof AppNotificationsRoute
   '/app/profile': typeof AppProfileRoute
   '/app/settings': typeof AppSettingsRoute
@@ -557,6 +564,7 @@ export interface FileRoutesByTo {
   '/app/mentor': typeof AppMentorRoute
   '/app/messages': typeof AppMessagesRoute
   '/app/mission-admin': typeof AppMissionAdminRoute
+  '/app/moderation': typeof AppModerationRoute
   '/app/notifications': typeof AppNotificationsRoute
   '/app/profile': typeof AppProfileRoute
   '/app/settings': typeof AppSettingsRoute
@@ -630,6 +638,7 @@ export interface FileRoutesById {
   '/app/messages': typeof AppMessagesRoute
   '/app/mission-admin': typeof AppMissionAdminRoute
   '/app/missions': typeof AppMissionsRouteWithChildren
+  '/app/moderation': typeof AppModerationRoute
   '/app/notifications': typeof AppNotificationsRoute
   '/app/profile': typeof AppProfileRoute
   '/app/settings': typeof AppSettingsRoute
@@ -708,6 +717,7 @@ export interface FileRouteTypes {
     | '/app/messages'
     | '/app/mission-admin'
     | '/app/missions'
+    | '/app/moderation'
     | '/app/notifications'
     | '/app/profile'
     | '/app/settings'
@@ -778,6 +788,7 @@ export interface FileRouteTypes {
     | '/app/mentor'
     | '/app/messages'
     | '/app/mission-admin'
+    | '/app/moderation'
     | '/app/notifications'
     | '/app/profile'
     | '/app/settings'
@@ -850,6 +861,7 @@ export interface FileRouteTypes {
     | '/app/messages'
     | '/app/mission-admin'
     | '/app/missions'
+    | '/app/moderation'
     | '/app/notifications'
     | '/app/profile'
     | '/app/settings'
@@ -1131,6 +1143,13 @@ declare module '@tanstack/react-router' {
       path: '/missions'
       fullPath: '/app/missions'
       preLoaderRoute: typeof AppMissionsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/moderation': {
+      id: '/app/moderation'
+      path: '/moderation'
+      fullPath: '/app/moderation'
+      preLoaderRoute: typeof AppModerationRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/notifications': {
@@ -1595,6 +1614,7 @@ interface AppRouteChildren {
   AppMessagesRoute: typeof AppMessagesRoute
   AppMissionAdminRoute: typeof AppMissionAdminRoute
   AppMissionsRoute: typeof AppMissionsRouteWithChildren
+  AppModerationRoute: typeof AppModerationRoute
   AppNotificationsRoute: typeof AppNotificationsRoute
   AppProfileRoute: typeof AppProfileRoute
   AppSettingsRoute: typeof AppSettingsRoute
@@ -1622,6 +1642,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppMessagesRoute: AppMessagesRoute,
   AppMissionAdminRoute: AppMissionAdminRoute,
   AppMissionsRoute: AppMissionsRouteWithChildren,
+  AppModerationRoute: AppModerationRoute,
   AppNotificationsRoute: AppNotificationsRoute,
   AppProfileRoute: AppProfileRoute,
   AppSettingsRoute: AppSettingsRoute,

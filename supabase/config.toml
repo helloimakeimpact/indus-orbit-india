@@ -10,3 +10,12 @@ verify_jwt = true
 # function; Supabase JWT verification must not intercept those Bearer tokens.
 [functions.io-openai]
 verify_jwt = false
+
+[functions.io-payments]
+verify_jwt = true
+
+[functions.io-payment-webhook]
+verify_jwt = false
+
+[functions.orbit-attachment-scan-webhook]
+verify_jwt = false
