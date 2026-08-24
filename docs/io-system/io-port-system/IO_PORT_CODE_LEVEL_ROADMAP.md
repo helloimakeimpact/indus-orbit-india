@@ -2,7 +2,7 @@
 
 Status: active implementation roadmap, updated 24 August 2026 after the collaboration, Trust and finance releases. It distinguishes source work from deployed proof and from policy/provider work required before a private or paid beta. The current operational verdict is in `IO_PORT_IMPLEMENTATION_STATUS.md`.
 
-Latest code-level checkpoint: Chat JSON/SSE and the stateless Responses subset, capability-gated tools/structured output/HTTPS image input, richer usage/credit/invoice history, the packaged OpenCode client with global SSE/continued prompts/task trees/approval enforcement/full diffs/secure loopback pairing, and the member control-room views are implemented. The hosted finance schema now covers verified buyer identity, GST/tax/FX evidence, immutable issuance, payment/refund records, provider reconciliation and member invoice PDFs. Payment execution remains deliberately undeployed until policy and merchant approval; this is an activation gate, not missing browser code.
+Latest code-level checkpoint: Chat JSON/SSE and the stateless Responses subset, capability-gated tools/structured output/HTTPS image input, richer usage/credit/invoice history, the packaged OpenCode client with global SSE/continued prompts/task trees/approval enforcement/full diffs/secure loopback pairing, and the member control-room views are implemented. The hosted finance schema now covers verified buyer identity, GST/tax/FX evidence, immutable issuance, payment/refund records, provider reconciliation and member invoice PDFs. The reviewed payment functions are deployed but remain inert: no approved tax policy or live processor exists, so collection still fails closed until policy and merchant approval.
 
 Related documents:
 
