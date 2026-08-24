@@ -35,7 +35,7 @@ Released after that checkpoint:
 - atomic per-key spend reserve/settle/release in the same database transaction as workspace accounting;
 - HMAC-derived OpenAI safety identifiers;
 - operator-reasoned, confirmation-gated, discovery-first `io-chat-v1` conformance with an eight-token request and USD 0.01 maximum;
-- hosted `io-provider-conformance` v1 plus four covering foreign-key indexes; no approval or paid call was created;
+- hosted `io-provider-conformance` v3 plus four covering foreign-key indexes; no approval or paid call was created;
 - hosted TypeScript schema contracts synchronized into the member repository;
 - the standalone 23-file admin application published to private GitHub `main`;
 - 57 member tests and 16 admin tests.
@@ -101,7 +101,7 @@ Exit criteria:
 - every privileged function has positive and negative role tests;
 - no unresolved critical/high trust-boundary finding remains.
 
-User input needed: choose/verify the transactional email provider and sender domain, then nominate security/privacy ownership. Current worker source targets Resend but is not deployed.
+User input needed: choose/verify the transactional email provider and sender domain, then nominate security/privacy ownership. The fixed-template worker is deployed but remains inactive until its server secrets and service-only schedule are configured.
 
 ## Phase 4 — finish the people-centred Discord-like Community system
 

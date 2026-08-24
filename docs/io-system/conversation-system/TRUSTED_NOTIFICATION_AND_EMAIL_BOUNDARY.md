@@ -1,6 +1,6 @@
 # Trusted notification and email boundary
 
-Status: database/browser cutover is Released to the active demo project; email worker source is Verified locally but intentionally undeployed, updated 9 August 2026.
+Status: database/browser cutover is Released to the active demo project; the fixed-template email worker is deployed as v2 but remains operationally inactive until its provider secrets and service-only schedule are configured, updated 24 August 2026.
 
 This record defines what now owns cross-member notifications and email. It replaces the former pattern in which browser code could choose a notification recipient, category, message, link, email subject and HTML. That former contract is no longer executable by authenticated users.
 
@@ -47,7 +47,7 @@ It never accepts a caller-authored subject or HTML body.
 - uses the outbox job ID as the provider idempotency key;
 - records success/provider ID or a redacted bounded error through the lease-completion RPC.
 
-The worker is intentionally **not deployed**. No email/provider request was made. The formerly deployed browser-composed `resend-email-dispatcher` was replaced in place by a `410 Gone` tombstone at version 14, so stale callers cannot send through the retired contract. Activation of the new worker requires these Supabase Edge Function secrets and a reviewed service-only schedule:
+The worker is deployed with service-key authentication and fails closed with `503` if its provider configuration is absent. No email/provider request was made in this release. The formerly browser-composed `resend-email-dispatcher` remains a fail-closed tombstone, so stale callers cannot send through the retired contract. Operational activation of the worker requires these Supabase Edge Function secrets and a reviewed service-only schedule:
 
 ```text
 RESEND_API_KEY=<provider API key>

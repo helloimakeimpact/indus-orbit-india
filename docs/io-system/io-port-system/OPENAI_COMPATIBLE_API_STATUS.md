@@ -1,6 +1,6 @@
 # OpenAI-compatible I/O API status
 
-Status: **Partial**, with the bounded v1 foundation, transparent fee/commercial gate, multi-window key limits, per-key spend cap, CN workspace policy and HMAC safety identifier **Released** to the hosted Indus Orbit control plane. On 24 August 2026, `io-openai` v6 released the stateless Responses endpoint, SSE response transport, and fail-closed request/response contracts for function tools, strict JSON output and HTTPS image input. Provider routing remains disabled, so no paid model traffic was created and advanced provider behavior is not yet end-to-end Released.
+Status: **Partial**, with the bounded v1 foundation, transparent fee/commercial gate, multi-window key limits, per-key spend cap, CN workspace policy and HMAC safety identifier **Released** to the hosted Indus Orbit control plane. On 24 August 2026, `io-openai` v8 released the stateless Responses endpoint, SSE response transport, and fail-closed request/response contracts for function tools, strict JSON output and HTTPS image input. Provider routing remains disabled, so no paid model traffic was created and advanced provider behavior is not yet end-to-end Released.
 
 ## Released contract
 
@@ -73,7 +73,7 @@ This boundary prevents a broad “OpenAI-compatible” claim from hiding semanti
 - a rolled-back hosted functional transaction passed raw-key shape, hash-only storage, allow/rate-limit behavior, counter bound, revocation and exactly-once audit checks;
 - `io-gateway` v24 is active with JWT verification and no-dispatch route preflight;
 - `io-openai` v6 is active with custom-key verification, browser-origin key rejection, Chat SSE and the stateless Responses endpoint;
-- `io-provider-conformance` v1 is active with JWT verification, while approvals/runs remain zero;
+- `io-provider-conformance` v3 is active with its reviewed custom authentication boundary, while approvals/runs remain zero;
 - a live browser-origin invalid-key probe returned `403`; the equivalent server-shaped invalid-key probe returned `401`; neither loaded provider capacity or made inference traffic;
 - the hosted 550-basis-point policy, fee-rounding boundary, commercial trigger, admin projection, OpenAI Luna price v2 and DeepSeek CN disclosure were verified;
 - an invalid test key returned `401` with an OpenAI-shaped authentication error;
@@ -81,7 +81,7 @@ This boundary prevents a broad “OpenAI-compatible” claim from hiding semanti
 - provider receipts/attempts remain zero and no provider call was made;
 - 61/61 TypeScript unit tests pass in the release candidate, including Chat/Responses parser, streaming options, bounded tools, structured output, HTTPS media, key/idempotency, preflight validation, browser-origin, precise-fee, provider discovery, safety-identifier and CN-policy tests;
 - hosted migration `expose_io_route_capabilities` exposes the exact verified capability flags to the server-only resolver; a post-apply query returned zero routable endpoints, preserving the commercial/conformance gate;
-- a no-secret hosted probe of `POST /v1/responses` reached v6 and returned the expected I/O-key `401` contract;
+- a no-secret hosted probe of `POST /v1/responses` reached the active API and returned the expected I/O-key `401` contract;
 - a clean 75-migration local replay passes all 676 pgTAP assertions.
 
 The post-migration Security Advisor reports expected notices on private deny-by-default tables and authenticated `SECURITY DEFINER` boundaries whose bodies enforce caller membership/capability and use empty search paths. Explicit grants were verified. Four new conformance foreign-key notices were closed by hosted migration `20260820191815`. Re-evaluate these intentional notices whenever the boundary changes; see the [Supabase database linter guidance](https://supabase.com/docs/guides/database/database-linter).

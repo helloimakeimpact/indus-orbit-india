@@ -15,20 +15,20 @@ Related documents:
 
 ## 1. Current implemented proof
 
-The demo project has an RLS-protected I/O control plane, three clearly labelled demo capacity sources, verified-JWT `io-gateway` v23, custom-key `io-openai` v4 and verified-JWT `io-provider-conformance` v1. Released web source moves the authenticated product to `/io`; it uses its own shell and does not require Community onboarding. Provider traffic remains off.
+The demo project has an RLS-protected I/O control plane, three clearly labelled demo capacity sources, custom-authenticated `io-gateway` v26, custom-key `io-openai` v8 and custom-authenticated `io-provider-conformance` v3. Released web source moves the authenticated product to `/io`; it uses its own shell and does not require Community onboarding. Provider traffic remains off.
 
 The existing people-messaging system is also now hardened in the demo project: only accepted, non-suspended connections can insert a direct message, recipients can update only `read_at`, and new messages are capped at 4,000 characters.
 
 The shared-message client extraction in `src/features/conversations/` provides contacts, caller-bound cursor-paginated direct history and event-driven unread hooks for the full Messages route and quick chat. A common cache/store and private Broadcast remain deliberate follow-on work.
 
-| Concern                  | Current code                                                          | Truthful status                                                                                                                                                       |
-| ------------------------ | --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Web control room         | `src/features/io/IoOverview.tsx`                                      | Member UI with local/OpenCode, provider catalogue, route/model selection, budget status, settled cost and safe session/receipt history.                               |
-| Local terminal connector | `src/features/io/opencode.ts`                                         | Loopback-only health → session → prompt with durable lifecycle, cancellation, time/input/1 MiB response bounds. Daemon-confirmed abort and Realtime remain.           |
-| Provider gateway         | `supabase/functions/io-gateway/index.ts`                              | Demo v23 is Released with the streamed 2 MiB success-body cap, strict JSON validation, transparent fee settlement and a shared execution core used by `io-openai` v4. |
-| Browser data access      | `src/features/io/io.client.ts`                                        | Browser-facing I/O data access, explicitly separated from privileged Edge/RPC work.                                                                                   |
-| Control-plane schema     | `supabase/migrations/20260730155210_create_io_port_control_plane.sql` | Workspaces, memberships, sources, grants, policy records, key metadata and safe audit events.                                                                         |
-| I/O nested shell         | `src/features/io/IoWorkspaceShell.tsx`                                | Working in-page context navigation and evidence guide; preview-only workspace/health/activity claims are removed.                                                     |
+| Concern                  | Current code                                                          | Truthful status                                                                                                                                             |
+| ------------------------ | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Web control room         | `src/features/io/IoOverview.tsx`                                      | Member UI with local/OpenCode, provider catalogue, route/model selection, budget status, settled cost and safe session/receipt history.                     |
+| Local terminal connector | `src/features/io/opencode.ts`                                         | Loopback-only health → session → prompt with durable lifecycle, cancellation, time/input/1 MiB response bounds. Daemon-confirmed abort and Realtime remain. |
+| Provider gateway         | `supabase/functions/io-gateway/index.ts`                              | Demo v26 is Released with bounded SSE/JSON transport, strict validation, transparent fee settlement and a shared execution core used by `io-openai` v8.     |
+| Browser data access      | `src/features/io/io.client.ts`                                        | Browser-facing I/O data access, explicitly separated from privileged Edge/RPC work.                                                                         |
+| Control-plane schema     | `supabase/migrations/20260730155210_create_io_port_control_plane.sql` | Workspaces, memberships, sources, grants, policy records, key metadata and safe audit events.                                                               |
+| I/O nested shell         | `src/features/io/IoWorkspaceShell.tsx`                                | Working in-page context navigation and evidence guide; preview-only workspace/health/activity claims are removed.                                           |
 
 ## 2. Non-negotiable boundaries
 
@@ -72,11 +72,11 @@ supabase/functions/_shared/io/
 supabase/functions/io-gateway/index.ts  thin HTTP/CORS/action handler
 ```
 
-The boundary validates request shape, workspace UUIDs, modes, route strategy/model IDs, message limits, local loopback origin/session data and typed public errors before dispatch. It performs membership and entitlement checks separately, audits every requested/completed provider route and writes a safe failure audit without retaining prompt/response text. It validates normalized OpenAI-compatible and Gemini response shapes before returning them. Gateway version 18 and its currency-aware receipt writer are deployed to the demo; all 67 source migrations replay from zero locally.
+The boundary validates request shape, workspace UUIDs, modes, route strategy/model IDs, message limits, local loopback origin/session data and typed public errors before dispatch. It performs membership and entitlement checks separately, audits every requested/completed provider route and writes a safe failure audit without retaining prompt/response text. It validates normalized OpenAI-compatible and Gemini response shapes before returning them. Gateway version 26 and its currency-aware receipt writer are deployed to the demo.
 
 **Released after demo v18:** the client sends an idempotency key; `operations.ts` calls the reserve/finalize/outcome RPC boundary; the resolver excludes open circuits; and the gateway settles/releases exactly once. SQL tests cover budget isolation, idempotency, balanced ledger, stale holds and health/circuit behavior. The hosted release contract confirms the schema/grants; real provider concurrency is still untested.
 
-Still required before broad provider rollout: formal route-policy versions, scheduled health/latency probes, cancellation, streaming/SSE, tools/media/structured output and broader provider/capability conformance. The current adapter remains intentionally non-streaming and supports only the reviewed OpenAI-compatible and Gemini-native chat surfaces.
+Chat JSON/SSE, the stateless Responses subset, function tools, strict structured output and HTTPS image input are implemented behind exact capability gates. Still required before broad provider rollout: formal route-policy activation/retirement commands, scheduled health/latency probes, distributed abuse/rate controls, upstream cancellation propagation and provider-specific conformance for every enabled advanced capability. Unsupported modalities continue to fail closed.
 
 ### 4.2 Make workspace creation atomic
 
@@ -149,18 +149,20 @@ io_ledger_entries
 
 It enforces hard reserve before dispatch, atomic settle/release once, stale-hold expiry and balanced ledger entries in integer minor units. The browser and admin app display these values but never become the source of truth.
 
-Still required for the commercial layer:
+The commercial records are now implemented and hosted:
 
 ```text
-io_credit_grants
-io_fee_rule_versions
+io_credit_grants / io_service_fee_policies
 io_fx_rate_versions
-io_invoice_runs
+io_invoices
 io_invoice_lines
+io_payment_intents
 io_payment_events
+io_refunds
+io_provider_statements / reconciliation results
 ```
 
-The member-visible price must be derived from an immutable route receipt: usage/recovery cost plus one labelled I/O routing fee, then a separately disclosed payment/tax treatment. Do not take a hidden credit-purchase fee and a second execution mark-up for the same service.
+The member-visible price is derived from an immutable route receipt: usage/recovery cost plus one labelled 5.5% I/O routing fee, then separately disclosed payment/tax treatment. Invoice issuance freezes buyer, seller, tax and usage evidence. Drafts are not tax invoices; provider callbacks do not finalize payment state; signed and deduplicated webhooks do.
 
 The required invariant is **reserve → dispatch → settle once → release remainder**. Provider bills, user invoices, sponsored grants and refunds must be derivable from ledger entries, never recomputed from UI aggregates.
 
@@ -179,7 +181,7 @@ admin-indus-orbit/src/contracts.test.ts
 
 **Released to demo:** immutable workspace budget configuration, budget snapshots, endpoint health/circuit snapshots and reasoned 15-minute manual circuit open/close. All authorization remains in database RPCs; browser state does not grant authority.
 
-**Released to demo:** provider conformance approval/execution uses a single-use 30-minute authorization, non-billable discovery first, one bounded eight-token chat check, a USD 0.01 ceiling, a mandatory operator reason, explicit DeepSeek China-processing acknowledgement and redacted evidence. No approval/run exists yet. Still required: controlled execution, secret-reference workflows, capacity/grant lifecycle, broader policy review, scheduled health, reconciliation/commercial ledger, retention jobs and export.
+**Released to demo:** provider conformance approval/execution uses a single-use 30-minute authorization, non-billable discovery first, one bounded eight-token chat check, a USD 0.01 ceiling, a mandatory operator reason, explicit DeepSeek China-processing acknowledgement and redacted evidence. Separate Trust queues now cover report triage, attachment evidence and independent appeals. The finance surface covers billing verification, second-person tax/FX/processor approval, invoice issuance, payment/refund evidence and provider-statement reconciliation. No provider approval/run or finance activation exists yet. Remaining operator work is secret-reference rotation, capacity/grant lifecycle, scheduled health, retention/export policy and production personas.
 
 Hiding a route through `useAuth().isAdmin` is only presentation. RLS and Edge/RPC checks must authorize every mutation.
 
@@ -195,7 +197,7 @@ io_terminal_approval_requests
 io_terminal_approval_decisions
 ```
 
-The migrations store only safe lifecycle metadata and hashed origin/runtime references. Timeline payloads reject prompt, output, source code, commands, file paths, URLs and credentials; approval decisions are not execution grants. The beta still requires:
+The migrations store only safe lifecycle metadata and hashed origin/runtime references. Timeline payloads reject prompt, output, source code, commands, file paths, URLs and credentials. The packaged loopback client now provides secure pairing, global OpenCode SSE, continued prompts, task trees, daemon-confirmed permission replies and full diffs. The hosted timeline remains privacy-minimised metadata, so these collaborative records still require explicit product/data contracts before they can leave the member's device:
 
 ```text
 io_session_artifacts
@@ -203,7 +205,7 @@ io_session_tasks
 io_session_handoffs
 ```
 
-New UI/routes:
+Future hosted collaboration UI/routes:
 
 ```text
 src/routes/app.io.sessions.tsx
@@ -211,11 +213,11 @@ src/routes/app.io.sessions.$sessionId.tsx
 src/features/io/terminal/
 ```
 
-Next add realtime timeline delivery, reconnect/resume, daemon-enforced approval/reject behavior, stop, diff/artifact/task display and authorized human handoff. The web app may attach only to an explicitly local, loopback-bound OpenCode instance; it must never expose an internet-listening shell or covertly proxy a member's files.
+Next add explicit artifact sharing, cross-person handoff and hosted session/task projections. The web app may attach only to an explicitly local, loopback-bound OpenCode instance; it must never expose an internet-listening shell or covertly proxy a member's files.
 
 ## 9. P5 — shared Discord-like system
 
-The I/O nested shell is a useful prototype, but the lasting system belongs in the app shell so Messages, Missions, Learning and I/O gain the same spatial model. Implement the plan in `../conversation-system/CONVERSATION_SYSTEM_IMPLEMENTATION_PLAN.md` through a shared `AppShellContext`, orbit rail, context sidebar and inspector.
+The live Orbit Space slice now supplies rooms, memberships, threads/replies, reactions, private quarantined attachments, room administration and moderation. The I/O nested shell has URL-addressable views and its own product boundary. The remaining shell work is to generalize one responsive rail/context/inspector frame across Messages, Chapters, Missions and I/O without coupling I/O access to Community onboarding.
 
 The data distinction is fixed:
 
@@ -229,7 +231,7 @@ The data distinction is fixed:
 
 ## 10. P6 — privacy, testing and release gates
 
-Add a dedicated retention/security migration plus test suites:
+The repository currently passes 67 unit/contract tests, TypeScript, formatting, production build and a zero-vulnerability high-severity dependency audit. The database release has its RLS/ACL and foreign-key-index evidence verified against the hosted project. Remaining beta evidence should add:
 
 ```text
 supabase/tests/io_rls.sql
@@ -257,11 +259,11 @@ Private-beta acceptance requires:
 
 Execute in this order:
 
-1. verify/configure `IO_SAFETY_IDENTIFIER_SECRET`; the hosted TypeScript schema snapshot already matches migration 73;
-2. host the member/admin web builds and run authenticated member/operator negative-role personas without a provider call;
-3. use the separate admin application to authorize and execute one discovery-first, USD 0.01-capped conformance run; DeepSeek additionally requires explicit China-hosted processing acknowledgement;
-4. keep activation disabled until provider conformance passes **and** reviewed written onward-access authorization exists;
-5. add terminal Realtime/resume/approval enforcement, then streaming/tools/structured output/media suites as separately conformed capabilities;
-6. continue the shared conversation/spatial shell plan without merging human and terminal storage.
+1. host the separate admin application and run authenticated member/operator/negative-role browser personas without a provider call;
+2. configure the attachment scanner callback and exercise clean/infected/error/retry evidence;
+3. approve accountant-reviewed GST/FX/refund rules and complete Razorpay test-mode capture, duplicate webhook, partial refund and reconciliation evidence;
+4. authorize and execute one discovery-first, USD 0.01-capped provider conformance run; DeepSeek additionally requires explicit China-hosted processing acknowledgement;
+5. keep provider activation disabled until conformance passes **and** reviewed written onward-access authorization exists;
+6. add explicit artifact sharing/handoff, provider-specific advanced-capability suites and the generalized shared Orbit shell.
 
-No provider call or paid traffic is needed for steps 1–2. Step 3 is the only billable step and requires the operator's explicit confirmation; conformance never activates a route.
+No provider call or paid traffic is needed for steps 1–3. Step 4 is the only provider-billable step and requires the operator's explicit confirmation; conformance never activates a route.
