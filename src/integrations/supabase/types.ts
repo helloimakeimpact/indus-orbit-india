@@ -5197,6 +5197,26 @@ export type Database = {
       };
     };
     Functions: {
+      admin_io_create_draft_invoice: {
+        Args: {
+          _currency_code: string;
+          _period_end: string;
+          _period_start: string;
+          _workspace_id: string;
+        };
+        Returns: Json;
+      };
+      admin_io_post_credit: {
+        Args: {
+          _amount_nanos: number;
+          _currency_code: string;
+          _entry_kind: string;
+          _external_reference: string;
+          _reason: string;
+          _workspace_id: string;
+        };
+        Returns: Json;
+      };
       admin_io_begin_provider_conformance: {
         Args: {
           _acknowledge_external_processing: boolean;
@@ -5772,6 +5792,10 @@ export type Database = {
         Args: { _workspace_id: string };
         Returns: Json;
       };
+      get_my_io_billing_summary: {
+        Args: { _workspace_id: string };
+        Returns: Json;
+      };
       get_my_io_workspace_provider_policy: {
         Args: { _workspace_id: string };
         Returns: Json;
@@ -6069,6 +6093,28 @@ export type Database = {
           recipient_id: string;
           sender_id: string;
         }[];
+      };
+      list_my_io_credit_entries: {
+        Args: { _limit?: number; _workspace_id: string };
+        Returns: Json;
+      };
+      list_my_io_invoices: {
+        Args: { _limit?: number; _workspace_id: string };
+        Returns: Json;
+      };
+      list_my_io_usage_history: {
+        Args: {
+          _before_created_at?: string;
+          _before_id?: string;
+          _from?: string;
+          _limit?: number;
+          _model_key?: string;
+          _provider_key?: string;
+          _result_state?: string;
+          _to?: string;
+          _workspace_id: string;
+        };
+        Returns: Json;
       };
       list_my_io_terminal_events: {
         Args: {

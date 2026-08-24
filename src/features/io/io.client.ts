@@ -46,12 +46,77 @@ export type IoRouteReceipt = {
   candidateCount: number;
   fallbackCount: number;
   estimatedCostNanos: number | null;
+  providerCostNanos: string | null;
+  serviceFeeNanos: string | null;
+  customerChargeNanos: string | null;
+  creditAppliedNanos: string;
+  amountDueNanos: string;
+  serviceFeeBasisPoints: number | null;
   inputTokens: number | null;
   outputTokens: number | null;
   createdAt: string;
   completedAt: string;
   attemptCount: number;
   failedAttemptCount: number;
+};
+
+export type IoUsageHistoryCursor = { createdAt: string; id: string };
+
+export type IoUsageHistoryPage = {
+  items: IoRouteReceipt[];
+  hasMore: boolean;
+  nextCursor: IoUsageHistoryCursor | null;
+};
+
+export type IoCreditBalance = {
+  accountId: string;
+  currencyCode: string;
+  status: "active" | "frozen" | "closed";
+  balanceNanos: string;
+};
+
+export type IoUnbilledSummary = {
+  currencyCode: string;
+  customerChargeNanos: string;
+  creditAppliedNanos: string;
+  amountDueNanos: string;
+  usageCount: number;
+};
+
+export type IoBillingSummary = {
+  credits: IoCreditBalance[];
+  unbilled: IoUnbilledSummary[];
+  invoiceCounts: { draft: number; issued: number; paid: number };
+};
+
+export type IoCreditEntry = {
+  id: string;
+  currencyCode: string;
+  kind: string;
+  amountNanos: string;
+  reason: string;
+  postedAt: string;
+};
+
+export type IoInvoice = {
+  id: string;
+  invoiceNumber: string;
+  currencyCode: string;
+  periodStart: string;
+  periodEnd: string;
+  state: "draft" | "issued" | "paid" | "void";
+  providerCostNanos: string;
+  serviceFeeNanos: string;
+  subtotalNanos: string;
+  creditAppliedNanos: string;
+  taxNanos: string;
+  totalNanos: string;
+  amountDueNanos: string;
+  taxStatus: "not_assessed" | "not_applicable" | "assessed";
+  createdAt: string;
+  issuedAt: string | null;
+  dueAt: string | null;
+  lineCount: number;
 };
 
 export type PartnerRunResult = {
@@ -258,6 +323,18 @@ function readNonNegativeIntegerString(value: UnknownRecord, key: string): number
   if (typeof candidate !== "string" || !/^\d+$/.test(candidate)) return null;
   const parsed = Number(candidate);
   return Number.isSafeInteger(parsed) ? parsed : null;
+}
+
+function readExactIntegerString(
+  value: UnknownRecord,
+  key: string,
+  options: { nullable?: boolean; signed?: boolean } = {},
+): string | null {
+  const candidate = value[key];
+  if (candidate === null && options.nullable) return null;
+  if (typeof candidate !== "string") return null;
+  const pattern = options.signed ? /^-?\d+$/ : /^\d+$/;
+  return pattern.test(candidate) ? candidate : null;
 }
 
 function responseError(value: unknown, fallback: string) {
@@ -803,47 +880,143 @@ export async function getIoAuditEvents(workspaceId: string): Promise<IoAuditEven
   }));
 }
 
-export async function getIoRouteReceipts(workspaceId: string): Promise<IoRouteReceipt[]> {
-  const { data, error } = await supabase
-    .from("io_route_receipts")
-    .select(
-      "id, request_id, result_state, route_strategy, selected_provider_key, selected_model_key, selected_capacity_mode, selected_region_code, selected_residency_country_code, selected_retention_class, selected_currency_code, candidate_count, fallback_count, estimated_cost_nanos, input_tokens, output_tokens, created_at, completed_at, io_provider_attempts(attempt_state)",
-    )
-    .eq("workspace_id", workspaceId)
-    .order("created_at", { ascending: false })
-    .order("id", { ascending: false })
-    .limit(12);
+function parseUsageReceipt(value: unknown): IoRouteReceipt | null {
+  const receipt = asRecord(value);
+  if (!receipt) return null;
+  const resultState = readString(receipt, "resultState");
+  const id = readString(receipt, "id");
+  const requestId = readString(receipt, "requestId");
+  const routeStrategy = readString(receipt, "routeStrategy");
+  const createdAt = readString(receipt, "createdAt");
+  const completedAt = readString(receipt, "completedAt");
+  const candidateCount = readNonNegativeInteger(receipt, "candidateCount");
+  const fallbackCount = readNonNegativeInteger(receipt, "fallbackCount");
+  const attemptCount = readNonNegativeInteger(receipt, "attemptCount");
+  const failedAttemptCount = readNonNegativeInteger(receipt, "failedAttemptCount");
+  const creditAppliedNanos = readExactIntegerString(receipt, "creditAppliedNanos");
+  const amountDueNanos = readExactIntegerString(receipt, "amountDueNanos");
+  if (
+    !id ||
+    !requestId ||
+    (resultState !== "completed" && resultState !== "failed") ||
+    !routeStrategy ||
+    !createdAt ||
+    !completedAt ||
+    candidateCount === null ||
+    fallbackCount === null ||
+    attemptCount === null ||
+    failedAttemptCount === null ||
+    creditAppliedNanos === null ||
+    amountDueNanos === null
+  ) {
+    return null;
+  }
+  const estimatedCostNanos = receipt.estimatedCostNanos;
+  const inputTokens = receipt.inputTokens;
+  const outputTokens = receipt.outputTokens;
+  const serviceFeeBasisPoints = receipt.serviceFeeBasisPoints;
+  return {
+    id,
+    requestId,
+    resultState,
+    routeStrategy,
+    providerKey: readNullableString(receipt, "providerKey"),
+    modelKey: readNullableString(receipt, "modelKey"),
+    capacityMode: readNullableString(receipt, "capacityMode"),
+    regionCode: readNullableString(receipt, "regionCode"),
+    residencyCountryCode: readNullableString(receipt, "residencyCountryCode"),
+    retentionClass: readNullableString(receipt, "retentionClass"),
+    currencyCode: readNullableString(receipt, "currencyCode"),
+    candidateCount,
+    fallbackCount,
+    estimatedCostNanos:
+      estimatedCostNanos === null
+        ? null
+        : typeof estimatedCostNanos === "number" &&
+            Number.isSafeInteger(estimatedCostNanos) &&
+            estimatedCostNanos >= 0
+          ? estimatedCostNanos
+          : null,
+    providerCostNanos: readExactIntegerString(receipt, "providerCostNanos", { nullable: true }),
+    serviceFeeNanos: readExactIntegerString(receipt, "serviceFeeNanos", { nullable: true }),
+    customerChargeNanos: readExactIntegerString(receipt, "customerChargeNanos", {
+      nullable: true,
+    }),
+    creditAppliedNanos,
+    amountDueNanos,
+    serviceFeeBasisPoints:
+      serviceFeeBasisPoints === null
+        ? null
+        : typeof serviceFeeBasisPoints === "number" &&
+            Number.isInteger(serviceFeeBasisPoints) &&
+            serviceFeeBasisPoints >= 0
+          ? serviceFeeBasisPoints
+          : null,
+    inputTokens:
+      inputTokens === null
+        ? null
+        : typeof inputTokens === "number" && Number.isInteger(inputTokens) && inputTokens >= 0
+          ? inputTokens
+          : null,
+    outputTokens:
+      outputTokens === null
+        ? null
+        : typeof outputTokens === "number" && Number.isInteger(outputTokens) && outputTokens >= 0
+          ? outputTokens
+          : null,
+    createdAt,
+    completedAt,
+    attemptCount,
+    failedAttemptCount,
+  };
+}
 
-  if (error) throw new Error(error.message);
-
-  return (data ?? []).flatMap((receipt) => {
-    if (receipt.result_state !== "completed" && receipt.result_state !== "failed") return [];
-    const attempts = receipt.io_provider_attempts ?? [];
-    return [
-      {
-        id: receipt.id,
-        requestId: receipt.request_id,
-        resultState: receipt.result_state,
-        routeStrategy: receipt.route_strategy,
-        providerKey: receipt.selected_provider_key,
-        modelKey: receipt.selected_model_key,
-        capacityMode: receipt.selected_capacity_mode,
-        regionCode: receipt.selected_region_code,
-        residencyCountryCode: receipt.selected_residency_country_code,
-        retentionClass: receipt.selected_retention_class,
-        currencyCode: receipt.selected_currency_code,
-        candidateCount: receipt.candidate_count,
-        fallbackCount: receipt.fallback_count,
-        estimatedCostNanos: receipt.estimated_cost_nanos,
-        inputTokens: receipt.input_tokens,
-        outputTokens: receipt.output_tokens,
-        createdAt: receipt.created_at,
-        completedAt: receipt.completed_at,
-        attemptCount: attempts.length,
-        failedAttemptCount: attempts.filter((attempt) => attempt.attempt_state === "failed").length,
-      },
-    ];
+export async function listMyIoUsageHistory(input: {
+  workspaceId: string;
+  limit?: number;
+  cursor?: IoUsageHistoryCursor | null;
+  resultState?: "completed" | "failed" | null;
+  providerKey?: string | null;
+  modelKey?: string | null;
+  from?: string | null;
+  to?: string | null;
+}): Promise<IoUsageHistoryPage> {
+  const { data, error } = await supabase.rpc("list_my_io_usage_history", {
+    _workspace_id: input.workspaceId,
+    _limit: input.limit ?? 25,
+    _before_created_at: input.cursor?.createdAt,
+    _before_id: input.cursor?.id,
+    _result_state: input.resultState ?? undefined,
+    _provider_key: input.providerKey ?? undefined,
+    _model_key: input.modelKey ?? undefined,
+    _from: input.from ?? undefined,
+    _to: input.to ?? undefined,
   });
+  if (error) throw new Error(error.message);
+  const page = asRecord(data);
+  if (!page || !Array.isArray(page.items) || typeof page.hasMore !== "boolean") {
+    throw new Error("The I/O usage history is invalid.");
+  }
+  const items = page.items.map(parseUsageReceipt);
+  if (items.some((item) => item === null)) {
+    throw new Error("The I/O usage history contains an invalid receipt.");
+  }
+  const rawCursor = page.nextCursor === null ? null : asRecord(page.nextCursor);
+  const nextCursor = rawCursor
+    ? { createdAt: readString(rawCursor, "createdAt"), id: readString(rawCursor, "id") }
+    : null;
+  if (rawCursor && (!nextCursor?.createdAt || !nextCursor.id)) {
+    throw new Error("The I/O usage cursor is invalid.");
+  }
+  return {
+    items: items as IoRouteReceipt[],
+    hasMore: page.hasMore,
+    nextCursor: nextCursor as IoUsageHistoryCursor | null,
+  };
+}
+
+export async function getIoRouteReceipts(workspaceId: string): Promise<IoRouteReceipt[]> {
+  return (await listMyIoUsageHistory({ workspaceId, limit: 25 })).items;
 }
 
 export async function runPartnerRoute(input: {
@@ -935,6 +1108,148 @@ export async function getMyIoBudgetStatus(workspaceId: string): Promise<IoBudget
         remainingMinor,
         periodStart,
         periodEnd,
+      },
+    ];
+  });
+}
+
+export async function getMyIoBillingSummary(workspaceId: string): Promise<IoBillingSummary> {
+  const { data, error } = await supabase.rpc("get_my_io_billing_summary", {
+    _workspace_id: workspaceId,
+  });
+  if (error) throw new Error(error.message);
+  const summary = asRecord(data);
+  const counts = summary ? asRecord(summary.invoiceCounts) : null;
+  if (!summary || !counts || !Array.isArray(summary.credits) || !Array.isArray(summary.unbilled)) {
+    throw new Error("The I/O billing summary is invalid.");
+  }
+  const credits = summary.credits.flatMap((value): IoCreditBalance[] => {
+    const credit = asRecord(value);
+    if (!credit) return [];
+    const accountId = readString(credit, "accountId");
+    const currencyCode = readString(credit, "currencyCode");
+    const status = readString(credit, "status");
+    const balanceNanos = readExactIntegerString(credit, "balanceNanos");
+    return accountId &&
+      currencyCode &&
+      balanceNanos !== null &&
+      (status === "active" || status === "frozen" || status === "closed")
+      ? [{ accountId, currencyCode, status, balanceNanos }]
+      : [];
+  });
+  const unbilled = summary.unbilled.flatMap((value): IoUnbilledSummary[] => {
+    const row = asRecord(value);
+    if (!row) return [];
+    const currencyCode = readString(row, "currencyCode");
+    const customerChargeNanos = readExactIntegerString(row, "customerChargeNanos");
+    const creditAppliedNanos = readExactIntegerString(row, "creditAppliedNanos");
+    const amountDueNanos = readExactIntegerString(row, "amountDueNanos");
+    const usageCount = readNonNegativeInteger(row, "usageCount");
+    return currencyCode &&
+      customerChargeNanos !== null &&
+      creditAppliedNanos !== null &&
+      amountDueNanos !== null &&
+      usageCount !== null
+      ? [{ currencyCode, customerChargeNanos, creditAppliedNanos, amountDueNanos, usageCount }]
+      : [];
+  });
+  const draft = readNonNegativeInteger(counts, "draft");
+  const issued = readNonNegativeInteger(counts, "issued");
+  const paid = readNonNegativeInteger(counts, "paid");
+  if (draft === null || issued === null || paid === null) {
+    throw new Error("The I/O invoice counts are invalid.");
+  }
+  return { credits, unbilled, invoiceCounts: { draft, issued, paid } };
+}
+
+export async function listMyIoCreditEntries(workspaceId: string): Promise<IoCreditEntry[]> {
+  const { data, error } = await supabase.rpc("list_my_io_credit_entries", {
+    _workspace_id: workspaceId,
+    _limit: 25,
+  });
+  if (error) throw new Error(error.message);
+  if (!Array.isArray(data)) throw new Error("The I/O credit history is invalid.");
+  return data.flatMap((value): IoCreditEntry[] => {
+    const entry = asRecord(value);
+    if (!entry) return [];
+    const id = readString(entry, "id");
+    const currencyCode = readString(entry, "currencyCode");
+    const kind = readString(entry, "kind");
+    const amountNanos = readExactIntegerString(entry, "amountNanos", { signed: true });
+    const reason = readString(entry, "reason");
+    const postedAt = readString(entry, "postedAt");
+    return id && currencyCode && kind && amountNanos && reason && postedAt
+      ? [{ id, currencyCode, kind, amountNanos, reason, postedAt }]
+      : [];
+  });
+}
+
+export async function listMyIoInvoices(workspaceId: string): Promise<IoInvoice[]> {
+  const { data, error } = await supabase.rpc("list_my_io_invoices", {
+    _workspace_id: workspaceId,
+    _limit: 25,
+  });
+  if (error) throw new Error(error.message);
+  if (!Array.isArray(data)) throw new Error("The I/O invoice history is invalid.");
+  return data.flatMap((value): IoInvoice[] => {
+    const invoice = asRecord(value);
+    if (!invoice) return [];
+    const id = readString(invoice, "id");
+    const invoiceNumber = readString(invoice, "invoiceNumber");
+    const currencyCode = readString(invoice, "currencyCode");
+    const periodStart = readString(invoice, "periodStart");
+    const periodEnd = readString(invoice, "periodEnd");
+    const state = readString(invoice, "state");
+    const taxStatus = readString(invoice, "taxStatus");
+    const createdAt = readString(invoice, "createdAt");
+    const lineCount = readNonNegativeInteger(invoice, "lineCount");
+    const providerCostNanos = readExactIntegerString(invoice, "providerCostNanos");
+    const serviceFeeNanos = readExactIntegerString(invoice, "serviceFeeNanos");
+    const subtotalNanos = readExactIntegerString(invoice, "subtotalNanos");
+    const creditAppliedNanos = readExactIntegerString(invoice, "creditAppliedNanos");
+    const taxNanos = readExactIntegerString(invoice, "taxNanos");
+    const totalNanos = readExactIntegerString(invoice, "totalNanos");
+    const amountDueNanos = readExactIntegerString(invoice, "amountDueNanos");
+    if (
+      !id ||
+      !invoiceNumber ||
+      !currencyCode ||
+      !periodStart ||
+      !periodEnd ||
+      !createdAt ||
+      lineCount === null ||
+      !["draft", "issued", "paid", "void"].includes(state ?? "") ||
+      !["not_assessed", "not_applicable", "assessed"].includes(taxStatus ?? "") ||
+      providerCostNanos === null ||
+      serviceFeeNanos === null ||
+      subtotalNanos === null ||
+      creditAppliedNanos === null ||
+      taxNanos === null ||
+      totalNanos === null ||
+      amountDueNanos === null
+    ) {
+      return [];
+    }
+    return [
+      {
+        id,
+        invoiceNumber,
+        currencyCode,
+        periodStart,
+        periodEnd,
+        state: state as IoInvoice["state"],
+        providerCostNanos,
+        serviceFeeNanos,
+        subtotalNanos,
+        creditAppliedNanos,
+        taxNanos,
+        totalNanos,
+        amountDueNanos,
+        taxStatus: taxStatus as IoInvoice["taxStatus"],
+        createdAt,
+        issuedAt: readNullableString(invoice, "issuedAt"),
+        dueAt: readNullableString(invoice, "dueAt"),
+        lineCount,
       },
     ];
   });

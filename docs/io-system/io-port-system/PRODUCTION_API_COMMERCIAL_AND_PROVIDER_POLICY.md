@@ -91,16 +91,18 @@ OpenRouter's current FAQ says provider inference prices are passed through witho
 
 ### Released and remaining billing scope
 
-| Capability                                                             | State                                                                                    |
-| ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| Versioned 550-basis-point policy                                       | Released                                                                                 |
-| Provider cost, fee and customer total in receipts/usage                | Released                                                                                 |
-| Exact fee validation inside atomic finalization                        | Released                                                                                 |
-| Hard reserve, settle/release and idempotency                           | Released                                                                                 |
-| Input/output token price dimensions                                    | Released                                                                                 |
-| Cached/cache-write token settlement                                    | Partial: price evidence can be stored; upstream usage parsing/settlement is not complete |
-| Tools, media, storage and regional uplift dimensions                   | Planned                                                                                  |
-| Tax, FX, invoices, credits, payment/refund and provider reconciliation | Planned                                                                                  |
+| Capability                                                            | State                                                                                    |
+| --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Versioned 550-basis-point policy                                      | Released                                                                                 |
+| Provider cost, fee and customer total in receipts/usage               | Released                                                                                 |
+| Exact fee validation inside atomic finalization                       | Released                                                                                 |
+| Hard reserve, settle/release and idempotency                          | Released                                                                                 |
+| Input/output token price dimensions                                   | Released                                                                                 |
+| Cached/cache-write token settlement                                   | Partial: price evidence can be stored; upstream usage parsing/settlement is not complete |
+| Tools, media, storage and regional uplift dimensions                  | Planned                                                                                  |
+| Non-cash credit ledger and automatic application                      | Released: exact nanos; credits never authorize a route                                   |
+| Immutable draft invoice snapshots and member invoice history          | Released: drafts are reconciliation records, not legal tax invoices                      |
+| Tax, FX, invoice issuance, payment/refund and provider reconciliation | Planned/blocked on approved commercial, tax and payment rules                            |
 
 ## 4. Commercial activation is fail-closed
 

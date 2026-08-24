@@ -62,15 +62,18 @@ import {
   decideMyIoTerminalApproval,
   appendMyIoTerminalEvent,
   getIoAuditEvents,
+  getMyIoBillingSummary,
   getMyIoBudgetStatus,
   getMyIoWorkspaceProviderPolicy,
   getIoCapacitySources,
-  getIoRouteReceipts,
   getIoRouteCatalog,
   getMyIoWorkspaces,
   listMyIoApiKeys,
+  listMyIoCreditEntries,
+  listMyIoInvoices,
   listMyIoTerminalSessions,
   listMyIoTerminalEvents,
+  listMyIoUsageHistory,
   preflightPartnerRoute,
   requestMyIoTerminalApproval,
   runPartnerRoute,
@@ -80,12 +83,16 @@ import {
   type IoAuditEvent,
   type IoCapacitySource,
   type IoBudgetStatus,
+  type IoBillingSummary,
   type IoRouteCatalog,
   type IoRoutePreflight,
   type IoRouteReceipt,
   type IoRouteStrategy,
   type IoTerminalSession,
   type IoTerminalEvent,
+  type IoCreditEntry,
+  type IoInvoice,
+  type IoUsageHistoryCursor,
   type IoWorkspace,
   type IoWorkspaceProviderPolicy,
   type PartnerRunResult,
@@ -141,7 +148,16 @@ export function IoOverview() {
   const [sources, setSources] = useState<IoCapacitySource[]>([]);
   const [events, setEvents] = useState<IoAuditEvent[]>([]);
   const [receipts, setReceipts] = useState<IoRouteReceipt[]>([]);
+  const [usageCursor, setUsageCursor] = useState<IoUsageHistoryCursor | null>(null);
+  const [usageHasMore, setUsageHasMore] = useState(false);
+  const [usageHistoryBusy, setUsageHistoryBusy] = useState(false);
+  const [usageStateFilter, setUsageStateFilter] = useState<"all" | "completed" | "failed">("all");
+  const [usageProviderFilter, setUsageProviderFilter] = useState("");
+  const [usageModelFilter, setUsageModelFilter] = useState("");
   const [budgets, setBudgets] = useState<IoBudgetStatus[]>([]);
+  const [billingSummary, setBillingSummary] = useState<IoBillingSummary | null>(null);
+  const [creditEntries, setCreditEntries] = useState<IoCreditEntry[]>([]);
+  const [invoices, setInvoices] = useState<IoInvoice[]>([]);
   const [apiKeys, setApiKeys] = useState<IoApiKeyMetadata[]>([]);
   const [apiKeyName, setApiKeyName] = useState("My development key");
   const [newRawApiKey, setNewRawApiKey] = useState<string | null>(null);
@@ -249,7 +265,12 @@ export function IoOverview() {
         setSources([]);
         setEvents([]);
         setReceipts([]);
+        setUsageCursor(null);
+        setUsageHasMore(false);
         setBudgets([]);
+        setBillingSummary(null);
+        setCreditEntries([]);
+        setInvoices([]);
         setApiKeys([]);
         setNewRawApiKey(null);
         setRouteCatalog(null);
@@ -271,15 +292,21 @@ export function IoOverview() {
         terminalSessionsResult,
         providerPolicyResult,
         catalogResult,
+        billingResult,
+        creditEntriesResult,
+        invoicesResult,
       ] = await Promise.allSettled([
         getIoCapacitySources(nextWorkspace.id),
         getIoAuditEvents(nextWorkspace.id),
-        getIoRouteReceipts(nextWorkspace.id),
+        listMyIoUsageHistory({ workspaceId: nextWorkspace.id, limit: 25 }),
         getMyIoBudgetStatus(nextWorkspace.id),
         listMyIoApiKeys(nextWorkspace.id),
         listMyIoTerminalSessions(nextWorkspace.id),
         getMyIoWorkspaceProviderPolicy(nextWorkspace.id),
         getIoRouteCatalog(nextWorkspace.id),
+        getMyIoBillingSummary(nextWorkspace.id),
+        listMyIoCreditEntries(nextWorkspace.id),
+        listMyIoInvoices(nextWorkspace.id),
       ]);
       if (loadSequence !== workspaceLoadSequence.current) return;
       if (sourcesResult.status === "rejected") throw sourcesResult.reason;
@@ -289,10 +316,21 @@ export function IoOverview() {
       if (apiKeysResult.status === "rejected") throw apiKeysResult.reason;
       if (terminalSessionsResult.status === "rejected") throw terminalSessionsResult.reason;
       if (providerPolicyResult.status === "rejected") throw providerPolicyResult.reason;
+      if (billingResult.status === "rejected") throw billingResult.reason;
+      if (creditEntriesResult.status === "rejected") throw creditEntriesResult.reason;
+      if (invoicesResult.status === "rejected") throw invoicesResult.reason;
       setSources(sourcesResult.value);
       setEvents(eventsResult.value);
-      setReceipts(receiptsResult.value);
+      setReceipts(receiptsResult.value.items);
+      setUsageCursor(receiptsResult.value.nextCursor);
+      setUsageHasMore(receiptsResult.value.hasMore);
+      setUsageStateFilter("all");
+      setUsageProviderFilter("");
+      setUsageModelFilter("");
       setBudgets(budgetResult.value);
+      setBillingSummary(billingResult.value);
+      setCreditEntries(creditEntriesResult.value);
+      setInvoices(invoicesResult.value);
       setApiKeys(apiKeysResult.value);
       setNewRawApiKey(null);
       setTerminalSessions(terminalSessionsResult.value);
@@ -436,6 +474,37 @@ export function IoOverview() {
       toast.error(error instanceof Error ? error.message : "Could not update provider policy.");
     } finally {
       setProviderPolicyBusy(false);
+    }
+  }
+
+  async function refreshUsageHistory(append = false) {
+    if (!workspace || usageHistoryBusy) return;
+    setUsageHistoryBusy(true);
+    try {
+      const page = await listMyIoUsageHistory({
+        workspaceId: workspace.id,
+        limit: 25,
+        cursor: append ? usageCursor : null,
+        resultState: usageStateFilter === "all" ? null : usageStateFilter,
+        providerKey: usageProviderFilter.trim() || null,
+        modelKey: usageModelFilter.trim() || null,
+      });
+      setReceipts((current) =>
+        append
+          ? [
+              ...current,
+              ...page.items.filter(
+                (candidate) => !current.some((receipt) => receipt.id === candidate.id),
+              ),
+            ]
+          : page.items,
+      );
+      setUsageCursor(page.nextCursor);
+      setUsageHasMore(page.hasMore);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not load usage history.");
+    } finally {
+      setUsageHistoryBusy(false);
     }
   }
 
@@ -1902,22 +1971,192 @@ export function IoOverview() {
           <div id="io-usage-ledger">
             {loading ? (
               <div className="h-32 animate-pulse bg-muted/30" />
-            ) : receipts.length ? (
-              <div className="divide-y divide-border/55">
-                {receipts.map((receipt) => (
-                  <RouteReceiptRow key={receipt.id} receipt={receipt} />
-                ))}
-              </div>
             ) : (
-              <div className="flex min-h-36 flex-col items-center justify-center p-6 text-center">
-                <FileCheck2 className="h-7 w-7 text-muted-foreground/35" />
-                <p className="mt-2 text-sm font-medium text-muted-foreground">
-                  No provider route receipts yet
-                </p>
-                <p className="mt-1 max-w-md text-xs leading-5 text-muted-foreground">
-                  Successful and failed partner routes will record model, capacity, fallback, token
-                  and estimated-cost facts. Prompt and response bodies are never stored here.
-                </p>
+              <div>
+                <div className="grid gap-3 border-b border-border/55 bg-background/35 p-4 md:grid-cols-3">
+                  <BillingSummaryCard
+                    label="Available credits"
+                    value={
+                      billingSummary?.credits.length
+                        ? billingSummary.credits
+                            .map((credit) =>
+                              formatExactNanos(credit.balanceNanos, credit.currencyCode),
+                            )
+                            .join(" · ")
+                        : "No credit account"
+                    }
+                    detail="Credits offset settled usage; the workspace budget still authorizes every route."
+                  />
+                  <BillingSummaryCard
+                    label="Unbilled usage"
+                    value={
+                      billingSummary?.unbilled.length
+                        ? billingSummary.unbilled
+                            .map((row) => formatExactNanos(row.amountDueNanos, row.currencyCode))
+                            .join(" · ")
+                        : "No amount due"
+                    }
+                    detail={`${billingSummary?.unbilled.reduce((total, row) => total + row.usageCount, 0) ?? 0} settled usage records; provider cost and I/O fee remain separate.`}
+                  />
+                  <BillingSummaryCard
+                    label="Invoices"
+                    value={`${billingSummary?.invoiceCounts.issued ?? 0} issued · ${billingSummary?.invoiceCounts.draft ?? 0} draft`}
+                    detail="Drafts are not tax invoices. Issuance remains an operator and compliance action."
+                  />
+                </div>
+
+                <div className="grid gap-3 border-b border-border/55 p-4 xl:grid-cols-2">
+                  <div className="rounded-xl border border-border/60 bg-background/60 p-3">
+                    <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                      Credit ledger
+                    </p>
+                    {creditEntries.length ? (
+                      <div className="mt-2 space-y-2">
+                        {creditEntries.slice(0, 5).map((entry) => (
+                          <div
+                            key={entry.id}
+                            className="flex items-start justify-between gap-3 text-[10px]"
+                          >
+                            <div className="min-w-0">
+                              <p className="font-semibold capitalize text-foreground">
+                                {humanizeEvent(entry.kind)}
+                              </p>
+                              <p className="truncate text-muted-foreground" title={entry.reason}>
+                                {entry.reason}
+                              </p>
+                            </div>
+                            <span
+                              className={cn(
+                                "shrink-0 font-mono font-semibold",
+                                entry.amountNanos.startsWith("-")
+                                  ? "text-amber-800"
+                                  : "text-emerald-800",
+                              )}
+                            >
+                              {formatExactNanos(entry.amountNanos, entry.currencyCode)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="mt-2 text-[10px] leading-4 text-muted-foreground">
+                        No promotional, sponsored or manual credits have been posted. Provider calls
+                        are never enabled merely by showing a credit balance.
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="rounded-xl border border-border/60 bg-background/60 p-3">
+                    <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                      Invoice snapshots
+                    </p>
+                    {invoices.length ? (
+                      <div className="mt-2 space-y-2">
+                        {invoices.slice(0, 5).map((invoice) => (
+                          <div
+                            key={invoice.id}
+                            className="flex items-start justify-between gap-3 text-[10px]"
+                          >
+                            <div>
+                              <p className="font-mono font-semibold text-foreground">
+                                {invoice.invoiceNumber}
+                              </p>
+                              <p className="text-muted-foreground">
+                                {invoice.lineCount} lines · {invoice.taxStatus.replaceAll("_", " ")}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <Badge variant="outline" className="text-[9px] capitalize">
+                                {invoice.state}
+                              </Badge>
+                              <p className="mt-1 font-mono font-semibold">
+                                {formatExactNanos(invoice.amountDueNanos, invoice.currencyCode)}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="mt-2 text-[10px] leading-4 text-muted-foreground">
+                        No invoice snapshots yet. An operator can create a draft only from settled,
+                        uninvoiced usage; tax and issuance are never guessed by the application.
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid gap-2 border-b border-border/55 p-4 md:grid-cols-[9rem_minmax(0,1fr)_minmax(0,1fr)_auto]">
+                  <select
+                    value={usageStateFilter}
+                    onChange={(event) =>
+                      setUsageStateFilter(event.target.value as typeof usageStateFilter)
+                    }
+                    aria-label="Usage result filter"
+                    className="h-9 rounded-md border border-input bg-background px-3 text-xs"
+                  >
+                    <option value="all">All results</option>
+                    <option value="completed">Completed</option>
+                    <option value="failed">Failed</option>
+                  </select>
+                  <Input
+                    value={usageProviderFilter}
+                    onChange={(event) => setUsageProviderFilter(event.target.value)}
+                    placeholder="Provider key"
+                    aria-label="Usage provider filter"
+                    maxLength={80}
+                  />
+                  <Input
+                    value={usageModelFilter}
+                    onChange={(event) => setUsageModelFilter(event.target.value)}
+                    placeholder="Model key"
+                    aria-label="Usage model filter"
+                    maxLength={160}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={usageHistoryBusy}
+                    onClick={() => void refreshUsageHistory(false)}
+                  >
+                    {usageHistoryBusy ? <LoaderCircle className="animate-spin" /> : <Route />}
+                    Apply filters
+                  </Button>
+                </div>
+
+                {receipts.length ? (
+                  <div className="divide-y divide-border/55">
+                    {receipts.map((receipt) => (
+                      <RouteReceiptRow key={receipt.id} receipt={receipt} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex min-h-36 flex-col items-center justify-center p-6 text-center">
+                    <FileCheck2 className="h-7 w-7 text-muted-foreground/35" />
+                    <p className="mt-2 text-sm font-medium text-muted-foreground">
+                      No matching provider route receipts
+                    </p>
+                    <p className="mt-1 max-w-md text-xs leading-5 text-muted-foreground">
+                      Route history records model, capacity, fallback, usage, cost, fee, credit and
+                      amount-due facts. Prompt and response bodies are never stored here.
+                    </p>
+                  </div>
+                )}
+
+                {usageHasMore ? (
+                  <div className="flex justify-center border-t border-border/55 p-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={usageHistoryBusy || !usageCursor}
+                      onClick={() => void refreshUsageHistory(true)}
+                    >
+                      {usageHistoryBusy ? <LoaderCircle className="animate-spin" /> : null}
+                      Load earlier usage
+                    </Button>
+                  </div>
+                ) : null}
               </div>
             )}
           </div>
@@ -2198,10 +2437,34 @@ function RouteReceiptRow({ receipt }: { receipt: IoRouteReceipt }) {
         value={`${receipt.attemptCount} total · ${receipt.failedAttemptCount} failed · ${receipt.fallbackCount} fallbacks`}
       />
       <ReceiptFact
-        label="Usage / estimate"
-        value={`${formatTokens(receipt.inputTokens, receipt.outputTokens)} · ${formatNanos(receipt.estimatedCostNanos, receipt.currencyCode)}`}
+        label="Usage / settled due"
+        value={`${formatTokens(receipt.inputTokens, receipt.outputTokens)} · ${
+          receipt.currencyCode && receipt.customerChargeNanos !== null
+            ? `${formatExactNanos(receipt.amountDueNanos, receipt.currencyCode)} due · ${formatExactNanos(receipt.serviceFeeNanos ?? "0", receipt.currencyCode)} I/O fee`
+            : formatNanos(receipt.estimatedCostNanos, receipt.currencyCode)
+        }`}
       />
     </article>
+  );
+}
+
+function BillingSummaryCard({
+  label,
+  value,
+  detail,
+}: {
+  label: string;
+  value: string;
+  detail: string;
+}) {
+  return (
+    <div className="rounded-xl border border-border/60 bg-background/70 p-3">
+      <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+        {label}
+      </p>
+      <p className="mt-1 font-mono text-sm font-semibold text-[var(--indigo-night)]">{value}</p>
+      <p className="mt-1 text-[10px] leading-4 text-muted-foreground">{detail}</p>
+    </div>
   );
 }
 
@@ -2352,6 +2615,16 @@ function formatNanos(nanos: number | null, currencyCode: string | null) {
     currency: currencyCode,
     maximumFractionDigits: 6,
   }).format(nanos / 1_000_000_000);
+}
+
+function formatExactNanos(nanos: string, currencyCode: string) {
+  if (!/^-?\d+$/.test(nanos) || !/^[A-Z]{3}$/.test(currencyCode)) return "Invalid amount";
+  const value = BigInt(nanos);
+  const negative = value < 0n;
+  const absolute = negative ? -value : value;
+  const whole = absolute / 1_000_000_000n;
+  const fraction = (absolute % 1_000_000_000n).toString().padStart(9, "0").replace(/0+$/, "");
+  return `${currencyCode} ${negative ? "-" : ""}${whole.toLocaleString()}${fraction ? `.${fraction}` : ""}`;
 }
 
 function formatMinor(minor: number, currencyCode: string) {
