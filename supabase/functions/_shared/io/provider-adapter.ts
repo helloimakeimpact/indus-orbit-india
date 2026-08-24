@@ -1,17 +1,25 @@
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { GatewayError } from "./errors.ts";
+import { gatewayContentText, toOpenAiCompatibleMessage } from "./message-content.ts";
 import { selectProviderRoute, type RouteInput } from "./routing.ts";
-import type { GatewayMessage, PartnerResult, ProviderConnection } from "./types.ts";
+import { assertStructuredOutput } from "./structured-output.ts";
+import type {
+  GatewayInferenceOptions,
+  GatewayMessage,
+  GatewayToolCall,
+  PartnerResult,
+  ProviderConnection,
+} from "./types.ts";
 
 const supportedTiers = new Set(["economy", "balanced", "premium"]);
 const supportedHealthStates = new Set(["healthy", "degraded", "unavailable", "unknown"]);
 const supportedCircuitStates = new Set(["closed", "open", "half_open"]);
 const secretReferencePattern = /^IO_PROVIDER_[A-Z0-9_]+_API_KEY$/;
 const defaultOutputTokenAllowance = 1_024;
+const maximumOutputTokenAllowance = 4_096;
 const maximumProviderResponseBytes = 2 * 1_024 * 1_024;
 
-export type ProviderChatOptions = {
-  maxOutputTokens?: number;
+export type ProviderChatOptions = GatewayInferenceOptions & {
   safetySubject?: string;
 };
 
@@ -159,6 +167,12 @@ function readConnection(row: RegistryRow): ProviderConnection | null {
     unitQuantity,
     inputPriceNanos,
     outputPriceNanos,
+    supportsStreaming: row.supports_streaming === true,
+    supportsTools: row.supports_tools === true,
+    supportsStructuredOutput: row.supports_structured_output === true,
+    supportsVision: row.supports_vision === true,
+    supportsAudio: row.supports_audio === true,
+    supportsCancellation: row.supports_cancellation === true,
     healthState: healthState as ProviderConnection["healthState"],
     circuitState: circuitState as ProviderConnection["circuitState"],
   };
@@ -221,7 +235,7 @@ export async function resolveProviderRoute(
     tier: readSelectionTier(),
     freshnessDays: readPositiveInteger("IO_MODEL_SELECTION_FRESHNESS_DAYS", 180, 3_650),
     affordabilityMultiplier: readAffordabilityMultiplier(),
-    outputTokenAllowance: defaultOutputTokenAllowance,
+    outputTokenAllowance: input.outputTokenAllowance ?? defaultOutputTokenAllowance,
   });
 }
 
@@ -241,8 +255,21 @@ function readOpenAiResult(body: unknown): PartnerResult {
   const choices = root?.choices;
   const firstChoice = Array.isArray(choices) ? asRecord(choices[0]) : null;
   const message = firstChoice ? asRecord(firstChoice.message) : null;
-  const content = message ? readString(message, "content") : null;
-  if (!content) {
+  const content = message && typeof message.content === "string" ? message.content : null;
+  const toolCalls =
+    message && Array.isArray(message.tool_calls)
+      ? message.tool_calls.flatMap((value): GatewayToolCall[] => {
+          const call = asRecord(value);
+          const fn = call ? asRecord(call.function) : null;
+          const id = call ? readString(call, "id") : null;
+          const name = fn ? readString(fn, "name") : null;
+          const args = fn && typeof fn.arguments === "string" ? fn.arguments : null;
+          return id && name && args
+            ? [{ id, type: "function", function: { name, arguments: args } }]
+            : [];
+        })
+      : [];
+  if (!content?.trim() && toolCalls.length === 0) {
     throw new GatewayError(
       "upstream_failure",
       502,
@@ -250,11 +277,27 @@ function readOpenAiResult(body: unknown): PartnerResult {
     );
   }
   const usage = root ? asRecord(root.usage) : null;
+  const finishReasonRaw = firstChoice ? readString(firstChoice, "finish_reason") : null;
+  const finishReason =
+    finishReasonRaw === "stop" ||
+    finishReasonRaw === "length" ||
+    finishReasonRaw === "tool_calls" ||
+    finishReasonRaw === "content_filter"
+      ? finishReasonRaw
+      : "unknown";
+  const promptDetails = usage ? asRecord(usage.prompt_tokens_details) : null;
   return {
-    content,
+    content: content ?? "",
+    message: {
+      role: "assistant",
+      content,
+      ...(toolCalls.length ? { toolCalls } : {}),
+    },
+    finishReason,
     usage: {
       inputTokens: readUsageValue(usage, "prompt_tokens"),
       outputTokens: readUsageValue(usage, "completion_tokens"),
+      cachedInputTokens: readUsageValue(promptDetails, "cached_tokens"),
     },
   };
 }
@@ -281,6 +324,8 @@ function readGeminiResult(body: unknown): PartnerResult {
   const usage = root ? asRecord(root.usageMetadata) : null;
   return {
     content: text,
+    message: { role: "assistant", content: text },
+    finishReason: "stop",
     usage: {
       inputTokens: readUsageValue(usage, "promptTokenCount"),
       outputTokens: readUsageValue(usage, "candidatesTokenCount"),
@@ -390,7 +435,7 @@ export async function discoverProviderModel(connection: ProviderConnection) {
 
 function checkedOutputTokenLimit(value?: number) {
   const limit = value ?? defaultOutputTokenAllowance;
-  if (!Number.isInteger(limit) || limit < 1 || limit > defaultOutputTokenAllowance) {
+  if (!Number.isInteger(limit) || limit < 1 || limit > maximumOutputTokenAllowance) {
     throw new GatewayError("bad_request", 400, "The provider output limit is invalid.");
   }
   return limit;
@@ -425,13 +470,13 @@ async function createSafetyIdentifier(subject: string) {
 function toGeminiRequest(messages: GatewayMessage[], maxOutputTokens: number) {
   const systemText = messages
     .filter((message) => message.role === "system")
-    .map((message) => message.content)
+    .map((message) => gatewayContentText(message.content))
     .join("\n\n");
   const contents = messages
     .filter((message) => message.role !== "system")
     .map((message) => ({
       role: message.role === "assistant" ? "model" : "user",
-      parts: [{ text: message.content }],
+      parts: [{ text: gatewayContentText(message.content) }],
     }));
   if (!contents.length) {
     throw new GatewayError(
@@ -452,6 +497,7 @@ function toOpenAiCompatibleRequest(
   messages: GatewayMessage[],
   maxOutputTokens: number,
   safetyIdentifier?: string,
+  options: ProviderChatOptions = {},
 ) {
   const usesModernCompletionLimit =
     connection.providerKey === "openai" || connection.providerKey === "groq";
@@ -466,12 +512,42 @@ function toOpenAiCompatibleRequest(
 
   return {
     model: connection.providerModelId,
-    messages,
+    messages: messages.map(toOpenAiCompatibleMessage),
     ...(usesModernCompletionLimit
       ? { max_completion_tokens: maxOutputTokens }
       : { max_tokens: maxOutputTokens }),
     ...(connection.providerKey === "openai" && safetyIdentifier
       ? { safety_identifier: safetyIdentifier }
+      : {}),
+    ...(options.tools?.length ? { tools: options.tools } : {}),
+    ...(options.toolChoice
+      ? {
+          tool_choice:
+            typeof options.toolChoice === "string"
+              ? options.toolChoice
+              : { type: "function", function: { name: options.toolChoice.name } },
+        }
+      : {}),
+    ...(options.parallelToolCalls !== undefined
+      ? { parallel_tool_calls: options.parallelToolCalls }
+      : {}),
+    ...(options.responseFormat && options.responseFormat.type !== "text"
+      ? {
+          response_format:
+            options.responseFormat.type === "json_object"
+              ? { type: "json_object" }
+              : {
+                  type: "json_schema",
+                  json_schema: {
+                    name: options.responseFormat.jsonSchema.name,
+                    ...(options.responseFormat.jsonSchema.description
+                      ? { description: options.responseFormat.jsonSchema.description }
+                      : {}),
+                    schema: options.responseFormat.jsonSchema.schema,
+                    strict: options.responseFormat.jsonSchema.strict ?? true,
+                  },
+                },
+        }
       : {}),
     ...reasoningSettings,
     stream: false,
@@ -491,6 +567,18 @@ export async function sendProviderChat(
       : undefined;
   const isGemini =
     connection.integrationStyle === "native_adapter" && connection.providerKey === "gemini";
+  if (
+    isGemini &&
+    (options.tools?.length ||
+      (options.responseFormat && options.responseFormat.type !== "text") ||
+      messages.some((message) => Array.isArray(message.content)))
+  ) {
+    throw new GatewayError(
+      "not_configured",
+      503,
+      "The selected native provider adapter does not support this advanced request yet.",
+    );
+  }
   const url = isGemini
     ? `${connection.baseUrl}/models/${encodeURIComponent(connection.providerModelId)}:generateContent`
     : `${connection.baseUrl}/chat/completions`;
@@ -499,7 +587,7 @@ export async function sendProviderChat(
     : { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" };
   const body = isGemini
     ? toGeminiRequest(messages, maxOutputTokens)
-    : toOpenAiCompatibleRequest(connection, messages, maxOutputTokens, safetyIdentifier);
+    : toOpenAiCompatibleRequest(connection, messages, maxOutputTokens, safetyIdentifier, options);
 
   let upstream: Response;
   try {
@@ -526,5 +614,12 @@ export async function sendProviderChat(
 
   const parsedBody = await readProviderJson(upstream);
   const result = isGemini ? readGeminiResult(parsedBody) : readOpenAiResult(parsedBody);
+  if (
+    options.responseFormat?.type === "json_schema" &&
+    options.responseFormat.jsonSchema.strict &&
+    result.message.content
+  ) {
+    assertStructuredOutput(result.message.content, options.responseFormat.jsonSchema.schema);
+  }
   return { ...result, providerRequestId: providerRequestId(upstream) };
 }

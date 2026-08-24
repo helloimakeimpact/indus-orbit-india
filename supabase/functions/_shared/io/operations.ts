@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { GatewayError } from "./errors.ts";
+import { gatewayMessageBytes } from "./message-content.ts";
 import type { GatewayMessage, ProviderConnection, RouteSelection } from "./types.ts";
 
 type JsonRecord = Record<string, unknown>;
@@ -130,10 +131,7 @@ export function calculateCostNanos(
 }
 
 export function conservativeInputTokenBound(messages: GatewayMessage[]) {
-  const contentBytes = messages.reduce(
-    (total, message) => total + new TextEncoder().encode(message.content).byteLength,
-    0,
-  );
+  const contentBytes = messages.reduce((total, message) => total + gatewayMessageBytes(message), 0);
   return contentBytes + messages.length * 16 + 128;
 }
 
@@ -214,6 +212,7 @@ export async function fingerprintRouteRequest(input: {
   messages: GatewayMessage[];
   routeStrategy?: string;
   requestedModelId?: string;
+  inferenceOptions?: Record<string, unknown>;
 }) {
   const canonical = JSON.stringify({
     workspaceId: input.workspaceId,
@@ -221,6 +220,7 @@ export async function fingerprintRouteRequest(input: {
     messages: input.messages,
     routeStrategy: input.routeStrategy ?? "latest_affordable",
     requestedModelId: input.requestedModelId ?? null,
+    inferenceOptions: input.inferenceOptions ?? null,
   });
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(canonical));
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");

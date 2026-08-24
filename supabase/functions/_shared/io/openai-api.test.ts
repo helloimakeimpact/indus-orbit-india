@@ -3,6 +3,7 @@ import test from "node:test";
 import { GatewayError } from "./errors.ts";
 import {
   parseOpenAiChatRequest,
+  parseOpenAiResponsesRequest,
   rejectBrowserApiKeyRequest,
   requireApiKeyAuthorization,
   requireClientIdempotencyKey,
@@ -27,19 +28,101 @@ test("parses the supported non-streaming OpenAI chat subset", () => {
     {
       model: "io/latest-affordable",
       messages: [{ role: "user", content: "Hello" }],
+      stream: false,
+      includeUsage: false,
+      inferenceOptions: {
+        maxOutputTokens: undefined,
+        tools: undefined,
+        toolChoice: undefined,
+        parallelToolCalls: true,
+        responseFormat: undefined,
+      },
     },
   );
 });
 
-test("rejects unsupported OpenAI fields instead of silently ignoring them", () => {
+test("accepts bounded tools, structured output, streaming, and HTTPS image input", () => {
+  const parsed = parseOpenAiChatRequest({
+    model: "io/latest-affordable",
+    messages: [
+      {
+        role: "user",
+        content: [
+          { type: "text", text: "Read this" },
+          { type: "image_url", image_url: { url: "https://example.com/image.png" } },
+        ],
+      },
+    ],
+    stream: true,
+    stream_options: { include_usage: true },
+    tools: [
+      {
+        type: "function",
+        function: {
+          name: "lookup",
+          parameters: { type: "object", properties: {}, additionalProperties: false },
+          strict: true,
+        },
+      },
+    ],
+    response_format: {
+      type: "json_schema",
+      json_schema: {
+        name: "answer",
+        schema: { type: "object", properties: {}, additionalProperties: false },
+        strict: true,
+      },
+    },
+  });
+  assert.equal(parsed.stream, true);
+  assert.equal(parsed.includeUsage, true);
+  assert.equal(parsed.inferenceOptions.tools?.[0].function.name, "lookup");
+  assert.equal(parsed.inferenceOptions.responseFormat?.type, "json_schema");
+  assert.equal(Array.isArray(parsed.messages[0].content), true);
+});
+
+test("parses the stateless Responses API input and function-tool shape", () => {
+  const parsed = parseOpenAiResponsesRequest({
+    model: "io/latest-affordable",
+    instructions: "Be concise",
+    input: "Hello",
+    store: false,
+    tools: [
+      {
+        type: "function",
+        name: "lookup",
+        parameters: { type: "object", properties: {} },
+      },
+    ],
+    text: { format: { type: "json_object" } },
+  });
+  assert.equal(parsed.messages[0].role, "system");
+  assert.equal(parsed.messages[1].content, "Hello");
+  assert.equal(parsed.inferenceOptions.tools?.[0].function.name, "lookup");
+});
+
+test("rejects unsupported or unsafe OpenAI fields instead of silently ignoring them", () => {
   assert.throws(
     () =>
       parseOpenAiChatRequest({
         model: "io/latest-affordable",
         messages: [{ role: "user", content: "Hello" }],
-        tools: [],
+        temperature: 0.5,
       }),
     (error) => error instanceof GatewayError && error.code === "bad_request",
+  );
+  assert.throws(
+    () =>
+      parseOpenAiChatRequest({
+        model: "io/latest-affordable",
+        messages: [
+          {
+            role: "user",
+            content: [{ type: "image_url", image_url: { url: "http://private.test/image.png" } }],
+          },
+        ],
+      }),
+    GatewayError,
   );
 });
 

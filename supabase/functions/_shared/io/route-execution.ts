@@ -19,6 +19,7 @@ import { resolveProviderRoute, sendProviderChat } from "./provider-adapter.ts";
 import { writeRouteReceipt, type ProviderAttempt } from "./receipt.ts";
 import { selectRouteAttempts } from "./routing.ts";
 import type {
+  GatewayInferenceOptions,
   GatewayMessage,
   GatewayMode,
   PartnerResult,
@@ -36,6 +37,7 @@ export type RouteExecutionInput = {
   mode?: GatewayMode;
   routeStrategy?: RouteStrategy;
   requestedModelId?: string;
+  inferenceOptions?: GatewayInferenceOptions;
 };
 
 export type RouteExecutionReplay = {
@@ -53,6 +55,8 @@ export type RouteExecutionSuccess = {
   model: string;
   modelSelection: RouteStrategy;
   content: string;
+  message: PartnerResult["message"];
+  finishReason: PartnerResult["finishReason"];
   usage: PartnerResult["usage"];
   capacitySource: string;
   route: {
@@ -89,8 +93,20 @@ export async function executePartnerRoute(
   const selection = await resolveProviderRoute(admin, input.messages, {
     strategy: input.routeStrategy,
     requestedModelId: input.requestedModelId,
+    outputTokenAllowance: input.inferenceOptions?.maxOutputTokens,
     entitledCapacitySourceIds: entitledSourceIds,
-    connectionFilter: (connection) => workspaceAllowsProvider(providerPolicy, connection),
+    connectionFilter: (connection) =>
+      workspaceAllowsProvider(providerPolicy, connection) &&
+      (!input.inferenceOptions?.tools?.length || connection.supportsTools) &&
+      (!input.inferenceOptions?.responseFormat ||
+        input.inferenceOptions.responseFormat.type === "text" ||
+        connection.supportsStructuredOutput) &&
+      (!input.messages.some(
+        (message) =>
+          Array.isArray(message.content) &&
+          message.content.some((part) => part.type === "image_url"),
+      ) ||
+        connection.supportsVision),
   });
   const routeAttempts = selectRouteAttempts(
     selection.routeCandidates,
@@ -99,13 +115,13 @@ export async function executePartnerRoute(
   const reserveMinor = calculateReservationMinor(
     routeAttempts,
     input.messages,
-    1_024,
+    input.inferenceOptions?.maxOutputTokens ?? 1_024,
     serviceFeePolicy.feeBasisPoints,
   );
   const reserveCustomerNanos = calculateReservationNanos(
     routeAttempts,
     input.messages,
-    1_024,
+    input.inferenceOptions?.maxOutputTokens ?? 1_024,
     serviceFeePolicy.feeBasisPoints,
   ).customerChargeNanos;
   const fingerprint = await fingerprintRouteRequest({
@@ -114,6 +130,7 @@ export async function executePartnerRoute(
     messages: input.messages,
     routeStrategy: input.routeStrategy,
     requestedModelId: input.requestedModelId,
+    inferenceOptions: input.inferenceOptions as Record<string, unknown> | undefined,
   });
   const reservation = await beginRouteRequest(admin, {
     workspaceId: input.workspaceId,
@@ -157,7 +174,10 @@ export async function executePartnerRoute(
       price_currency: selection.connection.currencyCode,
       mode,
       message_count: input.messages.length,
-      character_count: input.messages.reduce((sum, message) => sum + message.content.length, 0),
+      character_count: input.messages.reduce(
+        (sum, message) => sum + JSON.stringify(message.content).length,
+        0,
+      ),
     },
   });
 
@@ -172,6 +192,7 @@ export async function executePartnerRoute(
     try {
       const candidateResult = await sendProviderChat(candidate.connection, input.messages, {
         safetySubject: input.actorUserId,
+        ...input.inferenceOptions,
       });
       attempts.push({
         connection: candidate.connection,
@@ -310,6 +331,8 @@ export async function executePartnerRoute(
     model: selectedRoute.connection.providerModelId,
     modelSelection: selectedRoute.strategy,
     content: result.content,
+    message: result.message,
+    finishReason: result.finishReason,
     usage: result.usage,
     capacitySource:
       entitlements.find(

@@ -1,4 +1,5 @@
 import { GatewayError } from "./errors.ts";
+import { gatewayMessageWeight } from "./message-content.ts";
 import type { GatewayMessage, ProviderConnection, RouteSelection, RouteStrategy } from "./types.ts";
 
 export type RouteInput = {
@@ -6,6 +7,7 @@ export type RouteInput = {
   requestedModelId?: string;
   entitledCapacitySourceIds: ReadonlySet<string>;
   connectionFilter?: (connection: ProviderConnection) => boolean;
+  outputTokenAllowance?: number;
 };
 
 export type RoutingSettings = {
@@ -42,7 +44,7 @@ function isDeprecated(connection: ProviderConnection, now: number) {
 function estimateInputTokens(messages: GatewayMessage[]) {
   return Math.max(
     1,
-    Math.ceil(messages.reduce((total, message) => total + message.content.length, 0) / 4),
+    Math.ceil(messages.reduce((total, message) => total + gatewayMessageWeight(message), 0) / 4),
   );
 }
 

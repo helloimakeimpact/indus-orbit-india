@@ -99,7 +99,12 @@ export function requireMessages(value: unknown): GatewayMessage[] {
     };
   });
 
-  if (messages.reduce((sum, message) => sum + message.content.length, 0) > 24_000) {
+  if (
+    messages.reduce(
+      (sum, message) => sum + (typeof message.content === "string" ? message.content.length : 0),
+      0,
+    ) > 24_000
+  ) {
     throw new GatewayError(
       "bad_request",
       400,

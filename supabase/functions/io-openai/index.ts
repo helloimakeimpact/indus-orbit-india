@@ -3,11 +3,18 @@ import { createGatewayAdminClient } from "../_shared/io/auth.ts";
 import { asGatewayError, GatewayError } from "../_shared/io/errors.ts";
 import {
   parseOpenAiChatRequest,
+  parseOpenAiResponsesRequest,
   rejectBrowserApiKeyRequest,
   requireApiKeyAuthorization,
   requireClientIdempotencyKey,
   sha256Hex,
 } from "../_shared/io/openai-api.ts";
+import {
+  chatCompletionBody,
+  chatCompletionStream,
+  responsesBody,
+  responsesStream,
+} from "../_shared/io/openai-output.ts";
 import {
   getActiveCapacityEntitlements,
   getWorkspaceProviderPolicy,
@@ -15,7 +22,12 @@ import {
 } from "../_shared/io/policy.ts";
 import { loadReadyProviderConnections } from "../_shared/io/provider-adapter.ts";
 import { executePartnerRoute } from "../_shared/io/route-execution.ts";
-import type { ProviderConnection, RouteStrategy } from "../_shared/io/types.ts";
+import type {
+  GatewayInferenceOptions,
+  GatewayMessage,
+  ProviderConnection,
+  RouteStrategy,
+} from "../_shared/io/types.ts";
 
 type ApiKeyActor = {
   apiKeyId: string;
@@ -174,6 +186,60 @@ async function parseJson(request: Request) {
   }
 }
 
+function executionHeaders(
+  actor: ApiKeyActor,
+  result: Awaited<ReturnType<typeof executePartnerRoute>>,
+) {
+  if (result.replayed) return rateHeaders(actor);
+  return {
+    ...rateHeaders(actor),
+    "x-io-request-id": result.requestId,
+    "x-io-receipt-id": result.receiptId,
+    "x-io-provider": result.route.providerKey,
+    "x-io-capacity-source": result.capacitySource,
+    "x-io-service-fee-bps": String(result.route.serviceFeeBasisPoints),
+  };
+}
+
+async function executeApiInference(input: {
+  admin: SupabaseClient;
+  actor: ApiKeyActor;
+  request: Request;
+  model: string;
+  messages: GatewayMessage[];
+  inferenceOptions: GatewayInferenceOptions;
+  protocol: "chat" | "responses";
+}) {
+  const connections = await entitledConnections(input.admin, input.actor.workspaceId);
+  const modelRoute = resolveModel(connections, input.model);
+  const clientIdempotencyKey = requireClientIdempotencyKey(
+    input.request.headers.get("Idempotency-Key"),
+  );
+  const result = await executePartnerRoute(input.admin, {
+    workspaceId: input.actor.workspaceId,
+    actorUserId: input.actor.actorUserId,
+    actorKind: "api_key",
+    apiKeyId: input.actor.apiKeyId,
+    idempotencyKey: `api_${await sha256Hex(
+      `${input.actor.apiKeyId}:${input.protocol}:${clientIdempotencyKey}`,
+    )}`,
+    messages: input.messages,
+    mode: "run",
+    inferenceOptions: input.inferenceOptions,
+    ...modelRoute,
+  });
+  if (result.replayed) {
+    throw new GatewayError(
+      "request_in_progress",
+      409,
+      result.state === "reserved"
+        ? "This idempotent request is already in progress."
+        : "This idempotent request was already finalized; use a new Idempotency-Key.",
+    );
+  }
+  return result;
+}
+
 Deno.serve(async (request) => {
   const pathname = new URL(request.url).pathname.replace(/\/+$/, "");
   try {
@@ -213,61 +279,35 @@ Deno.serve(async (request) => {
     if (request.method === "POST" && pathname.endsWith("/v1/chat/completions")) {
       const actor = await authenticateApiKey(admin, request, "inference:invoke");
       const body = parseOpenAiChatRequest(await parseJson(request));
-      const connections = await entitledConnections(admin, actor.workspaceId);
-      const modelRoute = resolveModel(connections, body.model);
-      const clientIdempotencyKey = requireClientIdempotencyKey(
-        request.headers.get("Idempotency-Key"),
-      );
-      const result = await executePartnerRoute(admin, {
-        workspaceId: actor.workspaceId,
-        actorUserId: actor.actorUserId,
-        actorKind: "api_key",
-        apiKeyId: actor.apiKeyId,
-        idempotencyKey: `api_${await sha256Hex(`${actor.apiKeyId}:${clientIdempotencyKey}`)}`,
+      const result = await executeApiInference({
+        admin,
+        actor,
+        request,
+        model: body.model,
         messages: body.messages,
-        mode: "run",
-        ...modelRoute,
+        inferenceOptions: body.inferenceOptions,
+        protocol: "chat",
       });
-      if (result.replayed) {
-        throw new GatewayError(
-          "request_in_progress",
-          409,
-          result.state === "reserved"
-            ? "This idempotent request is already in progress."
-            : "This idempotent request was already finalized; use a new Idempotency-Key.",
-        );
-      }
-      const promptTokens = result.usage.inputTokens ?? 0;
-      const completionTokens = result.usage.outputTokens ?? 0;
-      return json(
-        {
-          id: `chatcmpl-${result.requestId.replaceAll("-", "")}`,
-          object: "chat.completion",
-          created: Math.floor(Date.now() / 1000),
-          model: body.model,
-          choices: [
-            {
-              index: 0,
-              message: { role: "assistant", content: result.content },
-              finish_reason: "stop",
-            },
-          ],
-          usage: {
-            prompt_tokens: promptTokens,
-            completion_tokens: completionTokens,
-            total_tokens: promptTokens + completionTokens,
-          },
-        },
-        200,
-        {
-          ...rateHeaders(actor),
-          "x-io-request-id": result.requestId,
-          "x-io-receipt-id": result.receiptId,
-          "x-io-provider": result.route.providerKey,
-          "x-io-capacity-source": result.capacitySource,
-          "x-io-service-fee-bps": String(result.route.serviceFeeBasisPoints),
-        },
-      );
+      const headers = executionHeaders(actor, result);
+      if (body.stream) return chatCompletionStream(result, body.model, body.includeUsage, headers);
+      return json(chatCompletionBody(result, body.model), 200, headers);
+    }
+
+    if (request.method === "POST" && pathname.endsWith("/v1/responses")) {
+      const actor = await authenticateApiKey(admin, request, "inference:invoke");
+      const body = parseOpenAiResponsesRequest(await parseJson(request));
+      const result = await executeApiInference({
+        admin,
+        actor,
+        request,
+        model: body.model,
+        messages: body.messages,
+        inferenceOptions: body.inferenceOptions,
+        protocol: "responses",
+      });
+      const headers = executionHeaders(actor, result);
+      if (body.stream) return responsesStream(result, body.model, headers);
+      return json(responsesBody(result, body.model), 200, headers);
     }
 
     return openAiError(new GatewayError("bad_request", 404, "I/O API endpoint not found."));
