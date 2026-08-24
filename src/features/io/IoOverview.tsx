@@ -28,6 +28,14 @@ import {
   Workflow,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  IOPortOpenCodeClient,
+  type OpenCodeFileDiff,
+  type OpenCodeEvent,
+  type OpenCodePairing,
+  type OpenCodePermission,
+  type OpenCodeTaskNode,
+} from "../../../packages/io-opencode-client/src/index";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -51,6 +59,7 @@ import {
   createMyIoTestApiKey,
   createMyIoTerminalSession,
   completeMyIoTerminalSession,
+  decideMyIoTerminalApproval,
   appendMyIoTerminalEvent,
   getIoAuditEvents,
   getMyIoBudgetStatus,
@@ -63,6 +72,7 @@ import {
   listMyIoTerminalSessions,
   listMyIoTerminalEvents,
   preflightPartnerRoute,
+  requestMyIoTerminalApproval,
   runPartnerRoute,
   setMyIoWorkspaceProviderPolicy,
   revokeMyIoApiKey,
@@ -84,6 +94,39 @@ import {
 type SessionMode = "observe" | "plan" | "build" | "run";
 type ExecutionPath = "partner" | "terminal";
 
+type TerminalInspection = {
+  durableSessionId: string;
+  pairing: OpenCodePairing;
+  taskTree: OpenCodeTaskNode;
+  diffs: OpenCodeFileDiff[];
+  permissions: OpenCodePermission[];
+};
+
+type TerminalLiveEvent = {
+  durableSessionId: string;
+  state: "connecting" | "live" | "offline";
+  type: string | null;
+  receivedAt: string | null;
+};
+
+function classifyOpenCodePermission(
+  permission: string,
+): "read" | "edit" | "shell" | "network" | "task" | "web" | "mcp" | "external_directory" {
+  const value = permission.toLowerCase();
+  if (value.includes("external")) return "external_directory";
+  if (value.includes("shell") || value.includes("bash")) return "shell";
+  if (value.includes("network")) return "network";
+  if (value.includes("web")) return "web";
+  if (value.includes("mcp")) return "mcp";
+  if (value.includes("task")) return "task";
+  if (value.includes("write") || value.includes("edit")) return "edit";
+  return "read";
+}
+
+function approvalExpiryFromNow(durationMs: number) {
+  return new Date(Date.now() + durationMs).toISOString();
+}
+
 export function IoOverview() {
   const activeView = useIoWorkspaceView();
   const [workspace, setWorkspace] = useState<IoWorkspace | null>(null);
@@ -92,6 +135,8 @@ export function IoOverview() {
   const selectedWorkspaceIdRef = useRef<string | null>(null);
   const workspaceLoadSequence = useRef(0);
   const terminalAbortController = useRef<AbortController | null>(null);
+  const terminalEventController = useRef<AbortController | null>(null);
+  const terminalInspectionRefreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const terminalTimelineLoadSequence = useRef(0);
   const [sources, setSources] = useState<IoCapacitySource[]>([]);
   const [events, setEvents] = useState<IoAuditEvent[]>([]);
@@ -113,6 +158,11 @@ export function IoOverview() {
     durableSessionId: string;
     summary: OpenCodeReconnectSummary;
   } | null>(null);
+  const [terminalInspection, setTerminalInspection] = useState<TerminalInspection | null>(null);
+  const [terminalLiveEvent, setTerminalLiveEvent] = useState<TerminalLiveEvent | null>(null);
+  const [terminalContinuePrompt, setTerminalContinuePrompt] = useState("");
+  const [terminalContinueBusy, setTerminalContinueBusy] = useState(false);
+  const [terminalPermissionBusy, setTerminalPermissionBusy] = useState<string | null>(null);
   const [routeCatalogError, setRouteCatalogError] = useState<string | null>(null);
   const [routePreflight, setRoutePreflight] = useState<IoRoutePreflight | null>(null);
   const [preflightLoading, setPreflightLoading] = useState(false);
@@ -135,6 +185,10 @@ export function IoOverview() {
   useEffect(
     () => () => {
       terminalAbortController.current?.abort();
+      terminalEventController.current?.abort();
+      if (terminalInspectionRefreshTimer.current) {
+        globalThis.clearTimeout(terminalInspectionRefreshTimer.current);
+      }
     },
     [],
   );
@@ -436,6 +490,10 @@ export function IoOverview() {
                 runtimeVersion: session.serverVersion,
               });
               durableSessionId = durable.id;
+              setTerminalSessions((current) => [
+                durable,
+                ...current.filter((candidate) => candidate.id !== durable.id),
+              ]);
               if (typeof window !== "undefined") {
                 try {
                   saveOpenCodeLocalBinding(window.localStorage, {
@@ -448,6 +506,32 @@ export function IoOverview() {
                 } catch {
                   localBindingFailed = true;
                 }
+              }
+              try {
+                const client = new IOPortOpenCodeClient({
+                  origin: session.connectorOrigin,
+                  password: openCodePassword,
+                });
+                const [pairing, taskTree, diffs, permissions] = await Promise.all([
+                  client.pair(),
+                  client.getTaskTree(session.sessionId),
+                  client.getFullDiffs(session.sessionId),
+                  client.listPendingPermissions(session.sessionId),
+                ]);
+                setTerminalInspection({
+                  durableSessionId: durable.id,
+                  pairing,
+                  taskTree,
+                  diffs,
+                  permissions,
+                });
+                startLocalEventStream({
+                  client,
+                  durableSessionId: durable.id,
+                  localSessionId: session.sessionId,
+                });
+              } catch {
+                // The local run remains available. Reconnect can rebuild this advisory snapshot.
               }
             } catch {
               durableMetadataFailed = true;
@@ -527,6 +611,83 @@ export function IoOverview() {
     terminalAbortController.current?.abort();
   }
 
+  function startLocalEventStream(input: {
+    client: IOPortOpenCodeClient;
+    durableSessionId: string;
+    localSessionId: string;
+  }) {
+    terminalEventController.current?.abort();
+    if (terminalInspectionRefreshTimer.current) {
+      globalThis.clearTimeout(terminalInspectionRefreshTimer.current);
+    }
+    const controller = new AbortController();
+    terminalEventController.current = controller;
+    setTerminalLiveEvent({
+      durableSessionId: input.durableSessionId,
+      state: "connecting",
+      type: null,
+      receivedAt: null,
+    });
+
+    const reconcile = () => {
+      if (terminalInspectionRefreshTimer.current) {
+        globalThis.clearTimeout(terminalInspectionRefreshTimer.current);
+      }
+      terminalInspectionRefreshTimer.current = globalThis.setTimeout(() => {
+        void Promise.all([
+          input.client.getTaskTree(input.localSessionId),
+          input.client.getFullDiffs(input.localSessionId),
+          input.client.listPendingPermissions(input.localSessionId),
+        ])
+          .then(([taskTree, diffs, permissions]) => {
+            if (!controller.signal.aborted) {
+              setTerminalInspection((current) =>
+                current?.durableSessionId === input.durableSessionId
+                  ? { ...current, taskTree, diffs, permissions }
+                  : current,
+              );
+            }
+          })
+          .catch(() => {
+            // SSE is advisory. Explicit reconnect remains the authoritative REST recovery path.
+          });
+      }, 250);
+    };
+
+    void input.client
+      .subscribeSessionEvents({
+        sessionId: input.localSessionId,
+        signal: controller.signal,
+        onEvent: (event: OpenCodeEvent) => {
+          setTerminalLiveEvent({
+            durableSessionId: input.durableSessionId,
+            state: "live",
+            type: event.type,
+            receivedAt: new Date().toISOString(),
+          });
+          reconcile();
+        },
+      })
+      .then(() => {
+        if (!controller.signal.aborted) {
+          setTerminalLiveEvent((current) =>
+            current?.durableSessionId === input.durableSessionId
+              ? { ...current, state: "offline" }
+              : current,
+          );
+        }
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) {
+          setTerminalLiveEvent((current) =>
+            current?.durableSessionId === input.durableSessionId
+              ? { ...current, state: "offline" }
+              : current,
+          );
+        }
+      });
+  }
+
   async function reconnectLocalTerminal(session: IoTerminalSession) {
     if (typeof window === "undefined" || terminalReconnectBusy) return;
     const binding = loadOpenCodeLocalBinding(window.localStorage, session.id);
@@ -538,16 +699,167 @@ export function IoOverview() {
     }
     setTerminalReconnectBusy(session.id);
     try {
-      const summary = await inspectOpenCodeLocalSession({
-        binding,
+      const client = new IOPortOpenCodeClient({
+        origin: binding.connectorOrigin,
         password: openCodePassword,
       });
+      const [summary, pairing, taskTree, diffs, permissions] = await Promise.all([
+        inspectOpenCodeLocalSession({ binding, password: openCodePassword }),
+        client.pair(),
+        client.getTaskTree(binding.sessionId),
+        client.getFullDiffs(binding.sessionId),
+        client.listPendingPermissions(binding.sessionId),
+      ]);
       setTerminalReconnect({ durableSessionId: session.id, summary });
+      setTerminalInspection({
+        durableSessionId: session.id,
+        pairing,
+        taskTree,
+        diffs,
+        permissions,
+      });
+      startLocalEventStream({
+        client,
+        durableSessionId: session.id,
+        localSessionId: binding.sessionId,
+      });
       toast.success("Reconnected to the exact local OpenCode session.");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Local OpenCode reconnect failed.");
     } finally {
       setTerminalReconnectBusy(null);
+    }
+  }
+
+  async function continueLocalTerminal(session: IoTerminalSession) {
+    if (
+      typeof window === "undefined" ||
+      !workspace ||
+      terminalContinueBusy ||
+      !terminalContinuePrompt.trim()
+    ) {
+      return;
+    }
+    const binding = loadOpenCodeLocalBinding(window.localStorage, session.id);
+    if (!binding) {
+      toast.error("This browser has no local binding for that OpenCode session.");
+      return;
+    }
+    setTerminalContinueBusy(true);
+    let continuationId: string | null = null;
+    try {
+      const client = new IOPortOpenCodeClient({
+        origin: binding.connectorOrigin,
+        password: openCodePassword,
+      });
+      const pairing = await client.pair();
+      const durable = await createMyIoTerminalSession({
+        workspaceId: workspace.id,
+        title: `Continuation · ${session.title}`.slice(0, 160),
+        mode: session.mode,
+        connectorOrigin: binding.connectorOrigin,
+        runtimeReference: binding.sessionId,
+        runtimeVersion: pairing.serverVersion,
+      });
+      continuationId = durable.id;
+      saveOpenCodeLocalBinding(window.localStorage, {
+        durableSessionId: durable.id,
+        connectorOrigin: binding.connectorOrigin,
+        sessionId: binding.sessionId,
+        serverVersion: pairing.serverVersion,
+        storedAt: new Date().toISOString(),
+      });
+      const result = await client.continuePrompt(binding.sessionId, terminalContinuePrompt);
+      await appendMyIoTerminalEvent({
+        sessionId: durable.id,
+        type: "prompt.accepted",
+        payload: {},
+      });
+      await completeMyIoTerminalSession(durable.id, "completed");
+      const [taskTree, diffs, permissions] = await Promise.all([
+        client.getTaskTree(binding.sessionId),
+        client.getFullDiffs(binding.sessionId),
+        client.listPendingPermissions(binding.sessionId),
+      ]);
+      setTerminalResult({
+        connectorOrigin: binding.connectorOrigin,
+        sessionId: binding.sessionId,
+        title: durable.title,
+        content: result.content || "OpenCode accepted the continued prompt.",
+        serverVersion: pairing.serverVersion,
+        changedFileCount: diffs.length,
+      });
+      setTerminalInspection({
+        durableSessionId: session.id,
+        pairing,
+        taskTree,
+        diffs,
+        permissions,
+      });
+      setTerminalContinuePrompt("");
+      await loadWorkspace(workspace.id);
+      toast.success("Continued the exact local OpenCode session and recorded safe metadata.");
+    } catch (error) {
+      if (continuationId) {
+        await completeMyIoTerminalSession(continuationId, "failed").catch(() => undefined);
+      }
+      toast.error(error instanceof Error ? error.message : "Could not continue the local session.");
+    } finally {
+      setTerminalContinueBusy(false);
+    }
+  }
+
+  async function answerLocalPermission(
+    session: IoTerminalSession,
+    permission: OpenCodePermission,
+    decision: "once" | "reject",
+  ) {
+    if (typeof window === "undefined" || terminalPermissionBusy) return;
+    if (decision === "once" && permission.risk === "critical") {
+      toast.error("Critical local actions stay blocked until step-up authentication is released.");
+      return;
+    }
+    const binding = loadOpenCodeLocalBinding(window.localStorage, session.id);
+    if (!binding) {
+      toast.error("This browser has no local binding for that OpenCode session.");
+      return;
+    }
+    setTerminalPermissionBusy(permission.id);
+    try {
+      const permissionKind = classifyOpenCodePermission(permission.permission);
+      const expiresInMs = permission.risk === "critical" ? 4 * 60_000 : 15 * 60_000;
+      const cloudRequest = await requestMyIoTerminalApproval({
+        sessionId: session.id,
+        permissionKind,
+        riskClass: permission.risk,
+        reason: "Exact local OpenCode permission presented for member decision.",
+        expiresAt: approvalExpiryFromNow(expiresInMs),
+      });
+      await decideMyIoTerminalApproval(
+        cloudRequest.requestId,
+        decision === "once" ? "approved" : "rejected",
+        decision === "once"
+          ? "Member approved this exact request once."
+          : "Member rejected this exact request.",
+      );
+      const client = new IOPortOpenCodeClient({
+        origin: binding.connectorOrigin,
+        password: openCodePassword,
+      });
+      await client.replyPermission({
+        request: permission,
+        decision,
+        confirmationId: permission.id,
+      });
+      const permissions = await client.listPendingPermissions(binding.sessionId);
+      setTerminalInspection((current) =>
+        current?.durableSessionId === session.id ? { ...current, permissions } : current,
+      );
+      toast.success(decision === "once" ? "Approved once." : "Permission rejected.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not decide the permission.");
+    } finally {
+      setTerminalPermissionBusy(null);
     }
   }
 
@@ -558,6 +870,7 @@ export function IoOverview() {
     budgets.length > 0 &&
     !catalogLoading &&
     (routeStrategy !== "explicit_model" || Boolean(requestedModelId));
+  const canRunTerminal = openCodePassword.length >= 16 && openCodePassword.length <= 1_024;
   const routeSignals = [
     { label: "Registry evidence", value: "Enforced", icon: FileCheck2 },
     {
@@ -754,20 +1067,29 @@ export function IoOverview() {
               </div>
 
               {executionPath === "terminal" ? (
-                <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_11rem]">
-                  <Input
-                    value={openCodeUrl}
-                    onChange={(event) => setOpenCodeUrl(event.target.value)}
-                    aria-label="OpenCode server URL"
-                    placeholder="http://127.0.0.1:4096"
-                  />
-                  <Input
-                    type="password"
-                    value={openCodePassword}
-                    onChange={(event) => setOpenCodePassword(event.target.value)}
-                    aria-label="OpenCode server password"
-                    placeholder="Password (if set)"
-                  />
+                <div className="space-y-1.5">
+                  <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_14rem]">
+                    <Input
+                      value={openCodeUrl}
+                      onChange={(event) => setOpenCodeUrl(event.target.value)}
+                      aria-label="OpenCode server URL"
+                      placeholder="http://127.0.0.1:4096"
+                    />
+                    <Input
+                      type="password"
+                      value={openCodePassword}
+                      onChange={(event) => setOpenCodePassword(event.target.value)}
+                      aria-label="OpenCode server password"
+                      placeholder="16+ character password"
+                      minLength={16}
+                      maxLength={1_024}
+                      autoComplete="off"
+                    />
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">
+                    Use the same 16+ character <code>OPENCODE_SERVER_PASSWORD</code>. It remains in
+                    this tab's memory, is never saved by I/O, and can pair only to this device.
+                  </p>
                 </div>
               ) : (
                 <div
@@ -959,6 +1281,7 @@ export function IoOverview() {
                         : !workspace ||
                           !prompt.trim() ||
                           prompt.trim().length > 24_000 ||
+                          (executionPath === "terminal" && !canRunTerminal) ||
                           (executionPath === "partner" && !canRunPartner)
                     }
                     onClick={
@@ -1257,7 +1580,7 @@ export function IoOverview() {
                     variant="ghost"
                     size="sm"
                     className="h-7 px-2 text-[10px]"
-                    disabled={terminalReconnectBusy !== null}
+                    disabled={terminalReconnectBusy !== null || !canRunTerminal}
                     onClick={() => void reconnectLocalTerminal(session)}
                   >
                     {terminalReconnectBusy === session.id ? (
@@ -1288,6 +1611,192 @@ export function IoOverview() {
                       <span>
                         Changed files: <strong>{terminalReconnect.summary.changedFileCount}</strong>
                       </span>
+                    </div>
+                  ) : null}
+                  {terminalInspection?.durableSessionId === session.id ? (
+                    <div className="sm:col-span-5 space-y-3 rounded-xl border border-border/65 bg-background/85 p-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                          <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--saffron-deep)]">
+                            Secure local pairing
+                          </p>
+                          <p className="mt-1 text-[10px] text-muted-foreground">
+                            {terminalInspection.pairing.origin} · OpenCode{" "}
+                            {terminalInspection.pairing.serverVersion ?? "version unknown"} ·
+                            credential fingerprint{" "}
+                            {terminalInspection.pairing.credentialFingerprint}
+                          </p>
+                        </div>
+                        <Badge variant="outline" className="text-[9px]">
+                          SECRET IN MEMORY ONLY
+                        </Badge>
+                      </div>
+
+                      {terminalLiveEvent?.durableSessionId === session.id ? (
+                        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-[10px] text-sky-950">
+                          <span
+                            aria-hidden="true"
+                            className={cn(
+                              "h-2 w-2 rounded-full",
+                              terminalLiveEvent.state === "live"
+                                ? "bg-emerald-500"
+                                : terminalLiveEvent.state === "connecting"
+                                  ? "animate-pulse bg-sky-500"
+                                  : "bg-amber-500",
+                            )}
+                          />
+                          <strong className="capitalize">SSE {terminalLiveEvent.state}</strong>
+                          {terminalLiveEvent.type ? (
+                            <span className="text-sky-900/75">
+                              Last event: {terminalLiveEvent.type}
+                              {terminalLiveEvent.receivedAt
+                                ? ` · ${new Date(terminalLiveEvent.receivedAt).toLocaleTimeString()}`
+                                : ""}
+                            </span>
+                          ) : (
+                            <span className="text-sky-900/75">
+                              REST snapshot loaded; waiting for local events.
+                            </span>
+                          )}
+                        </div>
+                      ) : null}
+
+                      <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
+                        <Input
+                          value={terminalContinuePrompt}
+                          onChange={(event) => setTerminalContinuePrompt(event.target.value)}
+                          maxLength={24_000}
+                          placeholder="Continue this exact local session…"
+                          aria-label="Continued OpenCode prompt"
+                        />
+                        <Button
+                          type="button"
+                          size="sm"
+                          disabled={
+                            terminalContinueBusy ||
+                            !terminalContinuePrompt.trim() ||
+                            !canRunTerminal
+                          }
+                          onClick={() => void continueLocalTerminal(session)}
+                        >
+                          {terminalContinueBusy ? (
+                            <LoaderCircle className="animate-spin" />
+                          ) : (
+                            <Send />
+                          )}
+                          Continue locally
+                        </Button>
+                      </div>
+
+                      <div className="grid gap-3 lg:grid-cols-2">
+                        <div className="rounded-lg border border-border/60 p-3">
+                          <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                            Task tree
+                          </p>
+                          <OpenCodeTaskTreeView node={terminalInspection.taskTree} />
+                        </div>
+                        <div className="rounded-lg border border-border/60 p-3">
+                          <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                            Permission gate
+                          </p>
+                          {terminalInspection.permissions.length ? (
+                            <div className="mt-2 space-y-2">
+                              {terminalInspection.permissions.map((permission) => (
+                                <div
+                                  key={permission.id}
+                                  className="rounded-lg border border-amber-200 bg-amber-50 p-2 text-[10px] text-amber-950"
+                                >
+                                  <div className="flex flex-wrap items-center justify-between gap-2">
+                                    <strong>{permission.permission}</strong>
+                                    <Badge variant="outline" className="text-[9px] uppercase">
+                                      {permission.risk}
+                                    </Badge>
+                                  </div>
+                                  {permission.patterns.length ? (
+                                    <p className="mt-1 break-all text-amber-900/75">
+                                      {permission.patterns.join(", ")}
+                                    </p>
+                                  ) : null}
+                                  <div className="mt-2 flex flex-wrap gap-2">
+                                    <Button
+                                      type="button"
+                                      size="sm"
+                                      className="h-7 text-[10px]"
+                                      disabled={
+                                        terminalPermissionBusy !== null ||
+                                        !canRunTerminal ||
+                                        permission.risk === "critical"
+                                      }
+                                      onClick={() =>
+                                        void answerLocalPermission(session, permission, "once")
+                                      }
+                                    >
+                                      Approve once
+                                    </Button>
+                                    <Button
+                                      type="button"
+                                      size="sm"
+                                      variant="outline"
+                                      className="h-7 text-[10px]"
+                                      disabled={terminalPermissionBusy !== null || !canRunTerminal}
+                                      onClick={() =>
+                                        void answerLocalPermission(session, permission, "reject")
+                                      }
+                                    >
+                                      Reject
+                                    </Button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="mt-2 text-[10px] text-muted-foreground">
+                              No local permission requests are pending. I/O never records a blanket
+                              approval.
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="rounded-lg border border-border/60 p-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                            Full local diff review
+                          </p>
+                          <Badge variant="outline" className="text-[9px]">
+                            {terminalInspection.diffs.length} FILES
+                          </Badge>
+                        </div>
+                        {terminalInspection.diffs.length ? (
+                          <div className="mt-2 space-y-2">
+                            {terminalInspection.diffs.map((diff) => (
+                              <details
+                                key={diff.file}
+                                className="rounded-lg border border-border/55"
+                              >
+                                <summary className="cursor-pointer px-3 py-2 text-[10px] font-semibold">
+                                  {diff.file}
+                                  {diff.additions !== null && diff.deletions !== null
+                                    ? ` · +${diff.additions} / -${diff.deletions}`
+                                    : ""}
+                                </summary>
+                                <div className="grid border-t border-border/55 lg:grid-cols-2">
+                                  <pre className="max-h-80 overflow-auto whitespace-pre-wrap border-b border-border/55 bg-rose-50 p-3 text-[10px] lg:border-b-0 lg:border-r">
+                                    {diff.before}
+                                  </pre>
+                                  <pre className="max-h-80 overflow-auto whitespace-pre-wrap bg-emerald-50 p-3 text-[10px]">
+                                    {diff.after}
+                                  </pre>
+                                </div>
+                              </details>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="mt-2 text-[10px] text-muted-foreground">
+                            No changed files in this local session.
+                          </p>
+                        )}
+                      </div>
                     </div>
                   ) : null}
                   {selectedTerminalSessionId === session.id ? (
@@ -1539,6 +2048,34 @@ export function IoOverview() {
           </section>
         </div>
       ) : null}
+    </div>
+  );
+}
+
+function OpenCodeTaskTreeView({ node, depth = 0 }: { node: OpenCodeTaskNode; depth?: number }) {
+  return (
+    <div className={cn("mt-2", depth > 0 && "ml-3 border-l border-border/60 pl-3")}>
+      <div className="flex flex-wrap items-center justify-between gap-2 text-[10px]">
+        <span className="font-semibold">{node.title ?? node.sessionId}</span>
+        <Badge variant="outline" className="text-[8px] uppercase">
+          {node.status}
+        </Badge>
+      </div>
+      {node.todos.length ? (
+        <ul className="mt-1 space-y-1 text-[10px] text-muted-foreground">
+          {node.todos.map((todo) => (
+            <li key={todo.id} className="flex gap-2">
+              <span aria-hidden="true">{todo.status === "completed" ? "✓" : "○"}</span>
+              <span>{todo.content}</span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-1 text-[10px] text-muted-foreground">No task items reported.</p>
+      )}
+      {node.children.map((child) => (
+        <OpenCodeTaskTreeView key={child.sessionId} node={child} depth={depth + 1} />
+      ))}
     </div>
   );
 }

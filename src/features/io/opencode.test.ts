@@ -87,7 +87,7 @@ describe("local OpenCode continuity", { concurrency: false }, () => {
           serverVersion: null,
           storedAt: "2026-08-21T00:00:00.000Z",
         },
-        password: "",
+        password: "a-strong-local-password",
       });
       assert.equal(result.status, "idle");
       assert.equal(result.todoCount, 1);
@@ -117,7 +117,7 @@ describe("runOpenCodeSession", { concurrency: false }, () => {
     try {
       const result = await runOpenCodeSession({
         serverUrl: "http://localhost:4096",
-        password: "",
+        password: "a-strong-local-password",
         title: "I/O test",
         prompt: "Plan safely",
         onSessionCreated: async (session) => {
@@ -156,7 +156,7 @@ describe("runOpenCodeSession", { concurrency: false }, () => {
       await assert.rejects(
         runOpenCodeSession({
           serverUrl: "http://127.0.0.1:4096",
-          password: "",
+          password: "a-strong-local-password",
           title: "I/O test",
           prompt: "Plan safely",
           onSessionCreated: async () => {
@@ -188,7 +188,7 @@ describe("runOpenCodeSession", { concurrency: false }, () => {
       await assert.rejects(
         runOpenCodeSession({
           serverUrl: "http://127.0.0.1:4096",
-          password: "",
+          password: "a-strong-local-password",
           title: "I/O test",
           prompt: "Plan safely",
           onSessionCreated: async () => {
@@ -216,7 +216,7 @@ describe("runOpenCodeSession", { concurrency: false }, () => {
       await assert.rejects(
         runOpenCodeSession({
           serverUrl: "http://127.0.0.1:4096",
-          password: "",
+          password: "a-strong-local-password",
           title: "I/O test",
           prompt: "Plan safely",
         }),
@@ -256,7 +256,7 @@ describe("runOpenCodeSession", { concurrency: false }, () => {
     try {
       const run = runOpenCodeSession({
         serverUrl: "http://127.0.0.1:4096",
-        password: "",
+        password: "a-strong-local-password",
         title: "I/O test",
         prompt: "Plan safely",
         signal: controller.signal,
@@ -294,7 +294,7 @@ describe("runOpenCodeSession", { concurrency: false }, () => {
       await assert.rejects(
         runOpenCodeSession({
           serverUrl: "http://127.0.0.1:4096",
-          password: "",
+          password: "a-strong-local-password",
           title: "I/O test",
           prompt: "Plan safely",
           requestTimeoutMs: 5,
@@ -319,7 +319,7 @@ describe("runOpenCodeSession", { concurrency: false }, () => {
       await assert.rejects(
         runOpenCodeSession({
           serverUrl: "http://127.0.0.1:4096",
-          password: "",
+          password: "a-strong-local-password",
           title: "I/O test",
           prompt: "Plan safely",
           requestTimeoutMs: 5,
@@ -330,7 +330,7 @@ describe("runOpenCodeSession", { concurrency: false }, () => {
       await assert.rejects(
         runOpenCodeSession({
           serverUrl: "http://127.0.0.1:4096",
-          password: "",
+          password: "a-strong-local-password",
           title: "I/O test",
           prompt: "x".repeat(24_001),
         }),
@@ -343,7 +343,7 @@ describe("runOpenCodeSession", { concurrency: false }, () => {
       await assert.rejects(
         runOpenCodeSession({
           serverUrl: "http://127.0.0.1:4096",
-          password: "",
+          password: "a-strong-local-password",
           title: "I/O test",
           prompt: "Plan safely",
         }),

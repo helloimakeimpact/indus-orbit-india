@@ -1,6 +1,6 @@
 # OpenCode adoption plan for I/O Terminal
 
-Status: current upstream capability review and implementation gap, 1 August 2026.
+Status: implementation and remaining compatibility plan, updated 24 August 2026.
 
 ## Adoption decision
 
@@ -18,27 +18,35 @@ Official references:
 
 ## Capability adoption matrix
 
-| OpenCode capability                      | Current I/O implementation                              | I/O adoption work                                                                                                                                                                                |
-| ---------------------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Headless server and health               | Minimal HTTP proof                                      | Version-detect server, validate capability compatibility, reconnect, error taxonomy and daemon ownership.                                                                                        |
-| Web plus attached terminal sharing state | Not integrated                                          | Let I/O register a local daemon and open/attach from branded web while terminal remains local; do not expose an unauthenticated listener.                                                        |
-| Projects and repository context          | Only user-entered local origin                          | Add project registration, safe display name/root fingerprint, workspace authorization and explicit external-directory permissions. Avoid sending raw local paths to cloud logs.                  |
-| Durable sessions/messages/parts          | Creates one upstream session                            | Add I/O session metadata, mapping to upstream local session, lifecycle, resume/archive/fork, parent/child tasks and safe event projection. Content remains local unless explicitly synchronized. |
-| Primary agents and subagents             | Not implemented                                         | Map Observe/Plan/Build/Run to reviewed agent profiles; expose selected model, instruction source, permissions and child-agent activity.                                                          |
-| Granular tool permissions                | Only high-level mode copy                               | Translate I/O policies into ordered `allow`/`ask`/`deny` rules for read/edit/bash/task/web/MCP/external-directory actions; record request, decision scope and outcome.                           |
-| Approval UX                              | Not implemented                                         | Add once/session/policy approval, expiration, rejection reason, mobile-safe confirmation and immutable audit. Destructive/network/production actions require stronger gates.                     |
-| Tools and custom tools                   | Not implemented                                         | Render tool identity, arguments summary, state, output classification and duration; add schema/version allowlists and output size/redaction rules.                                               |
-| Bash/terminal execution                  | Not integrated                                          | Stream bounded output locally, show working directory and exit state, enforce command/network/filesystem policy, support cancellation and prohibit implicit remote shell exposure.               |
-| Commands and prompt templates            | Not implemented                                         | Add reviewed workspace command catalogue with arguments, agent/model override, file references, ownership/version and permission preview.                                                        |
-| MCP integrations                         | Not implemented                                         | Add approved connector registry, OAuth/secret boundary, tool allowlists, data egress disclosure, timeout and revocation.                                                                         |
-| LSP and formatter status                 | Not implemented                                         | Surface language service/formatter availability and safe diagnostics; keep heavy processes local.                                                                                                |
-| File search/read/edit                    | Not integrated into I/O UI                              | Add tree/search, diff-first edits, binary/large-file limits, external-directory gates and explicit artifact sharing.                                                                             |
-| Git/VCS, diffs and undo/redo             | Not implemented                                         | Add branch/status/diff review, checkpoint/revert, conflict handling and explicit commit/push authority. Never infer permission to publish.                                                       |
-| Todos/task tree                          | Not implemented                                         | Add user-visible work plan, parent/child tasks, status, blocking reason and handoff. Separate planning truth from model narration.                                                               |
-| Event stream                             | Not implemented                                         | Consume upstream events with ordering/reconnect/deduplication, project safe event summaries to I/O, and retain prohibited content locally.                                                       |
-| Provider/model abstraction               | OpenCode uses its own provider; I/O gateway is separate | Expose a compatible I/O endpoint and scoped key so OpenCode can route through I/O policy/receipts; retain local or BYOK escape paths.                                                            |
-| Share links                              | Not adopted                                             | Replace public-by-convenience sharing with private, audience-bound, expiring, revocable I/O handoffs; recheck authorization on every open.                                                       |
-| SDK/OpenAPI generation                   | Not used                                                | Pin a compatible SDK/spec, generate typed client, test against supported OpenCode versions and isolate upstream changes behind an adapter.                                                       |
+| OpenCode capability                      | Current I/O implementation                          | I/O adoption work                                                                                                                                                                  |
+| ---------------------------------------- | --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Headless server and health               | Typed loopback client, health/version pairing       | Add explicit capability negotiation, supported-version matrix and daemon ownership.                                                                                                |
+| Web plus attached terminal sharing state | Not integrated                                      | Let I/O register a local daemon and open/attach from branded web while terminal remains local; do not expose an unauthenticated listener.                                          |
+| Projects and repository context          | Only user-entered local origin                      | Add project registration, safe display name/root fingerprint, workspace authorization and explicit external-directory permissions. Avoid sending raw local paths to cloud logs.    |
+| Durable sessions/messages/parts          | Create, reconnect and continue exact local session  | Add archive/fork/private handoff; content remains local unless explicitly synchronized.                                                                                            |
+| Primary agents and subagents             | Not implemented                                     | Map Observe/Plan/Build/Run to reviewed agent profiles; expose selected model, instruction source, permissions and child-agent activity.                                            |
+| Granular tool permissions                | Pending permissions classified and rendered locally | Add complete policy profiles and server capability checks for ordered `allow`/`ask`/`deny`.                                                                                        |
+| Approval UX                              | Exact once/reject bridge; critical approval blocked | Add step-up, revoke/expiry race tests and pinned real-daemon enforcement journeys.                                                                                                 |
+| Tools and custom tools                   | Not implemented                                     | Render tool identity, arguments summary, state, output classification and duration; add schema/version allowlists and output size/redaction rules.                                 |
+| Bash/terminal execution                  | Not integrated                                      | Stream bounded output locally, show working directory and exit state, enforce command/network/filesystem policy, support cancellation and prohibit implicit remote shell exposure. |
+| Commands and prompt templates            | Not implemented                                     | Add reviewed workspace command catalogue with arguments, agent/model override, file references, ownership/version and permission preview.                                          |
+| MCP integrations                         | Not implemented                                     | Add approved connector registry, OAuth/secret boundary, tool allowlists, data egress disclosure, timeout and revocation.                                                           |
+| LSP and formatter status                 | Not implemented                                     | Surface language service/formatter availability and safe diagnostics; keep heavy processes local.                                                                                  |
+| File search/read/edit                    | Not integrated into I/O UI                          | Add tree/search, diff-first edits, binary/large-file limits, external-directory gates and explicit artifact sharing.                                                               |
+| Git/VCS, diffs and undo/redo             | Complete bounded local before/after diff review     | Add branch/status, checkpoint/revert, conflict handling and explicit commit/push authority. Never infer permission to publish.                                                     |
+| Todos/task tree                          | Bounded parent/child session tree and todos         | Add fork creation, blocking reasons and handoff. Separate planning truth from model narration.                                                                                     |
+| Event stream                             | Global SSE plus REST reconciliation Verified        | Pin versions, test disconnect/gap recovery, add safe dedupe/ordering evidence and keep prohibited content local.                                                                   |
+| Provider/model abstraction               | Released scoped I/O API; OpenCode config unverified | Configure and test an entitled, commercially authorized route; retain local or BYOK escape paths.                                                                                  |
+| Share links                              | Not adopted                                         | Replace public-by-convenience sharing with private, audience-bound, expiring, revocable I/O handoffs; recheck authorization on every open.                                         |
+| SDK/OpenAPI generation                   | Separately buildable typed adapter package          | Pin a compatible upstream spec/version matrix and publish signed client artifacts.                                                                                                 |
+
+### Verified 24 August implementation delta
+
+- `packages/io-opencode-client` is a separately buildable typed adapter with loopback-only origins, strong in-memory Basic authentication, bounded JSON/SSE/diff parsing and fixture tests.
+- `/global/event` is consumed with session filtering, `Last-Event-ID`, backoff and a reconnect budget. Each event schedules a REST refresh of tasks, diffs and pending permissions; SSE is never treated as an authorization or sole source of truth.
+- The I/O workspace can continue the exact local session, render bounded parent/child tasks and todos, and inspect full local before/after file content without uploading it.
+- A pending OpenCode permission is classified, recorded through the Released approval RPC, owner-decided once, then answered on the exact OpenCode request. Remembered approval is always false. Critical permission approval is disabled until step-up exists.
+- This delta is **Verified locally**, not Released: no pinned real-OpenCode authenticated browser matrix or production web deployment has been completed.
 
 ## I/O Terminal target architecture
 
@@ -77,13 +85,12 @@ Each event/artifact type needs a content classification and sync policy. Databas
 
 ## Implementation sequence
 
-1. Add typed OpenCode server adapter, version/capability discovery and fixture tests.
-2. Add durable I/O session/link/event/approval metadata with strict RLS.
-3. Subscribe to local events and render a safe read-only timeline with reconnect.
-4. Add Observe and Plan profiles first; verify no mutation is possible.
-5. Add Build with diff-first edits and per-action approvals; then Run with stricter command/network policies.
-6. Add tasks, child sessions, resume/abort, commands, MCP and artifacts one capability at a time.
-7. Expose a scoped I/O model endpoint for OpenCode after gateway streaming, API keys, budgets and receipts are ready.
-8. Add private handoff and multi-user review.
-9. Package the authenticated local daemon.
-10. Design hosted runners as a separate security/operations programme after local V1 is proven.
+1. **Verified locally:** typed adapter, fixture tests, durable metadata/RLS, global SSE, REST reconciliation, continued prompts, child task trees, full diffs and once/reject permission bridge.
+2. Pin supported OpenCode versions and run authenticated real-daemon browser contracts for every implemented route, including SSE disconnect/recovery and permission races.
+3. Add capability negotiation, verified abort acknowledgement and fork creation.
+4. Add Observe and Plan policy profiles first; prove mutation denial. Add Build/Run only with step-up, per-action approval and stricter command/network/filesystem policy.
+5. Add command/tool output, MCP, LSP/formatter, repository context, checkpoint/revert and reviewed artifacts one bounded capability at a time.
+6. Configure OpenCode against the Released scoped I/O model endpoint after one provider route is commercially authorized and conformed.
+7. Add private handoff and multi-user review.
+8. Replace the daemon password with a short-lived origin-bound pairing token, then package signed local daemon installers.
+9. Design hosted runners as a separate security/operations programme after local V1 is proven.

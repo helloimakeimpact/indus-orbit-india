@@ -109,6 +109,12 @@ export type IoTerminalEvent = {
   occurredAt: string;
 };
 
+export type IoTerminalApproval = {
+  requestId: string;
+  state: "pending" | "approved" | "rejected" | "expired";
+  expiresAt: string | null;
+};
+
 export type IoRouteStrategy = "latest_affordable" | "lowest_cost" | "explicit_model";
 
 export type IoRoutableModel = {
@@ -1090,6 +1096,70 @@ export async function listMyIoTerminalSessions(workspaceId: string): Promise<IoT
     const parsed = parseTerminalSession(value, "session_id");
     return parsed ? [parsed] : [];
   });
+}
+
+export async function requestMyIoTerminalApproval(input: {
+  sessionId: string;
+  permissionKind:
+    | "read"
+    | "edit"
+    | "shell"
+    | "network"
+    | "task"
+    | "web"
+    | "mcp"
+    | "external_directory";
+  riskClass: "low" | "moderate" | "high" | "critical";
+  reason: string;
+  expiresAt: string;
+}): Promise<IoTerminalApproval> {
+  const { data, error } = await supabase.rpc("request_my_io_terminal_approval", {
+    _session_id: input.sessionId,
+    _permission_kind: input.permissionKind,
+    _risk_class: input.riskClass,
+    _decision_scope: "once",
+    _reason: input.reason,
+    _expires_at: input.expiresAt,
+  });
+  if (error) throw new Error(error.message);
+  const result = asRecord(data);
+  const requestId = result ? readString(result, "requestId") : null;
+  const state = result ? readString(result, "state") : null;
+  if (!requestId || state !== "pending") {
+    throw new Error("The terminal approval request is invalid.");
+  }
+  return {
+    requestId,
+    state,
+    expiresAt: result ? readNullableString(result, "expiresAt") : null,
+  };
+}
+
+export async function decideMyIoTerminalApproval(
+  requestId: string,
+  decision: "approved" | "rejected",
+  reason: string,
+): Promise<IoTerminalApproval> {
+  const { data, error } = await supabase.rpc("decide_my_io_terminal_approval", {
+    _request_id: requestId,
+    _decision: decision,
+    _reason: reason,
+  });
+  if (error) throw new Error(error.message);
+  const result = asRecord(data);
+  const returnedRequestId = result ? readString(result, "requestId") : null;
+  const state = result ? readString(result, "state") : null;
+  if (
+    returnedRequestId !== requestId ||
+    !["approved", "rejected", "expired"].includes(state ?? "")
+  ) {
+    throw new Error("The terminal approval decision is invalid.");
+  }
+  return {
+    requestId,
+    state: state as IoTerminalApproval["state"],
+    expiresAt: null,
+  };
 }
 
 export async function getIoRouteCatalog(workspaceId: string): Promise<IoRouteCatalog> {

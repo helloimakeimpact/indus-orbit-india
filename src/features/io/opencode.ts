@@ -52,6 +52,7 @@ type UnknownRecord = Record<string, unknown>;
 const DEFAULT_REQUEST_TIMEOUT_MS = 45_000;
 const MAX_RESPONSE_BYTES = 1_048_576;
 const MAX_PROMPT_CHARACTERS = 24_000;
+const MIN_PASSWORD_CHARACTERS = 16;
 const LOCAL_BINDING_PREFIX = "indus-orbit:io-terminal:";
 const durableSessionIdPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -145,8 +146,17 @@ export function loadOpenCodeLocalBinding(storage: Storage, durableSessionId: str
 
 function headers(password: string) {
   const result: Record<string, string> = { "Content-Type": "application/json" };
-  if (password) result.Authorization = `Basic ${btoa(`opencode:${password}`)}`;
+  const bytes = new TextEncoder().encode(`opencode:${password}`);
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  result.Authorization = `Basic ${btoa(binary)}`;
   return result;
+}
+
+function validateOpenCodePassword(password: string) {
+  if (password.length < MIN_PASSWORD_CHARACTERS || password.length > 1_024) {
+    throw new Error("Use an OpenCode server password of at least 16 characters.");
+  }
 }
 
 async function readBoundedText(response: Response) {
@@ -275,7 +285,7 @@ export async function inspectOpenCodeLocalSession(input: {
 }): Promise<OpenCodeReconnectSummary> {
   const binding = validateLocalBinding(input.binding);
   if (!binding) throw new Error("The local OpenCode session binding is invalid.");
-  if (input.password.length > 1_024) throw new Error("The local OpenCode password is too long.");
+  validateOpenCodePassword(input.password);
   if (input.signal?.aborted) throw new OpenCodeStoppedError();
   const timeoutMs = input.requestTimeoutMs ?? 10_000;
   if (!Number.isInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 30_000) {
@@ -369,9 +379,7 @@ export async function runOpenCodeSession(input: {
   if (!prompt || prompt.length > MAX_PROMPT_CHARACTERS) {
     throw new Error("OpenCode prompts must be between 1 and 24,000 characters.");
   }
-  if (input.password.length > 1_024) {
-    throw new Error("The local OpenCode password is too long.");
-  }
+  validateOpenCodePassword(input.password);
   if (input.signal?.aborted) throw new OpenCodeStoppedError();
   const timeoutMs = input.requestTimeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS;
   if (!Number.isInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 120_000) {

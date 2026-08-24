@@ -1,22 +1,26 @@
 # I/O Terminal and OpenCode system record
 
-Status: durable metadata, exact private live timeline and approval foundations are **Released**; cancellation, device-local reconnect, timeout and size bounds are **Verified**; advanced terminal operations remain open, audited 21 August 2026.
+Status: durable metadata, exact private live timeline and approval records are **Released**; the packaged loopback client, strong in-memory pairing, global SSE consumer, continued prompts, bounded task trees and full local diff review are **Verified in source and tests**; a real-daemon authenticated browser journey and web deployment remain required, audited 24 August 2026.
 
 ## Product boundary
 
 I/O Port and the Indus Orbit Community are separate products on the same identity. A person may sign up and use top-level `/io` without completing Community onboarding. The terminal is an I/O workspace capability; human discussion remains in the existing Community conversation system.
 
-The application does not embed a full fork of OpenCode. It uses a reviewed browser connector in `src/features/io/opencode.ts` for a user-run loopback OpenCode server and stores only safe lifecycle metadata in Supabase. Prompt text, generated content, commands, output, source code, file paths, passwords, endpoint URLs and provider credentials are never written to the terminal metadata tables.
+The application does not embed a full fork of OpenCode. It uses a reviewed browser connector plus the buildable `@indus-orbit/opencode-client` package for a user-run loopback OpenCode server and stores only safe lifecycle metadata in Supabase. Prompt text, generated content, commands, output, source code, file paths, passwords, endpoint URLs and provider credentials are never written to the terminal metadata tables.
 
 ## Verified local implementation
 
 ### Local OpenCode connector
 
 - accepts only credential-free HTTP loopback origins;
-- keeps the optional OpenCode password in memory;
+- requires an OpenCode server password of 16–1,024 characters, keeps it in tab memory only and fingerprints the credential for pairing evidence without persisting it;
 - propagates cancellation to `POST /session/:id/abort` after cancelling the browser request;
 - reads `GET /session/:id/diff` after success only to display the local changed-file count; no diff body is uploaded;
-- retains a validated origin/session binding only in the creating browser and can reconnect to the exact session through `GET /session/:id`, `/session/status`, `/todo` and `/diff`; only status and counts are rendered, and the OpenCode password is never persisted;
+- retains a validated origin/session binding only in the creating browser and reconnects to the exact session through `GET /session/:id`, `/session/status`, `/todo`, `/children`, `/diff` and `/permission`; raw local content is never synchronized;
+- consumes OpenCode's global `/global/event` SSE endpoint with bounded frames, session filtering, `Last-Event-ID`, exponential reconnect and a finite reconnect budget;
+- treats SSE as advisory and debounces authoritative REST reconciliation for tasks, diffs and permissions after each local event, because current OpenCode releases have documented event-stream regressions;
+- continues the exact local OpenCode session, renders a bounded four-level/64-session child task tree and displays complete before/after diffs locally with a 128-file/4 MiB ceiling;
+- records an exact, expiring, once-scoped approval and owner decision before replying to the matching OpenCode permission ID; blanket and remembered approvals are prohibited, and critical actions remain reject-only until step-up authentication exists;
 - checks server health, creates a runtime session and sends one prompt with a 45-second default request timeout;
 - validates returned health, session and message shapes;
 - bounds prompt/title/password/server metadata, streams responses through a 1 MiB limit and composes caller cancellation with its timeout;
@@ -39,13 +43,13 @@ The local browser flow creates a durable record when OpenCode creates its runtim
 
 Migration `20260812000100_add_io_terminal_timeline_and_approval_rpcs.sql` adds ordered, replay-safe `append_my_io_terminal_event` and paged `list_my_io_terminal_events` RPCs. Payload validation accepts only constrained runtime/prompt metadata; it rejects prompts, output, commands, paths, URLs and arbitrary JSON. The member UI displays that safe timeline only.
 
-The same migration adds caller-bound approval request and owner-decision RPCs with bounded expiry, risk/scope classification and idempotent replay. A decision is explicitly **not** an execution grant: no browser or database call can use it to run an OpenCode command. Step-up authentication, approval UI, daemon enforcement and tool/command controls remain required before any executable approval capability is exposed.
+The same migration adds caller-bound approval request and owner-decision RPCs with bounded expiry, risk/scope classification and idempotent replay. The verified web flow now binds one pending local OpenCode permission ID to one cloud request/decision and sends `once` or `reject` to the local daemon only after the recorded decision. The database decision alone remains non-executable. Critical approvals fail closed until step-up authentication is released, and a real-daemon security journey is still required before this bridge can be called Released.
 
 Migration `20260821120706_add_private_terminal_timeline_broadcast.sql` adds an exact `io-terminal:<session UUID>` private Broadcast topic, active-session-member authorization on `realtime.messages` and an insert trigger for the already allow-listed metadata event row. The member timeline re-subscribes after refresh and re-reads the caller-bound RPC on each event. This is cloud metadata continuity, not OpenCode output streaming.
 
 ### Evidence
 
-- OpenCode lifecycle, daemon-abort propagation, device-local binding/reconnect, local diff count, timeout and validation unit tests pass as part of the 57-test member suite.
+- OpenCode lifecycle, daemon-abort propagation, device-local binding/reconnect, strong password, continued prompt, task-tree, complete-diff, exact permission and global-SSE contracts pass as part of the 65-test member suite.
 - The terminal SQL contracts contribute 54 passing assertions to the 681-assertion fresh 76-migration database replay.
 - Database lint reports no `public` or `private` schema errors.
 - Member typecheck, production build and formatting pass.
@@ -56,17 +60,17 @@ These facts are **Released** to hosted project `jpwvgpnbkrktipwhvqss`: the three
 
 The following capabilities are still **Planned** or **Partial**:
 
-1. OpenCode `/event` SSE ingestion and bounded retention/compaction of the existing ordered cloud metadata timeline; private Supabase Broadcast and safe device-local reconnect are Released;
-2. continued prompts, verified daemon-abort acknowledgement, fork, child sessions and task tree; Stop invokes OpenCode abort, but its best-effort cleanup deliberately preserves the original failure and therefore does not yet prove process termination;
-3. command, tool, MCP, LSP, formatter and repository-context UI;
-4. step-up, approval UI, daemon-side execution enforcement and revoke/expiry handling for the existing approval request/decision boundary;
-5. diff, review, revert, artifact and safe download flows;
-6. explicit session invitations, role changes, revocation and human handoff;
-7. retention/deletion controls and support-safe diagnostics;
-8. short-lived authenticated daemon pairing, origin binding, revocation and version negotiation;
-9. packaged local clients for supported operating systems;
-10. an OpenAI-compatible I/O API usable by OpenCode through the same policy, budget and receipt path;
-11. hosted runners with workload identity, isolation, network/filesystem policy, secrets, quotas, scheduling, observability and recovery.
+1. verify SSE reconnect, event reconciliation, continuation, task trees, diffs and permission decisions against pinned real OpenCode versions in authenticated browser tests; unit fixtures are Verified, not a production compatibility guarantee;
+2. verify daemon-abort acknowledgement and process termination; Stop invokes the abort route but best-effort cleanup deliberately preserves the original failure;
+3. add fork creation plus command, tool-output, MCP, LSP, formatter and repository-context views; tool permission prompts are visible, but unrestricted command output is intentionally absent;
+4. add re-auth/step-up for high-risk actions, revoke/expiry races and a daemon capability handshake; critical actions remain blocked;
+5. add checkpoint/revert, reviewed artifact export and safe download; complete local before/after diff review is Verified;
+6. add explicit session invitations, role changes, revocation and human handoff;
+7. add retention/deletion controls and support-safe diagnostics;
+8. replace the long-lived OpenCode server password with a short-lived, origin/audience-bound pairing token and explicit revocation; current pairing is strong, loopback-only and memory-only but remains **Partial**;
+9. package the local daemon/installers for supported operating systems; the TypeScript client library is buildable and documented, but an OS installer is not;
+10. configure OpenCode to use the Released OpenAI-compatible I/O endpoint and run a real entitled route after commercial/provider approval;
+11. build hosted runners with workload identity, isolation, network/filesystem policy, secrets, quotas, scheduling, observability and recovery.
 
 Long-running agent execution must not run inside a Supabase Edge Function. Hosted execution requires a separate runner control plane and an outbound, authenticated attach protocol.
 
