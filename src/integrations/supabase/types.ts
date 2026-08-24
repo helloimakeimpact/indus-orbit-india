@@ -928,6 +928,7 @@ export type Database = {
       conversation_reports: {
         Row: {
           category: string;
+          client_request_id: string | null;
           created_at: string;
           description: string;
           id: string;
@@ -940,6 +941,7 @@ export type Database = {
         };
         Insert: {
           category: string;
+          client_request_id?: string | null;
           created_at?: string;
           description: string;
           id?: string;
@@ -952,6 +954,7 @@ export type Database = {
         };
         Update: {
           category?: string;
+          client_request_id?: string | null;
           created_at?: string;
           description?: string;
           id?: string;
@@ -6094,6 +6097,16 @@ export type Database = {
           sender_id: string;
         }[];
       };
+      list_my_conversation_room_feed: {
+        Args: {
+          _before_created_at?: string;
+          _before_id?: string;
+          _limit?: number;
+          _room_id: string;
+          _thread_id?: string;
+        };
+        Returns: Json;
+      };
       list_my_io_credit_entries: {
         Args: { _limit?: number; _workspace_id: string };
         Returns: Json;
@@ -6173,6 +6186,15 @@ export type Database = {
         Args: { _other_user_id: string };
         Returns: number;
       };
+      moderate_conversation_message: {
+        Args: {
+          _action: string;
+          _client_request_id: string;
+          _message_id: string;
+          _reason: string;
+        };
+        Returns: Json;
+      };
       my_lead_summary: { Args: never; Returns: Json };
       post_my_mission_update: {
         Args: {
@@ -6195,6 +6217,21 @@ export type Database = {
           isOneToOne: true;
           isSetofReturn: false;
         };
+      };
+      prepare_my_conversation_attachment: {
+        Args: {
+          _alt_text: string;
+          _byte_size: number;
+          _client_request_id: string;
+          _content_type: string;
+          _file_name: string;
+          _message_id: string;
+        };
+        Returns: Json;
+      };
+      finalize_my_conversation_attachment: {
+        Args: { _attachment_id: string };
+        Returns: Json;
       };
       record_my_product_event: {
         Args: {
@@ -6279,6 +6316,15 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      report_my_conversation_message: {
+        Args: {
+          _category: string;
+          _client_request_id: string;
+          _description: string;
+          _message_id: string;
+        };
+        Returns: Json;
+      };
       respond_to_my_connection_request: {
         Args: { _request_id: string; _status: string };
         Returns: {
@@ -6300,6 +6346,25 @@ export type Database = {
         };
       };
       revoke_my_io_api_key: { Args: { _key_id: string }; Returns: Json };
+      set_managed_conversation_room_permission: {
+        Args: {
+          _capability: string;
+          _effect: string;
+          _role_id: string;
+          _room_id: string;
+          _user_id: string;
+        };
+        Returns: Json;
+      };
+      set_managed_conversation_thread_lock: {
+        Args: {
+          _client_request_id: string;
+          _locked: boolean;
+          _reason: string;
+          _thread_id: string;
+        };
+        Returns: Json;
+      };
       send_my_conversation_message: {
         Args: {
           _client_request_id: string;
@@ -6514,9 +6579,22 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      toggle_my_conversation_reaction: {
+        Args: { _message_id: string; _reaction_key: string };
+        Returns: Json;
+      };
       unblock_my_member: {
         Args: { _blocked_user_id: string };
         Returns: boolean;
+      };
+      update_managed_conversation_room: {
+        Args: {
+          _description: string;
+          _display_name: string;
+          _posting_policy: string;
+          _room_id: string;
+        };
+        Returns: Json;
       };
       update_my_chapter_details: {
         Args: {

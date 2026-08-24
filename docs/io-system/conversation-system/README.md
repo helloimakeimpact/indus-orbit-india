@@ -1,6 +1,6 @@
 # Conversation and branded spatial system record
 
-Status: direct messages, caller-owned blocking, private Broadcast, bounded direct-history pagination and the Chapter/Mission Space foundation are Released to demo, updated 21 August 2026.
+Status: direct messages, caller-owned blocking, private Broadcast, bounded history, Chapter/Mission Spaces and the first Threads/reactions/reporting/Room-control layer are Released to demo, updated 24 August 2026.
 
 ## Current truth
 
@@ -29,6 +29,10 @@ Implemented:
 - caller-bound Space join/leave/decision, Thread creation, Room message and read-state RPC boundaries;
 - direct Chapter/Mission browser writes revoked by the new migration, with explicit RLS/grants and covering foreign-key indexes;
 - a first responsive `/app/spaces/$spaceId` implementation with grouped Rooms, durable timeline/composer, People roster, Realtime message reconciliation and Chapter/Mission back-links;
+- a caller-bound keyset-paged Room/Thread feed, one Thread per parent message, continued replies and moderator lock/reopen;
+- four purposeful reaction toggles, member reporting, stable moderated-message tombstones and capability-checked restrict/restore evidence;
+- manager-only Room name/description/posting controls plus a role/member permission-override RPC boundary;
+- a private 10 MB quarantine-first attachment bucket, author-owned reservation/upload/finalization, MIME/size reconciliation and short signed downloads only for authorized objects;
 - rolling schema compatibility so the frontend can release before the hosted migration without hiding genuine authorization or validation errors.
 
 Still left:
@@ -36,10 +40,10 @@ Still left:
 - configure an approved sender domain, deploy/schedule the fixed-template email worker and add redacted operator/dead-letter controls;
 - retain the Released `20260819225550_add_direct_message_pagination_rpc.sql`, then add one cross-surface conversation store, retry/offline/reconnect and multi-device conflict handling;
 - run hosted authenticated browser personas across proposal/approval, Chapter/Mission lifecycle, membership, Room send/read and outsider privacy;
-- Threads UI, Thread membership/read behavior, Boards/forums and administrative Room/role configuration;
-- presence, typing, reaction/mention UI, pins, bookmarks, attachment storage/scanning, search and notification controls;
-- conversation moderation/report UI, retention/export/deletion and redacted operator tools;
+- Thread membership/follow/read behavior, Boards/forums and the full role/permission editor;
+- presence, typing, mentions, pins, bookmarks, a trusted attachment scanner, search and notification controls;
+- report triage/assignment/appeals, retention/export/deletion and redacted admin operator tools;
 - one reusable Indus Orbit rail/sidebar/workspace/inspector shell across product systems;
 - I/O session collaboration that never leaks prompts, terminal output, files or tools through human messaging.
 
-The complete 75-migration local replay passes 676 assertions. `20260820230351_add_member_block_and_private_dm_broadcast.sql` and its exact-policy hardening successor are Released to hosted Indus Orbit with RLS, explicit grants and generated client types synchronized. The exact delivered Space slice, deployment order and owner/code split are in `CHAPTER_MISSION_SPACE_SYSTEM_PLAN.md`. The complete feature comparison is in `DISCORD_LIKE_CAPABILITY_PLAN.md`; the wider engineering plan remains in `CONVERSATION_SYSTEM_IMPLEMENTATION_PLAN.md`; the released delivery contract is in `TRUSTED_NOTIFICATION_AND_EMAIL_BOUNDARY.md`.
+The latest collaboration migration is Released to hosted Indus Orbit with RLS, explicit grants and synchronized client contracts. The member unit suite passes 67/67; the new database contract adds 29 assertions for the next full replay. Exact current behavior and limits are in `ORBIT_COLLABORATION_RELEASE.md`. The original delivery split is in `CHAPTER_MISSION_SPACE_SYSTEM_PLAN.md`; the wider engineering plan remains in `CONVERSATION_SYSTEM_IMPLEMENTATION_PLAN.md`.
