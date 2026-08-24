@@ -18,16 +18,19 @@ import {
   TerminalSquare,
   X,
 } from "lucide-react";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import type { IoWorkspaceView } from "@/features/io/io-workspace-view";
+import { IoWorkspaceViewContext } from "@/features/io/io-workspace-view-context";
 import { cn } from "@/lib/utils";
 
 type IoNavItem = {
   label: string;
   icon: typeof CircleGauge;
-  href: string;
+  view: IoWorkspaceView;
   count?: string;
 };
 
@@ -40,24 +43,24 @@ const navGroups: IoNavGroup[] = [
   {
     label: "Workspace",
     items: [
-      { label: "Overview", icon: CircleGauge, href: "#io-overview" },
-      { label: "Sessions", icon: MessageSquareText, href: "#io-sessions" },
-      { label: "Terminal", icon: TerminalSquare, href: "#io-terminal" },
+      { label: "Overview", icon: CircleGauge, view: "overview" },
+      { label: "Sessions", icon: MessageSquareText, view: "sessions" },
+      { label: "Terminal", icon: TerminalSquare, view: "terminal" },
     ],
   },
   {
     label: "Intelligence",
     items: [
-      { label: "Model routes", icon: Route, href: "#io-sessions" },
-      { label: "Capacity", icon: Cpu, href: "#io-capacity" },
-      { label: "Evidence", icon: FileSearch, href: "#io-evidence" },
+      { label: "Model routes", icon: Route, view: "routes" },
+      { label: "Capacity", icon: Cpu, view: "capacity" },
+      { label: "Evidence", icon: FileSearch, view: "evidence" },
     ],
   },
   {
     label: "Stewardship",
     items: [
-      { label: "Usage ledger", icon: IndianRupee, href: "#io-usage-ledger" },
-      { label: "Safety", icon: ShieldCheck, href: "#io-safety" },
+      { label: "Usage ledger", icon: IndianRupee, view: "ledger" },
+      { label: "Safety", icon: ShieldCheck, view: "safety" },
     ],
   },
 ];
@@ -101,6 +104,14 @@ type IoWorkspaceShellProps = {
 export function IoWorkspaceShell({ children }: IoWorkspaceShellProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [inspectorOpen, setInspectorOpen] = useState(false);
+  const { view: activeView } = useSearch({ from: "/io" });
+  const navigate = useNavigate({ from: "/io" });
+
+  function selectView(view: IoWorkspaceView) {
+    setMobileNavOpen(false);
+    if (view === activeView) return;
+    void navigate({ to: "/io", search: { view } });
+  }
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(min-width: 1280px)");
@@ -115,111 +126,118 @@ export function IoWorkspaceShell({ children }: IoWorkspaceShellProps) {
   }, []);
 
   return (
-    <div className="mx-auto min-h-[calc(100vh-5.25rem)] max-w-[112rem] overflow-hidden rounded-2xl border border-border/80 bg-card/70 shadow-[var(--app-shadow-strong)]">
-      <header className="flex min-h-14 items-center gap-2 border-b border-border/70 bg-card/80 px-3 sm:px-4">
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="md:hidden"
-          aria-label={mobileNavOpen ? "Close I/O navigation" : "Open I/O navigation"}
-          aria-expanded={mobileNavOpen}
-          onClick={() => setMobileNavOpen((value) => !value)}
-        >
-          {mobileNavOpen ? <X /> : <Menu />}
-        </Button>
+    <IoWorkspaceViewContext.Provider value={activeView}>
+      <div className="app-ui mx-auto min-h-[calc(100vh-5.25rem)] max-w-[112rem] overflow-hidden rounded-2xl border border-border/80 bg-card/70 text-foreground shadow-[var(--app-shadow-strong)]">
+        <header className="flex min-h-14 items-center gap-2 border-b border-border/70 bg-card/80 px-3 sm:px-4">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="md:hidden"
+            aria-label={mobileNavOpen ? "Close I/O navigation" : "Open I/O navigation"}
+            aria-expanded={mobileNavOpen}
+            onClick={() => setMobileNavOpen((value) => !value)}
+          >
+            {mobileNavOpen ? <X /> : <Menu />}
+          </Button>
 
-        <div className="flex min-w-0 flex-1 items-center gap-2.5">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[var(--indigo-night)] text-[var(--parchment)] shadow-sm">
-            <TerminalSquare className="h-4 w-4" />
-          </span>
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <p className="truncate text-sm font-semibold text-[var(--indigo-night)]">I/O Port</p>
-              <Badge className="border-[var(--saffron)]/35 bg-[var(--saffron)]/12 text-[10px] text-[var(--indigo-night)] hover:bg-[var(--saffron)]/12">
-                BETA
-              </Badge>
+          <div className="flex min-w-0 flex-1 items-center gap-2.5">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[var(--indigo-night)] text-[var(--parchment)] shadow-sm">
+              <TerminalSquare className="h-4 w-4" />
+            </span>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <p className="truncate text-sm font-semibold text-[var(--indigo-night)]">
+                  I/O Port
+                </p>
+                <Badge className="border-[var(--saffron)]/35 bg-[var(--saffron)]/12 text-[10px] text-[var(--indigo-night)] hover:bg-[var(--saffron)]/12">
+                  BETA
+                </Badge>
+              </div>
+              <p className="hidden truncate text-[11px] text-muted-foreground sm:block">
+                India-rooted model access, terminal work and shared capacity
+              </p>
             </div>
-            <p className="hidden truncate text-[11px] text-muted-foreground sm:block">
-              India-rooted model access, terminal work and shared capacity
-            </p>
           </div>
-        </div>
 
-        <div className="hidden items-center gap-2 lg:flex">
-          <div className="flex items-center gap-1.5 rounded-full border border-border/70 bg-background/50 px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
-            Authenticated workspace evidence
+          <div className="hidden items-center gap-2 lg:flex">
+            <div className="flex items-center gap-1.5 rounded-full border border-border/70 bg-background/50 px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
+              Authenticated workspace evidence
+            </div>
           </div>
-        </div>
 
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          aria-label={inspectorOpen ? "Hide activity inspector" : "Show activity inspector"}
-          aria-pressed={inspectorOpen}
-          onClick={() => setInspectorOpen((value) => !value)}
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            aria-label={inspectorOpen ? "Hide activity inspector" : "Show activity inspector"}
+            aria-pressed={inspectorOpen}
+            onClick={() => setInspectorOpen((value) => !value)}
+          >
+            {inspectorOpen ? <PanelRightClose /> : <PanelRightOpen />}
+          </Button>
+        </header>
+
+        <div
+          className={cn(
+            "relative grid min-h-[calc(100vh-8.85rem)] md:grid-cols-[13rem_minmax(0,1fr)]",
+            inspectorOpen
+              ? "xl:grid-cols-[14rem_minmax(0,1fr)_19rem]"
+              : "xl:grid-cols-[14rem_minmax(0,1fr)]",
+          )}
         >
-          {inspectorOpen ? <PanelRightClose /> : <PanelRightOpen />}
-        </Button>
-      </header>
-
-      <div
-        className={cn(
-          "relative grid min-h-[calc(100vh-8.85rem)] md:grid-cols-[13rem_minmax(0,1fr)]",
-          inspectorOpen
-            ? "xl:grid-cols-[14rem_minmax(0,1fr)_19rem]"
-            : "xl:grid-cols-[14rem_minmax(0,1fr)]",
-        )}
-      >
-        <IoContextNav
-          className={cn(
-            "absolute inset-y-0 left-0 z-20 w-[17rem] shadow-2xl transition-transform md:static md:z-auto md:w-auto md:translate-x-0 md:shadow-none",
-            mobileNavOpen ? "translate-x-0" : "-translate-x-full",
-          )}
-          onSelect={() => setMobileNavOpen(false)}
-        />
-
-        {mobileNavOpen ? (
-          <button
-            type="button"
-            className="absolute inset-0 z-10 bg-[var(--indigo-night)]/25 backdrop-blur-[2px] md:hidden"
-            aria-label="Close I/O navigation"
-            onClick={() => setMobileNavOpen(false)}
+          <IoContextNav
+            className={cn(
+              "absolute inset-y-0 left-0 z-20 w-[17rem] shadow-2xl transition-transform md:static md:z-auto md:w-auto md:translate-x-0 md:shadow-none",
+              mobileNavOpen ? "translate-x-0" : "-translate-x-full",
+            )}
+            activeView={activeView}
+            onSelect={selectView}
           />
-        ) : null}
 
-        <section aria-label="I/O Port working surface" className="min-w-0 bg-background/50">
-          {children}
-        </section>
+          {mobileNavOpen ? (
+            <button
+              type="button"
+              className="absolute inset-0 z-10 bg-[var(--indigo-night)]/25 backdrop-blur-[2px] md:hidden"
+              aria-label="Close I/O navigation"
+              onClick={() => setMobileNavOpen(false)}
+            />
+          ) : null}
 
-        <IoActivityInspector
-          className={cn(
-            "fixed inset-y-0 right-0 z-50 w-[min(21rem,90vw)] shadow-2xl transition-transform xl:static xl:z-auto xl:w-auto xl:shadow-none",
-            inspectorOpen ? "translate-x-0" : "translate-x-full xl:hidden",
-          )}
-          onClose={() => setInspectorOpen(false)}
-        />
+          <section aria-label="I/O Port working surface" className="min-w-0 bg-background/50">
+            {children}
+          </section>
 
-        {inspectorOpen ? (
-          <button
-            type="button"
-            className="fixed inset-0 z-40 bg-[var(--indigo-night)]/25 backdrop-blur-[2px] xl:hidden"
-            aria-label="Close activity inspector"
-            onClick={() => setInspectorOpen(false)}
+          <IoActivityInspector
+            className={cn(
+              "fixed inset-y-0 right-0 z-50 w-[min(21rem,90vw)] shadow-2xl transition-transform xl:static xl:z-auto xl:w-auto xl:shadow-none",
+              inspectorOpen ? "translate-x-0" : "translate-x-full xl:hidden",
+            )}
+            onClose={() => setInspectorOpen(false)}
           />
-        ) : null}
+
+          {inspectorOpen ? (
+            <button
+              type="button"
+              className="fixed inset-0 z-40 bg-[var(--indigo-night)]/25 backdrop-blur-[2px] xl:hidden"
+              aria-label="Close activity inspector"
+              onClick={() => setInspectorOpen(false)}
+            />
+          ) : null}
+        </div>
       </div>
-    </div>
+    </IoWorkspaceViewContext.Provider>
   );
 }
 
 export function IoContextNav({
+  activeView,
   className,
   onSelect,
 }: {
+  activeView: IoWorkspaceView;
   className?: string;
-  onSelect?: () => void;
+  onSelect: (view: IoWorkspaceView) => void;
 }) {
   return (
     <aside className={cn("flex min-h-0 flex-col border-r border-border/70 bg-card/95", className)}>
@@ -247,12 +265,19 @@ export function IoContextNav({
               <div className="space-y-0.5">
                 {group.items.map((item) => {
                   const Icon = item.icon;
+                  const active = item.view === activeView;
                   return (
-                    <a
+                    <button
                       key={item.label}
-                      href={item.href}
-                      onClick={onSelect}
-                      className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs font-medium text-muted-foreground transition hover:bg-muted/60 hover:text-foreground"
+                      type="button"
+                      aria-current={active ? "page" : undefined}
+                      onClick={() => onSelect(item.view)}
+                      className={cn(
+                        "flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs font-medium transition",
+                        active
+                          ? "bg-[var(--indigo-night)] text-[var(--parchment)] shadow-sm"
+                          : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+                      )}
                     >
                       <Icon className="h-3.5 w-3.5" />
                       <span className="min-w-0 flex-1 truncate">{item.label}</span>
@@ -261,7 +286,7 @@ export function IoContextNav({
                           {item.count}
                         </span>
                       ) : null}
-                    </a>
+                    </button>
                   );
                 })}
               </div>

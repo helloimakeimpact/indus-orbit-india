@@ -6,6 +6,8 @@ This plan covers the whole product: public brand site, identity, Community, conv
 
 Execution update, 19 August 2026: the Released I/O controls remain unchanged. Direct-history keyset pagination, terminal cancellation/time/size bounds, gateway response caps and strict admin route matching are **Verified locally**. A clean replay now passes 68 migrations and 550 assertions; member/admin checks and dependency audits pass. The alias-safe migration-68 dry run made no hosted change because direct database transport failed on the current IPv6 network. Provider routing remains disabled.
 
+Execution update, 24 August 2026: the member I/O shell navigation and visibility repair is **Verified locally** by typecheck and 59/59 unit tests. Overview, Sessions, Terminal, Model routes, Capacity, Evidence, Usage ledger and Safety are now distinct query-backed views with active navigation and refresh continuity; invalid view values fail to Overview. The light I/O workspace now establishes its own foreground/design-token scope, eliminating the inherited parchment-on-grey contrast failure. This is checked-in UI behavior, not hosted-production or provider-activation evidence; authenticated browser accessibility and visual-regression journeys remain an exit gate.
+
 ## Current release checkpoint
 
 Completed in the demo environment:
@@ -131,6 +133,7 @@ Deliverables:
 5. Add OpenAI-compatible partner and local endpoints while preserving provider-specific adapters where semantics differ.
 6. Add member usage, credit, sponsorship, estimate, receipt and failure/offline UI.
    **Released slice:** authenticated users can run a no-dispatch preflight that returns the chosen route, candidate evidence, capability/price versions, residency and provider-cost plus 5.5% estimate without reserving budget or contacting a provider.
+   **Verified local slice:** the I/O rail resolves to eight focused, URL-backed views with refresh-safe state, active semantics and corrected light-surface contrast. Hosted visual/accessibility personas remain required before release.
 7. Activate one provider at a time only after contract tests; the first live conformance call requires an explicit admin reason/confirmation and is capped at USD 0.01.
 8. **Released foundation:** versioned 5.5% fee settlement and written onward-access activation gates. Still required: cached/tools/media/storage/regional billing dimensions, credits/FX/tax/invoices/refunds and provider reconciliation.
 

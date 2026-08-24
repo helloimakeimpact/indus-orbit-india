@@ -1,6 +1,6 @@
 # I/O Port implementation status and multi-provider readiness
 
-Status: local code, UI, database, admin and hosted-release assessment, updated 20 August 2026.
+Status: local code, UI, database, admin and hosted-release assessment, updated 24 August 2026.
 
 This is the operational source of truth for the current I/O Port implementation. It separates what exists from what is only represented in a plan or preview. Cross-product dependencies and release gates are governed by `../../MASTER_IMPLEMENTATION_AND_RELEASE_PLAN.md` and `../../RELEASE_READINESS_CHECKLIST.md`. Product direction remains in `IO_PORT_IMPLEMENTATION_PLAN.md`; the detailed delivery sequence remains in `IO_PORT_CODE_LEVEL_ROADMAP.md`; the OpenRouter comparison is in `OPENROUTER_CAPABILITY_AND_CAPACITY_PLAN.md`.
 
@@ -71,7 +71,7 @@ The member must be able to understand which model, provider, serving region, dat
 - The Community switch opens `/app`; a nonmember sees an explicit I/O-versus-Community choice and setup starts only after a deliberate Community action.
 - The working overview can create/select a workspace, display entitled capacity sources and safe audit events, select Observe/Plan/Build/Run, and choose between local OpenCode and a provider-partnership path.
 - The provider path calls a safe catalogue action and presents `Latest + affordable`, `Lowest cost`, and an explicit reviewed-model selector. It remains disabled until the gateway returns an entitled reviewed route.
-- The nested I/O shell now uses working section navigation and a truthful evidence guide. Preview-only workspace, health and activity claims were removed; live workspace, capacity, audit and receipt facts remain inside the member-owned surface.
+- The nested I/O shell now uses eight distinct query-backed views rather than in-page hash jumps. Overview, Sessions, Terminal, Model routes, Capacity, Evidence, Usage ledger and Safety each have an active navigation state, survive refresh and fail safely to Overview for invalid search input. The light workspace establishes its own foreground/design-token scope so headings, inputs, placeholders and ghost controls no longer inherit the outer parchment text colour. The view registry and fallback are covered by the 59-test member suite; authenticated visual/accessibility personas remain required.
 - The route-evidence ledger shows the latest twelve RLS-scoped receipts with provider/model, route strategy, capacity/residency, attempts, failures/fallbacks, token use and currency-labelled estimate. It stores and renders no prompt or response body.
 - The member surface now loads authoritative budget status, disables partner dispatch when no usable budget is available, displays settled/released minor units after a route, and lists durable local-terminal lifecycle records.
 
