@@ -32,10 +32,11 @@ export const Route = createFileRoute("/brand")({
 const CARD = {
   name: "Amar Pandey",
   title: "CEO",
-  org: "Jri.Ai",
+  org: "indusorbit.com",
   city: "Paris",
   phone: "+33766550190",
-  email: "office@jri.ai",
+  email: "office@indusorbit.com",
+  url: "https://indusorbit.com",
 };
 
 const palette = [
