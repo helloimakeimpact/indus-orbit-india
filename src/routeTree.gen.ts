@@ -21,6 +21,7 @@ import { Route as IoPortRouteImport } from './routes/io-port'
 import { Route as IoRouteImport } from './routes/io'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CitiesRouteImport } from './routes/cities'
+import { Route as BrandRouteImport } from './routes/brand'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as AdminRouteImport } from './routes/admin'
@@ -143,6 +144,11 @@ const ContactRoute = ContactRouteImport.update({
 const CitiesRoute = CitiesRouteImport.update({
   id: '/cities',
   path: '/cities',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BrandRoute = BrandRouteImport.update({
+  id: '/brand',
+  path: '/brand',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -469,6 +475,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
+  '/brand': typeof BrandRoute
   '/cities': typeof CitiesRoute
   '/contact': typeof ContactRoute
   '/io': typeof IoRouteWithChildren
@@ -545,6 +552,7 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/brand': typeof BrandRoute
   '/cities': typeof CitiesRoute
   '/contact': typeof ContactRoute
   '/io-port': typeof IoPortRoute
@@ -614,6 +622,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
+  '/brand': typeof BrandRoute
   '/cities': typeof CitiesRoute
   '/contact': typeof ContactRoute
   '/io': typeof IoRouteWithChildren
@@ -693,6 +702,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/app'
     | '/auth'
+    | '/brand'
     | '/cities'
     | '/contact'
     | '/io'
@@ -769,6 +779,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/admin'
     | '/auth'
+    | '/brand'
     | '/cities'
     | '/contact'
     | '/io-port'
@@ -837,6 +848,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/app'
     | '/auth'
+    | '/brand'
     | '/cities'
     | '/contact'
     | '/io'
@@ -915,6 +927,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   AppRoute: typeof AppRouteWithChildren
   AuthRoute: typeof AuthRoute
+  BrandRoute: typeof BrandRoute
   CitiesRoute: typeof CitiesRoute
   ContactRoute: typeof ContactRoute
   IoRoute: typeof IoRouteWithChildren
@@ -1017,6 +1030,13 @@ declare module '@tanstack/react-router' {
       path: '/cities'
       fullPath: '/cities'
       preLoaderRoute: typeof CitiesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/brand': {
+      id: '/brand'
+      path: '/brand'
+      fullPath: '/brand'
+      preLoaderRoute: typeof BrandRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -1675,6 +1695,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   AppRoute: AppRouteWithChildren,
   AuthRoute: AuthRoute,
+  BrandRoute: BrandRoute,
   CitiesRoute: CitiesRoute,
   ContactRoute: ContactRoute,
   IoRoute: IoRouteWithChildren,
