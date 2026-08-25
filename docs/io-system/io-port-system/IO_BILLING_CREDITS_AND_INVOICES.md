@@ -112,14 +112,12 @@ One active Checkout per invoice prevents parallel overpayment. Expired intents a
 
 ## Activation sequence
 
-1. Add test key and webhook secrets in Supabase.
-2. Register a Razorpay **test** processor configuration with current terms/refund evidence; a different super-admin approves it.
-3. Have an Indian tax professional review one GST policy draft; a different super-admin approves it.
-4. If usage currency differs from INR, create and second-person approve one time-bounded FX rate.
-5. Submit and verify a workspace billing profile.
-6. Run a sandbox journey: draft → issue → Checkout → capture → duplicate webhook → partial refund → duplicate webhook → reconciliation.
-7. Retain the resulting invoice, Razorpay dashboard, webhook, database and reconciliation evidence.
-8. Only then repeat merchant due diligence and approvals for the **live** processor configuration and live secrets.
+1. Create an isolated staging Supabase project/deployment; do not execute Razorpay test settlement against the production finance database.
+2. Add a reviewed staging-only test-payment adapter, then add test key and webhook secrets only to that staging project.
+3. Register and second-person approve the test processor, GST policy, any required FX rate and a workspace billing profile in staging.
+4. Run a sandbox journey: draft → issue → Checkout → capture → duplicate webhook → partial refund → duplicate webhook → reconciliation.
+5. Retain the resulting invoice, Razorpay dashboard, webhook, database and reconciliation evidence.
+6. Only then repeat merchant due diligence and approvals for the **live** production processor configuration and live secrets.
 
 ## Current hosted evidence
 
@@ -134,6 +132,7 @@ One active Checkout per invoice prevents parallel overpayment. Expired intents a
 ## Still outside code
 
 - Razorpay merchant/test/live credentials and webhook configuration;
+- an isolated staging Supabase deployment plus staging-only test-payment adapter and retained sandbox evidence;
 - accountant-approved GST registration/classification/place-of-supply and invoice sample;
 - treasury-approved FX source/cadence/tolerance;
 - refund authority/SLA, privacy/retention and accounting treatment;
