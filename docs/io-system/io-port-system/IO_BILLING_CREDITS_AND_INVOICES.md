@@ -1,53 +1,142 @@
-# I/O billing, credits and invoices
+# I/O billing, credits, GST, FX and Razorpay
 
-Status: hosted schema and caller-bound RPCs **Released** on 24 August 2026; member UI **Verified locally** and awaiting the next web deployment.
+Status: finance code and hosted control plane **Released** on 25 August 2026; commercial activation remains operator-, accountant- and merchant-gated.
 
-## Released boundary
+## What is implemented
 
-I/O now preserves the commercial evidence for every settled route in integer currency nanos:
+Every settled route preserves exact integer currency nanos:
 
 ```text
 provider cost + separately recorded 5.5% I/O service fee = customer charge
 customer charge - applied non-cash credit = amount due
 ```
 
-The hosted Indus Orbit project contains:
+The hosted Indus Orbit project now contains:
 
-- paged, filterable member usage history with exact cost, fee, credit and amount-due fields;
-- one credit account per workspace and currency, with append-only grant/application entries;
-- automatic credit application when, and only when, a usage record is first settled;
-- immutable invoice-line snapshots derived from uninvoiced settled usage;
-- capability-gated operator RPCs for posting an idempotent credit and creating a draft invoice;
-- caller-bound member RPCs for billing summary, credit history and invoice history;
-- a member ledger surface that displays unbilled usage, available credits, draft/issued/paid counts, filters and keyset pagination.
+- paged member usage and immutable invoice-line evidence;
+- workspace/currency credit accounts and append-only credit entries;
+- verified, versioned buyer billing profiles;
+- versioned GST/tax policies and FX rates with effective periods and second-person approval;
+- same-currency invoice drafts and cross-currency drafts that snapshot one approved FX rate;
+- immutable issued-invoice seller, buyer, SAC, place-of-supply, tax and FX evidence;
+- a member invoice PDF generated only from the issued database snapshot;
+- Razorpay server-created Orders and Standard Checkout;
+- mandatory server verification of the Checkout HMAC response;
+- signed test/live webhook verification over the unmodified request body;
+- provider-event and financial-transition idempotency, including duplicate capture/refund protection;
+- captured-payment-only refunds with `X-Refund-Idempotency` on every Razorpay refund request;
+- out-of-order refund reconciliation when a webhook arrives before the refund API response is saved;
+- payment/refund/dispute state and provider-statement reconciliation;
+- separate finance-operator UI for billing verification, structured Indian GST drafts, FX evidence, invoice drafting/issuance, Razorpay configuration, refunds and reconciliation.
 
-Credits do not increase or replace a workspace budget. The hard reserve-before-dispatch budget remains the authorization boundary. A credit only offsets an already-settled customer charge. Provider cost and the I/O fee remain visible even when the resulting amount due is zero.
+The browser receives only the Razorpay public key ID, server-created Order ID and amount. Razorpay key secrets, webhook secrets, raw webhook bodies and raw Checkout signatures are never returned or stored. A Checkout success response proves only that its signature is valid; the signed webhook remains settlement authority.
 
-## Security and privacy boundary
+## Razorpay runtime configuration
 
-The browser cannot select or mutate the underlying billing tables. Direct access for `anon` and `authenticated` is revoked; member reads and operator mutations pass through `security definer` RPCs that bind the caller to workspace membership or an administrative capability. Prompt, response, provider credential and raw upstream error data are absent from billing records.
+Use separate Supabase Edge Function secrets for each environment:
 
-Credit external references are unique per account, so an operator retry cannot silently double-grant a credit. A usage record can receive only one automatic credit application. One usage record and route receipt can appear in only one invoice line.
+```text
+RAZORPAY_TEST_KEY_ID=rzp_test_...
+RAZORPAY_TEST_KEY_SECRET=...
+RAZORPAY_TEST_WEBHOOK_SECRET=...
 
-## Invoice meaning
+RAZORPAY_LIVE_KEY_ID=rzp_live_...
+RAZORPAY_LIVE_KEY_SECRET=...
+RAZORPAY_LIVE_WEBHOOK_SECRET=...
+```
 
-An I/O `draft` is a reconciliation snapshot, not a legal tax invoice and not proof of payment. Draft creation freezes provider cost, service fee, credits and amount due for a selected workspace, currency and period. Ordinary members can see issued/paid invoices; workspace owners and admins may also see drafts.
+Configure both Razorpay dashboards to send supported payment/refund/dispute events to:
 
-The following remain **Planned/Blocked on commercial decisions**:
+```text
+https://jpwvgpnbkrktipwhvqss.supabase.co/functions/v1/io-payment-webhook
+```
 
-- buyer legal identity, GST/place-of-supply and tax calculation;
-- invoice issuance, numbering/legal artifact generation and delivery;
-- payment processor, INR/foreign-currency settlement and approved FX versions;
-- refunds, payment failures, chargebacks and credit-expiry policy;
-- provider invoice ingestion and line-by-line reconciliation;
-- accounting approval and production concurrency evidence using controlled provider traffic.
+The legacy single-environment names remain available only for a controlled transition and require an explicit environment:
 
-No code should promote a draft to `issued` or `paid` until those rules and owners are approved.
+```text
+RAZORPAY_ENVIRONMENT=test|live
+RAZORPAY_KEY_ID=...
+RAZORPAY_KEY_SECRET=...
 
-## Verification evidence
+RAZORPAY_WEBHOOK_ENVIRONMENT=test|live
+RAZORPAY_WEBHOOK_SECRET=...
+```
 
-- Hosted project: `jpwvgpnbkrktipwhvqss` (`Indus Orbit`, `ap-south-1`).
-- Migration: `20260824173000_add_io_billing_history_credits_and_invoices.sql`.
-- Hosted schema verification: four billing tables, six RPCs, usage credit/amount-due columns and the settlement trigger are present.
-- Local quality gate: typecheck, lint, 65 unit tests and production build pass.
-- Supabase Advisor was run after the DDL. Its existing broad project notices require a separate backlog pass; the new tables intentionally use RLS with no browser policies because all access is RPC-only and direct grants are revoked.
+Do not configure both test and live with one secret, and do not place any key secret in Netlify, GitHub variables exposed to Vite, browser JavaScript or local storage. `io-payments` requires a Supabase user JWT. `io-payment-webhook` deliberately disables Supabase JWT verification because it performs its own Razorpay HMAC verification.
+
+## Indian GST boundary
+
+The admin app creates a structured INR policy draft. Its common templates are:
+
+- domestic intra-state: 9% CGST + 9% SGST;
+- domestic inter-state: 18% IGST;
+- export: zero-rated evidence, distinct from exemption;
+- exempt: explicit exemption evidence.
+
+These are data-entry templates, not legal classification. A qualified Indian tax professional must confirm the seller legal identity/GSTIN/state, buyer category and place of supply, SAC, description, taxable base, rate, export conditions, invoice wording and effective period. A different super-admin must then approve the exact policy version. The application cannot issue an invoice without a verified buyer profile and matching approved policy.
+
+Drafts are reconciliation snapshots, not tax invoices. Issuance snapshots the approved policy and labels export as `zero_rated` and exemption as `exempt`. No policy is approved by code or migration.
+
+## FX boundary
+
+Usage may remain in its provider currency or be invoiced in a settlement currency. Cross-currency draft creation requires an approved, currently effective rate whose base and quote currencies match exactly. Conversion uses rational integer arithmetic and snapshots:
+
+- source and settlement currency;
+- approved rate-version ID;
+- numerator and denominator;
+- evidence URL;
+- source totals and converted invoice/line totals.
+
+The rate cannot change an existing invoice. Final amount due is rounded only to the settlement currency's active minor-unit rule at issuance. No automatic market-rate fetch or silently floating rate is used.
+
+## Payment and refund lifecycle
+
+```text
+issued invoice
+  → one active server payment intent
+  → deterministic Razorpay receipt
+  → create or unambiguously recover Razorpay Order
+  → Standard Checkout
+  → server verifies order_id|payment_id HMAC
+  → signed webhook captures settlement
+  → invoice paid state
+
+captured payment
+  → capability-gated refund request
+  → idempotent Razorpay refund API call
+  → signed webhook processes/fails refund
+  → invoice refund state
+```
+
+One active Checkout per invoice prevents parallel overpayment. Expired intents are cancelled before a new intent is created. Event IDs deduplicate ordinary retries; unique provider payment/refund identifiers and locked state transitions also prevent a provider retry with a different event ID from incrementing money twice.
+
+## Activation sequence
+
+1. Add test key and webhook secrets in Supabase.
+2. Register a Razorpay **test** processor configuration with current terms/refund evidence; a different super-admin approves it.
+3. Have an Indian tax professional review one GST policy draft; a different super-admin approves it.
+4. If usage currency differs from INR, create and second-person approve one time-bounded FX rate.
+5. Submit and verify a workspace billing profile.
+6. Run a sandbox journey: draft → issue → Checkout → capture → duplicate webhook → partial refund → duplicate webhook → reconciliation.
+7. Retain the resulting invoice, Razorpay dashboard, webhook, database and reconciliation evidence.
+8. Only then repeat merchant due diligence and approvals for the **live** processor configuration and live secrets.
+
+## Current hosted evidence
+
+- Project: `jpwvgpnbkrktipwhvqss` (`Indus Orbit`, `ap-south-1`).
+- Migration: `20260825121136_harden_razorpay_gst_and_refunds.sql` applied successfully.
+- Edge Functions: `io-payments` v3 active with JWT verification; `io-payment-webhook` v2 active with Razorpay HMAC verification.
+- Contract: 23/23 finance schema/grant assertions pass on the hosted database.
+- Smoke: unauthenticated payments request returns `401`; unsigned webhook currently returns `503` because no environment-specific Razorpay webhook secret is configured.
+- Activation counts at migration time: zero invoices, payment intents, provider events, refunds, approved tax policies, approved FX rates and approved payment processors.
+- Advisor: new finance indexes exist; unused-index notices are expected with zero finance traffic. RPC-only finance tables intentionally use RLS with no browser policy and revoked direct browser mutation grants.
+
+## Still outside code
+
+- Razorpay merchant/test/live credentials and webhook configuration;
+- accountant-approved GST registration/classification/place-of-supply and invoice sample;
+- treasury-approved FX source/cadence/tolerance;
+- refund authority/SLA, privacy/retention and accounting treatment;
+- approved test and live processor records with two-person review;
+- sandbox and then controlled-live operational evidence;
+- Netlify deployment of the member commit and publication of the separate admin app.

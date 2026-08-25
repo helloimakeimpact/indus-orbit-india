@@ -51,7 +51,7 @@ The demo deployment contains metadata and secret references, not key values. No 
 - Issued invoices can be downloaded by workspace members as a PDF derived from the immutable database representation; drafts cannot be represented as tax invoices.
 - Checkout receives only a public Razorpay key and a server-created order. Capture, failure, dispute and refund status remain signed-webhook authoritative.
 - Provider statements reconcile immutable line evidence to route attempts by provider request ID, retaining unmatched, ambiguous, currency and amount exceptions.
-- The finance runtime stays fail-closed: zero approved tax policies and zero approved live processors; no payment function was deployed and no charge was attempted.
+- The finance runtime stays fail-closed: zero approved tax policies, FX rates and live processors. `io-payments` v3 and `io-payment-webhook` v2 are deployed, but no valid payment path exists until credentials and two-person-approved policy records are present; no charge was attempted.
 
 ### 1.2 Authenticated browser and member-read repair, 24 August 2026
 
@@ -393,7 +393,7 @@ Exit: a member can make an informed choice and inspect the result without operat
 
 ### Phase E — budgets, pricing, and capacity classes
 
-**Released progress:** hard reserve-before-dispatch, settle/release-once, stale-hold expiry, usage evidence, balanced integer-unit route ledger, exact 5.5% provider-cost/fee/customer-total evidence, non-cash credit application and immutable draft invoice snapshots are Released. Cached/cache-write token parsing, tools/media/storage/regional dimensions, FX, tax, invoice issuance, payments, refunds and provider reconciliation remain Partial/Planned.
+**Released progress:** hard reserve-before-dispatch, settle/release-once, stale-hold expiry, usage evidence, balanced integer-unit route ledger, exact 5.5% provider-cost/fee/customer-total evidence, non-cash credit application, immutable invoice issuance, structured GST evidence, approved-rate FX conversion, Razorpay checkout/signature/webhook/refund controls and provider reconciliation are Released. Cached/cache-write token parsing and provider-specific tools/media/storage/regional billing dimensions remain Partial; credentials, business approvals and sandbox/live evidence remain external release gates.
 
 1. Concurrency-test the released reserve/settle/credit path; add reviewed upstream price snapshots, FX, tax and provider-specific non-token dimensions.
 2. Add BYOK ownership and isolation.

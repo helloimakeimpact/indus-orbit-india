@@ -123,7 +123,7 @@ export type IoInvoice = {
     | "partially_refunded"
     | "refunded"
     | "disputed";
-  taxStatus: "not_assessed" | "not_applicable" | "assessed";
+  taxStatus: "not_assessed" | "not_applicable" | "assessed" | "zero_rated" | "exempt";
   supplyKind: string | null;
   createdAt: string;
   issuedAt: string | null;
@@ -153,12 +153,31 @@ export type IoPaymentCheckout = {
   paymentIntentId: string;
   amountMinor: number;
   currencyCode: string;
+  environment: "live";
+};
+
+export type IoPaymentCheckoutVerification = {
+  paymentIntentId: string;
+  state: string;
+  settlementPending: boolean;
 };
 
 export type IoInvoiceDocument = {
   id: string;
   invoiceNumber: string;
   currencyCode: string;
+  sourceCurrencyCode: string | null;
+  fx: {
+    rateVersionId: string;
+    numerator: string;
+    denominator: string;
+    evidenceUrl: string;
+    sourceProviderCostNanos: string;
+    sourceServiceFeeNanos: string;
+    sourceSubtotalNanos: string;
+    sourceCreditAppliedNanos: string;
+    sourceAmountDueNanos: string;
+  } | null;
   periodStart: string;
   periodEnd: string;
   state: "issued" | "paid" | "void";
@@ -1297,7 +1316,9 @@ export async function listMyIoInvoices(workspaceId: string): Promise<IoInvoice[]
       !createdAt ||
       lineCount === null ||
       !["draft", "issued", "paid", "void"].includes(state ?? "") ||
-      !["not_assessed", "not_applicable", "assessed"].includes(taxStatus ?? "") ||
+      !["not_assessed", "not_applicable", "assessed", "zero_rated", "exempt"].includes(
+        taxStatus ?? "",
+      ) ||
       ![
         "not_due",
         "due",
@@ -1448,6 +1469,7 @@ export async function createMyIoPaymentCheckout(invoiceId: string): Promise<IoPa
     !readString(checkout, "orderId") ||
     !readString(checkout, "paymentIntentId") ||
     !readString(checkout, "currencyCode") ||
+    checkout.environment !== "live" ||
     amountMinor === null ||
     amountMinor < 1
   ) {
@@ -1460,7 +1482,39 @@ export async function createMyIoPaymentCheckout(invoiceId: string): Promise<IoPa
     paymentIntentId: readString(checkout, "paymentIntentId")!,
     amountMinor,
     currencyCode: readString(checkout, "currencyCode")!,
+    environment: "live",
   };
+}
+
+export async function verifyMyIoPaymentCheckout(input: {
+  paymentIntentId: string;
+  orderId: string;
+  paymentId: string;
+  signature: string;
+}): Promise<IoPaymentCheckoutVerification> {
+  const { data, error } = await supabase.functions.invoke("io-payments", {
+    body: {
+      action: "verify_checkout",
+      paymentIntentId: input.paymentIntentId,
+      orderId: input.orderId,
+      paymentId: input.paymentId,
+      signature: input.signature,
+    },
+  });
+  if (error) throw new Error(error.message);
+  const evidence = asRecord(data);
+  const paymentIntentId = evidence ? readString(evidence, "paymentIntentId") : null;
+  const state = evidence ? readString(evidence, "state") : null;
+  if (
+    !evidence ||
+    evidence.ok !== true ||
+    paymentIntentId !== input.paymentIntentId ||
+    !state ||
+    typeof evidence.settlementPending !== "boolean"
+  ) {
+    throw new Error("The checkout verification returned invalid evidence.");
+  }
+  return { paymentIntentId, state, settlementPending: evidence.settlementPending };
 }
 
 export async function getMyIoInvoiceDocument(invoiceId: string): Promise<IoInvoiceDocument> {
@@ -1519,7 +1573,9 @@ export async function getMyIoInvoiceDocument(invoiceId: string): Promise<IoInvoi
       "refunded",
       "disputed",
     ].includes(fields.paymentState ?? "") ||
-    !["not_assessed", "not_applicable", "assessed"].includes(fields.taxStatus ?? "")
+    !["not_assessed", "not_applicable", "assessed", "zero_rated", "exempt"].includes(
+      fields.taxStatus ?? "",
+    )
   ) {
     throw new Error("The issued invoice evidence is incomplete.");
   }
@@ -1568,10 +1624,30 @@ export async function getMyIoInvoiceDocument(invoiceId: string): Promise<IoInvoi
   if (lines.length !== rawLines.length) {
     throw new Error("The invoice line evidence is incomplete.");
   }
+  const fxRecord = asRecord(document.fx);
+  const fx = fxRecord
+    ? {
+        rateVersionId: readString(fxRecord, "rateVersionId") ?? "",
+        numerator: readExactIntegerString(fxRecord, "numerator") ?? "",
+        denominator: readExactIntegerString(fxRecord, "denominator") ?? "",
+        evidenceUrl: readString(fxRecord, "evidenceUrl") ?? "",
+        sourceProviderCostNanos: readExactIntegerString(fxRecord, "sourceProviderCostNanos") ?? "",
+        sourceServiceFeeNanos: readExactIntegerString(fxRecord, "sourceServiceFeeNanos") ?? "",
+        sourceSubtotalNanos: readExactIntegerString(fxRecord, "sourceSubtotalNanos") ?? "",
+        sourceCreditAppliedNanos:
+          readExactIntegerString(fxRecord, "sourceCreditAppliedNanos") ?? "",
+        sourceAmountDueNanos: readExactIntegerString(fxRecord, "sourceAmountDueNanos") ?? "",
+      }
+    : null;
+  if (fx && Object.values(fx).some((value) => !value)) {
+    throw new Error("The invoice FX evidence is incomplete.");
+  }
   return {
     id: fields.id!,
     invoiceNumber: fields.invoiceNumber!,
     currencyCode: fields.currencyCode!,
+    sourceCurrencyCode: readNullableString(document, "sourceCurrencyCode"),
+    fx,
     periodStart: fields.periodStart!,
     periodEnd: fields.periodEnd!,
     state: fields.state as IoInvoiceDocument["state"],

@@ -36,16 +36,44 @@ async function sha256Hex(value: string) {
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
+type RazorpayEnvironment = "test" | "live";
+
+function webhookSecrets() {
+  const configured: Array<{ environment: RazorpayEnvironment; secret: string }> = [];
+  const testSecret = Deno.env.get("RAZORPAY_TEST_WEBHOOK_SECRET")?.trim();
+  const liveSecret = Deno.env.get("RAZORPAY_LIVE_WEBHOOK_SECRET")?.trim();
+  if (testSecret) configured.push({ environment: "test", secret: testSecret });
+  if (liveSecret) configured.push({ environment: "live", secret: liveSecret });
+
+  const legacySecret = Deno.env.get("RAZORPAY_WEBHOOK_SECRET")?.trim();
+  const legacyEnvironment = Deno.env.get("RAZORPAY_WEBHOOK_ENVIRONMENT")?.trim().toLowerCase();
+  if (legacySecret && (legacyEnvironment === "test" || legacyEnvironment === "live")) {
+    if (!configured.some((item) => item.environment === legacyEnvironment)) {
+      configured.push({
+        environment: legacyEnvironment as RazorpayEnvironment,
+        secret: legacySecret,
+      });
+    }
+  }
+  return configured;
+}
+
 Deno.serve(async (request) => {
   if (request.method !== "POST") return new Response("Method not allowed", { status: 405 });
-  const secret = Deno.env.get("RAZORPAY_WEBHOOK_SECRET")?.trim();
-  if (!secret) return new Response("Webhook is not configured", { status: 503 });
+  const secrets = webhookSecrets();
+  if (!secrets.length) return new Response("Webhook is not configured", { status: 503 });
   const rawBody = await request.text();
   const receivedSignature = request.headers.get("x-razorpay-signature")?.trim().toLowerCase() ?? "";
-  const expectedSignature = await hmacHex(secret, rawBody);
-  if (!receivedSignature || !equalHex(receivedSignature, expectedSignature)) {
+  const matches: typeof secrets = [];
+  for (const candidate of secrets) {
+    const expectedSignature = await hmacHex(candidate.secret, rawBody);
+    if (receivedSignature && equalHex(receivedSignature, expectedSignature))
+      matches.push(candidate);
+  }
+  if (matches.length !== 1) {
     return new Response("Unauthorized", { status: 401 });
   }
+  const environment = matches[0].environment;
 
   try {
     const payload = record(JSON.parse(rawBody));
@@ -67,7 +95,8 @@ Deno.serve(async (request) => {
     const eventPayload = record(payload?.payload);
     const payment = record(record(eventPayload?.payment)?.entity);
     const refund = record(record(eventPayload?.refund)?.entity);
-    const entity = refund ?? payment;
+    const dispute = record(record(eventPayload?.dispute)?.entity);
+    const entity = refund ?? payment ?? dispute;
     const orderId =
       typeof payment?.order_id === "string"
         ? payment.order_id
@@ -79,18 +108,32 @@ Deno.serve(async (request) => {
         ? payment.id
         : typeof refund?.payment_id === "string"
           ? refund.payment_id
-          : "";
+          : typeof dispute?.payment_id === "string"
+            ? dispute.payment_id
+            : "";
     const refundId = typeof refund?.id === "string" ? refund.id : "";
     const amountMinor = typeof entity?.amount === "number" ? entity.amount : null;
     const currencyCode = typeof entity?.currency === "string" ? entity.currency : "";
     const createdAt =
       typeof entity?.created_at === "number" ? entity.created_at : Date.now() / 1000;
-    if (!orderId || !Number.isSafeInteger(amountMinor) || amountMinor! < 0) {
+    const isPaymentEvent =
+      eventType.startsWith("payment.") && eventType !== "payment.dispute.created";
+    const isRefundEvent = eventType.startsWith("refund.");
+    if (
+      !entity ||
+      !Number.isSafeInteger(amountMinor) ||
+      amountMinor! < 0 ||
+      !/^[A-Z]{3}$/.test(currencyCode) ||
+      (isPaymentEvent && !orderId) ||
+      ((isRefundEvent || eventType === "payment.dispute.created") && !paymentId) ||
+      (isRefundEvent && !refundId)
+    ) {
       return new Response("Event shape is invalid", { status: 400 });
     }
     const admin = createGatewayAdminClient();
     const { error } = await admin.rpc("record_io_payment_provider_event", {
       _provider_key: "razorpay",
+      _environment: environment,
       _provider_event_id: eventId,
       _event_type: eventType,
       _external_order_id: orderId,

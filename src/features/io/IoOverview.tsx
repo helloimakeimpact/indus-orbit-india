@@ -76,6 +76,7 @@ import {
   listMyIoCreditEntries,
   listMyIoInvoices,
   createMyIoPaymentCheckout,
+  verifyMyIoPaymentCheckout,
   listMyIoTerminalSessions,
   listMyIoTerminalEvents,
   listMyIoUsageHistory,
@@ -151,6 +152,11 @@ const emptyBillingProfileDraft: BillingProfileDraft = {
 
 type RazorpayInstance = { open: () => void };
 type RazorpayConstructor = new (options: Record<string, unknown>) => RazorpayInstance;
+type RazorpayCheckoutResult = {
+  razorpay_payment_id: string;
+  razorpay_order_id: string;
+  razorpay_signature: string;
+};
 
 declare global {
   interface Window {
@@ -209,6 +215,12 @@ function invoiceSnapshotText(snapshot: Record<string, unknown>, key: string) {
       (part): part is string => typeof part === "string" && Boolean(part.trim()),
     );
     return parts.join(", ");
+  }
+  if (value && typeof value === "object") {
+    const parts = Object.values(value as Record<string, unknown>).flatMap((part) =>
+      typeof part === "string" && part.trim() ? [part.trim()] : [],
+    );
+    if (parts.length) return parts.join(", ");
   }
   return "—";
 }
@@ -729,10 +741,31 @@ export function IoOverview() {
           : undefined,
         notes: { payment_intent_id: checkout.paymentIntentId },
         theme: { color: "#ff9c24" },
-        handler: () => {
-          setPaymentBusy(null);
-          toast.success("Payment submitted. Final status follows the signed provider webhook.");
-          void loadWorkspace(workspace.id);
+        handler: (result: RazorpayCheckoutResult) => {
+          void (async () => {
+            try {
+              const verification = await verifyMyIoPaymentCheckout({
+                paymentIntentId: checkout.paymentIntentId,
+                orderId: result.razorpay_order_id,
+                paymentId: result.razorpay_payment_id,
+                signature: result.razorpay_signature,
+              });
+              toast.success(
+                verification.settlementPending
+                  ? "Checkout verified. Final settlement follows the signed Razorpay webhook."
+                  : "Payment verified and settled.",
+              );
+              await loadWorkspace(workspace.id);
+            } catch (error) {
+              toast.error(
+                error instanceof Error
+                  ? error.message
+                  : "Payment returned, but server verification failed.",
+              );
+            } finally {
+              setPaymentBusy(null);
+            }
+          })();
         },
         modal: {
           ondismiss: () => setPaymentBusy(null),
@@ -809,6 +842,18 @@ export function IoOverview() {
       line("I/O service fee", money(evidence.serviceFeeNanos));
       line("Subtotal", money(evidence.subtotalNanos));
       line("Credits applied", `− ${money(evidence.creditAppliedNanos)}`);
+      if (evidence.fx && evidence.sourceCurrencyCode) {
+        const sourceMoney = (nanos: string) =>
+          formatExactNanos(nanos, evidence.sourceCurrencyCode!);
+        line(
+          `FX source · ${evidence.sourceCurrencyCode}`,
+          sourceMoney(evidence.fx.sourceAmountDueNanos),
+        );
+        line(
+          "Approved FX snapshot",
+          `${evidence.fx.numerator}/${evidence.fx.denominator} ${evidence.currencyCode} per ${evidence.sourceCurrencyCode}`,
+        );
+      }
       if (invoiceSnapshotNanos(tax, "cgstNanos") !== "0") {
         line(
           `CGST · ${basisPointsLabel(tax, "cgstBasisPoints")}`,
