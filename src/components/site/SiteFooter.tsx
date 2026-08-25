@@ -171,7 +171,7 @@ export function SiteFooter() {
         </div>
         <div className="border-t border-white/10">
           <div className="mx-auto flex max-w-6xl flex-col gap-2 px-6 py-5 text-xs text-[var(--parchment)]/60 md:flex-row md:items-center md:justify-between">
-            <span>© {new Date().getFullYear()} Indus Orbit. Made for India.</span>
+            <span>© {new Date().getFullYear()} Indus Orbit. Rooted in India.</span>
             <span>Connection · Synergy · Society</span>
           </div>
         </div>

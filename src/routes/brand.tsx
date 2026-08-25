@@ -1,4 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useRef, useState, type Ref } from "react";
+import QRCode from "react-qr-code";
 import { SiteShell } from "@/components/site/SiteShell";
 import { canonical, siteUrl } from "@/lib/seo";
 import logo from "@/assets/indus-orbit-logo.png";
@@ -34,7 +36,7 @@ const CARD = {
   title: "CEO",
   org: "Indus Orbit",
   domain: "indusorbit.com",
-  tagline: "India Thinks Together.",
+  tagline: "Made of Many Minds.",
   city: "Paris",
   phone: "+33766550190",
   email: "office@indusorbit.com",
@@ -48,6 +50,13 @@ const palette = [
   { name: "Card", token: "--card", use: "Panels, ledgers, evidence drawers" },
   { name: "Border", token: "--border", use: "Hairlines, dividers, chips" },
 ];
+
+const PRODUCTS = [
+  { name: "I/O Port", meaning: "Intelligence" },
+  { name: "Network", meaning: "People" },
+  { name: "Chapters", meaning: "Places" },
+  { name: "Missions", meaning: "Action" },
+] as const;
 
 function vcard() {
   return [
@@ -75,6 +84,23 @@ function downloadVcard() {
   URL.revokeObjectURL(url);
 }
 
+async function downloadVisitingCard(front: HTMLElement, back: HTMLElement) {
+  const [{ toPng }, { jsPDF }] = await Promise.all([import("html-to-image"), import("jspdf")]);
+  const renderOptions = {
+    cacheBust: true,
+    pixelRatio: 4,
+  } as const;
+  const [frontPng, backPng] = await Promise.all([
+    toPng(front, renderOptions),
+    toPng(back, renderOptions),
+  ]);
+  const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: [85, 49] });
+  pdf.addImage(frontPng, "PNG", 0, 0, 85, 49, undefined, "FAST");
+  pdf.addPage([85, 49], "landscape");
+  pdf.addImage(backPng, "PNG", 0, 0, 85, 49, undefined, "FAST");
+  pdf.save("indus-orbit-visiting-card.pdf");
+}
+
 function Swatch({ name, token, use }: { name: string; token: string; use: string }) {
   return (
     <div className="rounded-3xl border border-border bg-card p-4">
@@ -91,93 +117,122 @@ function Swatch({ name, token, use }: { name: string; token: string; use: string
   );
 }
 
-function VisitingCardFront() {
+function VisitingCardFront({ cardRef }: { cardRef?: Ref<HTMLDivElement> }) {
   return (
-    <div className="aspect-[1.75/1] w-full overflow-hidden rounded-3xl bg-[var(--indigo-night)] p-5 text-[var(--parchment)] shadow-xl sm:p-7">
-      <div className="flex h-full flex-col justify-between">
-        <div className="flex items-center gap-3">
+    <div
+      ref={cardRef}
+      className="aspect-[1.75/1] w-full overflow-hidden rounded-3xl bg-[var(--indigo-night)] p-5 text-[var(--parchment)] shadow-xl sm:p-7"
+    >
+      <div className="flex h-full flex-col items-center justify-between text-center">
+        <div className="flex items-center gap-2.5">
           <img
             src={logo}
             alt="Indus Orbit logo"
-            width={40}
-            height={40}
-            className="pixelated h-10 w-10"
+            width={32}
+            height={32}
+            className="pixelated h-8 w-8"
           />
-          <div>
-            <p className="font-display text-lg leading-none">Indus Orbit</p>
-            <p className="text-[10px] uppercase tracking-[0.25em] text-[var(--saffron)]">
-              {CARD.tagline}
-            </p>
-          </div>
+          <p className="font-display text-lg leading-none">Indus Orbit</p>
         </div>
-        <p className="max-w-[16ch] font-display text-xl font-medium leading-[0.95] text-balance sm:text-3xl">
-          The General Intelligence Company of India
+        <div className="flex flex-col items-center">
+          <p className="max-w-[19ch] font-display text-xl font-medium leading-[1.02] text-balance sm:text-3xl">
+            The General Intelligence Company of India
+          </p>
+        </div>
+        <p className="text-xs font-medium tracking-[0.08em] text-[var(--saffron)] sm:text-sm">
+          {CARD.tagline}
         </p>
-        <div className="flex items-end justify-between gap-4">
-          <div>
-            <p className="font-display text-xl leading-none sm:text-2xl">{CARD.name}</p>
-            <p className="mt-1.5 text-[10px] font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">
-              {CARD.title}
-            </p>
-          </div>
-          <a
-            href={CARD.url}
-            className="text-right text-[10px] font-semibold uppercase tracking-[0.18em] hover:text-[var(--saffron)] sm:text-xs"
-          >
-            {CARD.domain}
-          </a>
-        </div>
       </div>
     </div>
   );
 }
 
-function VisitingCardBack() {
+function VisitingCardBack({ cardRef }: { cardRef?: Ref<HTMLDivElement> }) {
   return (
-    <div className="aspect-[1.75/1] w-full overflow-hidden rounded-3xl border border-border bg-[var(--parchment)] p-7 text-[var(--indigo-night)] shadow-xl">
-      <div className="flex h-full flex-col justify-between">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-[var(--indigo-night)]/60">
-          Contact
-        </p>
-        <ul className="space-y-2 text-sm">
-          <li className="flex items-center gap-2">
-            <Phone className="h-4 w-4 shrink-0" />
-            <a href={`tel:${CARD.phone}`} className="hover:underline">
-              {CARD.phone}
-            </a>
-          </li>
-          <li className="flex items-center gap-2">
-            <Mail className="h-4 w-4 shrink-0" />
-            <a href={`mailto:${CARD.email}`} className="hover:underline">
-              {CARD.email}
-            </a>
-          </li>
-          <li className="flex items-center gap-2">
-            <MapPin className="h-4 w-4 shrink-0" />
-            {CARD.city}, France
-          </li>
-          <li className="flex items-center gap-2">
-            <Globe2 className="h-4 w-4 shrink-0" />
-            <a href={CARD.url} className="hover:underline">
-              {CARD.domain}
-            </a>
-          </li>
-        </ul>
-        <div className="flex items-center justify-between">
+    <div
+      ref={cardRef}
+      className="aspect-[1.75/1] w-full overflow-hidden rounded-3xl border border-border bg-[var(--parchment)] p-5 text-[var(--indigo-night)] shadow-xl sm:p-7"
+    >
+      <div className="grid h-full grid-cols-[1.08fr_0.92fr] gap-4 sm:gap-6">
+        <div className="flex min-w-0 flex-col justify-between">
           <div>
-            <span className="font-display text-lg">Indus Orbit</span>
-            <p className="text-[9px] uppercase tracking-[0.2em] text-[var(--saffron)]">
-              {CARD.tagline}
+            <p className="font-display text-lg leading-none sm:text-2xl">{CARD.name}</p>
+            <p className="mt-1.5 text-[8px] font-semibold uppercase tracking-[0.25em] text-[var(--indigo-night)]/55 sm:text-[9px]">
+              {CARD.title}
             </p>
           </div>
-          <img
-            src={logo}
-            alt=""
-            width={28}
-            height={28}
-            className="pixelated h-7 w-7"
-            aria-hidden="true"
-          />
+          <ul className="space-y-1.5 text-[10px] sm:space-y-2 sm:text-sm">
+            <li className="flex items-center gap-2">
+              <Phone className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
+              <a href={`tel:${CARD.phone}`} className="truncate hover:underline">
+                {CARD.phone}
+              </a>
+            </li>
+            <li className="flex items-center gap-2">
+              <Mail className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
+              <a href={`mailto:${CARD.email}`} className="truncate hover:underline">
+                {CARD.email}
+              </a>
+            </li>
+            <li className="flex items-center gap-2">
+              <MapPin className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
+              {CARD.city}, France
+            </li>
+          </ul>
+          <a
+            href={CARD.url}
+            className="flex items-center gap-2 text-[10px] font-medium hover:underline sm:text-xs"
+          >
+            <Globe2 className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
+            {CARD.domain}
+          </a>
+        </div>
+        <div className="flex min-w-0 flex-col justify-between border-l border-[var(--indigo-night)]/12 pl-4 sm:pl-6">
+          <div>
+            <p className="text-[8px] font-semibold uppercase tracking-[0.22em] text-[var(--indigo-night)]/50 sm:text-[9px]">
+              Products
+            </p>
+            <ul className="mt-2 space-y-1.5 sm:mt-3 sm:space-y-2">
+              {PRODUCTS.map((product) => (
+                <li key={product.name} className="flex items-baseline justify-between gap-2">
+                  <span className="truncate font-display text-[11px] leading-none sm:text-sm">
+                    {product.name}
+                  </span>
+                  <span className="text-[7px] font-semibold uppercase tracking-[0.12em] text-[var(--indigo-night)]/45 sm:text-[8px]">
+                    {product.meaning}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="flex items-end justify-between gap-2">
+            <div>
+              <div
+                className="w-14 rounded-md bg-white p-1 sm:w-[72px]"
+                aria-label="Scan to save Amar Pandey's contact"
+              >
+                <QRCode
+                  value={vcard()}
+                  size={72}
+                  bgColor="#ffffff"
+                  fgColor="#11143d"
+                  level="M"
+                  style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                />
+              </div>
+              <p className="mt-1 text-[7px] font-semibold uppercase tracking-[0.14em] text-[var(--indigo-night)]/50">
+                Save contact
+              </p>
+            </div>
+            <img
+              src={logo}
+              alt=""
+              width={24}
+              height={24}
+              className="pixelated h-5 w-5 sm:h-6 sm:w-6"
+              aria-hidden="true"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -185,6 +240,24 @@ function VisitingCardBack() {
 }
 
 function BrandPage() {
+  const frontCardRef = useRef<HTMLDivElement>(null);
+  const backCardRef = useRef<HTMLDivElement>(null);
+  const [isDownloadingCard, setIsDownloadingCard] = useState(false);
+  const [cardDownloadError, setCardDownloadError] = useState<string | null>(null);
+
+  const handleCardDownload = async () => {
+    if (!frontCardRef.current || !backCardRef.current || isDownloadingCard) return;
+    setIsDownloadingCard(true);
+    setCardDownloadError(null);
+    try {
+      await downloadVisitingCard(frontCardRef.current, backCardRef.current);
+    } catch {
+      setCardDownloadError("The card PDF could not be prepared. Please try again.");
+    } finally {
+      setIsDownloadingCard(false);
+    }
+  };
+
   return (
     <SiteShell navTone="dark">
       <section className="relative h-[58svh] min-h-[420px] w-full overflow-hidden">
@@ -382,10 +455,19 @@ function BrandPage() {
             Printed on 400gsm uncoated stock with a saffron foil ring on the mark.
           </p>
           <div className="mt-10 grid gap-6 md:grid-cols-2">
-            <VisitingCardFront />
-            <VisitingCardBack />
+            <VisitingCardFront cardRef={frontCardRef} />
+            <VisitingCardBack cardRef={backCardRef} />
           </div>
           <div className="mt-8 flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={handleCardDownload}
+              disabled={isDownloadingCard}
+              className="inline-flex items-center gap-2 rounded-full bg-[var(--saffron)] px-5 py-3 text-sm font-semibold text-[var(--indigo-night)] transition hover:bg-[var(--indigo-night)] hover:text-[var(--parchment)] disabled:cursor-wait disabled:opacity-60"
+            >
+              <Download className="h-4 w-4" />
+              {isDownloadingCard ? "Preparing PDF…" : "Download visiting card (.pdf)"}
+            </button>
             <button
               type="button"
               onClick={downloadVcard}
@@ -406,6 +488,11 @@ function BrandPage() {
               <Phone className="h-4 w-4" /> {CARD.phone}
             </a>
           </div>
+          {cardDownloadError ? (
+            <p className="mt-3 text-sm text-destructive" role="alert">
+              {cardDownloadError}
+            </p>
+          ) : null}
         </div>
       </section>
     </SiteShell>
