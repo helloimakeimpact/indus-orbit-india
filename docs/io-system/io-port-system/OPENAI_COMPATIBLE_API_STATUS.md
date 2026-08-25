@@ -68,7 +68,7 @@ This boundary prevents a broad “OpenAI-compatible” claim from hiding semanti
 
 ## Verification evidence
 
-- hosted migration ledger contains 89 entries, including `20260820191501` (workspace/key policy), `20260820191544` (provider conformance), `20260820191815` (conformance FK indexes) and the later collaboration, Trust, finance and I/O-history releases;
+- hosted migration ledger contains 90 entries, including `20260820191501` (workspace/key policy), `20260820191544` (provider conformance), `20260820191815` (conformance FK indexes), the collaboration/Trust releases and `20260825122611` (Razorpay/GST/FX hardening);
 - function grants, private-table containment, security-definer and empty-search-path contracts passed on the hosted project;
 - a rolled-back hosted functional transaction passed raw-key shape, hash-only storage, allow/rate-limit behavior, counter bound, revocation and exactly-once audit checks;
 - `io-gateway` v27 is active with custom JWT verification, no-dispatch route preflight and provider-fetch cancellation;

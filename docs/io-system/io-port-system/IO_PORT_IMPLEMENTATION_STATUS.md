@@ -424,7 +424,7 @@ The highest-leverage next slice is **finish provider conformance without enablin
 
 ## 11. Verification basis and limits
 
-This assessment uses local source, current 68/68 member and 22/22 admin checks, the last recorded 733/733 full hosted database suite and the live 89-migration Supabase schema. Production approval is not claimed. The newest additive releases were applied transactionally through the connected migration API and verified by object/ACL/default/state checks plus post-DDL advisors. A fresh empty-database replay of the entire 89-migration chain remains required as retained CI evidence.
+This assessment uses local source, current 68/68 member and 25/25 admin checks, the last recorded 733/733 full hosted database suite, the additive 23/23 hosted finance contract and the live 90-migration Supabase schema. Production approval is not claimed. The newest additive releases were applied transactionally through the connected migration API and verified by object/ACL/default/state checks plus post-DDL advisors. A fresh empty-database replay of the entire 90-migration chain remains required as retained CI evidence.
 
 The connected Supabase tools do not expose Edge Function secret names or values. Consequently this audit confirms what names the code reads and what provider records exist, but it cannot confirm which provider-specific secrets the operator added. No secret should be copied into an issue, chat, document, log, table, or repository to overcome that limitation.
 
