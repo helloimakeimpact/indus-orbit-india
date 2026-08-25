@@ -59,8 +59,8 @@ function WhatIsIndusOrbitPage() {
             What is Indus Orbit?
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-[var(--parchment)]/80">
-            A general intelligence company for India. We build the digital and physical gravity that
-            pulls India’s next generation of builders into the same orbit.
+            The general intelligence company of India. We build the digital and physical gravity
+            that pulls India’s next generation of builders into the same orbit.
           </p>
 
           {/* TOGGLE */}

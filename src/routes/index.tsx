@@ -28,13 +28,13 @@ export const Route = createFileRoute("/")({
     links: canonical("/"),
     meta: [
       { property: "og:url", content: siteUrl("/") },
-      { title: "Indus Orbit — A general intelligence company for India" },
+      { title: "Indus Orbit — The general intelligence company of India" },
       {
         name: "description",
         content:
           "Indus Orbit builds AI tools and human networks that connect India's youth, industry experts, founders and the diaspora into one orbit.",
       },
-      { property: "og:title", content: "Indus Orbit — A general intelligence company for India" },
+      { property: "og:title", content: "Indus Orbit — The general intelligence company of India" },
       {
         property: "og:description",
         content:

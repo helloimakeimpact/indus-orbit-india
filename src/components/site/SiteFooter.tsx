@@ -41,7 +41,7 @@ export function SiteFooter() {
               <span className="font-display text-2xl font-semibold">Indus Orbit</span>
             </div>
             <p className="mt-4 max-w-md text-sm text-[var(--parchment)]/75">
-              A general intelligence company for India — building tools and networks that connect
+              The general intelligence company of India — building tools and networks that connect
               youth, experts, founders, investors and the diaspora into one orbit.
             </p>
             <div className="mt-6 mb-2 flex flex-wrap gap-3">

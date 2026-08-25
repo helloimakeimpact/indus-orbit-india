@@ -3,7 +3,7 @@ import { SiteShell } from "@/components/site/SiteShell";
 import { canonical, siteUrl } from "@/lib/seo";
 import logo from "@/assets/indus-orbit-logo.png";
 import brandHero from "@/assets/brand-hero.jpg";
-import { Download, Mail, MapPin, Phone, Palette, Type, Sparkles } from "lucide-react";
+import { Download, Globe2, Mail, MapPin, Phone, Palette, Type, Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/brand")({
   head: () => ({
@@ -32,7 +32,9 @@ export const Route = createFileRoute("/brand")({
 const CARD = {
   name: "Amar Pandey",
   title: "CEO",
-  org: "indusorbit.com",
+  org: "Indus Orbit",
+  domain: "indusorbit.com",
+  tagline: "India Thinks Together.",
   city: "Paris",
   phone: "+33766550190",
   email: "office@indusorbit.com",
@@ -57,6 +59,7 @@ function vcard() {
     `TITLE:${CARD.title}`,
     `TEL;TYPE=CELL:${CARD.phone}`,
     `EMAIL;TYPE=WORK:${CARD.email}`,
+    `URL:${CARD.url}`,
     `ADR;TYPE=WORK:;;;${CARD.city};;;France`,
     "END:VCARD",
   ].join("\r\n");
@@ -90,7 +93,7 @@ function Swatch({ name, token, use }: { name: string; token: string; use: string
 
 function VisitingCardFront() {
   return (
-    <div className="aspect-[1.75/1] w-full overflow-hidden rounded-3xl bg-[var(--indigo-night)] p-7 text-[var(--parchment)] shadow-xl">
+    <div className="aspect-[1.75/1] w-full overflow-hidden rounded-3xl bg-[var(--indigo-night)] p-5 text-[var(--parchment)] shadow-xl sm:p-7">
       <div className="flex h-full flex-col justify-between">
         <div className="flex items-center gap-3">
           <img
@@ -103,15 +106,26 @@ function VisitingCardFront() {
           <div>
             <p className="font-display text-lg leading-none">Indus Orbit</p>
             <p className="text-[10px] uppercase tracking-[0.25em] text-[var(--saffron)]">
-              General intelligence for India
+              {CARD.tagline}
             </p>
           </div>
         </div>
-        <div>
-          <p className="font-display text-3xl leading-none">{CARD.name}</p>
-          <p className="mt-2 text-xs font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">
-            {CARD.title} · {CARD.org}
-          </p>
+        <p className="max-w-[16ch] font-display text-xl font-medium leading-[0.95] text-balance sm:text-3xl">
+          The General Intelligence Company of India
+        </p>
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <p className="font-display text-xl leading-none sm:text-2xl">{CARD.name}</p>
+            <p className="mt-1.5 text-[10px] font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">
+              {CARD.title}
+            </p>
+          </div>
+          <a
+            href={CARD.url}
+            className="text-right text-[10px] font-semibold uppercase tracking-[0.18em] hover:text-[var(--saffron)] sm:text-xs"
+          >
+            {CARD.domain}
+          </a>
         </div>
       </div>
     </div>
@@ -142,9 +156,20 @@ function VisitingCardBack() {
             <MapPin className="h-4 w-4 shrink-0" />
             {CARD.city}, France
           </li>
+          <li className="flex items-center gap-2">
+            <Globe2 className="h-4 w-4 shrink-0" />
+            <a href={CARD.url} className="hover:underline">
+              {CARD.domain}
+            </a>
+          </li>
         </ul>
         <div className="flex items-center justify-between">
-          <span className="font-display text-lg">Indus Orbit</span>
+          <div>
+            <span className="font-display text-lg">Indus Orbit</span>
+            <p className="text-[9px] uppercase tracking-[0.2em] text-[var(--saffron)]">
+              {CARD.tagline}
+            </p>
+          </div>
           <img
             src={logo}
             alt=""

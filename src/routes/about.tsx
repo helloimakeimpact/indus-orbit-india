@@ -19,7 +19,7 @@ export const Route = createFileRoute("/about")({
       {
         property: "og:description",
         content:
-          "Connection · Synergy · Society — the three pillars of a general intelligence company built for India.",
+          "Connection · Synergy · Society — the three pillars of the general intelligence company of India.",
       },
       { property: "og:image", content: aboutImg },
       { name: "twitter:card", content: "summary_large_image" },
@@ -87,7 +87,7 @@ function AboutPage() {
             <p>
               India is unusual. Our markets are dense, our diaspora is global, our young population
               is enormous, and our trust still travels through relationships. A general intelligence
-              company for India has to honour all of that.
+              company of India has to honour all of that.
             </p>
             <p>
               Indus Orbit exists to build the tools, networks and rituals that fit how India

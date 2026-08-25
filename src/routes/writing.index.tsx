@@ -22,7 +22,7 @@ export const Route = createFileRoute("/writing/")({
       { property: "og:title", content: "Writing — Indus Orbit" },
       {
         property: "og:description",
-        content: "Notes from a general intelligence company built for India.",
+        content: "Notes from the general intelligence company of India.",
       },
     ],
   }),

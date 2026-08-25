@@ -242,7 +242,7 @@ const rawPosts: RawPost[] = [
 function defaultBody(p: RawPost): string[] {
   return [
     p.excerpt,
-    `This is a working note from ${p.author} at Indus Orbit — part of an ongoing series on ${p.tag.toLowerCase()} for a general intelligence company built for India.`,
+    `This is a working note from ${p.author} at Indus Orbit — part of an ongoing series on ${p.tag.toLowerCase()} from the general intelligence company of India.`,
     `We publish these as they harden into something usable, not when they're finished. If a section here changes your mind (or you think we've got it wrong), write back — most of what ends up in the Orbit dispatch started as a reply from a reader.`,
     `Over the next few weeks we'll expand this piece with field notes, benchmarks and interviews from the members closest to the problem. Subscribe to the Orbit dispatch to get the next revision in your inbox.`,
   ];

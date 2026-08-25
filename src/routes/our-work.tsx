@@ -77,7 +77,7 @@ const featured = [
   {
     name: "Indus Orbit",
     tag: "Flagship",
-    tagline: "A general intelligence company built for India.",
+    tagline: "The general intelligence company of India.",
     body: "Indus Orbit is the mothership — the research, product and network layer that ties all our work together. The members' directory, Skills library, Model Observatory and our writing all live here, orbiting one thesis: intelligence in India will be built through relationships, not just models.",
     href: "/",
     gradient: "from-[var(--saffron)]/70 via-[var(--gold)]/70 to-[var(--indigo-night)]",

@@ -60,6 +60,8 @@ I/O Port is intended to be India’s people-centred intelligence exchange: one g
 
 ## Brand translated into product behavior
 
+The canonical identity is **“The General Intelligence Company of India”**, never “for India.” The concise brand line is **“India Thinks Together.”** It expresses the operating thesis—people, institutions, models and capacity becoming more capable through cooperation—without suggesting an aerospace company. Public identity and stationery use `indusorbit.com`; `jri.ai` is not an Indus Orbit identity domain.
+
 Indigo provides structure and trust; parchment provides a calm working surface; saffron marks deliberate attention and action. Scientific credibility comes from evidence, timestamps, units, uncertainty and reproducibility—not decorative technical language. The voice should be ambitious without making claims that the system cannot yet prove.
 
 The spatial application model is a persistent Orbit rail, contextual navigation, main workspace and optional inspector. That geometry can support People, Learn, Action, Messages and I/O while keeping their data and permissions distinct.
