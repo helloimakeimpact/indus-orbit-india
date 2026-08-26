@@ -91,11 +91,12 @@ The post-migration Security Advisor reports expected notices on private deny-by-
 1. Run the current 89-migration chain and database contracts from an empty database in retained CI evidence.
 2. Replace post-settlement SSE chunking with direct upstream token streaming and settlement on every streaming terminal path. Client cancellation already propagates through the Released in-flight provider fetch.
 3. Expand the stateless Responses subset only after versioned request/response/error compatibility tests; do not enable stored continuation implicitly.
-4. Publish curl, OpenAI SDK and OpenCode configuration examples without exposing keys in browser storage or Git.
-5. Add anomaly suspension, rotation reminders, reviewed plan-tier limits and operator suspension evidence around the Released conservative key policy.
-6. Add production live-key policy only after terms, abuse, support, billing and incident ownership are approved; the database now blocks provider activation without written onward-access evidence.
-7. Have an authorized operator explicitly run one USD 0.01-capped test through the Released conformance workflow; until a run passes and commercial authorization is recorded, `/models` may correctly be empty.
-8. Run streaming/tools/structured-output/vision conformance one capability at a time; code support does not make an endpoint eligible without exact evidence.
+4. Add anomaly suspension, rotation reminders, reviewed plan-tier limits and operator suspension evidence around the Released conservative key policy.
+5. Add production live-key policy only after terms, abuse, support, billing and incident ownership are approved; the database now blocks provider activation without written onward-access evidence.
+6. Have an authorized operator explicitly run one USD 0.01-capped test through the Released conformance workflow; until a run passes and commercial authorization is recorded, `/models` may correctly be empty.
+7. Run streaming/tools/structured-output/vision conformance one capability at a time; code support does not make an endpoint eligible without exact evidence.
+
+The signed-in I/O workspace and `IO_API_QUICKSTART.md` now publish copyable curl, OpenAI JavaScript/Python SDK and OpenCode examples. All examples use environment/secret-manager placeholders and preserve the no-browser-key boundary.
 
 Full production/domain, browser-key, pricing and OpenAI/DeepSeek evidence is maintained in `PRODUCTION_API_COMMERCIAL_AND_PROVIDER_POLICY.md`.
 

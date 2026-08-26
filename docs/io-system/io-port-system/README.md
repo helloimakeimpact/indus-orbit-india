@@ -1,6 +1,6 @@
 # I/O Port system record
 
-Status: deployed provider foundation, operational core, terminal safety boundary, bounded OpenAI-compatible API and transparent commercial gate, updated 21 August 2026.
+Status: deployed provider foundation, operational core, terminal safety boundary, bounded OpenAI-compatible API and transparent commercial gate, updated 26 August 2026.
 
 ## Current operational truth
 
@@ -35,6 +35,7 @@ I/O and the Community share one identity but not one onboarding gate. The Commun
 
 - `IO_PORT_IMPLEMENTATION_STATUS.md` — detailed done/partial/left and verified deployment state.
 - `OPENAI_COMPATIBLE_API_STATUS.md` — released API/key contract, evidence, limitations and next work.
+- `IO_API_QUICKSTART.md` — curl, OpenAI SDK and OpenCode examples with the browser-key boundary.
 - `PRODUCTION_API_COMMERCIAL_AND_PROVIDER_POLICY.md` — production domains, browser-key boundary, 5.5% settlement and OpenAI/DeepSeek/OpenRouter commercial research.
 - `OPENROUTER_CAPABILITY_AND_CAPACITY_PLAN.md` — feature-by-feature OpenRouter comparison and capacity adoption plan.
 - `IO_PORT_IMPLEMENTATION_PLAN.md` — product and platform target.

@@ -1,6 +1,12 @@
 # Supabase schema-reconciliation record
 
-Status: the linked Indus Orbit demo has 73 hosted migrations. The local directory has 74 files because `20260628124500_seed_builder_courses_and_soda_ideas.sql` remains an intentional local/demo-only seed. The newest workspace/key, conformance and FK-index migrations were applied through the connected Supabase project API and verified there. The last clean local baseline is 68 migrations with 550/550 assertions; historical aliases remain, updated 20 August 2026.
+Status: the linked Indus Orbit demo has 91 hosted migrations. The local directory has 92 files because `20260628124500_seed_builder_courses_and_soda_ideas.sql` remains an intentional local/demo-only seed. The newest workspace/key, conformance, finance and schema-advisor migrations were applied through the connected Supabase project API and verified there. The last retained clean local baseline predates the current 92-file chain; historical aliases remain, updated 26 August 2026.
+
+## 26 August 2026 schema-advisor closure
+
+The connected API recorded `finalize_schema_advisor_indexes` at hosted version `20260826135924`; its local source is `20260825194943_finalize_schema_advisor_indexes.sql`. It adds nineteen indexes covering all twenty previously reported foreign-key paths—the composite `geo_places(region_id, country_code)` index covers both related constraints—and stable UUID primary keys to `conversation_mentions` and `conversation_notification_preferences` without weakening their existing business-key uniqueness.
+
+Hosted verification found all nineteen indexes, both primary keys and zero null row identifiers. The Performance Advisor now reports zero uncovered foreign keys and zero tables without a primary key. Remaining notices are 116 inherited RLS init-plan opportunities, 49 multiple-permissive-policy notices and workload-dependent unused-index information. The local Docker stack was unavailable, so no new empty-replay claim is made.
 
 ## Current addendum — exact hosted/local boundary
 

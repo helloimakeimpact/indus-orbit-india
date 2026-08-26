@@ -628,18 +628,21 @@ export type Database = {
       conversation_mentions: {
         Row: {
           created_at: string;
+          id: string;
           mentioned_role_id: string | null;
           mentioned_user_id: string | null;
           message_id: string;
         };
         Insert: {
           created_at?: string;
+          id?: string;
           mentioned_role_id?: string | null;
           mentioned_user_id?: string | null;
           message_id: string;
         };
         Update: {
           created_at?: string;
+          id?: string;
           mentioned_role_id?: string | null;
           mentioned_user_id?: string | null;
           message_id?: string;
@@ -893,6 +896,7 @@ export type Database = {
       };
       conversation_notification_preferences: {
         Row: {
+          id: string;
           preference: string;
           quiet_hours: Json;
           room_id: string | null;
@@ -901,6 +905,7 @@ export type Database = {
           user_id: string;
         };
         Insert: {
+          id?: string;
           preference?: string;
           quiet_hours?: Json;
           room_id?: string | null;
@@ -909,6 +914,7 @@ export type Database = {
           user_id: string;
         };
         Update: {
+          id?: string;
           preference?: string;
           quiet_hours?: Json;
           room_id?: string | null;

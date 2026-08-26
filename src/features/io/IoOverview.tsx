@@ -1367,6 +1367,56 @@ export function IoOverview() {
   const ioApiBaseUrl =
     import.meta.env.VITE_IO_API_BASE_URL?.trim().replace(/\/$/, "") ||
     `${(import.meta.env.VITE_SUPABASE_URL ?? "").replace(/\/$/, "")}/functions/v1/io-openai/v1`;
+  const ioApiExamples = [
+    {
+      label: "curl",
+      code: `curl ${ioApiBaseUrl}/chat/completions \\
+  -H "Authorization: Bearer $IO_API_KEY" \\
+  -H "Content-Type: application/json" \\
+  -H "Idempotency-Key: $(uuidgen)" \\
+  -d '{"model":"io/latest-affordable","messages":[{"role":"user","content":"Hello from I/O"}],"stream":true}'`,
+    },
+    {
+      label: "OpenAI JavaScript SDK",
+      code: `import OpenAI from "openai";
+
+const io = new OpenAI({
+  apiKey: process.env.IO_API_KEY,
+  baseURL: "${ioApiBaseUrl}",
+});
+
+const response = await io.responses.create({
+  model: "io/latest-affordable",
+  input: "Hello from I/O",
+  store: false,
+});`,
+    },
+    {
+      label: "OpenAI Python SDK",
+      code: `import os
+from openai import OpenAI
+
+io = OpenAI(
+    api_key=os.environ["IO_API_KEY"],
+    base_url="${ioApiBaseUrl}",
+)
+
+response = io.responses.create(
+    model="io/latest-affordable",
+    input="Hello from I/O",
+    store=False,
+)`,
+    },
+    {
+      label: "OpenCode",
+      code: `export IO_API_KEY="store-this-in-your-shell-secret-manager"
+opencode auth login
+
+# Provider base URL: ${ioApiBaseUrl}
+# Model: io/latest-affordable
+# API key: read from IO_API_KEY; never commit it or put it in browser JavaScript.`,
+    },
+  ];
   const viewMeta = IO_WORKSPACE_VIEW_META[activeView];
   const sessionView =
     activeView === "sessions" || activeView === "terminal" || activeView === "routes";
@@ -2002,11 +2052,48 @@ export function IoOverview() {
               </div>
               <div className="mt-3 space-y-1.5 text-[10px] leading-4 text-[var(--parchment)]/70">
                 <p>GET /models lists only routes entitled to this workspace.</p>
-                <p>POST /chat/completions supports non-streaming text chat.</p>
+                <p>POST /chat/completions supports JSON or SSE text and function-tool responses.</p>
+                <p>POST /responses supports the stateless store:false Responses subset.</p>
                 <p>
                   Default model: io/latest-affordable. Cost, fallback and capacity evidence remain
                   receipted.
                 </p>
+              </div>
+              <div className="mt-4 border-t border-white/10 pt-3">
+                <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-[var(--saffron)]">
+                  Server and local-agent quickstarts
+                </p>
+                <div className="mt-2 space-y-2">
+                  {ioApiExamples.map((example) => (
+                    <details
+                      key={example.label}
+                      className="rounded-lg border border-white/10 bg-white/5"
+                    >
+                      <summary className="cursor-pointer px-3 py-2 text-[10px] font-semibold text-[var(--parchment)]">
+                        {example.label}
+                      </summary>
+                      <div className="border-t border-white/10 p-2">
+                        <div className="flex items-start gap-2">
+                          <pre className="min-w-0 flex-1 overflow-x-auto whitespace-pre p-1 font-mono text-[9px] leading-4 text-[var(--parchment)]/75">
+                            {example.code}
+                          </pre>
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="outline"
+                            className="h-7 w-7 shrink-0 border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white"
+                            aria-label={`Copy ${example.label} quickstart`}
+                            onClick={() =>
+                              void copyApiValue(example.code, `${example.label} quickstart`)
+                            }
+                          >
+                            <Copy className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                    </details>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
