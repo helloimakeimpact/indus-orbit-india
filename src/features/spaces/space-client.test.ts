@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { parseSpaceFeedPayload } from "./space-feed";
+import { parseSpaceFeedPayload, parseSpaceRoomControls } from "./space-feed";
 
 test("Orbit Space feed preserves chronological collaboration evidence", () => {
   const feed = parseSpaceFeedPayload({
@@ -81,4 +81,31 @@ test("Orbit Space feed drops malformed rows and unsafe reaction keys", () => {
   assert.equal(feed.items.length, 1);
   assert.deepEqual(feed.items[0].reactions, []);
   assert.equal(feed.hasMore, false);
+});
+
+test("Orbit Room controls preserve only recognized caller-bound attention state", () => {
+  assert.deepEqual(
+    parseSpaceRoomControls({
+      roomId: "room-1",
+      preference: "mentions",
+      bookmarkedMessageIds: ["message-1", null],
+      pinnedMessageIds: ["message-2"],
+      followedThreadIds: ["thread-1"],
+      unreadThreadIds: ["thread-1"],
+      canManagePins: true,
+    }),
+    {
+      roomId: "room-1",
+      preference: "mentions",
+      bookmarkedMessageIds: ["message-1"],
+      pinnedMessageIds: ["message-2"],
+      followedThreadIds: ["thread-1"],
+      unreadThreadIds: ["thread-1"],
+      canManagePins: true,
+    },
+  );
+  assert.throws(
+    () => parseSpaceRoomControls({ roomId: "room-1", preference: "everything" }),
+    /invalid/,
+  );
 });

@@ -1488,6 +1488,55 @@ export type Database = {
           },
         ];
       };
+      conversation_thread_follows: {
+        Row: {
+          followed_at: string;
+          last_read_at: string | null;
+          last_read_message_id: string | null;
+          thread_id: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          followed_at?: string;
+          last_read_at?: string | null;
+          last_read_message_id?: string | null;
+          thread_id: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          followed_at?: string;
+          last_read_at?: string | null;
+          last_read_message_id?: string | null;
+          thread_id?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "conversation_thread_follows_last_read_message_id_fkey";
+            columns: ["last_read_message_id"];
+            isOneToOne: false;
+            referencedRelation: "conversation_messages";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "conversation_thread_follows_thread_id_fkey";
+            columns: ["thread_id"];
+            isOneToOne: false;
+            referencedRelation: "conversation_threads";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "conversation_thread_follows_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["user_id"];
+          },
+        ];
+      };
       conversation_thread_members: {
         Row: {
           added_at: string;
@@ -7161,6 +7210,10 @@ export type Database = {
         Returns: string;
       };
       get_my_admin_access: { Args: never; Returns: Json };
+      get_my_conversation_room_controls: {
+        Args: { _room_id: string };
+        Returns: Json;
+      };
       get_my_io_billing_profile: {
         Args: { _workspace_id: string };
         Returns: Json;
@@ -7592,6 +7645,10 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      mark_my_conversation_thread_read: {
+        Args: { _message_id: string; _thread_id: string };
+        Returns: undefined;
+      };
       mark_my_direct_conversation_read: {
         Args: { _other_user_id: string };
         Returns: number;
@@ -7950,6 +8007,14 @@ export type Database = {
         };
         Returns: Json;
       };
+      set_my_conversation_notification_preference: {
+        Args: { _preference: string; _room_id: string; _space_id: string };
+        Returns: Json;
+      };
+      set_my_conversation_thread_follow: {
+        Args: { _follow: boolean; _thread_id: string };
+        Returns: Json;
+      };
       set_my_io_workspace_provider_policy: {
         Args: {
           _allow_china_hosted: boolean;
@@ -7979,6 +8044,14 @@ export type Database = {
           _notice_id: string;
           _reason: string;
         };
+        Returns: Json;
+      };
+      toggle_managed_conversation_pin: {
+        Args: { _message_id: string };
+        Returns: Json;
+      };
+      toggle_my_conversation_bookmark: {
+        Args: { _message_id: string };
         Returns: Json;
       };
       toggle_my_conversation_reaction: {

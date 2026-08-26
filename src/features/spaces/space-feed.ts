@@ -47,6 +47,24 @@ export type SpaceFeed = {
   canManage: boolean;
   canModerate: boolean;
 };
+export type SpaceNotificationPreference = "default" | "all" | "mentions" | "digest" | "mute";
+export type SpaceRoomControls = {
+  roomId: string;
+  preference: SpaceNotificationPreference;
+  bookmarkedMessageIds: string[];
+  pinnedMessageIds: string[];
+  followedThreadIds: string[];
+  unreadThreadIds: string[];
+  canManagePins: boolean;
+};
+
+const notificationPreferences = new Set<SpaceNotificationPreference>([
+  "default",
+  "all",
+  "mentions",
+  "digest",
+  "mute",
+]);
 
 export function objectValue(value: Json | undefined): Record<string, Json | undefined> {
   return value && typeof value === "object" && !Array.isArray(value)
@@ -56,6 +74,30 @@ export function objectValue(value: Json | undefined): Record<string, Json | unde
 
 export function textValue(value: Json | undefined, fallback = ""): string {
   return typeof value === "string" ? value : fallback;
+}
+
+function stringArray(value: Json | undefined) {
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === "string" && Boolean(item))
+    : [];
+}
+
+export function parseSpaceRoomControls(value: Json): SpaceRoomControls {
+  const controls = objectValue(value);
+  const roomId = textValue(controls.roomId);
+  const preference = textValue(controls.preference, "default") as SpaceNotificationPreference;
+  if (!roomId || !notificationPreferences.has(preference)) {
+    throw new Error("The Room attention controls are invalid");
+  }
+  return {
+    roomId,
+    preference,
+    bookmarkedMessageIds: stringArray(controls.bookmarkedMessageIds),
+    pinnedMessageIds: stringArray(controls.pinnedMessageIds),
+    followedThreadIds: stringArray(controls.followedThreadIds),
+    unreadThreadIds: stringArray(controls.unreadThreadIds),
+    canManagePins: controls.canManagePins === true,
+  };
 }
 
 function nullableText(value: Json | undefined): string | null {

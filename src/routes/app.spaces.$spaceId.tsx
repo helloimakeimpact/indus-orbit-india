@@ -3,7 +3,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   BadgeCheck,
+  Bell,
   BookOpenCheck,
+  Bookmark,
   CalendarDays,
   Check,
   CircleHelp,
@@ -20,6 +22,7 @@ import {
   MessageCircle,
   MessageSquare,
   Paperclip,
+  Pin,
   Radio,
   RotateCcw,
   Send,
@@ -47,13 +50,19 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   createMessageThread,
   getRoomFeed,
+  getSpaceRoomControls,
   getSpaceWorkspace,
   markSpaceRoomRead,
+  markSpaceThreadRead,
   moderateSpaceMessage,
   reportSpaceMessage,
   sendSpaceMessage,
   setSpaceThreadLock,
+  setSpaceThreadFollowing,
+  setSpaceNotificationPreference,
   toggleSpaceReaction,
+  toggleSpaceBookmark,
+  toggleSpacePin,
   updateSpaceRoom,
   uploadSpaceAttachment,
   type SpaceFeed,
@@ -61,6 +70,8 @@ import {
   type SpaceReaction,
   type SpaceThreadSummary,
   type SpaceWorkspace,
+  type SpaceRoomControls,
+  type SpaceNotificationPreference,
 } from "@/features/spaces/space-client";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
@@ -74,6 +85,16 @@ const emptyFeed: SpaceFeed = {
   nextCursor: null,
   canManage: false,
   canModerate: false,
+};
+
+const emptyRoomControls: SpaceRoomControls = {
+  roomId: "",
+  preference: "default",
+  bookmarkedMessageIds: [],
+  pinnedMessageIds: [],
+  followedThreadIds: [],
+  unreadThreadIds: [],
+  canManagePins: false,
 };
 
 const reactions: Array<{
@@ -125,6 +146,7 @@ function SpacePage() {
   const [workspace, setWorkspace] = useState<SpaceWorkspace | null>(null);
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [feed, setFeed] = useState<SpaceFeed>(emptyFeed);
+  const [roomControls, setRoomControls] = useState<SpaceRoomControls>(emptyRoomControls);
   const [activeThread, setActiveThread] = useState<ActiveThread | null>(null);
   const [threadFeed, setThreadFeed] = useState<SpaceFeed>(emptyFeed);
   const [composer, setComposer] = useState("");
@@ -146,6 +168,7 @@ function SpacePage() {
   const [roomDescription, setRoomDescription] = useState("");
   const [roomPostingPolicy, setRoomPostingPolicy] = useState("members");
   const [roomSaving, setRoomSaving] = useState(false);
+  const [attentionBusy, setAttentionBusy] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const timelineEndRef = useRef<HTMLDivElement | null>(null);
   const threadEndRef = useRef<HTMLDivElement | null>(null);
@@ -171,8 +194,12 @@ function SpacePage() {
   const loadRoom = useCallback(async (roomId: string) => {
     setMessagesLoading(true);
     try {
-      const next = await getRoomFeed(roomId);
+      const [next, controls] = await Promise.all([
+        getRoomFeed(roomId),
+        getSpaceRoomControls(roomId),
+      ]);
       setFeed(next);
+      setRoomControls(controls);
       const lastMessage = next.items.at(-1);
       if (lastMessage) void markSpaceRoomRead(roomId, lastMessage.id).catch(() => undefined);
     } catch (loadError) {
@@ -185,7 +212,20 @@ function SpacePage() {
   const loadThread = useCallback(async (roomId: string, threadId: string) => {
     setThreadLoading(true);
     try {
-      setThreadFeed(await getRoomFeed(roomId, { threadId }));
+      const [next, controls] = await Promise.all([
+        getRoomFeed(roomId, { threadId }),
+        getSpaceRoomControls(roomId),
+      ]);
+      setThreadFeed(next);
+      setRoomControls(controls);
+      const lastMessage = next.items.at(-1);
+      if (lastMessage && controls.followedThreadIds.includes(threadId)) {
+        await markSpaceThreadRead(threadId, lastMessage.id);
+        setRoomControls({
+          ...controls,
+          unreadThreadIds: controls.unreadThreadIds.filter((id) => id !== threadId),
+        });
+      }
     } catch (loadError) {
       toast.error(loadError instanceof Error ? loadError.message : "Could not load Thread");
     } finally {
@@ -227,6 +267,7 @@ function SpacePage() {
     setActiveThread(null);
     setThreadFeed(emptyFeed);
     setSelectedFile(null);
+    setRoomControls(emptyRoomControls);
     setSelectedRoomId(roomId);
   }
 
@@ -311,6 +352,94 @@ function SpacePage() {
       else await loadRoom(selectedRoom.id);
     } catch (reactionError) {
       toast.error(reactionError instanceof Error ? reactionError.message : "Could not react");
+    }
+  }
+
+  async function toggleBookmark(messageId: string) {
+    if (attentionBusy) return;
+    setAttentionBusy(`bookmark:${messageId}`);
+    try {
+      const bookmarked = await toggleSpaceBookmark(messageId);
+      setRoomControls((current) => ({
+        ...current,
+        bookmarkedMessageIds: bookmarked
+          ? Array.from(new Set([...current.bookmarkedMessageIds, messageId]))
+          : current.bookmarkedMessageIds.filter((id) => id !== messageId),
+      }));
+      toast.success(bookmarked ? "Saved to your bookmarks" : "Bookmark removed");
+    } catch (bookmarkError) {
+      toast.error(
+        bookmarkError instanceof Error ? bookmarkError.message : "Could not update bookmark",
+      );
+    } finally {
+      setAttentionBusy(null);
+    }
+  }
+
+  async function togglePin(messageId: string) {
+    if (attentionBusy) return;
+    setAttentionBusy(`pin:${messageId}`);
+    try {
+      const pinned = await toggleSpacePin(messageId);
+      setRoomControls((current) => ({
+        ...current,
+        pinnedMessageIds: pinned
+          ? Array.from(new Set([...current.pinnedMessageIds, messageId]))
+          : current.pinnedMessageIds.filter((id) => id !== messageId),
+      }));
+      toast.success(pinned ? "Message pinned for this Room" : "Room pin removed");
+    } catch (pinError) {
+      toast.error(pinError instanceof Error ? pinError.message : "Could not update Room pin");
+    } finally {
+      setAttentionBusy(null);
+    }
+  }
+
+  async function toggleThreadFollowing() {
+    if (!activeThread || attentionBusy) return;
+    const threadId = activeThread.summary.id;
+    const following = !roomControls.followedThreadIds.includes(threadId);
+    setAttentionBusy(`follow:${threadId}`);
+    try {
+      await setSpaceThreadFollowing(threadId, following);
+      const lastMessage = threadFeed.items.at(-1);
+      if (following && lastMessage) await markSpaceThreadRead(threadId, lastMessage.id);
+      setRoomControls((current) => ({
+        ...current,
+        followedThreadIds: following
+          ? Array.from(new Set([...current.followedThreadIds, threadId]))
+          : current.followedThreadIds.filter((id) => id !== threadId),
+        unreadThreadIds: current.unreadThreadIds.filter((id) => id !== threadId),
+      }));
+      toast.success(following ? "Following this Thread" : "Thread notifications stopped");
+    } catch (followError) {
+      toast.error(
+        followError instanceof Error ? followError.message : "Could not update Thread follow",
+      );
+    } finally {
+      setAttentionBusy(null);
+    }
+  }
+
+  async function changeNotificationPreference(preference: SpaceNotificationPreference) {
+    if (!selectedRoom || attentionBusy) return;
+    setAttentionBusy("preference");
+    try {
+      await setSpaceNotificationPreference(
+        workspace?.space.id ?? spaceId,
+        selectedRoom.id,
+        preference,
+      );
+      setRoomControls((current) => ({ ...current, preference }));
+      toast.success("Room notification preference updated");
+    } catch (preferenceError) {
+      toast.error(
+        preferenceError instanceof Error
+          ? preferenceError.message
+          : "Could not update notifications",
+      );
+    } finally {
+      setAttentionBusy(null);
     }
   }
 
@@ -551,6 +680,37 @@ function SpacePage() {
                 </p>
               </div>
               <div className="flex items-center gap-2">
+                <label className="hidden items-center gap-1.5 text-[10px] text-muted-foreground sm:flex">
+                  <Bell className="h-3.5 w-3.5" />
+                  <span className="sr-only">Room notifications</span>
+                  <select
+                    value={roomControls.preference}
+                    disabled={!selectedRoom || attentionBusy !== null}
+                    onChange={(event) =>
+                      void changeNotificationPreference(
+                        event.target.value as SpaceNotificationPreference,
+                      )
+                    }
+                    className="h-8 rounded-lg border border-input bg-background px-2 text-[10px] text-foreground"
+                    aria-label="Room notification preference"
+                  >
+                    <option value="default">Default</option>
+                    <option value="all">All activity</option>
+                    <option value="mentions">Mentions</option>
+                    <option value="digest">Digest</option>
+                    <option value="mute">Mute</option>
+                  </select>
+                </label>
+                {roomControls.pinnedMessageIds.length ? (
+                  <Badge variant="outline" className="hidden gap-1 sm:inline-flex">
+                    <Pin className="h-3 w-3" /> {roomControls.pinnedMessageIds.length}
+                  </Badge>
+                ) : null}
+                {roomControls.bookmarkedMessageIds.length ? (
+                  <Badge variant="outline" className="hidden gap-1 sm:inline-flex">
+                    <Bookmark className="h-3 w-3" /> {roomControls.bookmarkedMessageIds.length}
+                  </Badge>
+                ) : null}
                 <Badge variant="outline" className="hidden sm:inline-flex">
                   {selectedRoom?.posting_policy ?? "members"}
                 </Badge>
@@ -605,8 +765,13 @@ function SpacePage() {
                 <MessageList
                   messages={feed.items}
                   canModerate={feed.canModerate}
+                  canManagePins={roomControls.canManagePins}
+                  bookmarkedMessageIds={roomControls.bookmarkedMessageIds}
+                  pinnedMessageIds={roomControls.pinnedMessageIds}
                   onThread={openThread}
                   onReact={react}
+                  onBookmark={toggleBookmark}
+                  onPin={togglePin}
                   onReport={setReportTarget}
                   onModerate={moderateMessage}
                 />
@@ -698,6 +863,10 @@ function SpacePage() {
               onReact={(id, key) => react(id, key, true)}
               onReport={setReportTarget}
               onLock={toggleThreadLock}
+              following={roomControls.followedThreadIds.includes(activeThread.summary.id)}
+              unread={roomControls.unreadThreadIds.includes(activeThread.summary.id)}
+              followBusy={attentionBusy === `follow:${activeThread.summary.id}`}
+              onFollow={toggleThreadFollowing}
               onModerate={(message) => moderateMessage(message, true)}
             />
           ) : (
@@ -808,16 +977,26 @@ function SpacePage() {
 function MessageList({
   messages,
   canModerate,
+  canManagePins = false,
+  bookmarkedMessageIds = [],
+  pinnedMessageIds = [],
   onThread,
   onReact,
+  onBookmark = async () => undefined,
+  onPin = async () => undefined,
   onReport,
   onModerate,
   allowThreads = true,
 }: {
   messages: SpaceMessage[];
   canModerate: boolean;
+  canManagePins?: boolean;
+  bookmarkedMessageIds?: string[];
+  pinnedMessageIds?: string[];
   onThread: (message: SpaceMessage) => Promise<void>;
   onReact: (messageId: string, key: SpaceReaction["key"]) => Promise<void>;
+  onBookmark?: (messageId: string) => Promise<void>;
+  onPin?: (messageId: string) => Promise<void>;
   onReport: (message: SpaceMessage) => void;
   onModerate: (message: SpaceMessage) => Promise<void>;
   allowThreads?: boolean;
@@ -830,10 +1009,12 @@ function MessageList({
           previous?.authorId === message.authorId &&
           new Date(message.createdAt).getTime() - new Date(previous.createdAt).getTime() <
             5 * 60 * 1000;
+        const bookmarked = bookmarkedMessageIds.includes(message.id);
+        const pinned = pinnedMessageIds.includes(message.id);
         return (
           <article
             key={message.id}
-            className={`group flex gap-3 rounded-xl px-2 py-2 hover:bg-muted/45 ${grouped ? "mt-0" : "mt-4"}`}
+            className={`group flex gap-3 rounded-xl px-2 py-2 hover:bg-muted/45 ${pinned ? "border border-amber-200 bg-amber-50/45" : ""} ${grouped ? "mt-0" : "mt-4"}`}
           >
             <div className="w-9 shrink-0">
               {!grouped && (
@@ -852,6 +1033,11 @@ function MessageList({
                   <time className="text-[10px] text-muted-foreground">
                     {formatMoment(message.createdAt)}
                   </time>
+                  {pinned ? (
+                    <Badge variant="outline" className="h-5 gap-1 text-[9px] text-amber-800">
+                      <Pin className="h-3 w-3" /> Pinned
+                    </Badge>
+                  ) : null}
                 </div>
               )}
               <p
@@ -892,6 +1078,30 @@ function MessageList({
                     {message.thread ? `${message.thread.replyCount} replies` : "Thread"}
                   </Button>
                 )}
+                <Button
+                  type="button"
+                  variant={bookmarked ? "secondary" : "ghost"}
+                  size="sm"
+                  className="h-7 gap-1 px-2 text-[11px]"
+                  disabled={Boolean(message.deletedAt)}
+                  onClick={() => void onBookmark(message.id)}
+                >
+                  <Bookmark className="h-3.5 w-3.5" />
+                  {bookmarked ? "Saved" : "Save"}
+                </Button>
+                {canManagePins ? (
+                  <Button
+                    type="button"
+                    variant={pinned ? "secondary" : "ghost"}
+                    size="sm"
+                    className="h-7 gap-1 px-2 text-[11px]"
+                    disabled={Boolean(message.deletedAt)}
+                    onClick={() => void onPin(message.id)}
+                  >
+                    <Pin className="h-3.5 w-3.5" />
+                    {pinned ? "Unpin" : "Pin"}
+                  </Button>
+                ) : null}
                 <Button
                   type="button"
                   variant="ghost"
@@ -972,6 +1182,10 @@ function ThreadPane({
   onReact,
   onReport,
   onLock,
+  following,
+  unread,
+  followBusy,
+  onFollow,
   onModerate,
 }: {
   thread: ActiveThread;
@@ -987,6 +1201,10 @@ function ThreadPane({
   onReact: (messageId: string, key: SpaceReaction["key"]) => Promise<void>;
   onReport: (message: SpaceMessage) => void;
   onLock: () => Promise<void>;
+  following: boolean;
+  unread: boolean;
+  followBusy: boolean;
+  onFollow: () => Promise<void>;
   onModerate: (message: SpaceMessage) => Promise<void>;
 }) {
   const locked = Boolean(thread.summary.lockedAt);
@@ -996,8 +1214,25 @@ function ThreadPane({
         <MessageCircle className="h-4 w-4 text-[var(--saffron)]" />
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold">{thread.summary.title ?? "Thread"}</p>
-          <p className="text-[10px] text-muted-foreground">{feed.items.length} loaded replies</p>
+          <p className="text-[10px] text-muted-foreground">
+            {feed.items.length} loaded replies{unread ? " · unread activity" : ""}
+          </p>
         </div>
+        <Button
+          type="button"
+          size="sm"
+          variant={following ? "secondary" : "ghost"}
+          className="h-8 px-2 text-[10px]"
+          disabled={followBusy}
+          onClick={() => void onFollow()}
+        >
+          {followBusy ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <Bell className="h-3.5 w-3.5" />
+          )}
+          {following ? "Following" : "Follow"}
+        </Button>
         {canModerate && (
           <Button
             type="button"

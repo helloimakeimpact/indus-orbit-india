@@ -4,11 +4,14 @@ import type { Database } from "@/integrations/supabase/types";
 import {
   objectValue,
   parseSpaceFeedPayload,
+  parseSpaceRoomControls,
   textValue,
   type SpaceFeed,
   type SpaceFeedCursor,
   type SpaceMessage,
+  type SpaceNotificationPreference,
   type SpaceReaction,
+  type SpaceRoomControls,
   type SpaceThreadSummary,
 } from "./space-feed";
 
@@ -17,7 +20,9 @@ export type {
   SpaceFeed,
   SpaceFeedCursor,
   SpaceMessage,
+  SpaceNotificationPreference,
   SpaceReaction,
+  SpaceRoomControls,
   SpaceThreadSummary,
 } from "./space-feed";
 
@@ -37,6 +42,14 @@ export type SpaceWorkspace = {
   rooms: Room[];
   members: SpaceMember[];
 };
+
+const notificationPreferences = new Set<SpaceNotificationPreference>([
+  "default",
+  "all",
+  "mentions",
+  "digest",
+  "mute",
+]);
 
 const attachmentTypes = new Set([
   "image/jpeg",
@@ -126,6 +139,82 @@ export async function getRoomFeed(
   if (error) throw new Error(error.message);
   const parsed = parseSpaceFeedPayload(data);
   return { ...parsed, items: await signVisibleAttachments(parsed.items) };
+}
+
+export async function getSpaceRoomControls(roomId: string): Promise<SpaceRoomControls> {
+  const { data, error } = await supabase.rpc("get_my_conversation_room_controls", {
+    _room_id: roomId,
+  });
+  if (error) throw new Error(error.message);
+  return parseSpaceRoomControls(data);
+}
+
+export async function toggleSpaceBookmark(messageId: string): Promise<boolean> {
+  const { data, error } = await supabase.rpc("toggle_my_conversation_bookmark", {
+    _message_id: messageId,
+  });
+  if (error) throw new Error(error.message);
+  const result = objectValue(data);
+  if (textValue(result.messageId) !== messageId || typeof result.bookmarked !== "boolean") {
+    throw new Error("The bookmark operation returned an invalid result");
+  }
+  return result.bookmarked;
+}
+
+export async function toggleSpacePin(messageId: string): Promise<boolean> {
+  const { data, error } = await supabase.rpc("toggle_managed_conversation_pin", {
+    _message_id: messageId,
+  });
+  if (error) throw new Error(error.message);
+  const result = objectValue(data);
+  if (textValue(result.messageId) !== messageId || typeof result.pinned !== "boolean") {
+    throw new Error("The pin operation returned an invalid result");
+  }
+  return result.pinned;
+}
+
+export async function setSpaceThreadFollowing(threadId: string, follow: boolean): Promise<void> {
+  const { data, error } = await supabase.rpc("set_my_conversation_thread_follow", {
+    _thread_id: threadId,
+    _follow: follow,
+  });
+  if (error) throw new Error(error.message);
+  const result = objectValue(data);
+  if (textValue(result.threadId) !== threadId || result.following !== follow) {
+    throw new Error("The Thread follow operation returned an invalid result");
+  }
+}
+
+export async function markSpaceThreadRead(threadId: string, messageId: string): Promise<void> {
+  const { error } = await supabase.rpc("mark_my_conversation_thread_read", {
+    _thread_id: threadId,
+    _message_id: messageId,
+  });
+  if (error) throw new Error(error.message);
+}
+
+export async function setSpaceNotificationPreference(
+  spaceId: string,
+  roomId: string,
+  preference: SpaceNotificationPreference,
+): Promise<void> {
+  if (!notificationPreferences.has(preference)) {
+    throw new Error("Choose a valid notification preference");
+  }
+  const { data, error } = await supabase.rpc("set_my_conversation_notification_preference", {
+    _space_id: spaceId,
+    _room_id: roomId,
+    _preference: preference,
+  });
+  if (error) throw new Error(error.message);
+  const result = objectValue(data);
+  if (
+    textValue(result.spaceId) !== spaceId ||
+    textValue(result.roomId) !== roomId ||
+    textValue(result.preference) !== preference
+  ) {
+    throw new Error("The notification preference returned an invalid result");
+  }
 }
 
 export async function sendSpaceMessage(
