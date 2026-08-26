@@ -58,6 +58,41 @@ export type OpenCodePromptResult = {
   raw: JsonRecord;
 };
 
+export type OpenCodeCapabilities = {
+  openApiVersion: string | null;
+  sessions: boolean;
+  events: boolean;
+  continuedPrompts: boolean;
+  taskTrees: boolean;
+  diffs: boolean;
+  permissions: boolean;
+  abort: boolean;
+  fork: boolean;
+  revert: boolean;
+  commands: boolean;
+};
+
+export type OpenCodeTimelinePart = {
+  id: string | null;
+  type: string;
+  tool: string | null;
+  status: string | null;
+  content: string | null;
+};
+
+export type OpenCodeTimelineEntry = {
+  messageId: string;
+  role: string;
+  createdAt: string | null;
+  parts: OpenCodeTimelinePart[];
+};
+
+export type OpenCodeSessionFork = {
+  sessionId: string;
+  parentSessionId: string;
+  title: string | null;
+};
+
 export class OpenCodeClientError extends Error {
   constructor(
     message: string,
@@ -80,6 +115,29 @@ function safeString(value: unknown, maximum: number) {
 
 function safeInteger(value: unknown) {
   return Number.isSafeInteger(value) && (value as number) >= 0 ? (value as number) : null;
+}
+
+function requireSessionId(value: string, field = "session identifier") {
+  const clean = value.trim();
+  if (!clean || clean.length > 512) {
+    throw new OpenCodeClientError(`The OpenCode ${field} is invalid.`);
+  }
+  return clean;
+}
+
+function hasOpenApiOperation(paths: JsonRecord, path: string, method: string) {
+  return asRecord(paths[path])?.[method] !== undefined;
+}
+
+function printablePartContent(part: JsonRecord) {
+  const direct = part.text ?? part.output;
+  if (typeof direct === "string" && direct.length <= MAX_JSON_BYTES) return direct;
+  const state = asRecord(part.state);
+  const stateOutput = state?.output;
+  if (typeof stateOutput === "string" && stateOutput.length <= MAX_JSON_BYTES) return stateOutput;
+  if (!state) return null;
+  const serialized = JSON.stringify(state);
+  return serialized.length <= MAX_JSON_BYTES ? serialized : null;
 }
 
 export function normalizeOpenCodeLoopbackOrigin(value: string) {
@@ -247,6 +305,142 @@ export class IOPortOpenCodeClient {
       credentialFingerprint: fingerprint.slice(0, 12),
       pairedAt: new Date().toISOString(),
     };
+  }
+
+  async negotiateCapabilities(): Promise<OpenCodeCapabilities> {
+    const document = asRecord(await this.#request("/doc"));
+    const paths = document ? asRecord(document.paths) : null;
+    if (!document || !paths) {
+      throw new OpenCodeClientError("OpenCode did not expose a valid OpenAPI capability document.");
+    }
+    return {
+      openApiVersion: safeString(document.openapi, 32),
+      sessions:
+        hasOpenApiOperation(paths, "/session", "get") &&
+        hasOpenApiOperation(paths, "/session", "post"),
+      events: hasOpenApiOperation(paths, "/global/event", "get"),
+      continuedPrompts: hasOpenApiOperation(paths, "/session/{id}/message", "post"),
+      taskTrees:
+        hasOpenApiOperation(paths, "/session/{id}/children", "get") &&
+        hasOpenApiOperation(paths, "/session/{id}/todo", "get"),
+      diffs: hasOpenApiOperation(paths, "/session/{id}/diff", "get"),
+      permissions: hasOpenApiOperation(paths, "/session/{id}/permissions/{permissionID}", "post"),
+      abort: hasOpenApiOperation(paths, "/session/{id}/abort", "post"),
+      fork: hasOpenApiOperation(paths, "/session/{id}/fork", "post"),
+      revert:
+        hasOpenApiOperation(paths, "/session/{id}/revert", "post") &&
+        hasOpenApiOperation(paths, "/session/{id}/unrevert", "post"),
+      commands: hasOpenApiOperation(paths, "/session/{id}/command", "post"),
+    };
+  }
+
+  async abortSession(sessionId: string) {
+    const id = requireSessionId(sessionId);
+    const acknowledged = await this.#request(`/session/${encodeURIComponent(id)}/abort`, {
+      method: "POST",
+    });
+    if (acknowledged !== true) {
+      throw new OpenCodeClientError("OpenCode did not acknowledge the local abort request.");
+    }
+    return true;
+  }
+
+  async forkSession(sessionId: string, messageId?: string): Promise<OpenCodeSessionFork> {
+    const id = requireSessionId(sessionId);
+    const cleanMessageId = messageId ? requireSessionId(messageId, "message identifier") : null;
+    const value = asRecord(
+      await this.#request(`/session/${encodeURIComponent(id)}/fork`, {
+        method: "POST",
+        body: JSON.stringify(cleanMessageId ? { messageID: cleanMessageId } : {}),
+      }),
+    );
+    const forkId = value ? safeString(value.id, 512) : null;
+    const parentSessionId = value ? safeString(value.parentID, 512) : null;
+    if (!forkId || (parentSessionId !== null && parentSessionId !== id)) {
+      throw new OpenCodeClientError("OpenCode returned an invalid forked session.");
+    }
+    return {
+      sessionId: forkId,
+      parentSessionId: parentSessionId ?? id,
+      title: value ? safeString(value.title, 160) : null,
+    };
+  }
+
+  async getSessionTimeline(sessionId: string, limit = 100): Promise<OpenCodeTimelineEntry[]> {
+    const id = requireSessionId(sessionId);
+    if (!Number.isInteger(limit) || limit < 1 || limit > 200) {
+      throw new OpenCodeClientError("OpenCode timeline limits must be between 1 and 200.");
+    }
+    const value = await this.#request(
+      `/session/${encodeURIComponent(id)}/message?limit=${encodeURIComponent(String(limit))}`,
+    );
+    if (!Array.isArray(value) || value.length > limit) {
+      throw new OpenCodeClientError("OpenCode returned an invalid or oversized message timeline.");
+    }
+    return value.map((raw): OpenCodeTimelineEntry => {
+      const row = asRecord(raw);
+      const info = row ? asRecord(row.info) : null;
+      const parts = row && Array.isArray(row.parts) ? row.parts : null;
+      const messageId = info ? safeString(info.id, 512) : null;
+      const role = info ? safeString(info.role, 64) : null;
+      if (!messageId || !role || !parts || parts.length > 512) {
+        throw new OpenCodeClientError("OpenCode returned an invalid message timeline entry.");
+      }
+      const time = asRecord(info?.time);
+      const created = time?.created;
+      const createdAt =
+        typeof created === "number" && Number.isFinite(created)
+          ? new Date(created).toISOString()
+          : typeof created === "string" && Number.isFinite(Date.parse(created))
+            ? new Date(created).toISOString()
+            : null;
+      return {
+        messageId,
+        role,
+        createdAt,
+        parts: parts.flatMap((candidate): OpenCodeTimelinePart[] => {
+          const part = asRecord(candidate);
+          const type = part ? safeString(part.type, 128) : null;
+          if (!part || !type) return [];
+          const state = asRecord(part.state);
+          return [
+            {
+              id: safeString(part.id, 512),
+              type,
+              tool: safeString(part.tool ?? part.command, 256),
+              status: safeString(state?.status ?? part.status, 128),
+              content: printablePartContent(part),
+            },
+          ];
+        }),
+      };
+    });
+  }
+
+  async revertSession(sessionId: string, messageId: string, partId?: string) {
+    const id = requireSessionId(sessionId);
+    const targetMessageId = requireSessionId(messageId, "message identifier");
+    const targetPartId = partId ? requireSessionId(partId, "part identifier") : null;
+    const acknowledged = await this.#request(`/session/${encodeURIComponent(id)}/revert`, {
+      method: "POST",
+      body: JSON.stringify({
+        messageID: targetMessageId,
+        ...(targetPartId ? { partID: targetPartId } : {}),
+      }),
+    });
+    if (acknowledged !== true) {
+      throw new OpenCodeClientError("OpenCode did not acknowledge the local revert request.");
+    }
+  }
+
+  async restoreRevertedSession(sessionId: string) {
+    const id = requireSessionId(sessionId);
+    const acknowledged = await this.#request(`/session/${encodeURIComponent(id)}/unrevert`, {
+      method: "POST",
+    });
+    if (acknowledged !== true) {
+      throw new OpenCodeClientError("OpenCode did not acknowledge restoration of the session.");
+    }
   }
 
   async continuePrompt(sessionId: string, prompt: string, signal?: AbortSignal) {

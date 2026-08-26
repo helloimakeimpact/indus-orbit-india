@@ -33,10 +33,12 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import {
   IOPortOpenCodeClient,
   type OpenCodeFileDiff,
+  type OpenCodeCapabilities,
   type OpenCodeEvent,
   type OpenCodePairing,
   type OpenCodePermission,
   type OpenCodeTaskNode,
+  type OpenCodeTimelineEntry,
 } from "../../../packages/io-opencode-client/src/index";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -115,6 +117,8 @@ type TerminalInspection = {
   taskTree: OpenCodeTaskNode;
   diffs: OpenCodeFileDiff[];
   permissions: OpenCodePermission[];
+  capabilities: OpenCodeCapabilities | null;
+  timeline: OpenCodeTimelineEntry[];
 };
 
 type TerminalLiveEvent = {
@@ -262,6 +266,17 @@ function approvalExpiryFromNow(durationMs: number) {
   return new Date(Date.now() + durationMs).toISOString();
 }
 
+async function loadOpenCodeAdvisory(client: IOPortOpenCodeClient, sessionId: string) {
+  const [capabilities, timeline] = await Promise.allSettled([
+    client.negotiateCapabilities(),
+    client.getSessionTimeline(sessionId),
+  ]);
+  return {
+    capabilities: capabilities.status === "fulfilled" ? capabilities.value : null,
+    timeline: timeline.status === "fulfilled" ? timeline.value : [],
+  };
+}
+
 export function IoOverview() {
   const activeView = useIoWorkspaceView();
   const [workspace, setWorkspace] = useState<IoWorkspace | null>(null);
@@ -316,6 +331,8 @@ export function IoOverview() {
   const [terminalContinuePrompt, setTerminalContinuePrompt] = useState("");
   const [terminalContinueBusy, setTerminalContinueBusy] = useState(false);
   const [terminalPermissionBusy, setTerminalPermissionBusy] = useState<string | null>(null);
+  const [terminalForkBusy, setTerminalForkBusy] = useState(false);
+  const [terminalRevertBusy, setTerminalRevertBusy] = useState<string | null>(null);
   const [routeCatalogError, setRouteCatalogError] = useState<string | null>(null);
   const [routePreflight, setRoutePreflight] = useState<IoRoutePreflight | null>(null);
   const [preflightLoading, setPreflightLoading] = useState(false);
@@ -1001,12 +1018,14 @@ export function IoOverview() {
                   client.getFullDiffs(session.sessionId),
                   client.listPendingPermissions(session.sessionId),
                 ]);
+                const advisory = await loadOpenCodeAdvisory(client, session.sessionId);
                 setTerminalInspection({
                   durableSessionId: durable.id,
                   pairing,
                   taskTree,
                   diffs,
                   permissions,
+                  ...advisory,
                 });
                 startLocalEventStream({
                   client,
@@ -1121,12 +1140,13 @@ export function IoOverview() {
           input.client.getTaskTree(input.localSessionId),
           input.client.getFullDiffs(input.localSessionId),
           input.client.listPendingPermissions(input.localSessionId),
+          input.client.getSessionTimeline(input.localSessionId),
         ])
-          .then(([taskTree, diffs, permissions]) => {
+          .then(([taskTree, diffs, permissions, timeline]) => {
             if (!controller.signal.aborted) {
               setTerminalInspection((current) =>
                 current?.durableSessionId === input.durableSessionId
-                  ? { ...current, taskTree, diffs, permissions }
+                  ? { ...current, taskTree, diffs, permissions, timeline }
                   : current,
               );
             }
@@ -1193,6 +1213,7 @@ export function IoOverview() {
         client.getFullDiffs(binding.sessionId),
         client.listPendingPermissions(binding.sessionId),
       ]);
+      const advisory = await loadOpenCodeAdvisory(client, binding.sessionId);
       setTerminalReconnect({ durableSessionId: session.id, summary });
       setTerminalInspection({
         durableSessionId: session.id,
@@ -1200,6 +1221,7 @@ export function IoOverview() {
         taskTree,
         diffs,
         permissions,
+        ...advisory,
       });
       startLocalEventStream({
         client,
@@ -1264,6 +1286,7 @@ export function IoOverview() {
         client.getFullDiffs(binding.sessionId),
         client.listPendingPermissions(binding.sessionId),
       ]);
+      const advisory = await loadOpenCodeAdvisory(client, binding.sessionId);
       setTerminalResult({
         connectorOrigin: binding.connectorOrigin,
         sessionId: binding.sessionId,
@@ -1278,6 +1301,7 @@ export function IoOverview() {
         taskTree,
         diffs,
         permissions,
+        ...advisory,
       });
       setTerminalContinuePrompt("");
       await loadWorkspace(workspace.id);
@@ -1343,6 +1367,146 @@ export function IoOverview() {
       toast.error(error instanceof Error ? error.message : "Could not decide the permission.");
     } finally {
       setTerminalPermissionBusy(null);
+    }
+  }
+
+  async function forkLocalTerminal(session: IoTerminalSession, messageId?: string) {
+    if (typeof window === "undefined" || !workspace || terminalForkBusy) return;
+    const binding = loadOpenCodeLocalBinding(window.localStorage, session.id);
+    if (!binding) {
+      toast.error("This browser has no local binding for that OpenCode session.");
+      return;
+    }
+    if (terminalInspection?.capabilities?.fork !== true) {
+      toast.error("This OpenCode daemon has not advertised session-fork support.");
+      return;
+    }
+    setTerminalForkBusy(true);
+    try {
+      const client = new IOPortOpenCodeClient({
+        origin: binding.connectorOrigin,
+        password: openCodePassword,
+      });
+      const [pairing, fork] = await Promise.all([
+        client.pair(),
+        client.forkSession(binding.sessionId, messageId),
+      ]);
+      const durable = await createMyIoTerminalSession({
+        workspaceId: workspace.id,
+        title: `Fork · ${session.title}`.slice(0, 160),
+        mode: session.mode,
+        connectorOrigin: binding.connectorOrigin,
+        runtimeReference: fork.sessionId,
+        runtimeVersion: pairing.serverVersion,
+      });
+      saveOpenCodeLocalBinding(window.localStorage, {
+        durableSessionId: durable.id,
+        connectorOrigin: binding.connectorOrigin,
+        sessionId: fork.sessionId,
+        serverVersion: pairing.serverVersion,
+        storedAt: new Date().toISOString(),
+      });
+      await appendMyIoTerminalEvent({
+        sessionId: durable.id,
+        type: "runtime.connected",
+        payload: { runtimeVersionKnown: pairing.serverVersion !== null },
+      });
+      const [taskTree, diffs, permissions, advisory] = await Promise.all([
+        client.getTaskTree(fork.sessionId),
+        client.getFullDiffs(fork.sessionId),
+        client.listPendingPermissions(fork.sessionId),
+        loadOpenCodeAdvisory(client, fork.sessionId),
+      ]);
+      setTerminalSessions((current) => [
+        durable,
+        ...current.filter((candidate) => candidate.id !== durable.id),
+      ]);
+      setTerminalInspection({
+        durableSessionId: durable.id,
+        pairing,
+        taskTree,
+        diffs,
+        permissions,
+        ...advisory,
+      });
+      setSelectedTerminalSessionId(durable.id);
+      startLocalEventStream({
+        client,
+        durableSessionId: durable.id,
+        localSessionId: fork.sessionId,
+      });
+      toast.success("Forked the local session. Continue it independently when ready.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not fork the local session.");
+    } finally {
+      setTerminalForkBusy(false);
+    }
+  }
+
+  async function revertLocalTerminal(session: IoTerminalSession, messageId: string) {
+    if (typeof window === "undefined" || terminalRevertBusy) return;
+    const binding = loadOpenCodeLocalBinding(window.localStorage, session.id);
+    if (!binding) {
+      toast.error("This browser has no local binding for that OpenCode session.");
+      return;
+    }
+    if (terminalInspection?.capabilities?.revert !== true) {
+      toast.error("This OpenCode daemon has not advertised checkpoint/revert support.");
+      return;
+    }
+    if (
+      !window.confirm("Revert this local OpenCode session to this message? Local files may change.")
+    ) {
+      return;
+    }
+    setTerminalRevertBusy(messageId);
+    try {
+      const client = new IOPortOpenCodeClient({
+        origin: binding.connectorOrigin,
+        password: openCodePassword,
+      });
+      await client.revertSession(binding.sessionId, messageId);
+      const [diffs, timeline] = await Promise.all([
+        client.getFullDiffs(binding.sessionId),
+        client.getSessionTimeline(binding.sessionId),
+      ]);
+      setTerminalInspection((current) =>
+        current?.durableSessionId === session.id ? { ...current, diffs, timeline } : current,
+      );
+      toast.success("Local session reverted to the selected checkpoint.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not revert the local session.");
+    } finally {
+      setTerminalRevertBusy(null);
+    }
+  }
+
+  async function restoreLocalTerminal(session: IoTerminalSession) {
+    if (typeof window === "undefined" || terminalRevertBusy) return;
+    const binding = loadOpenCodeLocalBinding(window.localStorage, session.id);
+    if (!binding) {
+      toast.error("This browser has no local binding for that OpenCode session.");
+      return;
+    }
+    setTerminalRevertBusy("restore");
+    try {
+      const client = new IOPortOpenCodeClient({
+        origin: binding.connectorOrigin,
+        password: openCodePassword,
+      });
+      await client.restoreRevertedSession(binding.sessionId);
+      const [diffs, timeline] = await Promise.all([
+        client.getFullDiffs(binding.sessionId),
+        client.getSessionTimeline(binding.sessionId),
+      ]);
+      setTerminalInspection((current) =>
+        current?.durableSessionId === session.id ? { ...current, diffs, timeline } : current,
+      );
+      toast.success("Restored the complete local OpenCode session.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not restore the local session.");
+    } finally {
+      setTerminalRevertBusy(null);
     }
   }
 
@@ -2202,6 +2366,61 @@ opencode auth login
                         </Badge>
                       </div>
 
+                      <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border/60 bg-muted/20 px-3 py-2">
+                        <div className="text-[10px] text-muted-foreground">
+                          {terminalInspection.capabilities ? (
+                            <>
+                              OpenAPI{" "}
+                              {terminalInspection.capabilities.openApiVersion ?? "version unknown"}
+                              {" · "}
+                              {
+                                Object.values(terminalInspection.capabilities).filter(
+                                  (value) => value === true,
+                                ).length
+                              }{" "}
+                              verified capabilities
+                            </>
+                          ) : (
+                            "Capability document unavailable; advanced mutations remain blocked."
+                          )}
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="h-7 text-[10px]"
+                            disabled={
+                              terminalForkBusy ||
+                              !canRunTerminal ||
+                              terminalInspection.capabilities?.fork !== true
+                            }
+                            onClick={() => void forkLocalTerminal(session)}
+                          >
+                            {terminalForkBusy ? (
+                              <LoaderCircle className="animate-spin" />
+                            ) : (
+                              <Workflow />
+                            )}
+                            Fork locally
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="h-7 text-[10px]"
+                            disabled={
+                              terminalRevertBusy !== null ||
+                              !canRunTerminal ||
+                              terminalInspection.capabilities?.revert !== true
+                            }
+                            onClick={() => void restoreLocalTerminal(session)}
+                          >
+                            Restore all
+                          </Button>
+                        </div>
+                      </div>
+
                       {terminalLiveEvent?.durableSessionId === session.id ? (
                         <div className="flex flex-wrap items-center gap-2 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-[10px] text-sky-950">
                           <span
@@ -2326,6 +2545,93 @@ opencode auth login
                             </p>
                           )}
                         </div>
+                      </div>
+
+                      <div className="rounded-lg border border-border/60 p-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                            Local message, tool and command trail
+                          </p>
+                          <Badge variant="outline" className="text-[9px]">
+                            {terminalInspection.timeline.length} MESSAGES
+                          </Badge>
+                        </div>
+                        {terminalInspection.timeline.length ? (
+                          <ol className="mt-2 space-y-2">
+                            {terminalInspection.timeline.map((entry) => (
+                              <li
+                                key={entry.messageId}
+                                className="rounded-lg border border-border/55 bg-muted/15 p-2.5"
+                              >
+                                <div className="flex flex-wrap items-center justify-between gap-2 text-[10px]">
+                                  <span className="font-semibold capitalize">{entry.role}</span>
+                                  <span className="text-muted-foreground">
+                                    {entry.createdAt
+                                      ? new Date(entry.createdAt).toLocaleString()
+                                      : "Time unavailable"}
+                                  </span>
+                                </div>
+                                <div className="mt-2 space-y-1.5">
+                                  {entry.parts.map((part, partIndex) => (
+                                    <details
+                                      key={part.id ?? `${entry.messageId}-${partIndex}`}
+                                      className="rounded border border-border/50 bg-background/75"
+                                    >
+                                      <summary className="cursor-pointer px-2 py-1.5 text-[9px] font-medium">
+                                        {part.type}
+                                        {part.tool ? ` · ${part.tool}` : ""}
+                                        {part.status ? ` · ${part.status}` : ""}
+                                      </summary>
+                                      {part.content ? (
+                                        <pre className="max-h-72 overflow-auto whitespace-pre-wrap border-t border-border/50 p-2 font-mono text-[9px] leading-4">
+                                          {part.content}
+                                        </pre>
+                                      ) : null}
+                                    </details>
+                                  ))}
+                                </div>
+                                <div className="mt-2 flex flex-wrap gap-2">
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-7 text-[9px]"
+                                    disabled={
+                                      terminalForkBusy ||
+                                      terminalInspection.capabilities?.fork !== true
+                                    }
+                                    onClick={() => void forkLocalTerminal(session, entry.messageId)}
+                                  >
+                                    Fork here
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-7 text-[9px] text-amber-800"
+                                    disabled={
+                                      terminalRevertBusy !== null ||
+                                      terminalInspection.capabilities?.revert !== true
+                                    }
+                                    onClick={() =>
+                                      void revertLocalTerminal(session, entry.messageId)
+                                    }
+                                  >
+                                    {terminalRevertBusy === entry.messageId ? (
+                                      <LoaderCircle className="animate-spin" />
+                                    ) : null}
+                                    Revert here
+                                  </Button>
+                                </div>
+                              </li>
+                            ))}
+                          </ol>
+                        ) : (
+                          <p className="mt-2 text-[10px] text-muted-foreground">
+                            No local message timeline is available. Content is read directly from
+                            this device and is never copied into the I/O control plane.
+                          </p>
+                        )}
                       </div>
 
                       <div className="rounded-lg border border-border/60 p-3">

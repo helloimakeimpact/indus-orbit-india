@@ -277,6 +277,48 @@ describe("runOpenCodeSession", { concurrency: false }, () => {
     }
   });
 
+  it("does not record stopped when the daemon fails to acknowledge abort", async () => {
+    const originalFetch = globalThis.fetch;
+    const controller = new AbortController();
+    const lifecycle: string[] = [];
+    let promptStarted!: () => void;
+    const promptRequestStarted = new Promise<void>((resolve) => {
+      promptStarted = resolve;
+    });
+    globalThis.fetch = async (input, init) => {
+      const url = String(input);
+      if (url.endsWith("/global/health")) return Response.json({ version: "1" });
+      if (url.endsWith("/session")) return Response.json({ id: "session-unconfirmed" });
+      if (url.endsWith("/abort")) return Response.json(false);
+      promptStarted();
+      return new Promise<Response>((_resolve, reject) => {
+        init?.signal?.addEventListener(
+          "abort",
+          () => reject(new DOMException("Stopped", "AbortError")),
+          { once: true },
+        );
+      });
+    };
+    try {
+      const run = runOpenCodeSession({
+        serverUrl: "http://127.0.0.1:4096",
+        password: "a-strong-local-password",
+        title: "I/O test",
+        prompt: "Plan safely",
+        signal: controller.signal,
+        onSessionSettled: async (_session, state) => {
+          lifecycle.push(state);
+        },
+      });
+      await promptRequestStarted;
+      controller.abort();
+      await assert.rejects(run, /did not acknowledge the local abort/);
+      assert.deepEqual(lifecycle, ["failed"]);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
   it("bounds local response size, input size, and request duration", async () => {
     const originalFetch = globalThis.fetch;
     let fetchCount = 0;

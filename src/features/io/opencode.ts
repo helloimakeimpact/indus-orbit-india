@@ -228,15 +228,17 @@ async function bestEffortAbortSession(
   timeoutMs: number,
 ) {
   try {
-    await requestOpenCode(
+    const acknowledged = await requestOpenCode(
       `${baseUrl}/session/${encodeURIComponent(sessionId)}/abort`,
       { method: "POST", headers: headers(password) },
       undefined,
       Math.min(timeoutMs, 5_000),
     );
+    return acknowledged === true;
   } catch {
     // The original request error remains authoritative. A disconnected local
     // daemon must not hide the reason the member already sees.
+    return false;
   }
 }
 
@@ -461,11 +463,20 @@ export async function runOpenCodeSession(input: {
     });
     changedFileCount = await readChangedFileCount(baseUrl, input.password, sessionId, timeoutMs);
   } catch (error) {
-    await bestEffortAbortSession(baseUrl, input.password, sessionId, timeoutMs);
-    await input.onSessionSettled?.(
-      reference,
-      error instanceof OpenCodeStoppedError ? "stopped" : "failed",
+    const abortAcknowledged = await bestEffortAbortSession(
+      baseUrl,
+      input.password,
+      sessionId,
+      timeoutMs,
     );
+    const stopped = error instanceof OpenCodeStoppedError;
+    await input.onSessionSettled?.(reference, stopped && abortAcknowledged ? "stopped" : "failed");
+    if (stopped && !abortAcknowledged) {
+      throw new Error(
+        "The browser stopped waiting, but OpenCode did not acknowledge the local abort. Reconnect before assuming the work stopped.",
+        { cause: error },
+      );
+    }
     throw error;
   }
   await input.onSessionSettled?.(reference, "completed");

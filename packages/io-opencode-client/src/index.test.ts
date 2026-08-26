@@ -98,6 +98,87 @@ describe("packaged OpenCode client", () => {
     assert.equal(continued.content, "continued");
   });
 
+  it("negotiates capabilities and requires positive mutation acknowledgements", async () => {
+    const calls: Array<{ url: string; body: string | null }> = [];
+    const client = new IOPortOpenCodeClient({
+      origin: "http://127.0.0.1:4096",
+      password: "a-strong-local-password",
+      fetch: async (input, init) => {
+        const url = String(input);
+        calls.push({ url, body: typeof init?.body === "string" ? init.body : null });
+        if (url.endsWith("/doc")) {
+          return Response.json({
+            openapi: "3.1.0",
+            paths: {
+              "/session": { get: {}, post: {} },
+              "/global/event": { get: {} },
+              "/session/{id}/message": { post: {} },
+              "/session/{id}/children": { get: {} },
+              "/session/{id}/todo": { get: {} },
+              "/session/{id}/diff": { get: {} },
+              "/session/{id}/permissions/{permissionID}": { post: {} },
+              "/session/{id}/abort": { post: {} },
+              "/session/{id}/fork": { post: {} },
+              "/session/{id}/revert": { post: {} },
+              "/session/{id}/unrevert": { post: {} },
+              "/session/{id}/command": { post: {} },
+            },
+          });
+        }
+        if (url.endsWith("/session/root/fork")) {
+          return Response.json({ id: "forked", parentID: "root", title: "Fork" });
+        }
+        if (url.includes("/session/root/message?limit=10")) {
+          return Response.json([
+            {
+              info: { id: "message-1", role: "assistant", time: { created: 1_700_000_000_000 } },
+              parts: [
+                { id: "part-1", type: "text", text: "Done" },
+                {
+                  id: "part-2",
+                  type: "tool",
+                  tool: "shell",
+                  state: { status: "completed", output: "tests passed" },
+                },
+              ],
+            },
+          ]);
+        }
+        return Response.json(true);
+      },
+    });
+
+    const capabilities = await client.negotiateCapabilities();
+    assert.equal(capabilities.openApiVersion, "3.1.0");
+    assert.equal(capabilities.abort, true);
+    assert.equal(capabilities.commands, true);
+    assert.equal(await client.abortSession("root"), true);
+    assert.deepEqual(await client.forkSession("root", "message-1"), {
+      sessionId: "forked",
+      parentSessionId: "root",
+      title: "Fork",
+    });
+    const timeline = await client.getSessionTimeline("root", 10);
+    assert.equal(timeline[0].parts[1].tool, "shell");
+    assert.equal(timeline[0].parts[1].content, "tests passed");
+    await client.revertSession("root", "message-1", "part-1");
+    await client.restoreRevertedSession("root");
+    assert.deepEqual(JSON.parse(calls.find((call) => call.url.endsWith("/fork"))?.body ?? "{}"), {
+      messageID: "message-1",
+    });
+  });
+
+  it("fails closed when OpenCode does not acknowledge abort or revert", async () => {
+    const client = new IOPortOpenCodeClient({
+      origin: "http://127.0.0.1:4096",
+      password: "a-strong-local-password",
+      fetch: async () => Response.json(false),
+    });
+    await assert.rejects(client.abortSession("root"), /did not acknowledge/);
+    await assert.rejects(client.revertSession("root", "message-1"), /did not acknowledge/);
+    await assert.rejects(client.restoreRevertedSession("root"), /did not acknowledge/);
+  });
+
   it("subscribes to the global SSE stream and scopes events to the requested session", async () => {
     const controller = new AbortController();
     const received: string[] = [];
