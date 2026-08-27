@@ -6392,6 +6392,61 @@ export type Database = {
         };
         Returns: Json;
       };
+      admin_content_queue: {
+        Args: {
+          _content_type?: string;
+          _limit?: number;
+          _status?: string;
+        };
+        Returns: {
+          content_id: string;
+          content_type: string;
+          created_at: string;
+          owner_display_name: string;
+          published_at: string;
+          status: string;
+          summary: string;
+          title: string;
+        }[];
+      };
+      admin_transition_content: {
+        Args: {
+          _content_id: string;
+          _content_type: string;
+          _expected_status: string;
+          _reason: string;
+          _target_status: string;
+        };
+        Returns: Json;
+      };
+      admin_program_queue: {
+        Args: {
+          _lifecycle_state?: string;
+          _limit?: number;
+          _program_type?: string;
+        };
+        Returns: {
+          created_at: string;
+          lifecycle_state: string;
+          location_label: string;
+          owner_display_name: string;
+          program_id: string;
+          program_type: string;
+          state_version: number;
+          title: string;
+          updated_at: string;
+        }[];
+      };
+      admin_transition_program: {
+        Args: {
+          _expected_version: number;
+          _program_id: string;
+          _program_type: string;
+          _reason: string;
+          _target_state: string;
+        };
+        Returns: Json;
+      };
       admin_io_approve_fx_rate: {
         Args: { _rate_id: string; _reason: string };
         Returns: Json;

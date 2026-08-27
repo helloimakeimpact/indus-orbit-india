@@ -1,6 +1,6 @@
 # Indus Orbit admin system
 
-Status: separate application foundation published to private GitHub `main`; provider/evidence/budget/circuit/commercial and capped provider-conformance database controls Released to demo on 20 August 2026.
+Status: separate application with Trust, Member Support, Content, Programmes, I/O, Finance, Team and Audit operations locally Verified; matching capability-checked database commands are Released to the connected demo through hosted version `20260826144354`, updated 27 August 2026. The current local commits are not yet published or hosted.
 
 ## Ownership boundary
 
@@ -13,16 +13,17 @@ Status: separate application foundation published to private GitHub `main`; prov
 
 Existing `public.user_roles.role = 'admin'` records remain root platform authority and are presented as **super-admin**. This avoids silently weakening dozens of inherited policies while the system is migrated.
 
-Six new scoped duties exist without copying that root role:
+Seven scoped duties exist without copying that root role:
 
-| Duty               | Capabilities                                                  |
-| ------------------ | ------------------------------------------------------------- |
-| Trust & safety     | `admin.enter`, `trust.manage`, `reports.manage`, `audit.read` |
-| Member support     | `admin.enter`, `members.read`, `members.support`              |
-| Content operator   | `admin.enter`, `content.manage`                               |
-| Programme operator | `admin.enter`, `programs.manage`                              |
-| I/O operator       | `admin.enter`, `io.read`, `io.manage`, `audit.read`           |
-| Audit viewer       | `admin.enter`, `audit.read`                                   |
+| Duty               | Capabilities                                                                                         |
+| ------------------ | ---------------------------------------------------------------------------------------------------- |
+| Trust & safety     | `admin.enter`, `trust.manage`, `reports.manage`, `audit.read`                                        |
+| Member support     | `admin.enter`, `members.read`, `members.support`                                                     |
+| Content operator   | `admin.enter`, `content.manage`                                                                      |
+| Programme operator | `admin.enter`, `programs.manage`                                                                     |
+| I/O operator       | `admin.enter`, `io.read`, `io.manage`, `audit.read`                                                  |
+| Finance operator   | `admin.enter`, `billing.read`, `billing.manage`, `billing.refund`, `billing.reconcile`, `audit.read` |
+| Audit viewer       | `admin.enter`, `audit.read`                                                                          |
 
 Assignments, capability mappings and assignment events live in the non-exposed `private` schema. `get_my_admin_access()` is caller-bound. `admin_set_team_role()` requires an existing super-admin and a human reason. Browser roles can no longer insert, update or delete `public.user_roles`.
 
@@ -51,7 +52,7 @@ The Released operational/conformance backend and published admin build additiona
 - a single-use, 30-minute, USD 0.01-capped provider-conformance approval with discovery-first execution and redacted evidence;
 - a fail-closed capability transition in which only a passing run seals the tested draft as Verified;
 - explicit China-hosted processing acknowledgement for the DeepSeek API test;
-- 13 passing browser contract tests and the last shared 550-assertion local database baseline.
+- 27 passing browser contract/access/finance assertions and the last shared 550-assertion local database baseline.
 
 The operational slice is Released through `20260810002754_create_io_operational_core.sql`; the commercial projection/gate is Released through `20260820001339_add_io_transparent_service_fee.sql`; conformance is Released through hosted versions `20260820191544` and `20260820191815` plus `io-provider-conformance` v1. The separate admin browser application is published but remains unhosted.
 
@@ -61,12 +62,13 @@ Implemented:
 
 - standalone branded shell and sign-in;
 - desktop and 390px mobile runtime verification;
-- control overview, team assignment/revocation and I/O operations pages;
+- control overview, team assignment/revocation, I/O, finance, Trust, Member Support, Content, Programme and Audit pages;
 - provider commercial state, onward-access activation gate and terms-evidence link;
 - reasoned, explicitly confirmed and cost-capped OpenAI/DeepSeek conformance controls;
 - safe unconfigured state and environment contract;
+- Content queues for Story, Event, Course and S.O.D.A. with bounded summaries and expected-state transitions;
+- Chapter/Mission Programme queues that call the canonical versioned lifecycle graph and synchronize projected Space state;
 - typed/build verification in both repositories;
-- all 23 tracked admin files published to `helloimakeimpact/admin-indus-orbit` private `main`;
 - demo database migrations and post-apply checks;
 - covering indexes for every foreign-key path in the new assignment, audit and provider-control tables.
 
@@ -74,10 +76,10 @@ Left before production:
 
 1. host the admin repository and set `VITE_ADMIN_APP_URL` in the member app;
 2. require MFA, recent re-authentication, session review/revocation and two-person approval for root changes;
-3. replace legacy trust/report, member, content and programme direct-table mutations with transactional capability-checked RPCs;
-4. add optimistic concurrency, mandatory decision reasons, immutable/redacted events, appeals and negative role-matrix tests;
-5. add paginated audit search/export with retention and redaction policy;
-6. role-test and explicitly execute the Released conformance boundary, then add commercial evidence mutation/expiry, scheduled health and ledger reconciliation before user traffic;
+3. run authenticated positive/negative browser personas for every scoped duty and all unauthorized cross-duty combinations;
+4. approve and connect the attachment scanner, tax/FX/Razorpay policies and credentials, then execute sandbox payment/refund/reconciliation journeys;
+5. add step-up-authorized audit export after retention/redaction policy approval;
+6. role-test and explicitly execute the Released conformance boundary, then add commercial evidence expiry and scheduled health before user traffic;
 7. create staging/production separation, SLOs, alerts, incident response and rollback proof.
 
 ## Security-advisor interpretation
