@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.17"
   }
   public: {
     Tables: {
@@ -634,18 +634,21 @@ export type Database = {
       conversation_mentions: {
         Row: {
           created_at: string
+          id: string
           mentioned_role_id: string | null
           mentioned_user_id: string | null
           message_id: string
         }
         Insert: {
           created_at?: string
+          id?: string
           mentioned_role_id?: string | null
           mentioned_user_id?: string | null
           message_id: string
         }
         Update: {
           created_at?: string
+          id?: string
           mentioned_role_id?: string | null
           mentioned_user_id?: string | null
           message_id?: string
@@ -899,6 +902,7 @@ export type Database = {
       }
       conversation_notification_preferences: {
         Row: {
+          id: string
           preference: string
           quiet_hours: Json
           room_id: string | null
@@ -907,6 +911,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          id?: string
           preference?: string
           quiet_hours?: Json
           room_id?: string | null
@@ -915,6 +920,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          id?: string
           preference?: string
           quiet_hours?: Json
           room_id?: string | null
@@ -1485,6 +1491,55 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "missions"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversation_thread_follows: {
+        Row: {
+          followed_at: string
+          last_read_at: string | null
+          last_read_message_id: string | null
+          thread_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          followed_at?: string
+          last_read_at?: string | null
+          last_read_message_id?: string | null
+          thread_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          followed_at?: string
+          last_read_at?: string | null
+          last_read_message_id?: string | null
+          thread_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_thread_follows_last_read_message_id_fkey"
+            columns: ["last_read_message_id"]
+            isOneToOne: false
+            referencedRelation: "conversation_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversation_thread_follows_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "conversation_threads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversation_thread_follows_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -6322,6 +6377,19 @@ export type Database = {
           threat_code: string
         }[]
       }
+      admin_content_queue: {
+        Args: { _content_type?: string; _limit?: number; _status?: string }
+        Returns: {
+          content_id: string
+          content_type: string
+          created_at: string
+          owner_display_name: string
+          published_at: string
+          status: string
+          summary: string
+          title: string
+        }[]
+      }
       admin_decide_appeal: {
         Args: {
           _appeal_id: string
@@ -6654,6 +6722,24 @@ export type Database = {
           target_type: string
         }[]
       }
+      admin_program_queue: {
+        Args: {
+          _lifecycle_state?: string
+          _limit?: number
+          _program_type?: string
+        }
+        Returns: {
+          created_at: string
+          lifecycle_state: string
+          location_label: string
+          owner_display_name: string
+          program_id: string
+          program_type: string
+          state_version: number
+          title: string
+          updated_at: string
+        }[]
+      }
       admin_report_queue: {
         Args: {
           _before_created_at?: string
@@ -6726,6 +6812,26 @@ export type Database = {
           _reason: string
           _role: string
           _target_user_id: string
+        }
+        Returns: Json
+      }
+      admin_transition_content: {
+        Args: {
+          _content_id: string
+          _content_type: string
+          _expected_status: string
+          _reason: string
+          _target_status: string
+        }
+        Returns: Json
+      }
+      admin_transition_program: {
+        Args: {
+          _expected_version: number
+          _program_id: string
+          _program_type: string
+          _reason: string
+          _target_state: string
         }
         Returns: Json
       }
@@ -7161,6 +7267,10 @@ export type Database = {
         Returns: string
       }
       get_my_admin_access: { Args: never; Returns: Json }
+      get_my_conversation_room_controls: {
+        Args: { _room_id: string }
+        Returns: Json
+      }
       get_my_io_billing_profile: {
         Args: { _workspace_id: string }
         Returns: Json
@@ -7495,6 +7605,22 @@ export type Database = {
           sender_id: string
         }[]
       }
+      list_my_io_api_key_usage: {
+        Args: { _workspace_id: string }
+        Returns: {
+          api_key_id: string
+          day_request_count: number
+          day_reserved_nanos: string
+          day_reset_at: string
+          day_spent_nanos: string
+          minute_request_count: number
+          minute_reset_at: string
+          month_request_count: number
+          month_reserved_nanos: string
+          month_reset_at: string
+          month_spent_nanos: string
+        }[]
+      }
       list_my_io_api_keys: {
         Args: { _workspace_id: string }
         Returns: {
@@ -7591,6 +7717,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      mark_my_conversation_thread_read: {
+        Args: { _message_id: string; _thread_id: string }
+        Returns: undefined
       }
       mark_my_direct_conversation_read: {
         Args: { _other_user_id: string }
@@ -7875,6 +8005,35 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      send_my_conversation_message_with_mentions: {
+        Args: {
+          _client_request_id: string
+          _content: string
+          _mentioned_user_ids?: string[]
+          _room_id: string
+          _thread_id: string
+        }
+        Returns: {
+          author_id: string
+          client_request_id: string | null
+          content: string
+          created_at: string
+          deleted_at: string | null
+          edited_at: string | null
+          id: string
+          message_type: string
+          provenance: Json
+          reply_to_message_id: string | null
+          room_id: string
+          thread_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "conversation_messages"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       send_my_direct_message: {
         Args: {
           _client_request_id: string
@@ -7950,6 +8109,27 @@ export type Database = {
         }
         Returns: Json
       }
+      set_my_conversation_attention_policy: {
+        Args: {
+          _digest_hour: number
+          _preference: string
+          _quiet_enabled: boolean
+          _quiet_end: string
+          _quiet_start: string
+          _room_id: string
+          _space_id: string
+          _timezone: string
+        }
+        Returns: Json
+      }
+      set_my_conversation_notification_preference: {
+        Args: { _preference: string; _room_id: string; _space_id: string }
+        Returns: Json
+      }
+      set_my_conversation_thread_follow: {
+        Args: { _follow: boolean; _thread_id: string }
+        Returns: Json
+      }
       set_my_io_workspace_provider_policy: {
         Args: {
           _allow_china_hosted: boolean
@@ -7979,6 +8159,14 @@ export type Database = {
           _notice_id: string
           _reason: string
         }
+        Returns: Json
+      }
+      toggle_managed_conversation_pin: {
+        Args: { _message_id: string }
+        Returns: Json
+      }
+      toggle_my_conversation_bookmark: {
+        Args: { _message_id: string }
         Returns: Json
       }
       toggle_my_conversation_reaction: {
