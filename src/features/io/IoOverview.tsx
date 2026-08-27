@@ -51,6 +51,12 @@ import { IO_WORKSPACE_VIEW_META } from "@/features/io/io-workspace-view";
 import { useIoWorkspaceView } from "@/features/io/io-workspace-view-context";
 import { apiKeyLifecycle, usagePercent } from "@/features/io/api-key-usage";
 import {
+  TERMINAL_MODE_POLICIES,
+  terminalCredentialLease,
+  terminalPermissionPolicy,
+  type TerminalMode,
+} from "@/features/io/terminal-policy";
+import {
   inspectOpenCodeLocalSession,
   loadOpenCodeLocalBinding,
   OpenCodeStoppedError,
@@ -111,7 +117,7 @@ import {
   type PartnerRunResult,
 } from "@/features/io/io.client";
 
-type SessionMode = "observe" | "plan" | "build" | "run";
+type SessionMode = TerminalMode;
 type ExecutionPath = "partner" | "terminal";
 
 type TerminalInspection = {
@@ -251,20 +257,6 @@ function basisPointsLabel(snapshot: Record<string, unknown>, key: string) {
     : "0.00%";
 }
 
-function classifyOpenCodePermission(
-  permission: string,
-): "read" | "edit" | "shell" | "network" | "task" | "web" | "mcp" | "external_directory" {
-  const value = permission.toLowerCase();
-  if (value.includes("external")) return "external_directory";
-  if (value.includes("shell") || value.includes("bash")) return "shell";
-  if (value.includes("network")) return "network";
-  if (value.includes("web")) return "web";
-  if (value.includes("mcp")) return "mcp";
-  if (value.includes("task")) return "task";
-  if (value.includes("write") || value.includes("edit")) return "edit";
-  return "read";
-}
-
 function approvalExpiryFromNow(durationMs: number) {
   return new Date(Date.now() + durationMs).toISOString();
 }
@@ -351,6 +343,9 @@ export function IoOverview() {
   const [prompt, setPrompt] = useState("");
   const [openCodeUrl, setOpenCodeUrl] = useState("http://127.0.0.1:4096");
   const [openCodePassword, setOpenCodePassword] = useState("");
+  const [openCodeCredentialEnteredAt, setOpenCodeCredentialEnteredAt] = useState<number | null>(
+    null,
+  );
   const [partnerResult, setPartnerResult] = useState<PartnerRunResult | null>(null);
   const [terminalResult, setTerminalResult] = useState<OpenCodeRunResult | null>(null);
   const executionPath: ExecutionPath =
@@ -366,6 +361,20 @@ export function IoOverview() {
     },
     [],
   );
+
+  useEffect(() => {
+    const lease = terminalCredentialLease(openCodeCredentialEnteredAt);
+    if (lease.expiresAt === null) return;
+    const timer = globalThis.setTimeout(
+      () => {
+        setOpenCodePassword("");
+        setOpenCodeCredentialEnteredAt(null);
+        toast.info("Local OpenCode credential expired from this tab. Re-enter it to continue.");
+      },
+      Math.max(0, lease.remainingMs),
+    );
+    return () => globalThis.clearTimeout(timer);
+  }, [openCodeCredentialEnteredAt]);
 
   useEffect(() => {
     const sessionId = selectedTerminalSessionId;
@@ -1333,8 +1342,13 @@ export function IoOverview() {
     decision: "once" | "reject",
   ) {
     if (typeof window === "undefined" || terminalPermissionBusy) return;
-    if (decision === "once" && permission.risk === "critical") {
-      toast.error("Critical local actions stay blocked until step-up authentication is released.");
+    const policy = terminalPermissionPolicy({
+      mode: session.mode,
+      permission: permission.permission,
+      risk: permission.risk,
+    });
+    if (decision === "once" && !policy.allowed) {
+      toast.error(policy.reason);
       return;
     }
     const binding = loadOpenCodeLocalBinding(window.localStorage, session.id);
@@ -1344,13 +1358,12 @@ export function IoOverview() {
     }
     setTerminalPermissionBusy(permission.id);
     try {
-      const permissionKind = classifyOpenCodePermission(permission.permission);
       const expiresInMs = permission.risk === "critical" ? 4 * 60_000 : 15 * 60_000;
       const cloudRequest = await requestMyIoTerminalApproval({
         sessionId: session.id,
-        permissionKind,
+        permissionKind: policy.kind,
         riskClass: permission.risk,
-        reason: "Exact local OpenCode permission presented for member decision.",
+        reason: policy.reason,
         expiresAt: approvalExpiryFromNow(expiresInMs),
       });
       await decideMyIoTerminalApproval(
@@ -1528,7 +1541,11 @@ export function IoOverview() {
     budgets.length > 0 &&
     !catalogLoading &&
     (routeStrategy !== "explicit_model" || Boolean(requestedModelId));
-  const canRunTerminal = openCodePassword.length >= 16 && openCodePassword.length <= 1_024;
+  const openCodeCredentialLease = terminalCredentialLease(openCodeCredentialEnteredAt);
+  const canRunTerminal =
+    openCodeCredentialLease.valid &&
+    openCodePassword.length >= 16 &&
+    openCodePassword.length <= 1_024;
   const routeSignals = [
     { label: "Registry evidence", value: "Enforced", icon: FileCheck2 },
     {
@@ -1697,7 +1714,7 @@ opencode auth login
             </div>
 
             <div className="app-filter-row" aria-label="Session mode">
-              {(["observe", "plan", "build", "run"] as const).map((item) => (
+              {(Object.keys(TERMINAL_MODE_POLICIES) as SessionMode[]).map((item) => (
                 <button
                   key={item}
                   type="button"
@@ -1711,6 +1728,10 @@ opencode auth login
               ))}
             </div>
           </div>
+          <p className="mt-2 text-[10px] text-muted-foreground" role="status">
+            <strong>{TERMINAL_MODE_POLICIES[mode].label} policy:</strong>{" "}
+            {TERMINAL_MODE_POLICIES[mode].summary}
+          </p>
 
           {workspace ? (
             <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border/65 bg-background/40 px-3 py-2">
@@ -1786,7 +1807,11 @@ opencode auth login
                     <Input
                       type="password"
                       value={openCodePassword}
-                      onChange={(event) => setOpenCodePassword(event.target.value)}
+                      onChange={(event) => {
+                        const value = event.target.value;
+                        setOpenCodePassword(value);
+                        setOpenCodeCredentialEnteredAt(value ? Date.now() : null);
+                      }}
                       aria-label="OpenCode server password"
                       placeholder="16+ character password"
                       minLength={16}
@@ -1796,7 +1821,8 @@ opencode auth login
                   </div>
                   <p className="text-[10px] text-muted-foreground">
                     Use the same 16+ character <code>OPENCODE_SERVER_PASSWORD</code>. It remains in
-                    this tab's memory, is never saved by I/O, and can pair only to this device.
+                    this tab's memory for at most 15 minutes, is never saved by I/O, and can pair
+                    only to this device.
                   </p>
                 </div>
               ) : (
@@ -2560,51 +2586,16 @@ opencode auth login
                           {terminalInspection.permissions.length ? (
                             <div className="mt-2 space-y-2">
                               {terminalInspection.permissions.map((permission) => (
-                                <div
+                                <PermissionDecisionCard
                                   key={permission.id}
-                                  className="rounded-lg border border-amber-200 bg-amber-50 p-2 text-[10px] text-amber-950"
-                                >
-                                  <div className="flex flex-wrap items-center justify-between gap-2">
-                                    <strong>{permission.permission}</strong>
-                                    <Badge variant="outline" className="text-[9px] uppercase">
-                                      {permission.risk}
-                                    </Badge>
-                                  </div>
-                                  {permission.patterns.length ? (
-                                    <p className="mt-1 break-all text-amber-900/75">
-                                      {permission.patterns.join(", ")}
-                                    </p>
-                                  ) : null}
-                                  <div className="mt-2 flex flex-wrap gap-2">
-                                    <Button
-                                      type="button"
-                                      size="sm"
-                                      className="h-7 text-[10px]"
-                                      disabled={
-                                        terminalPermissionBusy !== null ||
-                                        !canRunTerminal ||
-                                        permission.risk === "critical"
-                                      }
-                                      onClick={() =>
-                                        void answerLocalPermission(session, permission, "once")
-                                      }
-                                    >
-                                      Approve once
-                                    </Button>
-                                    <Button
-                                      type="button"
-                                      size="sm"
-                                      variant="outline"
-                                      className="h-7 text-[10px]"
-                                      disabled={terminalPermissionBusy !== null || !canRunTerminal}
-                                      onClick={() =>
-                                        void answerLocalPermission(session, permission, "reject")
-                                      }
-                                    >
-                                      Reject
-                                    </Button>
-                                  </div>
-                                </div>
+                                  mode={session.mode}
+                                  permission={permission}
+                                  busy={terminalPermissionBusy !== null}
+                                  canRun={canRunTerminal}
+                                  onDecision={(decision) =>
+                                    void answerLocalPermission(session, permission, decision)
+                                  }
+                                />
                               ))}
                             </div>
                           ) : (
@@ -3369,6 +3360,68 @@ opencode auth login
           </section>
         </div>
       ) : null}
+    </div>
+  );
+}
+
+function PermissionDecisionCard({
+  mode,
+  permission,
+  busy,
+  canRun,
+  onDecision,
+}: {
+  mode: TerminalMode;
+  permission: OpenCodePermission;
+  busy: boolean;
+  canRun: boolean;
+  onDecision: (decision: "once" | "reject") => void;
+}) {
+  const policy = terminalPermissionPolicy({
+    mode,
+    permission: permission.permission,
+    risk: permission.risk,
+  });
+  return (
+    <div className="rounded-lg border border-amber-200 bg-amber-50 p-2 text-[10px] text-amber-950">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <strong>{permission.permission}</strong>
+        <div className="flex flex-wrap gap-1">
+          <Badge variant="outline" className="text-[9px] uppercase">
+            {policy.kind.replace("_", " ")}
+          </Badge>
+          <Badge variant="outline" className="text-[9px] uppercase">
+            {permission.risk}
+          </Badge>
+        </div>
+      </div>
+      {permission.patterns.length ? (
+        <p className="mt-1 break-all text-amber-900/75">{permission.patterns.join(", ")}</p>
+      ) : null}
+      <p className={cn("mt-1", policy.allowed ? "text-emerald-800" : "text-red-800")}>
+        {policy.reason}
+      </p>
+      <div className="mt-2 flex flex-wrap gap-2">
+        <Button
+          type="button"
+          size="sm"
+          className="h-7 text-[10px]"
+          disabled={busy || !canRun || !policy.allowed}
+          onClick={() => onDecision("once")}
+        >
+          Approve once
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          className="h-7 text-[10px]"
+          disabled={busy || !canRun}
+          onClick={() => onDecision("reject")}
+        >
+          Reject
+        </Button>
+      </div>
     </div>
   );
 }

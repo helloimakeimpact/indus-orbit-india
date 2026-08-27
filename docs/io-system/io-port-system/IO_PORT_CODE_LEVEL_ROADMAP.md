@@ -231,7 +231,7 @@ The data distinction is fixed:
 
 ## 10. P6 — privacy, testing and release gates
 
-The repository currently passes 68 unit/contract tests, TypeScript, formatting, production build and a zero-vulnerability high-severity dependency audit. The database release has its RLS/ACL and foreign-key-index evidence verified against the hosted project. Remaining beta evidence should add:
+The repository currently passes 80 unit/contract tests, TypeScript, formatting and the production build/bundle budget; the last dependency audit reported zero vulnerabilities. The database release has its RLS/ACL and foreign-key-index evidence verified against the hosted project. Remaining beta evidence should add:
 
 ```text
 supabase/tests/io_rls.sql
