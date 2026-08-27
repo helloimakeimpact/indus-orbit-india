@@ -25,6 +25,7 @@ import {
   Pin,
   Radio,
   RotateCcw,
+  Search,
   Send,
   Settings,
   ShieldAlert,
@@ -57,6 +58,7 @@ import {
   markSpaceThreadRead,
   moderateSpaceMessage,
   reportSpaceMessage,
+  searchSpaceMessages,
   sendSpaceMessage,
   setSpaceAttentionPolicy,
   setSpaceThreadLock,
@@ -73,6 +75,7 @@ import {
   type SpaceThreadSummary,
   type SpaceWorkspace,
   type SpaceRoomControls,
+  type SpaceSearchResult,
   type SpaceNotificationPreference,
 } from "@/features/spaces/space-client";
 import { supabase } from "@/integrations/supabase/client";
@@ -192,6 +195,11 @@ function SpacePage() {
   const [attentionQuietEnd, setAttentionQuietEnd] = useState("07:00");
   const [attentionDigestHour, setAttentionDigestHour] = useState(8);
   const [attentionSaving, setAttentionSaving] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<SpaceSearchResult[]>([]);
+  const [searchedQuery, setSearchedQuery] = useState("");
+  const [searching, setSearching] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const timelineEndRef = useRef<HTMLDivElement | null>(null);
   const threadEndRef = useRef<HTMLDivElement | null>(null);
@@ -341,6 +349,50 @@ function SpacePage() {
     } finally {
       setSending(false);
     }
+  }
+
+  async function runSearch() {
+    if (!workspace || searching || searchQuery.trim().length < 2) return;
+    setSearching(true);
+    try {
+      setSearchResults(await searchSpaceMessages(workspace.space.id, searchQuery));
+      setSearchedQuery(searchQuery.trim());
+    } catch (searchError) {
+      toast.error(searchError instanceof Error ? searchError.message : "Could not search Space");
+    } finally {
+      setSearching(false);
+    }
+  }
+
+  async function openSearchResult(result: SpaceSearchResult) {
+    chooseRoom(result.roomId);
+    setSearchOpen(false);
+    if (!result.thread) return;
+    const summary: SpaceThreadSummary = {
+      id: result.thread.id,
+      title: result.thread.title,
+      replyCount: result.thread.replyCount,
+      updatedAt: result.thread.updatedAt,
+      lockedAt: result.thread.lockedAt,
+    };
+    const parent: SpaceMessage = {
+      id: result.thread.parentMessageId,
+      roomId: result.roomId,
+      threadId: null,
+      authorId: result.thread.parentAuthorId,
+      authorDisplayName: result.thread.parentAuthorDisplayName,
+      authorAvatarUrl: result.thread.parentAuthorAvatarUrl,
+      messageType: "human",
+      content: result.thread.parentContent,
+      createdAt: result.thread.parentCreatedAt,
+      editedAt: null,
+      deletedAt: result.thread.parentContent === null ? result.thread.parentCreatedAt : null,
+      reactions: [],
+      attachments: [],
+      thread: summary,
+    };
+    setActiveThread({ summary, parent });
+    await loadThread(result.roomId, result.thread.id);
   }
 
   async function sendThreadReply() {
@@ -761,6 +813,16 @@ function SpacePage() {
                 </p>
               </div>
               <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8"
+                  aria-label="Search this Space"
+                  onClick={() => setSearchOpen(true)}
+                >
+                  <Search className="h-3.5 w-3.5" />
+                </Button>
                 <label className="hidden items-center gap-1.5 text-[10px] text-muted-foreground sm:flex">
                   <Bell className="h-3.5 w-3.5" />
                   <span className="sr-only">Room notifications</span>
@@ -981,6 +1043,76 @@ function SpacePage() {
           )}
         </div>
       </div>
+
+      <Dialog open={searchOpen} onOpenChange={setSearchOpen}>
+        <DialogContent className="max-h-[85vh] overflow-hidden sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Search this Space</DialogTitle>
+            <DialogDescription>
+              Search only returns messages from Rooms and private Threads you can currently open.
+              Removed content stays excluded.
+            </DialogDescription>
+          </DialogHeader>
+          <form
+            className="flex gap-2"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void runSearch();
+            }}
+          >
+            <Input
+              autoFocus
+              value={searchQuery}
+              minLength={2}
+              maxLength={100}
+              placeholder="Search decisions, evidence or context"
+              onChange={(event) => {
+                setSearchQuery(event.target.value);
+                setSearchedQuery("");
+                setSearchResults([]);
+              }}
+            />
+            <Button type="submit" disabled={searching || searchQuery.trim().length < 2}>
+              {searching ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Search className="h-4 w-4" />
+              )}
+              Search
+            </Button>
+          </form>
+          <div className="max-h-[55vh] space-y-2 overflow-y-auto pr-1">
+            {searchResults.map((result) => (
+              <button
+                key={result.messageId}
+                type="button"
+                className="block w-full rounded-2xl border border-border bg-card p-4 text-left transition hover:border-[var(--saffron)]/45 hover:bg-muted/35"
+                onClick={() => void openSearchResult(result)}
+              >
+                <span className="flex flex-wrap items-center gap-2 text-[10px] text-muted-foreground">
+                  <Badge variant="outline">#{result.roomName}</Badge>
+                  {result.thread ? (
+                    <Badge variant="secondary">{result.thread.title ?? "Thread"}</Badge>
+                  ) : null}
+                  <span>{result.authorDisplayName}</span>
+                  <span>{formatMoment(result.createdAt)}</span>
+                </span>
+                <span className="mt-2 line-clamp-3 block whitespace-pre-wrap text-sm leading-6 text-foreground/85">
+                  {result.excerpt}
+                </span>
+                <span className="mt-2 block text-[10px] font-medium text-[var(--saffron-deep)]">
+                  {result.thread ? "Open Thread" : "Open Room"}
+                </span>
+              </button>
+            ))}
+            {!searching && searchedQuery && searchResults.length === 0 ? (
+              <div className="rounded-2xl bg-muted/50 p-6 text-center text-sm text-muted-foreground">
+                No visible messages match this search.
+              </div>
+            ) : null}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={Boolean(reportTarget)} onOpenChange={(open) => !open && setReportTarget(null)}>
         <DialogContent>

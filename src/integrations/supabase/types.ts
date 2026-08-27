@@ -8063,6 +8063,10 @@ export type Database = {
         };
         Returns: string;
       };
+      search_my_conversation_messages: {
+        Args: { _limit?: number; _query: string; _space_id: string };
+        Returns: Json;
+      };
       set_managed_conversation_room_permission: {
         Args: {
           _capability: string;

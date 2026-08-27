@@ -32,6 +32,7 @@ Implemented:
 - a caller-bound keyset-paged Room/Thread feed, one Thread per parent message, continued replies and moderator lock/reopen;
 - explicit person-mention composition for Rooms and Threads, with a ten-person ceiling, active membership/private-Thread authorization, idempotent records, mute/digest-aware content-free fan-out and fixed in-app notification copy;
 - validated per-Room attention schedules with IANA timezone, optional cross-midnight quiet hours, daily digest hour, visible next delivery and database-derived outbox deferral;
+- permission-filtered full-text Space history search with bounded input/results, indexed non-deleted content and Room/private-Thread authorization on every row;
 - four purposeful reaction toggles, member reporting, stable moderated-message tombstones and capability-checked restrict/restore evidence;
 - manager-only Room name/description/posting controls plus a role/member permission-override RPC boundary;
 - a private 10 MB quarantine-first attachment bucket, author-owned reservation/upload/finalization, MIME/size reconciliation and short signed downloads only for authorized objects;
@@ -43,9 +44,9 @@ Still left:
 - retain the Released `20260819225550_add_direct_message_pagination_rpc.sql`, then add one cross-surface conversation store, retry/offline/reconnect and multi-device conflict handling;
 - run hosted authenticated browser personas across proposal/approval, Chapter/Mission lifecycle, membership, Room send/read and outsider privacy;
 - private Thread membership editing, Boards/forums and the full role/permission editor;
-- presence, typing, role mentions, a trusted attachment scanner, search and notification worker/dead-letter operations;
+- presence, typing, role mentions, a trusted attachment scanner, search pagination and notification worker/dead-letter operations;
 - retention/export/deletion and additional redacted admin operator tools; report triage/assignment/appeals and attachment-review boundaries now exist in the separate admin app;
 - one reusable Indus Orbit rail/sidebar/workspace/inspector shell across product systems;
 - I/O session collaboration that never leaks prompts, terminal output, files or tools through human messaging.
 
-The latest collaboration migrations are Released to hosted Indus Orbit with RLS, explicit grants and synchronized client contracts. The member unit suite passes 82/82; the last complete collaboration database contract adds 29 assertions, while mention/attention RPCs have separate rolled-back hosted evidence pending the next full replay. Exact current behavior and limits are in `ORBIT_COLLABORATION_RELEASE.md`. The original delivery split is in `CHAPTER_MISSION_SPACE_SYSTEM_PLAN.md`; the wider engineering plan remains in `CONVERSATION_SYSTEM_IMPLEMENTATION_PLAN.md`.
+The latest collaboration migrations are Released to hosted Indus Orbit with RLS, explicit grants and synchronized client contracts. The member unit suite passes 83/83; the last complete collaboration database contract adds 29 assertions, while mention/attention/search RPCs have separate rolled-back hosted evidence pending the next full replay. Exact current behavior and limits are in `ORBIT_COLLABORATION_RELEASE.md`. The original delivery split is in `CHAPTER_MISSION_SPACE_SYSTEM_PLAN.md`; the wider engineering plan remains in `CONVERSATION_SYSTEM_IMPLEMENTATION_PLAN.md`.

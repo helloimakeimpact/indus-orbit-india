@@ -4,6 +4,7 @@ import {
   normalizeSpaceMentionIds,
   parseSpaceFeedPayload,
   parseSpaceRoomControls,
+  parseSpaceSearchPayload,
 } from "./space-feed";
 
 test("Orbit Space feed preserves chronological collaboration evidence", () => {
@@ -173,6 +174,62 @@ test("Orbit Room controls validate quiet-hour delivery evidence", () => {
       end: null,
       digestHour: 8,
     },
+  );
+});
+
+test("Orbit search keeps only complete authorized-result shapes", () => {
+  assert.deepEqual(
+    parseSpaceSearchPayload({
+      items: [
+        {
+          messageId: "message-1",
+          roomId: "room-1",
+          roomName: "Evidence",
+          threadId: "thread-1",
+          threadTitle: "Decision",
+          threadUpdatedAt: "2026-08-28T09:01:00Z",
+          threadLockedAt: null,
+          authorId: "user-1",
+          authorDisplayName: "Asha",
+          authorAvatarUrl: null,
+          excerpt: "A verified result",
+          createdAt: "2026-08-28T09:00:00Z",
+          parentMessageId: "parent-1",
+          parentAuthorId: "user-2",
+          parentAuthorDisplayName: "Kabir",
+          parentAuthorAvatarUrl: null,
+          parentContent: "Decision context",
+          parentCreatedAt: "2026-08-28T08:55:00Z",
+          replyCount: 3,
+        },
+        { messageId: "incomplete" },
+      ],
+    }),
+    [
+      {
+        messageId: "message-1",
+        roomId: "room-1",
+        roomName: "Evidence",
+        authorId: "user-1",
+        authorDisplayName: "Asha",
+        authorAvatarUrl: null,
+        excerpt: "A verified result",
+        createdAt: "2026-08-28T09:00:00Z",
+        thread: {
+          id: "thread-1",
+          title: "Decision",
+          updatedAt: "2026-08-28T09:01:00Z",
+          lockedAt: null,
+          replyCount: 3,
+          parentMessageId: "parent-1",
+          parentAuthorId: "user-2",
+          parentAuthorDisplayName: "Kabir",
+          parentAuthorAvatarUrl: null,
+          parentContent: "Decision context",
+          parentCreatedAt: "2026-08-28T08:55:00Z",
+        },
+      },
+    ],
   );
 });
 

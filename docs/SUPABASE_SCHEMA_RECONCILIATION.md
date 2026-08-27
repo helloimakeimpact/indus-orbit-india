@@ -1,6 +1,10 @@
 # Supabase schema-reconciliation record
 
-Status: the linked Indus Orbit demo has 98 hosted migrations. The local directory has 99 files because `20260628124500_seed_builder_courses_and_soda_ideas.sql` remains an intentional local/demo-only seed. The newest workspace/key, conformance, finance, schema-advisor, Orbit-attention, mention/quiet-hours and admin-domain migrations were applied through the connected Supabase project API and verified there. The last retained clean local baseline predates the current 99-file chain; historical aliases remain, updated 27 August 2026.
+Status: the linked Indus Orbit demo has 99 hosted migrations. The local directory has 100 files because `20260628124500_seed_builder_courses_and_soda_ideas.sql` remains an intentional local/demo-only seed. The newest workspace/key, conformance, finance, schema-advisor, Orbit-attention, mention/quiet-hours/search and admin-domain migrations were applied through the connected Supabase project API and verified there. The last retained clean local baseline predates the current 100-file chain; historical aliases remain, updated 27 August 2026.
+
+## 27 August 2026 permission-filtered Orbit search
+
+Hosted version `20260827225258` releases `search_my_conversation_messages(...)` plus a partial GIN index over non-deleted conversation content. The caller-bound RPC limits queries to 2–100 characters and 1–50 results, rechecks Space and Room access for every result, rechecks private-Thread membership, and excludes moderated/deleted content. A rolled-back hosted fixture proved one visible result while the same caller received zero results for a deleted message and for another member's private Thread. Anonymous execution is revoked; authenticated and service roles are explicit.
 
 ## 27 August 2026 Orbit quiet hours and digest schedule
 
@@ -22,7 +26,7 @@ Hosted version `20260826144354` releases four authenticated-only RPCs for the se
 
 Hosted versions `20260826142300` and `20260826143056` release caller-bound Thread follows/read pointers, Room notification preferences, personal bookmarks and manager-only Room pins. Browser table access remains SELECT-only: every write rechecks authentication and current Space/Room/Thread access inside a narrow RPC. The follow table has RLS, owner-only SELECT, a composite primary key and covering indexes for user activity and last-read message cleanup. Matching generated client contracts are checked in.
 
-The post-release hosted advisors report zero uncovered foreign keys and zero tables without primary keys. The remaining notices are 116 legacy auth-RLS initialization plans, 49 multiple-permissive-policy overlaps, 250 workload-dependent unused-index observations, 52 intentionally private RLS tables with no browser policy, 148 authenticated security-definer execution reviews and one project-level leaked-password-protection setting. The newest reviews cover the caller-bound API-key usage, mention and attention-policy functions. These notices are retained for explicit policy-by-policy review; no broad automated RLS rewrite is approved.
+The post-release hosted advisors report zero uncovered foreign keys and zero tables without primary keys. The remaining notices are 116 legacy auth-RLS initialization plans, 49 multiple-permissive-policy overlaps, 249 workload-dependent unused-index observations, 52 intentionally private RLS tables with no browser policy, 149 authenticated security-definer execution reviews and one project-level leaked-password-protection setting. The newest reviews cover the caller-bound API-key usage, mention, attention-policy and search functions. These notices are retained for explicit policy-by-policy review; no broad automated RLS rewrite is approved.
 
 ## 26 August 2026 schema-advisor closure
 

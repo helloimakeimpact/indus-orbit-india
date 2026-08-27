@@ -68,6 +68,29 @@ export type SpaceRoomControls = {
   unreadThreadIds: string[];
   canManagePins: boolean;
 };
+export type SpaceSearchResult = {
+  messageId: string;
+  roomId: string;
+  roomName: string;
+  authorId: string;
+  authorDisplayName: string;
+  authorAvatarUrl: string | null;
+  excerpt: string;
+  createdAt: string;
+  thread: {
+    id: string;
+    title: string | null;
+    updatedAt: string;
+    lockedAt: string | null;
+    replyCount: number;
+    parentMessageId: string;
+    parentAuthorId: string;
+    parentAuthorDisplayName: string;
+    parentAuthorAvatarUrl: string | null;
+    parentContent: string | null;
+    parentCreatedAt: string;
+  } | null;
+};
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -157,6 +180,57 @@ export function parseSpaceRoomControls(value: Json): SpaceRoomControls {
     unreadThreadIds: stringArray(controls.unreadThreadIds),
     canManagePins: controls.canManagePins === true,
   };
+}
+
+export function parseSpaceSearchPayload(value: Json): SpaceSearchResult[] {
+  const root = objectValue(value);
+  if (!Array.isArray(root.items)) return [];
+  return root.items.flatMap((item) => {
+    const row = objectValue(item);
+    const messageId = textValue(row.messageId);
+    const roomId = textValue(row.roomId);
+    const authorId = textValue(row.authorId);
+    const excerpt = textValue(row.excerpt);
+    const createdAt = textValue(row.createdAt);
+    if (!messageId || !roomId || !authorId || !excerpt || !createdAt) return [];
+
+    const threadId = textValue(row.threadId);
+    const parentMessageId = textValue(row.parentMessageId);
+    const parentAuthorId = textValue(row.parentAuthorId);
+    const parentCreatedAt = textValue(row.parentCreatedAt);
+    const threadUpdatedAt = textValue(row.threadUpdatedAt);
+    if (threadId && (!parentMessageId || !parentAuthorId || !parentCreatedAt || !threadUpdatedAt)) {
+      return [];
+    }
+
+    return [
+      {
+        messageId,
+        roomId,
+        roomName: textValue(row.roomName, "Room"),
+        authorId,
+        authorDisplayName: textValue(row.authorDisplayName, "Member"),
+        authorAvatarUrl: nullableText(row.authorAvatarUrl),
+        excerpt,
+        createdAt,
+        thread: threadId
+          ? {
+              id: threadId,
+              title: nullableText(row.threadTitle),
+              updatedAt: threadUpdatedAt,
+              lockedAt: nullableText(row.threadLockedAt),
+              replyCount: Math.max(0, Math.trunc(numberValue(row.replyCount))),
+              parentMessageId,
+              parentAuthorId,
+              parentAuthorDisplayName: textValue(row.parentAuthorDisplayName, "Member"),
+              parentAuthorAvatarUrl: nullableText(row.parentAuthorAvatarUrl),
+              parentContent: nullableText(row.parentContent),
+              parentCreatedAt,
+            }
+          : null,
+      },
+    ];
+  });
 }
 
 function nullableText(value: Json | undefined): string | null {
