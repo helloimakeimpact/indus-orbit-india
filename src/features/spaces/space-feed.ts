@@ -102,6 +102,12 @@ export function normalizeSpaceMentionIds(values: readonly string[], actorId: str
   return normalized;
 }
 
+export function normalizeSpaceRoleMentionIds(values: readonly string[]) {
+  const normalized = Array.from(new Set(values.filter((value) => uuidPattern.test(value))));
+  if (normalized.length > 3) throw new Error("A message can mention at most 3 roles");
+  return normalized;
+}
+
 const notificationPreferences = new Set<SpaceNotificationPreference>([
   "default",
   "all",

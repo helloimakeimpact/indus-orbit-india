@@ -38,16 +38,17 @@ The Chapter/Mission Space surface now provides:
 - explicit person mention selection in Room and Thread composers, with removable chips and a ten-person limit;
 - an attention dialog for Room preference, IANA timezone, cross-midnight quiet hours, digest hour, current quiet state and next scheduled delivery;
 - a Space search dialog backed by an authenticated-only indexed RPC that rechecks Room/private-Thread access and excludes deleted content;
+- manager-only role selection in the Room composer, capped at three roles and thirty actually visible recipients while private Threads reject role fan-out;
 - the existing grouped Room rail, main workspace and people/thread inspector geometry.
 
-The pure feed/attention/mention/search decoders are regression-tested for ordering, cursors, tombstones, reaction allowlisting, malformed rows, quiet-hour policy, bounded unique mention IDs and complete search-result shapes. Member format, TypeScript, ESLint and all 83 unit tests pass.
+The pure feed/attention/mention/search decoders are regression-tested for ordering, cursors, tombstones, reaction allowlisting, malformed rows, quiet-hour policy, bounded unique person/role mention IDs and complete search-result shapes. Member format, TypeScript, ESLint and all 84 unit tests pass.
 
 ## Deliberately not claimed as complete
 
 - No trusted malware/content scanner worker is connected. Pending files are not shared with other members.
 - Room permission-override commands exist, but a complete role/permission editor and view-as-role simulator are not in the member UI.
 - Report triage, moderator assignment, appeals and attachment scan decisions belong in the separate admin application and are not yet released there.
-- Private Thread membership editing, role mentions, the fixed-template delivery worker/dead-letter operations, search pagination, presence/typing, Boards and slow mode remain. Thread follow/read/unread, person mentions, pins, bookmarks, permission-filtered Space search and validated Room preference/quiet/digest scheduling are Released.
+- Private Thread membership editing, role selection in eligible public-Thread composers, the fixed-template delivery worker/dead-letter operations, search pagination, presence/typing, Boards and slow mode remain. Thread follow/read/unread, person mentions, manager-only Room role mentions, pins, bookmarks, permission-filtered Space search and validated Room preference/quiet/digest scheduling are Released.
 - Messages, Chapter/Mission Spaces and I/O share the Indus Orbit navigation language and spatial pattern, but have not yet been refactored onto one reusable React frame/store.
 - Authenticated multi-persona, mobile, accessibility and visual-regression browser journeys remain required after web deployment.
 
@@ -58,5 +59,6 @@ The pure feed/attention/mention/search decoders are regression-tested for orderi
 - Attention/mention migrations: `20260826160000_release_orbit_attention_controls.sql`, `20260826161500_index_orbit_thread_follow_read_message.sql` and `20260827110000_release_orbit_member_mentions.sql`.
 - Quiet-hours migration: `20260827120000_release_orbit_quiet_hours.sql`.
 - Permission-filtered search migration: `20260827130000_release_orbit_permission_filtered_search.sql`.
+- Bounded role-mention migration: `20260827140000_release_orbit_bounded_role_mentions.sql`.
 - Hosted verification: ten public product RPCs, private bucket, two Storage policies, zero direct browser table writes and zero existing collaboration content.
 - Database contract: `orbit_collaboration_controls.test.sql` adds 29 schema/ACL/storage assertions for the next complete replay.

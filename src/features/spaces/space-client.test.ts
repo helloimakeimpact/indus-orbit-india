@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   normalizeSpaceMentionIds,
+  normalizeSpaceRoleMentionIds,
   parseSpaceFeedPayload,
   parseSpaceRoomControls,
   parseSpaceSearchPayload,
@@ -249,5 +250,20 @@ test("Orbit mentions are unique, actor-free and bounded", () => {
         actor,
       ),
     /at most 10/,
+  );
+});
+
+test("Orbit role mentions are unique and manager-scale bounded", () => {
+  const role = "40000000-0000-4000-8000-000000000001";
+  assert.deepEqual(normalizeSpaceRoleMentionIds([role, role, "not-a-role"]), [role]);
+  assert.throws(
+    () =>
+      normalizeSpaceRoleMentionIds(
+        Array.from(
+          { length: 4 },
+          (_, index) => `40000000-0000-4000-8000-${String(index).padStart(12, "0")}`,
+        ),
+      ),
+    /at most 3 roles/,
   );
 });

@@ -8063,6 +8063,17 @@ export type Database = {
         };
         Returns: string;
       };
+      send_my_conversation_message_with_audience: {
+        Args: {
+          _client_request_id: string;
+          _content: string;
+          _mentioned_role_ids?: string[];
+          _mentioned_user_ids?: string[];
+          _room_id: string;
+          _thread_id: string;
+        };
+        Returns: Database["public"]["Tables"]["conversation_messages"]["Row"];
+      };
       search_my_conversation_messages: {
         Args: { _limit?: number; _query: string; _space_id: string };
         Returns: Json;

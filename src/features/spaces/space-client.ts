@@ -4,6 +4,7 @@ import type { Database } from "@/integrations/supabase/types";
 import {
   objectValue,
   normalizeSpaceMentionIds,
+  normalizeSpaceRoleMentionIds,
   parseSpaceFeedPayload,
   parseSpaceRoomControls,
   parseSpaceSearchPayload,
@@ -36,6 +37,7 @@ type Space = Database["public"]["Tables"]["conversation_spaces"]["Row"];
 type ContextGroup = Database["public"]["Tables"]["conversation_context_groups"]["Row"];
 type Room = Database["public"]["Tables"]["conversation_rooms"]["Row"];
 type Membership = Database["public"]["Tables"]["conversation_space_memberships"]["Row"];
+export type SpaceRole = Database["public"]["Tables"]["conversation_space_roles"]["Row"];
 type ProfileSummary = Pick<
   Database["public"]["Tables"]["profiles"]["Row"],
   "display_name" | "avatar_url" | "headline"
@@ -46,6 +48,7 @@ export type SpaceWorkspace = {
   space: Space;
   groups: ContextGroup[];
   rooms: Room[];
+  roles: SpaceRole[];
   members: SpaceMember[];
 };
 
@@ -97,7 +100,7 @@ export async function getSourceSpaceId(
 }
 
 export async function getSpaceWorkspace(spaceId: string): Promise<SpaceWorkspace> {
-  const [spaceResult, groupResult, roomResult, memberResult] = await Promise.all([
+  const [spaceResult, groupResult, roomResult, roleResult, memberResult] = await Promise.all([
     supabase.from("conversation_spaces").select("*").eq("id", spaceId).single(),
     supabase
       .from("conversation_context_groups")
@@ -110,6 +113,7 @@ export async function getSpaceWorkspace(spaceId: string): Promise<SpaceWorkspace
       .eq("space_id", spaceId)
       .is("archived_at", null)
       .order("position"),
+    supabase.from("conversation_space_roles").select("*").eq("space_id", spaceId).order("position"),
     supabase
       .from("conversation_space_memberships")
       .select(
@@ -120,13 +124,19 @@ export async function getSpaceWorkspace(spaceId: string): Promise<SpaceWorkspace
       .order("joined_at"),
   ]);
   const error =
-    spaceResult.error ?? groupResult.error ?? roomResult.error ?? memberResult.error ?? null;
+    spaceResult.error ??
+    groupResult.error ??
+    roomResult.error ??
+    roleResult.error ??
+    memberResult.error ??
+    null;
   if (error) throw new Error(error.message);
   if (!spaceResult.data) throw new Error("Space not found");
   return {
     space: spaceResult.data,
     groups: groupResult.data ?? [],
     rooms: roomResult.data ?? [],
+    roles: roleResult.data ?? [],
     members: (memberResult.data ?? []) as SpaceMember[],
   };
 }
@@ -289,16 +299,19 @@ export async function sendSpaceMessage(
   content: string,
   threadId?: string,
   mentionedUserIds: readonly string[] = [],
+  mentionedRoleIds: readonly string[] = [],
 ): Promise<string> {
   const cleanContent = content.trim();
   if (!cleanContent) throw new Error("Write a message first");
   const mentions = normalizeSpaceMentionIds(mentionedUserIds, null);
-  const { data, error } = await supabase.rpc("send_my_conversation_message_with_mentions", {
+  const roleMentions = normalizeSpaceRoleMentionIds(mentionedRoleIds);
+  const { data, error } = await supabase.rpc("send_my_conversation_message_with_audience", {
     _room_id: roomId,
     _thread_id: (threadId ?? null) as unknown as string,
     _content: cleanContent,
     _client_request_id: crypto.randomUUID(),
     _mentioned_user_ids: mentions,
+    _mentioned_role_ids: roleMentions,
   });
   if (error) throw new Error(error.message);
   return data.id;

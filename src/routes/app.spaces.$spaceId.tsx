@@ -168,6 +168,7 @@ function SpacePage() {
   const [threadComposer, setThreadComposer] = useState("");
   const [mentionedUserIds, setMentionedUserIds] = useState<string[]>([]);
   const [threadMentionedUserIds, setThreadMentionedUserIds] = useState<string[]>([]);
+  const [mentionedRoleIds, setMentionedRoleIds] = useState<string[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(true);
   const [messagesLoading, setMessagesLoading] = useState(false);
@@ -299,6 +300,7 @@ function SpacePage() {
     setThreadFeed(emptyFeed);
     setMentionedUserIds([]);
     setThreadMentionedUserIds([]);
+    setMentionedRoleIds([]);
     setSelectedFile(null);
     setRoomControls(emptyRoomControls);
     setSelectedRoomId(roomId);
@@ -334,6 +336,7 @@ function SpacePage() {
         composer.trim() || `Shared ${selectedFile?.name ?? "an attachment"}`,
         undefined,
         mentionedUserIds,
+        mentionedRoleIds,
       );
       if (selectedFile) {
         await uploadSpaceAttachment(messageId, selectedFile);
@@ -341,6 +344,7 @@ function SpacePage() {
       }
       setComposer("");
       setMentionedUserIds([]);
+      setMentionedRoleIds([]);
       setSelectedFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
       await loadRoom(selectedRoom.id);
@@ -954,9 +958,13 @@ function SpacePage() {
               )}
               <MentionPicker
                 members={workspace.members}
+                roles={workspace.roles}
                 actorUserId={user?.id ?? null}
                 selectedIds={mentionedUserIds}
                 onChange={setMentionedUserIds}
+                selectedRoleIds={mentionedRoleIds}
+                onRoleChange={setMentionedRoleIds}
+                canMentionRoles={feed.canManage}
               />
               <div className="flex items-end gap-2 rounded-2xl border border-border bg-background px-3 py-2 shadow-sm focus-within:ring-2 focus-within:ring-[var(--saffron)]/25">
                 <input
@@ -1511,15 +1519,23 @@ function AttachmentList({ attachments }: { attachments: SpaceMessage["attachment
 
 function MentionPicker({
   members,
+  roles = [],
   actorUserId,
   selectedIds,
   onChange,
+  selectedRoleIds = [],
+  onRoleChange,
+  canMentionRoles = false,
   compact = false,
 }: {
   members: SpaceWorkspace["members"];
+  roles?: SpaceWorkspace["roles"];
   actorUserId: string | null;
   selectedIds: string[];
   onChange: (value: string[]) => void;
+  selectedRoleIds?: string[];
+  onRoleChange?: (value: string[]) => void;
+  canMentionRoles?: boolean;
   compact?: boolean;
 }) {
   const available = members.filter(
@@ -1529,7 +1545,16 @@ function MentionPicker({
     const member = members.find((candidate) => candidate.user_id === id);
     return member ? [member] : [];
   });
-  if (!available.length && !selected.length) return null;
+  const availableRoles = canMentionRoles
+    ? roles.filter((role) => !selectedRoleIds.includes(role.id))
+    : [];
+  const selectedRoles = selectedRoleIds.flatMap((id) => {
+    const role = roles.find((candidate) => candidate.id === id);
+    return role ? [role] : [];
+  });
+  if (!available.length && !selected.length && !availableRoles.length && !selectedRoles.length) {
+    return null;
+  }
   return (
     <div className={cn("flex flex-wrap items-center gap-1.5", !compact && "mb-2 px-1")}>
       {selected.map((member) => (
@@ -1566,6 +1591,41 @@ function MentionPicker({
       ) : null}
       {selectedIds.length === 10 ? (
         <span className="text-[10px] text-muted-foreground">10-person mention limit</span>
+      ) : null}
+      {selectedRoles.map((role) => (
+        <button
+          key={role.id}
+          type="button"
+          className="rounded-full border border-violet-300 bg-violet-50 px-2 py-1 text-[10px] font-medium text-violet-900"
+          aria-label={`Remove role mention ${role.display_name}`}
+          onClick={() => onRoleChange?.(selectedRoleIds.filter((id) => id !== role.id))}
+        >
+          @{role.display_name} ×
+        </button>
+      ))}
+      {availableRoles.length && selectedRoleIds.length < 3 ? (
+        <label className="flex items-center gap-1 text-[10px] text-muted-foreground">
+          <span>@ Role</span>
+          <select
+            value=""
+            aria-label="Mention a Space role"
+            className="h-7 max-w-40 rounded-lg border border-border bg-background px-2 text-[10px] text-foreground"
+            onChange={(event) => {
+              if (!event.target.value) return;
+              onRoleChange?.([...selectedRoleIds, event.target.value]);
+            }}
+          >
+            <option value="">Choose role</option>
+            {availableRoles.map((role) => (
+              <option key={role.id} value={role.id}>
+                {role.display_name}
+              </option>
+            ))}
+          </select>
+        </label>
+      ) : null}
+      {selectedRoleIds.length === 3 ? (
+        <span className="text-[10px] text-muted-foreground">3-role mention limit</span>
       ) : null}
     </div>
   );
