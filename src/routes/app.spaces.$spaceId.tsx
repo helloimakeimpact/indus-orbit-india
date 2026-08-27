@@ -58,6 +58,7 @@ import {
   moderateSpaceMessage,
   reportSpaceMessage,
   sendSpaceMessage,
+  setSpaceAttentionPolicy,
   setSpaceThreadLock,
   setSpaceThreadFollowing,
   setSpaceNotificationPreference,
@@ -91,6 +92,16 @@ const emptyFeed: SpaceFeed = {
 const emptyRoomControls: SpaceRoomControls = {
   roomId: "",
   preference: "default",
+  quietHours: {
+    policyVersion: 1,
+    timezone: "UTC",
+    enabled: false,
+    start: null,
+    end: null,
+    digestHour: 8,
+  },
+  quietActive: false,
+  nextDeliveryAt: null,
   bookmarkedMessageIds: [],
   pinnedMessageIds: [],
   followedThreadIds: [],
@@ -172,6 +183,15 @@ function SpacePage() {
   const [roomPostingPolicy, setRoomPostingPolicy] = useState("members");
   const [roomSaving, setRoomSaving] = useState(false);
   const [attentionBusy, setAttentionBusy] = useState<string | null>(null);
+  const [attentionSettingsOpen, setAttentionSettingsOpen] = useState(false);
+  const [attentionPreference, setAttentionPreference] =
+    useState<SpaceNotificationPreference>("default");
+  const [attentionTimezone, setAttentionTimezone] = useState("UTC");
+  const [attentionQuietEnabled, setAttentionQuietEnabled] = useState(false);
+  const [attentionQuietStart, setAttentionQuietStart] = useState("22:00");
+  const [attentionQuietEnd, setAttentionQuietEnd] = useState("07:00");
+  const [attentionDigestHour, setAttentionDigestHour] = useState(8);
+  const [attentionSaving, setAttentionSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const timelineEndRef = useRef<HTMLDivElement | null>(null);
   const threadEndRef = useRef<HTMLDivElement | null>(null);
@@ -458,6 +478,52 @@ function SpacePage() {
     }
   }
 
+  function openAttentionSettings() {
+    const quiet = roomControls.quietHours;
+    setAttentionPreference(roomControls.preference);
+    setAttentionTimezone(
+      quiet.timezone === "UTC"
+        ? (Intl.DateTimeFormat().resolvedOptions().timeZone ?? "UTC")
+        : quiet.timezone,
+    );
+    setAttentionQuietEnabled(quiet.enabled);
+    setAttentionQuietStart(quiet.start ?? "22:00");
+    setAttentionQuietEnd(quiet.end ?? "07:00");
+    setAttentionDigestHour(quiet.digestHour);
+    setAttentionSettingsOpen(true);
+  }
+
+  async function saveAttentionSettings() {
+    if (!selectedRoom || !workspace || attentionSaving) return;
+    setAttentionSaving(true);
+    try {
+      await setSpaceAttentionPolicy({
+        spaceId: workspace.space.id,
+        roomId: selectedRoom.id,
+        preference: attentionPreference,
+        quietHours: {
+          policyVersion: 1,
+          timezone: attentionTimezone.trim(),
+          enabled: attentionQuietEnabled,
+          start: attentionQuietEnabled ? attentionQuietStart : null,
+          end: attentionQuietEnabled ? attentionQuietEnd : null,
+          digestHour: attentionDigestHour,
+        },
+      });
+      setRoomControls(await getSpaceRoomControls(selectedRoom.id));
+      setAttentionSettingsOpen(false);
+      toast.success("Room attention schedule updated");
+    } catch (attentionError) {
+      toast.error(
+        attentionError instanceof Error
+          ? attentionError.message
+          : "Could not update the attention schedule",
+      );
+    } finally {
+      setAttentionSaving(false);
+    }
+  }
+
   async function loadEarlier() {
     if (!selectedRoom || !feed.nextCursor) return;
     setLoadingEarlier(true);
@@ -716,6 +782,22 @@ function SpacePage() {
                     <option value="mute">Mute</option>
                   </select>
                 </label>
+                <Button
+                  type="button"
+                  size="icon"
+                  variant={roomControls.quietActive ? "secondary" : "ghost"}
+                  className="h-8 w-8"
+                  aria-label="Configure notifications, digest and quiet hours"
+                  disabled={!selectedRoom}
+                  onClick={openAttentionSettings}
+                >
+                  <Bell className="h-3.5 w-3.5" />
+                </Button>
+                {roomControls.quietActive ? (
+                  <Badge variant="outline" className="hidden text-[9px] sm:inline-flex">
+                    Quiet now
+                  </Badge>
+                ) : null}
                 {roomControls.pinnedMessageIds.length ? (
                   <Badge variant="outline" className="hidden gap-1 sm:inline-flex">
                     <Pin className="h-3 w-3" /> {roomControls.pinnedMessageIds.length}
@@ -940,6 +1022,108 @@ function SpacePage() {
               onClick={() => void submitReport()}
             >
               {reportSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Send report
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={attentionSettingsOpen} onOpenChange={setAttentionSettingsOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Attention schedule</DialogTitle>
+            <DialogDescription>
+              Choose what this Room may notify you about and when delivery should wait. Times use
+              your named timezone and never change Room visibility.
+            </DialogDescription>
+          </DialogHeader>
+          <label className="space-y-2 text-sm">
+            <span className="font-medium">Notification level</span>
+            <select
+              value={attentionPreference}
+              onChange={(event) =>
+                setAttentionPreference(event.target.value as SpaceNotificationPreference)
+              }
+              className="h-10 w-full rounded-md border border-input bg-background px-3"
+            >
+              <option value="default">Default</option>
+              <option value="all">All activity</option>
+              <option value="mentions">Mentions</option>
+              <option value="digest">Daily digest</option>
+              <option value="mute">Mute</option>
+            </select>
+          </label>
+          <label className="space-y-2 text-sm">
+            <span className="font-medium">IANA timezone</span>
+            <Input
+              value={attentionTimezone}
+              onChange={(event) => setAttentionTimezone(event.target.value)}
+              placeholder="Asia/Kolkata"
+              maxLength={64}
+            />
+          </label>
+          <label className="flex items-center gap-2 rounded-xl border border-border p-3 text-sm">
+            <input
+              type="checkbox"
+              checked={attentionQuietEnabled}
+              onChange={(event) => setAttentionQuietEnabled(event.target.checked)}
+            />
+            Hold external delivery during quiet hours
+          </label>
+          {attentionQuietEnabled ? (
+            <div className="grid grid-cols-2 gap-3">
+              <label className="space-y-2 text-sm">
+                <span className="font-medium">Quiet starts</span>
+                <Input
+                  type="time"
+                  value={attentionQuietStart}
+                  onChange={(event) => setAttentionQuietStart(event.target.value)}
+                />
+              </label>
+              <label className="space-y-2 text-sm">
+                <span className="font-medium">Quiet ends</span>
+                <Input
+                  type="time"
+                  value={attentionQuietEnd}
+                  onChange={(event) => setAttentionQuietEnd(event.target.value)}
+                />
+              </label>
+            </div>
+          ) : null}
+          <label className="space-y-2 text-sm">
+            <span className="font-medium">Daily digest hour · 0–23</span>
+            <Input
+              type="number"
+              min={0}
+              max={23}
+              step={1}
+              value={attentionDigestHour}
+              onChange={(event) => setAttentionDigestHour(Number(event.target.value))}
+            />
+          </label>
+          {roomControls.nextDeliveryAt ? (
+            <p className="rounded-xl bg-muted p-3 text-xs text-muted-foreground">
+              Current next scheduled delivery: {formatMoment(roomControls.nextDeliveryAt)}
+            </p>
+          ) : null}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAttentionSettingsOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              disabled={
+                attentionSaving ||
+                !attentionTimezone.trim() ||
+                !Number.isInteger(attentionDigestHour) ||
+                attentionDigestHour < 0 ||
+                attentionDigestHour > 23 ||
+                (attentionQuietEnabled &&
+                  (!attentionQuietStart ||
+                    !attentionQuietEnd ||
+                    attentionQuietStart === attentionQuietEnd))
+              }
+              onClick={() => void saveAttentionSettings()}
+            >
+              {attentionSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Save schedule
             </Button>
           </DialogFooter>
         </DialogContent>

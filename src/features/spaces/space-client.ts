@@ -11,6 +11,7 @@ import {
   type SpaceFeedCursor,
   type SpaceMessage,
   type SpaceNotificationPreference,
+  type SpaceQuietHours,
   type SpaceReaction,
   type SpaceRoomControls,
   type SpaceThreadSummary,
@@ -22,6 +23,7 @@ export type {
   SpaceFeedCursor,
   SpaceMessage,
   SpaceNotificationPreference,
+  SpaceQuietHours,
   SpaceReaction,
   SpaceRoomControls,
   SpaceThreadSummary,
@@ -215,6 +217,46 @@ export async function setSpaceNotificationPreference(
     textValue(result.preference) !== preference
   ) {
     throw new Error("The notification preference returned an invalid result");
+  }
+}
+
+export async function setSpaceAttentionPolicy(input: {
+  spaceId: string;
+  roomId: string;
+  preference: SpaceNotificationPreference;
+  quietHours: SpaceQuietHours;
+}): Promise<void> {
+  if (!notificationPreferences.has(input.preference)) {
+    throw new Error("Choose a valid notification preference");
+  }
+  const quiet = input.quietHours;
+  if (
+    !quiet.timezone ||
+    !Number.isInteger(quiet.digestHour) ||
+    quiet.digestHour < 0 ||
+    quiet.digestHour > 23 ||
+    (quiet.enabled && (!quiet.start || !quiet.end || quiet.start === quiet.end))
+  ) {
+    throw new Error("Choose a valid timezone, quiet window and digest hour");
+  }
+  const { data, error } = await supabase.rpc("set_my_conversation_attention_policy", {
+    _space_id: input.spaceId,
+    _room_id: input.roomId,
+    _preference: input.preference,
+    _timezone: quiet.timezone,
+    _quiet_enabled: quiet.enabled,
+    _quiet_start: quiet.start ?? "",
+    _quiet_end: quiet.end ?? "",
+    _digest_hour: quiet.digestHour,
+  });
+  if (error) throw new Error(error.message);
+  const result = objectValue(data);
+  if (
+    textValue(result.spaceId) !== input.spaceId ||
+    textValue(result.roomId) !== input.roomId ||
+    textValue(result.preference) !== input.preference
+  ) {
+    throw new Error("The attention policy returned an invalid result");
   }
 }
 

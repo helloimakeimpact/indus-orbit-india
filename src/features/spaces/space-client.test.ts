@@ -92,6 +92,16 @@ test("Orbit Room controls preserve only recognized caller-bound attention state"
     parseSpaceRoomControls({
       roomId: "room-1",
       preference: "mentions",
+      quietHours: {
+        policyVersion: 1,
+        timezone: "UTC",
+        enabled: false,
+        start: null,
+        end: null,
+        digestHour: 8,
+      },
+      quietActive: false,
+      nextDeliveryAt: null,
       bookmarkedMessageIds: ["message-1", null],
       pinnedMessageIds: ["message-2"],
       followedThreadIds: ["thread-1"],
@@ -101,6 +111,16 @@ test("Orbit Room controls preserve only recognized caller-bound attention state"
     {
       roomId: "room-1",
       preference: "mentions",
+      quietHours: {
+        policyVersion: 1,
+        timezone: "UTC",
+        enabled: false,
+        start: null,
+        end: null,
+        digestHour: 8,
+      },
+      quietActive: false,
+      nextDeliveryAt: null,
       bookmarkedMessageIds: ["message-1"],
       pinnedMessageIds: ["message-2"],
       followedThreadIds: ["thread-1"],
@@ -111,6 +131,48 @@ test("Orbit Room controls preserve only recognized caller-bound attention state"
   assert.throws(
     () => parseSpaceRoomControls({ roomId: "room-1", preference: "everything" }),
     /invalid/,
+  );
+});
+
+test("Orbit Room controls validate quiet-hour delivery evidence", () => {
+  const controls = parseSpaceRoomControls({
+    roomId: "room-1",
+    preference: "digest",
+    quietHours: {
+      policyVersion: 1,
+      timezone: "Asia/Kolkata",
+      enabled: true,
+      start: "22:00",
+      end: "07:00",
+      digestHour: 8,
+    },
+    quietActive: true,
+    nextDeliveryAt: "2026-08-28T02:30:00Z",
+  });
+  assert.equal(controls.quietHours.timezone, "Asia/Kolkata");
+  assert.equal(controls.quietActive, true);
+  assert.deepEqual(
+    parseSpaceRoomControls({
+      roomId: "room-1",
+      preference: "all",
+      quietHours: {
+        policyVersion: 1,
+        timezone: "Not/AZone",
+        enabled: true,
+        start: "25:00",
+        end: "07:00",
+        digestHour: 99,
+      },
+      quietActive: true,
+    }).quietHours,
+    {
+      policyVersion: 1,
+      timezone: "UTC",
+      enabled: false,
+      start: null,
+      end: null,
+      digestHour: 8,
+    },
   );
 });
 

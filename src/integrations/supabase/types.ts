@@ -8107,6 +8107,19 @@ export type Database = {
         };
         Returns: Json;
       };
+      set_my_conversation_attention_policy: {
+        Args: {
+          _digest_hour: number;
+          _preference: string;
+          _quiet_enabled: boolean;
+          _quiet_end: string;
+          _quiet_start: string;
+          _room_id: string;
+          _space_id: string;
+          _timezone: string;
+        };
+        Returns: Json;
+      };
       set_my_conversation_notification_preference: {
         Args: { _preference: string; _room_id: string; _space_id: string };
         Returns: Json;

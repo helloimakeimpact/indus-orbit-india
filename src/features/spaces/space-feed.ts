@@ -48,9 +48,20 @@ export type SpaceFeed = {
   canModerate: boolean;
 };
 export type SpaceNotificationPreference = "default" | "all" | "mentions" | "digest" | "mute";
+export type SpaceQuietHours = {
+  policyVersion: number;
+  timezone: string;
+  enabled: boolean;
+  start: string | null;
+  end: string | null;
+  digestHour: number;
+};
 export type SpaceRoomControls = {
   roomId: string;
   preference: SpaceNotificationPreference;
+  quietHours: SpaceQuietHours;
+  quietActive: boolean;
+  nextDeliveryAt: string | null;
   bookmarkedMessageIds: string[];
   pinnedMessageIds: string[];
   followedThreadIds: string[];
@@ -75,6 +86,7 @@ const notificationPreferences = new Set<SpaceNotificationPreference>([
   "digest",
   "mute",
 ]);
+const timePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 export function objectValue(value: Json | undefined): Record<string, Json | undefined> {
   return value && typeof value === "object" && !Array.isArray(value)
@@ -99,9 +111,46 @@ export function parseSpaceRoomControls(value: Json): SpaceRoomControls {
   if (!roomId || !notificationPreferences.has(preference)) {
     throw new Error("The Room attention controls are invalid");
   }
+  const quiet = objectValue(controls.quietHours);
+  const policyVersion = numberValue(quiet.policyVersion) || 1;
+  const timezone = textValue(quiet.timezone, "UTC");
+  const enabled = quiet.enabled === true;
+  const start = nullableText(quiet.start);
+  const end = nullableText(quiet.end);
+  const digestHour = quiet.digestHour === undefined ? 8 : numberValue(quiet.digestHour);
+  let timezoneValid = true;
+  try {
+    new Intl.DateTimeFormat("en", { timeZone: timezone }).format(0);
+  } catch {
+    timezoneValid = false;
+  }
+  const quietHoursValid = !(
+    !Number.isInteger(policyVersion) ||
+    policyVersion < 1 ||
+    !timezone ||
+    !timezoneValid ||
+    !Number.isInteger(digestHour) ||
+    digestHour < 0 ||
+    digestHour > 23 ||
+    (enabled &&
+      (!start || !end || start === end || !timePattern.test(start) || !timePattern.test(end)))
+  );
+  const safeQuietHours: SpaceQuietHours = quietHoursValid
+    ? { policyVersion, timezone, enabled, start, end, digestHour }
+    : {
+        policyVersion: 1,
+        timezone: "UTC",
+        enabled: false,
+        start: null,
+        end: null,
+        digestHour: 8,
+      };
   return {
     roomId,
     preference,
+    quietHours: safeQuietHours,
+    quietActive: quietHoursValid && controls.quietActive === true,
+    nextDeliveryAt: nullableText(controls.nextDeliveryAt),
     bookmarkedMessageIds: stringArray(controls.bookmarkedMessageIds),
     pinnedMessageIds: stringArray(controls.pinnedMessageIds),
     followedThreadIds: stringArray(controls.followedThreadIds),

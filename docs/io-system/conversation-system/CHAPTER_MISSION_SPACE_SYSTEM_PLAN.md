@@ -117,22 +117,22 @@ Chapter and Mission detail pages resolve their associated Space and expose **Ope
 
 ## 4. What is still only Partial or Planned
 
-| Capability               | State    | Remaining work                                                                                                                                                                              |
-| ------------------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Hosted schema            | Released | All three forward migrations and the read-only schema/RLS/RPC/Realtime contract pass on `jpwvgpnbkrktipwhvqss`; 26 historical timestamp aliases still prohibit ordinary future `db push`.   |
-| Space member journey     | Partial  | Add invite links, richer request reason, role explanation, notification defaults and complete leave/rejoin UX.                                                                              |
-| Threads                  | Partial  | Schema and create function exist; build Thread timeline, follow/unfollow, lock/archive, private membership and unread UI.                                                                   |
-| Roles and Room overrides | Partial  | Schema exists; add audited operator UI, effective-permission explanation and view-as-role tests.                                                                                            |
-| Reactions and mentions   | Partial  | Reactions plus accessible explicit person mentions are Released with bounded authorization and preference-aware fan-out; add role mentions, quiet-hour delivery and abuse/persona evidence. |
-| Attachments              | Partial  | Metadata exists; create private Storage buckets/policies, signed upload flow, type/size rules, malware scanning, alt text and download audit.                                               |
-| Pins and bookmarks       | Partial  | Records exist; add curator/private-member UI and permission tests.                                                                                                                          |
-| Moderation and reports   | Partial  | Records exist; add member reporting, evidence-safe moderator queue, mute/timeout/remove actions, appeals and retention rules.                                                               |
-| Search                   | Planned  | Permission-filtered full-text search with safe snippets, cursor pagination and deletion/retention behavior.                                                                                 |
-| Presence and typing      | Planned  | Privacy-aware, expiring private Broadcast events; never durable surveillance.                                                                                                               |
-| Notifications            | Partial  | Preferences and private outbox foundations exist; add event projection, digest/quiet hours, fixed-template worker deployment and operator dead-letter controls.                             |
-| Mobile/accessibility     | Partial  | Complete drawer navigation, focus restoration, keyboard paths, screen-reader announcements, reduced motion and visual regression.                                                           |
-| Shared shell             | Partial  | Generalize the new Space geometry and existing I/O geometry into one branded rail/sidebar/workspace/inspector architecture.                                                                 |
-| I/O collaboration        | Planned  | Link permissioned I/O sessions/artifacts without copying prompts, terminal output, files, credentials or provider responses into human messages.                                            |
+| Capability               | State    | Remaining work                                                                                                                                                                             |
+| ------------------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Hosted schema            | Released | All three forward migrations and the read-only schema/RLS/RPC/Realtime contract pass on `jpwvgpnbkrktipwhvqss`; 26 historical timestamp aliases still prohibit ordinary future `db push`.  |
+| Space member journey     | Partial  | Add invite links, richer request reason, role explanation, notification defaults and complete leave/rejoin UX.                                                                             |
+| Threads                  | Partial  | Schema and create function exist; build Thread timeline, follow/unfollow, lock/archive, private membership and unread UI.                                                                  |
+| Roles and Room overrides | Partial  | Schema exists; add audited operator UI, effective-permission explanation and view-as-role tests.                                                                                           |
+| Reactions and mentions   | Partial  | Reactions plus accessible explicit person mentions are Released with bounded authorization and preference-aware scheduling; add role mentions, worker delivery and abuse/persona evidence. |
+| Attachments              | Partial  | Metadata exists; create private Storage buckets/policies, signed upload flow, type/size rules, malware scanning, alt text and download audit.                                              |
+| Pins and bookmarks       | Partial  | Records exist; add curator/private-member UI and permission tests.                                                                                                                         |
+| Moderation and reports   | Partial  | Records exist; add member reporting, evidence-safe moderator queue, mute/timeout/remove actions, appeals and retention rules.                                                              |
+| Search                   | Planned  | Permission-filtered full-text search with safe snippets, cursor pagination and deletion/retention behavior.                                                                                |
+| Presence and typing      | Planned  | Privacy-aware, expiring private Broadcast events; never durable surveillance.                                                                                                              |
+| Notifications            | Partial  | Preferences, quiet/digest scheduling and private outbox foundations exist; add broader event projection, fixed-template worker deployment and operator retry/dead-letter controls.         |
+| Mobile/accessibility     | Partial  | Complete drawer navigation, focus restoration, keyboard paths, screen-reader announcements, reduced motion and visual regression.                                                          |
+| Shared shell             | Partial  | Generalize the new Space geometry and existing I/O geometry into one branded rail/sidebar/workspace/inspector architecture.                                                                |
+| I/O collaboration        | Planned  | Link permissioned I/O sessions/artifacts without copying prompts, terminal output, files, credentials or provider responses into human messages.                                           |
 
 ## 5. Safe hosted rollout
 
