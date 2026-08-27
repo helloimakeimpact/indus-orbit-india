@@ -8078,7 +8078,21 @@ export type Database = {
         Args: { _limit?: number; _query: string; _space_id: string };
         Returns: Json;
       };
+      list_managed_conversation_room_permissions: {
+        Args: { _room_id: string };
+        Returns: Json;
+      };
       set_managed_conversation_room_permission: {
+        Args: {
+          _capability: string;
+          _effect: string;
+          _role_id: string;
+          _room_id: string;
+          _user_id: string;
+        };
+        Returns: Json;
+      };
+      set_managed_conversation_room_permission_v2: {
         Args: {
           _capability: string;
           _effect: string;

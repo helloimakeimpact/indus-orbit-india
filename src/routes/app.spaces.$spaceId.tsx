@@ -52,6 +52,7 @@ import { cn } from "@/lib/utils";
 import {
   createMessageThread,
   getRoomFeed,
+  getManagedSpaceRoomPermissions,
   getSpaceRoomControls,
   getSpaceWorkspace,
   markSpaceRoomRead,
@@ -61,6 +62,7 @@ import {
   searchSpaceMessages,
   sendSpaceMessage,
   setSpaceAttentionPolicy,
+  setManagedSpaceRoomPermission,
   setSpaceThreadLock,
   setSpaceThreadFollowing,
   setSpaceNotificationPreference,
@@ -75,6 +77,8 @@ import {
   type SpaceThreadSummary,
   type SpaceWorkspace,
   type SpaceRoomControls,
+  type SpaceRoomPermission,
+  type SpaceRoomPermissionCapability,
   type SpaceSearchResult,
   type SpaceNotificationPreference,
 } from "@/features/spaces/space-client";
@@ -121,6 +125,17 @@ const reactions: Array<{
   { key: "support", label: "Support", icon: Heart },
   { key: "question", label: "Question", icon: CircleHelp },
   { key: "complete", label: "Complete", icon: BadgeCheck },
+];
+
+const roomPermissionOptions: Array<{
+  value: SpaceRoomPermissionCapability;
+  label: string;
+}> = [
+  { value: "room.view", label: "View Room" },
+  { value: "message.create", label: "Post messages" },
+  { value: "thread.create", label: "Create Threads" },
+  { value: "message.moderate", label: "Moderate messages" },
+  { value: "room.manage", label: "Manage Room" },
 ];
 
 export const Route = createFileRoute("/app/spaces/$spaceId")({
@@ -186,6 +201,13 @@ function SpacePage() {
   const [roomDescription, setRoomDescription] = useState("");
   const [roomPostingPolicy, setRoomPostingPolicy] = useState("members");
   const [roomSaving, setRoomSaving] = useState(false);
+  const [roomPermissions, setRoomPermissions] = useState<SpaceRoomPermission[]>([]);
+  const [permissionSubjectType, setPermissionSubjectType] = useState<"role" | "member">("role");
+  const [permissionSubjectId, setPermissionSubjectId] = useState("");
+  const [permissionCapability, setPermissionCapability] =
+    useState<SpaceRoomPermissionCapability>("room.view");
+  const [permissionEffect, setPermissionEffect] = useState<"allow" | "deny">("allow");
+  const [permissionSaving, setPermissionSaving] = useState<string | null>(null);
   const [attentionBusy, setAttentionBusy] = useState<string | null>(null);
   const [attentionSettingsOpen, setAttentionSettingsOpen] = useState(false);
   const [attentionPreference, setAttentionPreference] =
@@ -638,12 +660,58 @@ function SpacePage() {
     }
   }
 
-  function openRoomSettings() {
-    if (!selectedRoom) return;
+  async function openRoomSettings() {
+    if (!selectedRoom || !workspace) return;
     setRoomName(selectedRoom.display_name);
     setRoomDescription(selectedRoom.description);
     setRoomPostingPolicy(selectedRoom.posting_policy);
+    setPermissionSubjectType(workspace.roles.length ? "role" : "member");
+    setPermissionSubjectId(workspace.roles[0]?.id ?? workspace.members[0]?.user_id ?? "");
     setRoomSettingsOpen(true);
+    try {
+      setRoomPermissions(await getManagedSpaceRoomPermissions(selectedRoom.id));
+    } catch (permissionError) {
+      toast.error(
+        permissionError instanceof Error
+          ? permissionError.message
+          : "Could not load Room permissions",
+      );
+    }
+  }
+
+  async function saveRoomPermission(
+    effect: "allow" | "deny" | "inherit",
+    existing?: SpaceRoomPermission,
+  ) {
+    if (!selectedRoom || permissionSaving) return;
+    const roleId =
+      existing?.roleId ?? (permissionSubjectType === "role" ? permissionSubjectId : undefined);
+    const userId =
+      existing?.userId ?? (permissionSubjectType === "member" ? permissionSubjectId : undefined);
+    const capability = existing?.capability ?? permissionCapability;
+    if (!roleId && !userId) return;
+    setPermissionSaving(existing?.id ?? "new");
+    try {
+      await setManagedSpaceRoomPermission({
+        roomId: selectedRoom.id,
+        roleId: roleId ?? undefined,
+        userId: userId ?? undefined,
+        capability,
+        effect,
+      });
+      setRoomPermissions(await getManagedSpaceRoomPermissions(selectedRoom.id));
+      toast.success(
+        effect === "inherit" ? "Room permission now inherits" : "Room permission saved",
+      );
+    } catch (permissionError) {
+      toast.error(
+        permissionError instanceof Error
+          ? permissionError.message
+          : "Could not update Room permission",
+      );
+    } finally {
+      setPermissionSaving(null);
+    }
   }
 
   async function saveRoomSettings() {
@@ -883,7 +951,7 @@ function SpacePage() {
                     size="icon"
                     variant="ghost"
                     aria-label="Room settings"
-                    onClick={openRoomSettings}
+                    onClick={() => void openRoomSettings()}
                   >
                     <Settings className="h-4 w-4" />
                   </Button>
@@ -1123,7 +1191,7 @@ function SpacePage() {
       </Dialog>
 
       <Dialog open={Boolean(reportTarget)} onOpenChange={(open) => !open && setReportTarget(null)}>
-        <DialogContent>
+        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Report message</DialogTitle>
             <DialogDescription>
@@ -1270,7 +1338,7 @@ function SpacePage() {
       </Dialog>
 
       <Dialog open={roomSettingsOpen} onOpenChange={setRoomSettingsOpen}>
-        <DialogContent>
+        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Room administration</DialogTitle>
             <DialogDescription>
@@ -1306,6 +1374,124 @@ function SpacePage() {
               <option value="read_only">Read only</option>
             </select>
           </label>
+          <div className="space-y-3 rounded-2xl border border-border p-4">
+            <div>
+              <h3 className="text-sm font-semibold">Room access overrides</h3>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Explicit deny wins. Remove an override to return to the Space role and Room policy.
+                Source Chapter/Mission ownership is not changed here.
+              </p>
+            </div>
+            {roomPermissions.length ? (
+              <div className="space-y-2">
+                {roomPermissions.map((permission) => {
+                  const subject = permission.roleId
+                    ? (workspace.roles.find((role) => role.id === permission.roleId)
+                        ?.display_name ?? "Space role")
+                    : (workspace.members.find((member) => member.user_id === permission.userId)
+                        ?.profiles?.display_name ?? "Space member");
+                  const capability =
+                    roomPermissionOptions.find((option) => option.value === permission.capability)
+                      ?.label ?? permission.capability;
+                  return (
+                    <div
+                      key={permission.id}
+                      className="flex flex-wrap items-center gap-2 rounded-xl bg-muted/45 px-3 py-2 text-xs"
+                    >
+                      <span className="font-medium">{subject}</span>
+                      <span className="text-muted-foreground">{capability}</span>
+                      <Badge variant={permission.effect === "deny" ? "destructive" : "secondary"}>
+                        {permission.effect}
+                      </Badge>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        className="ml-auto h-7 text-[10px]"
+                        disabled={permissionSaving !== null}
+                        onClick={() => void saveRoomPermission("inherit", permission)}
+                      >
+                        {permissionSaving === permission.id ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          "Use inherited"
+                        )}
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="rounded-xl bg-muted/45 p-3 text-xs text-muted-foreground">
+                No explicit overrides. This Room uses inherited Space and posting policy.
+              </p>
+            )}
+            <div className="grid gap-2 sm:grid-cols-2">
+              <select
+                value={permissionSubjectType}
+                className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+                onChange={(event) => {
+                  const type = event.target.value as "role" | "member";
+                  setPermissionSubjectType(type);
+                  setPermissionSubjectId(
+                    type === "role"
+                      ? (workspace.roles[0]?.id ?? "")
+                      : (workspace.members[0]?.user_id ?? ""),
+                  );
+                }}
+              >
+                <option value="role">Space role</option>
+                <option value="member">Individual member</option>
+              </select>
+              <select
+                value={permissionSubjectId}
+                className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+                onChange={(event) => setPermissionSubjectId(event.target.value)}
+              >
+                {permissionSubjectType === "role"
+                  ? workspace.roles.map((role) => (
+                      <option key={role.id} value={role.id}>
+                        {role.display_name}
+                      </option>
+                    ))
+                  : workspace.members.map((member) => (
+                      <option key={member.user_id} value={member.user_id}>
+                        {member.profiles?.display_name ?? "Member"}
+                      </option>
+                    ))}
+              </select>
+              <select
+                value={permissionCapability}
+                className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+                onChange={(event) =>
+                  setPermissionCapability(event.target.value as SpaceRoomPermissionCapability)
+                }
+              >
+                {roomPermissionOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={permissionEffect}
+                className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+                onChange={(event) => setPermissionEffect(event.target.value as "allow" | "deny")}
+              >
+                <option value="allow">Explicitly allow</option>
+                <option value="deny">Explicitly deny</option>
+              </select>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={!permissionSubjectId || permissionSaving !== null}
+              onClick={() => void saveRoomPermission(permissionEffect)}
+            >
+              {permissionSaving === "new" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Add override
+            </Button>
+          </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setRoomSettingsOpen(false)}>
               Cancel

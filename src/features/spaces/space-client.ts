@@ -7,6 +7,7 @@ import {
   normalizeSpaceRoleMentionIds,
   parseSpaceFeedPayload,
   parseSpaceRoomControls,
+  parseSpaceRoomPermissions,
   parseSpaceSearchPayload,
   textValue,
   type SpaceFeed,
@@ -16,6 +17,8 @@ import {
   type SpaceQuietHours,
   type SpaceReaction,
   type SpaceRoomControls,
+  type SpaceRoomPermission,
+  type SpaceRoomPermissionCapability,
   type SpaceSearchResult,
   type SpaceThreadSummary,
 } from "./space-feed";
@@ -29,6 +32,8 @@ export type {
   SpaceQuietHours,
   SpaceReaction,
   SpaceRoomControls,
+  SpaceRoomPermission,
+  SpaceRoomPermissionCapability,
   SpaceSearchResult,
   SpaceThreadSummary,
 } from "./space-feed";
@@ -163,6 +168,44 @@ export async function getSpaceRoomControls(roomId: string): Promise<SpaceRoomCon
   });
   if (error) throw new Error(error.message);
   return parseSpaceRoomControls(data);
+}
+
+export async function getManagedSpaceRoomPermissions(
+  roomId: string,
+): Promise<SpaceRoomPermission[]> {
+  const { data, error } = await supabase.rpc("list_managed_conversation_room_permissions", {
+    _room_id: roomId,
+  });
+  if (error) throw new Error(error.message);
+  return parseSpaceRoomPermissions(data);
+}
+
+export async function setManagedSpaceRoomPermission(input: {
+  roomId: string;
+  roleId?: string;
+  userId?: string;
+  capability: SpaceRoomPermissionCapability;
+  effect: "allow" | "deny" | "inherit";
+}): Promise<void> {
+  if ((!input.roleId && !input.userId) || (input.roleId && input.userId)) {
+    throw new Error("Choose exactly one Space role or member");
+  }
+  const { data, error } = await supabase.rpc("set_managed_conversation_room_permission_v2", {
+    _room_id: input.roomId,
+    _role_id: (input.roleId ?? null) as unknown as string,
+    _user_id: (input.userId ?? null) as unknown as string,
+    _capability: input.capability,
+    _effect: input.effect,
+  });
+  if (error) throw new Error(error.message);
+  const result = objectValue(data);
+  if (
+    textValue(result.roomId) !== input.roomId ||
+    textValue(result.capability) !== input.capability ||
+    textValue(result.effect) !== input.effect
+  ) {
+    throw new Error("The Room permission operation returned an invalid result");
+  }
 }
 
 export async function searchSpaceMessages(

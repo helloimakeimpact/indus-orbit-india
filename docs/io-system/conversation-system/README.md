@@ -34,6 +34,7 @@ Implemented:
 - validated per-Room attention schedules with IANA timezone, optional cross-midnight quiet hours, daily digest hour, visible next delivery and database-derived outbox deferral;
 - permission-filtered full-text Space history search with bounded input/results, indexed non-deleted content and Room/private-Thread authorization on every row;
 - manager-only Room role mentions with three-role/thirty-visible-recipient caps, content-free delivery evidence and actual-visibility checks for both person and role recipients;
+- manager Room role/member permission editing across view, post, Thread, moderation and management capabilities, including inherited-policy removal and direct self-lockout prevention;
 - four purposeful reaction toggles, member reporting, stable moderated-message tombstones and capability-checked restrict/restore evidence;
 - manager-only Room name/description/posting controls plus a role/member permission-override RPC boundary;
 - a private 10 MB quarantine-first attachment bucket, author-owned reservation/upload/finalization, MIME/size reconciliation and short signed downloads only for authorized objects;
@@ -50,4 +51,4 @@ Still left:
 - one reusable Indus Orbit rail/sidebar/workspace/inspector shell across product systems;
 - I/O session collaboration that never leaks prompts, terminal output, files or tools through human messaging.
 
-The latest collaboration migrations are Released to hosted Indus Orbit with RLS, explicit grants and synchronized client contracts. The member unit suite passes 84/84; the last complete collaboration database contract adds 29 assertions, while person/role-mention, attention and search RPCs have separate rolled-back hosted evidence pending the next full replay. Exact current behavior and limits are in `ORBIT_COLLABORATION_RELEASE.md`. The original delivery split is in `CHAPTER_MISSION_SPACE_SYSTEM_PLAN.md`; the wider engineering plan remains in `CONVERSATION_SYSTEM_IMPLEMENTATION_PLAN.md`.
+The latest collaboration migrations are Released to hosted Indus Orbit with RLS, explicit grants and synchronized client contracts. The member unit suite passes 85/85; the last complete collaboration database contract adds 29 assertions, while person/role-mention, Room-permission, attention and search RPCs have separate rolled-back hosted evidence pending the next full replay. Exact current behavior and limits are in `ORBIT_COLLABORATION_RELEASE.md`. The original delivery split is in `CHAPTER_MISSION_SPACE_SYSTEM_PLAN.md`; the wider engineering plan remains in `CONVERSATION_SYSTEM_IMPLEMENTATION_PLAN.md`.

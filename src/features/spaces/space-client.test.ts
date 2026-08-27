@@ -5,6 +5,7 @@ import {
   normalizeSpaceRoleMentionIds,
   parseSpaceFeedPayload,
   parseSpaceRoomControls,
+  parseSpaceRoomPermissions,
   parseSpaceSearchPayload,
 } from "./space-feed";
 
@@ -229,6 +230,42 @@ test("Orbit search keeps only complete authorized-result shapes", () => {
           parentContent: "Decision context",
           parentCreatedAt: "2026-08-28T08:55:00Z",
         },
+      },
+    ],
+  );
+});
+
+test("Orbit Room permission decoder drops incomplete or unsafe overrides", () => {
+  assert.deepEqual(
+    parseSpaceRoomPermissions({
+      items: [
+        {
+          id: "override-1",
+          roleId: "role-1",
+          userId: null,
+          capability: "message.create",
+          effect: "deny",
+          createdAt: "2026-08-28T10:00:00Z",
+        },
+        {
+          id: "override-2",
+          roleId: "role-1",
+          userId: "user-1",
+          capability: "room.view",
+          effect: "allow",
+          createdAt: "2026-08-28T10:00:00Z",
+        },
+        { id: "override-3", userId: "user-1", capability: "root", effect: "allow" },
+      ],
+    }),
+    [
+      {
+        id: "override-1",
+        roleId: "role-1",
+        userId: null,
+        capability: "message.create",
+        effect: "deny",
+        createdAt: "2026-08-28T10:00:00Z",
       },
     ],
   );

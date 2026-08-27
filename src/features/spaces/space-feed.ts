@@ -91,6 +91,20 @@ export type SpaceSearchResult = {
     parentCreatedAt: string;
   } | null;
 };
+export type SpaceRoomPermissionCapability =
+  | "room.view"
+  | "message.create"
+  | "thread.create"
+  | "message.moderate"
+  | "room.manage";
+export type SpaceRoomPermission = {
+  id: string;
+  roleId: string | null;
+  userId: string | null;
+  capability: SpaceRoomPermissionCapability;
+  effect: "allow" | "deny";
+  createdAt: string;
+};
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -236,6 +250,38 @@ export function parseSpaceSearchPayload(value: Json): SpaceSearchResult[] {
           : null,
       },
     ];
+  });
+}
+
+const roomPermissionCapabilities = new Set<SpaceRoomPermissionCapability>([
+  "room.view",
+  "message.create",
+  "thread.create",
+  "message.moderate",
+  "room.manage",
+]);
+
+export function parseSpaceRoomPermissions(value: Json): SpaceRoomPermission[] {
+  const root = objectValue(value);
+  if (!Array.isArray(root.items)) return [];
+  return root.items.flatMap((item) => {
+    const row = objectValue(item);
+    const id = textValue(row.id);
+    const roleId = nullableText(row.roleId);
+    const userId = nullableText(row.userId);
+    const capability = textValue(row.capability) as SpaceRoomPermissionCapability;
+    const effect = textValue(row.effect);
+    const createdAt = textValue(row.createdAt);
+    if (
+      !id ||
+      !createdAt ||
+      (roleId === null) === (userId === null) ||
+      !roomPermissionCapabilities.has(capability) ||
+      (effect !== "allow" && effect !== "deny")
+    ) {
+      return [];
+    }
+    return [{ id, roleId, userId, capability, effect, createdAt }];
   });
 }
 
