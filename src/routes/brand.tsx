@@ -349,6 +349,116 @@ function BrandPage() {
         </div>
       </section>
 
+      {/* Merchandise */}
+      <section className="px-6 pb-20">
+        <div className="mx-auto w-full max-w-6xl">
+          <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">
+            <Shirt className="h-4 w-4" /> Merchandise
+          </p>
+          <h2 className="mt-3 font-display text-3xl font-medium md:text-4xl">
+            Wearable orbit — 2026 drop
+          </h2>
+          <p className="mt-3 max-w-2xl text-foreground/70">
+            Two print families only. The <strong>mark drop</strong> carries just the pixel planet
+            and the wordmark. The <strong>statement drop</strong> carries the full line — General
+            Intelligence Company of India. Never mix both on one garment.
+          </p>
+
+          <div className="mt-10 grid gap-6 md:grid-cols-3">
+            {[
+              {
+                src: merchTshirt,
+                w: 1024,
+                h: 1024,
+                alt: "Pixel-art parchment t-shirt printed with General Intelligence of India and the saffron ringed planet",
+                title: "Statement tee",
+                drop: "Statement drop",
+                spec: "Parchment 240gsm boxy cut · indigo chest print · saffron mark",
+              },
+              {
+                src: merchHoodie,
+                w: 1024,
+                h: 1024,
+                alt: "Pixel-art indigo hoodie with a small saffron Indus Orbit mark on the chest",
+                title: "Orbit hoodie",
+                drop: "Mark drop",
+                spec: "Indigo night 400gsm · left-chest mark · saffron drawcord tips",
+              },
+              {
+                src: merchMug,
+                w: 1024,
+                h: 1024,
+                alt: "Pixel-art indigo ceramic mug with the saffron Indus Orbit ringed planet and wordmark",
+                title: "Ledger mug",
+                drop: "Mark drop",
+                spec: "350ml matte indigo glaze · saffron single-colour transfer",
+              },
+            ].map((m) => (
+              <figure
+                key={m.title}
+                className="overflow-hidden rounded-3xl border border-border bg-card"
+              >
+                <img
+                  src={m.src}
+                  alt={m.alt}
+                  width={m.w}
+                  height={m.h}
+                  loading="lazy"
+                  className="pixelated aspect-square w-full object-cover"
+                />
+                <figcaption className="p-6">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">
+                    {m.drop}
+                  </p>
+                  <p className="mt-2 font-display text-2xl">{m.title}</p>
+                  <p className="mt-2 text-xs text-foreground/65">{m.spec}</p>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+
+          <figure className="mt-6 overflow-hidden rounded-3xl border border-border bg-card">
+            <img
+              src={merchKit}
+              alt="Pixel-art flat lay of Indus Orbit small goods: enamel pin, tote bag, sticker sheet, notebook and cap"
+              width={1536}
+              height={1024}
+              loading="lazy"
+              className="pixelated w-full object-cover"
+            />
+            <figcaption className="flex flex-wrap items-center justify-between gap-3 p-6">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">
+                  Small goods
+                </p>
+                <p className="mt-2 font-display text-2xl">Welcome kit</p>
+              </div>
+              <p className="max-w-xl text-xs text-foreground/65">
+                Enamel orbit pin, indigo canvas tote, sticker sheet, grid notebook and six-panel
+                cap. One accent colour per object — saffron on indigo, or indigo on parchment.
+                Never both accents on the same piece.
+              </p>
+            </figcaption>
+          </figure>
+
+          <div className="mt-6 grid gap-4 sm:grid-cols-3">
+            {[
+              { k: "Print rule", v: "One colour per side. Mark left chest, statement centre chest." },
+              { k: "Fabric", v: "Undyed parchment cotton or indigo-night pigment dye. No white." },
+              { k: "Clear space", v: "Mark keeps one ring-width of blank fabric on every side." },
+            ].map((r) => (
+              <div key={r.k} className="rounded-3xl border border-border bg-card p-5">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-foreground/50">
+                  {r.k}
+                </p>
+                <p className="mt-2 text-sm text-foreground/75">{r.v}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+
       {/* Visiting card */}
       <section className="px-6 pb-24">
         <div className="mx-auto w-full max-w-6xl">
