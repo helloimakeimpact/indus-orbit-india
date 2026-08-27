@@ -3,7 +3,11 @@ import { SiteShell } from "@/components/site/SiteShell";
 import { canonical, siteUrl } from "@/lib/seo";
 import logo from "@/assets/indus-orbit-logo.png";
 import brandHero from "@/assets/brand-hero.jpg";
-import { Download, Mail, MapPin, Phone, Palette, Type, Sparkles } from "lucide-react";
+import merchMug from "@/assets/merch-mug.jpg";
+import merchTshirt from "@/assets/merch-tshirt.jpg";
+import merchHoodie from "@/assets/merch-hoodie.jpg";
+import merchKit from "@/assets/merch-kit.jpg";
+import { Download, Mail, MapPin, Phone, Palette, Type, Sparkles, Shirt } from "lucide-react";
 
 export const Route = createFileRoute("/brand")({
   head: () => ({
