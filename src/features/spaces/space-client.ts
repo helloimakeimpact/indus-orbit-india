@@ -3,6 +3,7 @@ import { isMissingSchemaContract } from "@/integrations/supabase/schema-compat";
 import type { Database } from "@/integrations/supabase/types";
 import {
   objectValue,
+  normalizeSpaceMentionIds,
   parseSpaceFeedPayload,
   parseSpaceRoomControls,
   textValue,
@@ -221,14 +222,17 @@ export async function sendSpaceMessage(
   roomId: string,
   content: string,
   threadId?: string,
+  mentionedUserIds: readonly string[] = [],
 ): Promise<string> {
   const cleanContent = content.trim();
   if (!cleanContent) throw new Error("Write a message first");
-  const { data, error } = await supabase.rpc("send_my_conversation_message", {
+  const mentions = normalizeSpaceMentionIds(mentionedUserIds, null);
+  const { data, error } = await supabase.rpc("send_my_conversation_message_with_mentions", {
     _room_id: roomId,
     _thread_id: (threadId ?? null) as unknown as string,
     _content: cleanContent,
     _client_request_id: crypto.randomUUID(),
+    _mentioned_user_ids: mentions,
   });
   if (error) throw new Error(error.message);
   return data.id;

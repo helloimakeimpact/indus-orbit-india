@@ -1,6 +1,6 @@
 # Conversation and branded spatial system record
 
-Status: direct messages, caller-owned blocking, private Broadcast, bounded history, Chapter/Mission Spaces and the first Threads/reactions/reporting/Room-control layer are Released to demo, updated 24 August 2026.
+Status: direct messages, caller-owned blocking, private Broadcast, bounded history, Chapter/Mission Spaces and the Threads/reactions/reporting/attention/mention layer are Released to demo, updated 27 August 2026.
 
 ## Current truth
 
@@ -30,6 +30,7 @@ Implemented:
 - direct Chapter/Mission browser writes revoked by the new migration, with explicit RLS/grants and covering foreign-key indexes;
 - a first responsive `/app/spaces/$spaceId` implementation with grouped Rooms, durable timeline/composer, People roster, Realtime message reconciliation and Chapter/Mission back-links;
 - a caller-bound keyset-paged Room/Thread feed, one Thread per parent message, continued replies and moderator lock/reopen;
+- explicit person-mention composition for Rooms and Threads, with a ten-person ceiling, active membership/private-Thread authorization, idempotent records, mute/digest-aware content-free fan-out and fixed in-app notification copy;
 - four purposeful reaction toggles, member reporting, stable moderated-message tombstones and capability-checked restrict/restore evidence;
 - manager-only Room name/description/posting controls plus a role/member permission-override RPC boundary;
 - a private 10 MB quarantine-first attachment bucket, author-owned reservation/upload/finalization, MIME/size reconciliation and short signed downloads only for authorized objects;
@@ -40,10 +41,10 @@ Still left:
 - configure an approved sender domain, deploy/schedule the fixed-template email worker and add redacted operator/dead-letter controls;
 - retain the Released `20260819225550_add_direct_message_pagination_rpc.sql`, then add one cross-surface conversation store, retry/offline/reconnect and multi-device conflict handling;
 - run hosted authenticated browser personas across proposal/approval, Chapter/Mission lifecycle, membership, Room send/read and outsider privacy;
-- Thread membership/follow/read behavior, Boards/forums and the full role/permission editor;
-- presence, typing, mentions, pins, bookmarks, a trusted attachment scanner, search and notification controls;
-- report triage/assignment/appeals, retention/export/deletion and redacted admin operator tools;
+- private Thread membership editing, Boards/forums and the full role/permission editor;
+- presence, typing, role mentions, quiet-hour/digest scheduling, a trusted attachment scanner, search and notification worker operations;
+- retention/export/deletion and additional redacted admin operator tools; report triage/assignment/appeals and attachment-review boundaries now exist in the separate admin app;
 - one reusable Indus Orbit rail/sidebar/workspace/inspector shell across product systems;
 - I/O session collaboration that never leaks prompts, terminal output, files or tools through human messaging.
 
-The latest collaboration migration is Released to hosted Indus Orbit with RLS, explicit grants and synchronized client contracts. The member unit suite passes 67/67; the new database contract adds 29 assertions for the next full replay. Exact current behavior and limits are in `ORBIT_COLLABORATION_RELEASE.md`. The original delivery split is in `CHAPTER_MISSION_SPACE_SYSTEM_PLAN.md`; the wider engineering plan remains in `CONVERSATION_SYSTEM_IMPLEMENTATION_PLAN.md`.
+The latest collaboration migrations are Released to hosted Indus Orbit with RLS, explicit grants and synchronized client contracts. The member unit suite passes 81/81; the last complete collaboration database contract adds 29 assertions, while the mention RPC has separate rolled-back hosted evidence pending the next full replay. Exact current behavior and limits are in `ORBIT_COLLABORATION_RELEASE.md`. The original delivery split is in `CHAPTER_MISSION_SPACE_SYSTEM_PLAN.md`; the wider engineering plan remains in `CONVERSATION_SYSTEM_IMPLEMENTATION_PLAN.md`.

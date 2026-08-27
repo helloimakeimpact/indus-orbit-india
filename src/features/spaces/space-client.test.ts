@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { parseSpaceFeedPayload, parseSpaceRoomControls } from "./space-feed";
+import {
+  normalizeSpaceMentionIds,
+  parseSpaceFeedPayload,
+  parseSpaceRoomControls,
+} from "./space-feed";
 
 test("Orbit Space feed preserves chronological collaboration evidence", () => {
   const feed = parseSpaceFeedPayload({
@@ -107,5 +111,24 @@ test("Orbit Room controls preserve only recognized caller-bound attention state"
   assert.throws(
     () => parseSpaceRoomControls({ roomId: "room-1", preference: "everything" }),
     /invalid/,
+  );
+});
+
+test("Orbit mentions are unique, actor-free and bounded", () => {
+  const actor = "10000000-0000-4000-8000-000000000001";
+  const member = "20000000-0000-4000-8000-000000000001";
+  assert.deepEqual(normalizeSpaceMentionIds([actor, member, member, "not-a-user"], actor), [
+    member,
+  ]);
+  assert.throws(
+    () =>
+      normalizeSpaceMentionIds(
+        Array.from(
+          { length: 11 },
+          (_, index) => `20000000-0000-4000-8000-${String(index).padStart(12, "0")}`,
+        ),
+        actor,
+      ),
+    /at most 10/,
   );
 });

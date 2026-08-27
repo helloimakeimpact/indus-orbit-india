@@ -1,6 +1,6 @@
 # Orbit collaboration release
 
-Status: hosted database boundary **Released** on 24 August 2026; member web experience **Verified locally** and awaiting the next web deployment.
+Status: hosted database boundary **Released**, including attention controls and explicit member mentions through 27 August 2026; member web experience **Verified locally** and awaiting the next web deployment.
 
 The existing branded Chapter/Mission Space shell is now backed by working collaboration commands rather than dormant tables or visual affordances.
 
@@ -35,16 +35,17 @@ The Chapter/Mission Space surface now provides:
 - composer attachment selection, private upload and honest security-review state;
 - signed ten-minute downloads only when Storage policy permits them;
 - Realtime message/reaction reconciliation followed by an authoritative feed fetch;
+- explicit person mention selection in Room and Thread composers, with removable chips and a ten-person limit;
 - the existing grouped Room rail, main workspace and people/thread inspector geometry.
 
-The pure feed decoder is regression-tested for ordering, cursors, tombstones, reaction allowlisting and malformed rows. Member format, TypeScript, ESLint and all 67 unit tests pass.
+The pure feed/attention/mention decoders are regression-tested for ordering, cursors, tombstones, reaction allowlisting, malformed rows and bounded unique mention IDs. Member format, TypeScript, ESLint and all 81 unit tests pass.
 
 ## Deliberately not claimed as complete
 
 - No trusted malware/content scanner worker is connected. Pending files are not shared with other members.
 - Room permission-override commands exist, but a complete role/permission editor and view-as-role simulator are not in the member UI.
 - Report triage, moderator assignment, appeals and attachment scan decisions belong in the separate admin application and are not yet released there.
-- Thread membership/follow/unread controls, mentions, pins, bookmarks, search, presence/typing, Boards, slow mode and notification preferences remain.
+- Private Thread membership editing, role mentions, scheduled digests/quiet hours, search, presence/typing, Boards and slow mode remain. Thread follow/read/unread, person mentions, pins, bookmarks and Room notification preferences are Released.
 - Messages, Chapter/Mission Spaces and I/O share the Indus Orbit navigation language and spatial pattern, but have not yet been refactored onto one reusable React frame/store.
 - Authenticated multi-persona, mobile, accessibility and visual-regression browser journeys remain required after web deployment.
 
@@ -52,5 +53,6 @@ The pure feed decoder is regression-tested for ordering, cursors, tombstones, re
 
 - Hosted project: `jpwvgpnbkrktipwhvqss` (`Indus Orbit`, `ap-south-1`).
 - Migration: `20260824190000_release_orbit_collaboration_controls.sql`.
+- Attention/mention migrations: `20260826160000_release_orbit_attention_controls.sql`, `20260826161500_index_orbit_thread_follow_read_message.sql` and `20260827110000_release_orbit_member_mentions.sql`.
 - Hosted verification: ten public product RPCs, private bucket, two Storage policies, zero direct browser table writes and zero existing collaboration content.
 - Database contract: `orbit_collaboration_controls.test.sql` adds 29 schema/ACL/storage assertions for the next complete replay.

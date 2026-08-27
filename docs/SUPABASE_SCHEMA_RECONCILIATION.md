@@ -1,6 +1,10 @@
 # Supabase schema-reconciliation record
 
-Status: the linked Indus Orbit demo has 95 hosted migrations. The local directory has 96 files because `20260628124500_seed_builder_courses_and_soda_ideas.sql` remains an intentional local/demo-only seed. The newest workspace/key, conformance, finance, schema-advisor, Orbit-attention and admin-domain migrations were applied through the connected Supabase project API and verified there. The last retained clean local baseline predates the current 96-file chain; historical aliases remain, updated 27 August 2026.
+Status: the linked Indus Orbit demo has 96 hosted migrations. The local directory has 97 files because `20260628124500_seed_builder_courses_and_soda_ideas.sql` remains an intentional local/demo-only seed. The newest workspace/key, conformance, finance, schema-advisor, Orbit-attention, mention and admin-domain migrations were applied through the connected Supabase project API and verified there. The last retained clean local baseline predates the current 97-file chain; historical aliases remain, updated 27 August 2026.
+
+## 27 August 2026 Orbit member mentions
+
+Hosted version `20260827150853` releases `send_my_conversation_message_with_mentions(...)`. It atomically sends one Room/Thread message, validates at most ten active and conversation-authorized recipients, records idempotent person mentions and creates only fixed, content-free notification/outbox evidence. Room-level preference overrides Space-level preference; mute records the mention but suppresses notification/delivery intent, while digest creates only a digest-pending outbox event. Rolled-back caller-bound hosted checks proved one mention plus its delivery evidence under the default policy and one mention with zero notification/outbox fan-out under mute. No demo message or preference mutation was retained.
 
 ## 27 August 2026 API-key usage visibility
 
@@ -14,7 +18,7 @@ Hosted version `20260826144354` releases four authenticated-only RPCs for the se
 
 Hosted versions `20260826142300` and `20260826143056` release caller-bound Thread follows/read pointers, Room notification preferences, personal bookmarks and manager-only Room pins. Browser table access remains SELECT-only: every write rechecks authentication and current Space/Room/Thread access inside a narrow RPC. The follow table has RLS, owner-only SELECT, a composite primary key and covering indexes for user activity and last-read message cleanup. Matching generated client contracts are checked in.
 
-The post-release hosted advisors report zero uncovered foreign keys and zero tables without primary keys. The remaining notices are 116 legacy auth-RLS initialization plans, 49 multiple-permissive-policy overlaps, 253 unused-index observations, 52 intentionally private RLS tables with no browser policy, 146 authenticated security-definer execution reviews and one project-level leaked-password-protection setting. The additional review is the new caller-bound API-key usage function. These notices are retained for explicit policy-by-policy review; no broad automated RLS rewrite is approved.
+The post-release hosted advisors report zero uncovered foreign keys and zero tables without primary keys. The remaining notices are 116 legacy auth-RLS initialization plans, 49 multiple-permissive-policy overlaps, 251 workload-dependent unused-index observations, 52 intentionally private RLS tables with no browser policy, 147 authenticated security-definer execution reviews and one project-level leaked-password-protection setting. The two newest reviews are the caller-bound API-key usage and mention functions. These notices are retained for explicit policy-by-policy review; no broad automated RLS rewrite is approved.
 
 ## 26 August 2026 schema-advisor closure
 

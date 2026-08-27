@@ -47,6 +47,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/AuthContext";
+import { cn } from "@/lib/utils";
 import {
   createMessageThread,
   getRoomFeed,
@@ -151,6 +152,8 @@ function SpacePage() {
   const [threadFeed, setThreadFeed] = useState<SpaceFeed>(emptyFeed);
   const [composer, setComposer] = useState("");
   const [threadComposer, setThreadComposer] = useState("");
+  const [mentionedUserIds, setMentionedUserIds] = useState<string[]>([]);
+  const [threadMentionedUserIds, setThreadMentionedUserIds] = useState<string[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(true);
   const [messagesLoading, setMessagesLoading] = useState(false);
@@ -266,6 +269,8 @@ function SpacePage() {
   function chooseRoom(roomId: string) {
     setActiveThread(null);
     setThreadFeed(emptyFeed);
+    setMentionedUserIds([]);
+    setThreadMentionedUserIds([]);
     setSelectedFile(null);
     setRoomControls(emptyRoomControls);
     setSelectedRoomId(roomId);
@@ -299,12 +304,15 @@ function SpacePage() {
       const messageId = await sendSpaceMessage(
         selectedRoom.id,
         composer.trim() || `Shared ${selectedFile?.name ?? "an attachment"}`,
+        undefined,
+        mentionedUserIds,
       );
       if (selectedFile) {
         await uploadSpaceAttachment(messageId, selectedFile);
         toast.success("Attachment uploaded to security review");
       }
       setComposer("");
+      setMentionedUserIds([]);
       setSelectedFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
       await loadRoom(selectedRoom.id);
@@ -319,8 +327,14 @@ function SpacePage() {
     if (!selectedRoom || !activeThread || !threadComposer.trim()) return;
     setThreadSending(true);
     try {
-      await sendSpaceMessage(selectedRoom.id, threadComposer, activeThread.summary.id);
+      await sendSpaceMessage(
+        selectedRoom.id,
+        threadComposer,
+        activeThread.summary.id,
+        threadMentionedUserIds,
+      );
       setThreadComposer("");
+      setThreadMentionedUserIds([]);
       await Promise.all([
         loadThread(selectedRoom.id, activeThread.summary.id),
         loadRoom(selectedRoom.id),
@@ -338,6 +352,7 @@ function SpacePage() {
       const summary =
         message.thread ?? (await createMessageThread(selectedRoom.id, message.id, undefined));
       setActiveThread({ summary, parent: message });
+      setThreadMentionedUserIds([]);
       await loadThread(selectedRoom.id, summary.id);
     } catch (threadError) {
       toast.error(threadError instanceof Error ? threadError.message : "Could not open Thread");
@@ -793,6 +808,12 @@ function SpacePage() {
                   </Button>
                 </div>
               )}
+              <MentionPicker
+                members={workspace.members}
+                actorUserId={user?.id ?? null}
+                selectedIds={mentionedUserIds}
+                onChange={setMentionedUserIds}
+              />
               <div className="flex items-end gap-2 rounded-2xl border border-border bg-background px-3 py-2 shadow-sm focus-within:ring-2 focus-within:ring-[var(--saffron)]/25">
                 <input
                   ref={fileInputRef}
@@ -855,9 +876,13 @@ function SpacePage() {
               loading={threadLoading}
               sending={threadSending}
               composer={threadComposer}
+              members={workspace.members}
+              actorUserId={user?.id ?? null}
+              mentionedUserIds={threadMentionedUserIds}
               canModerate={feed.canModerate}
               endRef={threadEndRef}
               onComposer={setThreadComposer}
+              onMentionedUserIds={setThreadMentionedUserIds}
               onClose={() => setActiveThread(null)}
               onSend={sendThreadReply}
               onReact={(id, key) => react(id, key, true)}
@@ -1168,15 +1193,81 @@ function AttachmentList({ attachments }: { attachments: SpaceMessage["attachment
   );
 }
 
+function MentionPicker({
+  members,
+  actorUserId,
+  selectedIds,
+  onChange,
+  compact = false,
+}: {
+  members: SpaceWorkspace["members"];
+  actorUserId: string | null;
+  selectedIds: string[];
+  onChange: (value: string[]) => void;
+  compact?: boolean;
+}) {
+  const available = members.filter(
+    (member) => member.user_id !== actorUserId && !selectedIds.includes(member.user_id),
+  );
+  const selected = selectedIds.flatMap((id) => {
+    const member = members.find((candidate) => candidate.user_id === id);
+    return member ? [member] : [];
+  });
+  if (!available.length && !selected.length) return null;
+  return (
+    <div className={cn("flex flex-wrap items-center gap-1.5", !compact && "mb-2 px-1")}>
+      {selected.map((member) => (
+        <button
+          key={member.user_id}
+          type="button"
+          className="rounded-full border border-[var(--saffron)]/35 bg-[var(--saffron)]/10 px-2 py-1 text-[10px] font-medium text-[var(--indigo-night)]"
+          aria-label={`Remove mention ${member.profiles?.display_name ?? "Member"}`}
+          onClick={() => onChange(selectedIds.filter((id) => id !== member.user_id))}
+        >
+          @{member.profiles?.display_name ?? "Member"} ×
+        </button>
+      ))}
+      {available.length && selectedIds.length < 10 ? (
+        <label className="flex items-center gap-1 text-[10px] text-muted-foreground">
+          <span>@ Mention</span>
+          <select
+            value=""
+            aria-label="Mention a Space member"
+            className="h-7 max-w-40 rounded-lg border border-border bg-background px-2 text-[10px] text-foreground"
+            onChange={(event) => {
+              if (!event.target.value) return;
+              onChange([...selectedIds, event.target.value]);
+            }}
+          >
+            <option value="">Choose person</option>
+            {available.map((member) => (
+              <option key={member.user_id} value={member.user_id}>
+                {member.profiles?.display_name ?? "Member"} · {member.domain_role}
+              </option>
+            ))}
+          </select>
+        </label>
+      ) : null}
+      {selectedIds.length === 10 ? (
+        <span className="text-[10px] text-muted-foreground">10-person mention limit</span>
+      ) : null}
+    </div>
+  );
+}
+
 function ThreadPane({
   thread,
   feed,
   loading,
   sending,
   composer,
+  members,
+  actorUserId,
+  mentionedUserIds,
   canModerate,
   endRef,
   onComposer,
+  onMentionedUserIds,
   onClose,
   onSend,
   onReact,
@@ -1193,9 +1284,13 @@ function ThreadPane({
   loading: boolean;
   sending: boolean;
   composer: string;
+  members: SpaceWorkspace["members"];
+  actorUserId: string | null;
+  mentionedUserIds: string[];
   canModerate: boolean;
   endRef: React.RefObject<HTMLDivElement | null>;
   onComposer: (value: string) => void;
+  onMentionedUserIds: (value: string[]) => void;
   onClose: () => void;
   onSend: () => Promise<void>;
   onReact: (messageId: string, key: SpaceReaction["key"]) => Promise<void>;
@@ -1285,34 +1380,43 @@ function ThreadPane({
             This Thread is locked.
           </div>
         ) : (
-          <div className="flex items-end gap-2 rounded-xl border border-border px-2 py-1">
-            <textarea
-              value={composer}
-              onChange={(event) => onComposer(event.target.value)}
-              rows={1}
-              maxLength={4000}
-              placeholder="Reply in Thread"
-              className="min-h-9 flex-1 resize-none bg-transparent px-1 py-2 text-xs outline-none"
-              onKeyDown={(event) => {
-                if (event.key === "Enter" && !event.shiftKey) {
-                  event.preventDefault();
-                  void onSend();
-                }
-              }}
+          <div className="space-y-2">
+            <MentionPicker
+              members={members}
+              actorUserId={actorUserId}
+              selectedIds={mentionedUserIds}
+              onChange={onMentionedUserIds}
+              compact
             />
-            <Button
-              type="button"
-              size="icon"
-              className="h-8 w-8"
-              disabled={sending || !composer.trim()}
-              onClick={() => void onSend()}
-            >
-              {sending ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <Send className="h-3.5 w-3.5" />
-              )}
-            </Button>
+            <div className="flex items-end gap-2 rounded-xl border border-border px-2 py-1">
+              <textarea
+                value={composer}
+                onChange={(event) => onComposer(event.target.value)}
+                rows={1}
+                maxLength={4000}
+                placeholder="Reply in Thread"
+                className="min-h-9 flex-1 resize-none bg-transparent px-1 py-2 text-xs outline-none"
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" && !event.shiftKey) {
+                    event.preventDefault();
+                    void onSend();
+                  }
+                }}
+              />
+              <Button
+                type="button"
+                size="icon"
+                className="h-8 w-8"
+                disabled={sending || !composer.trim()}
+                onClick={() => void onSend()}
+              >
+                {sending ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Send className="h-3.5 w-3.5" />
+                )}
+              </Button>
+            </div>
           </div>
         )}
       </div>

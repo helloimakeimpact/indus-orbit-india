@@ -8003,6 +8003,35 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      send_my_conversation_message_with_mentions: {
+        Args: {
+          _client_request_id: string;
+          _content: string;
+          _mentioned_user_ids?: string[];
+          _room_id: string;
+          _thread_id: string;
+        };
+        Returns: {
+          author_id: string;
+          client_request_id: string | null;
+          content: string;
+          created_at: string;
+          deleted_at: string | null;
+          edited_at: string | null;
+          id: string;
+          message_type: string;
+          provenance: Json;
+          reply_to_message_id: string | null;
+          room_id: string;
+          thread_id: string | null;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "conversation_messages";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       send_my_direct_message: {
         Args: {
           _client_request_id: string;

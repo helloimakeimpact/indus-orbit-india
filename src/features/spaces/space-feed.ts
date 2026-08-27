@@ -58,6 +58,16 @@ export type SpaceRoomControls = {
   canManagePins: boolean;
 };
 
+const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+export function normalizeSpaceMentionIds(values: readonly string[], actorId: string | null) {
+  const normalized = Array.from(
+    new Set(values.filter((value) => uuidPattern.test(value) && value !== actorId)),
+  );
+  if (normalized.length > 10) throw new Error("A message can mention at most 10 people");
+  return normalized;
+}
+
 const notificationPreferences = new Set<SpaceNotificationPreference>([
   "default",
   "all",
