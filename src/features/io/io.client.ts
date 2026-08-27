@@ -1,5 +1,8 @@
 // Browser-facing I/O data access. Keep privileged work in Edge Functions or database RPCs.
 import { supabase } from "@/integrations/supabase/client";
+import { parseIoApiKeyUsageRows, type IoApiKeyUsage } from "@/features/io/api-key-usage";
+
+export type { IoApiKeyUsage } from "@/features/io/api-key-usage";
 
 export type IoWorkspace = {
   id: string;
@@ -834,6 +837,14 @@ export async function listMyIoApiKeys(workspaceId: string): Promise<IoApiKeyMeta
       },
     ];
   });
+}
+
+export async function listMyIoApiKeyUsage(workspaceId: string): Promise<IoApiKeyUsage[]> {
+  const { data, error } = await supabase.rpc("list_my_io_api_key_usage", {
+    _workspace_id: workspaceId,
+  });
+  if (error) throw new Error(error.message);
+  return parseIoApiKeyUsageRows(data);
 }
 
 export async function createMyIoTestApiKey(

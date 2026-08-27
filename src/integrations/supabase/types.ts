@@ -7624,6 +7624,22 @@ export type Database = {
           status: string;
         }[];
       };
+      list_my_io_api_key_usage: {
+        Args: { _workspace_id: string };
+        Returns: {
+          api_key_id: string;
+          day_request_count: number;
+          day_reserved_nanos: string;
+          day_reset_at: string;
+          day_spent_nanos: string;
+          minute_request_count: number;
+          minute_reset_at: string;
+          month_request_count: number;
+          month_reserved_nanos: string;
+          month_reset_at: string;
+          month_spent_nanos: string;
+        }[];
+      };
       list_my_io_credit_entries: {
         Args: { _limit?: number; _workspace_id: string };
         Returns: Json;

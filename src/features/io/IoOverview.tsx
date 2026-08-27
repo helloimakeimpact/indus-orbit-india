@@ -49,6 +49,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { IO_WORKSPACE_VIEW_META } from "@/features/io/io-workspace-view";
 import { useIoWorkspaceView } from "@/features/io/io-workspace-view-context";
+import { apiKeyLifecycle, usagePercent } from "@/features/io/api-key-usage";
 import {
   inspectOpenCodeLocalSession,
   loadOpenCodeLocalBinding,
@@ -75,6 +76,7 @@ import {
   getIoRouteCatalog,
   getMyIoWorkspaces,
   listMyIoApiKeys,
+  listMyIoApiKeyUsage,
   listMyIoCreditEntries,
   listMyIoInvoices,
   createMyIoPaymentCheckout,
@@ -89,6 +91,7 @@ import {
   upsertMyIoBillingProfile,
   revokeMyIoApiKey,
   type IoApiKeyMetadata,
+  type IoApiKeyUsage,
   type IoAuditEvent,
   type IoCapacitySource,
   type IoBudgetStatus,
@@ -311,6 +314,7 @@ export function IoOverview() {
   const [creditEntries, setCreditEntries] = useState<IoCreditEntry[]>([]);
   const [invoices, setInvoices] = useState<IoInvoice[]>([]);
   const [apiKeys, setApiKeys] = useState<IoApiKeyMetadata[]>([]);
+  const [apiKeyUsage, setApiKeyUsage] = useState<Record<string, IoApiKeyUsage>>({});
   const [apiKeyName, setApiKeyName] = useState("My development key");
   const [newRawApiKey, setNewRawApiKey] = useState<string | null>(null);
   const [apiKeyBusy, setApiKeyBusy] = useState<string | null>(null);
@@ -429,6 +433,7 @@ export function IoOverview() {
         setCreditEntries([]);
         setInvoices([]);
         setApiKeys([]);
+        setApiKeyUsage({});
         setNewRawApiKey(null);
         setRouteCatalog(null);
         setProviderPolicy(null);
@@ -446,6 +451,7 @@ export function IoOverview() {
         receiptsResult,
         budgetResult,
         apiKeysResult,
+        apiKeyUsageResult,
         terminalSessionsResult,
         providerPolicyResult,
         catalogResult,
@@ -459,6 +465,7 @@ export function IoOverview() {
         listMyIoUsageHistory({ workspaceId: nextWorkspace.id, limit: 25 }),
         getMyIoBudgetStatus(nextWorkspace.id),
         listMyIoApiKeys(nextWorkspace.id),
+        listMyIoApiKeyUsage(nextWorkspace.id),
         listMyIoTerminalSessions(nextWorkspace.id),
         getMyIoWorkspaceProviderPolicy(nextWorkspace.id),
         getIoRouteCatalog(nextWorkspace.id),
@@ -473,6 +480,7 @@ export function IoOverview() {
       if (receiptsResult.status === "rejected") throw receiptsResult.reason;
       if (budgetResult.status === "rejected") throw budgetResult.reason;
       if (apiKeysResult.status === "rejected") throw apiKeysResult.reason;
+      if (apiKeyUsageResult.status === "rejected") throw apiKeyUsageResult.reason;
       if (terminalSessionsResult.status === "rejected") throw terminalSessionsResult.reason;
       if (providerPolicyResult.status === "rejected") throw providerPolicyResult.reason;
       if (billingResult.status === "rejected") throw billingResult.reason;
@@ -516,6 +524,9 @@ export function IoOverview() {
       setCreditEntries(creditEntriesResult.value);
       setInvoices(invoicesResult.value);
       setApiKeys(apiKeysResult.value);
+      setApiKeyUsage(
+        Object.fromEntries(apiKeyUsageResult.value.map((usage) => [usage.apiKeyId, usage])),
+      );
       setNewRawApiKey(null);
       setTerminalSessions(terminalSessionsResult.value);
       setProviderPolicy(providerPolicyResult.value);
@@ -2143,52 +2154,110 @@ opencode auth login
 
               <div className="divide-y divide-border/55 rounded-xl border border-border/65">
                 {apiKeys.length ? (
-                  apiKeys.map((key) => (
-                    <article
-                      key={key.id}
-                      className="grid gap-2 px-3 py-3 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center"
-                    >
-                      <div className="min-w-0">
-                        <p className="truncate text-xs font-semibold text-foreground">{key.name}</p>
-                        <p className="mt-1 truncate font-mono text-[9px] text-muted-foreground">
-                          {key.keyPrefix}…{key.lastFour} · expires{" "}
-                          {key.expiresAt ? new Date(key.expiresAt).toLocaleDateString() : "never"}
+                  apiKeys.map((key) => {
+                    const usage = apiKeyUsage[key.id];
+                    const lifecycle = apiKeyLifecycle(key.status, key.expiresAt);
+                    const dailyCharge =
+                      BigInt(usage?.daySpentNanos ?? "0") + BigInt(usage?.dayReservedNanos ?? "0");
+                    return (
+                      <article key={key.id} className="space-y-2 px-3 py-3">
+                        <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center">
+                          <div className="min-w-0">
+                            <p className="truncate text-xs font-semibold text-foreground">
+                              {key.name}
+                            </p>
+                            <p className="mt-1 truncate font-mono text-[9px] text-muted-foreground">
+                              {key.keyPrefix}…{key.lastFour} · expires{" "}
+                              {key.expiresAt
+                                ? new Date(key.expiresAt).toLocaleDateString()
+                                : "never"}
+                            </p>
+                            <p className="mt-1 text-[9px] text-muted-foreground">
+                              Last used{" "}
+                              {key.lastUsedAt ? new Date(key.lastUsedAt).toLocaleString() : "never"}
+                              {lifecycle.rotateSoon && lifecycle.daysRemaining !== null
+                                ? ` · rotate within ${lifecycle.daysRemaining} day${lifecycle.daysRemaining === 1 ? "" : "s"}`
+                                : ""}
+                            </p>
+                          </div>
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              "w-fit text-[9px] uppercase",
+                              lifecycle.effectiveStatus === "active" && !lifecycle.rotateSoon
+                                ? "border-emerald-300 text-emerald-800"
+                                : lifecycle.rotateSoon
+                                  ? "border-amber-300 text-amber-800"
+                                  : "border-border text-muted-foreground",
+                            )}
+                          >
+                            {lifecycle.rotateSoon && lifecycle.effectiveStatus === "active"
+                              ? "rotate soon"
+                              : lifecycle.effectiveStatus}
+                          </Badge>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 w-fit px-2 text-[10px] text-destructive"
+                            disabled={lifecycle.effectiveStatus !== "active" || apiKeyBusy !== null}
+                            onClick={() => void revokeApiKey(key.id)}
+                          >
+                            {apiKeyBusy === key.id ? (
+                              <LoaderCircle className="animate-spin" />
+                            ) : (
+                              <Trash2 />
+                            )}
+                            Revoke
+                          </Button>
+                        </div>
+                        <div className="grid gap-2 text-[9px] text-muted-foreground sm:grid-cols-2">
+                          <div>
+                            <div className="flex justify-between gap-2">
+                              <span>Requests today</span>
+                              <span>
+                                {usage?.dayRequestCount ?? 0}/{key.requestsPerDay}
+                              </span>
+                            </div>
+                            <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-muted">
+                              <div
+                                className="h-full rounded-full bg-[var(--saffron)]"
+                                style={{
+                                  width: `${usagePercent(usage?.dayRequestCount ?? 0, key.requestsPerDay)}%`,
+                                }}
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <div className="flex justify-between gap-2">
+                              <span>Charge today · spent + reserved</span>
+                              <span>
+                                {formatExactNanos(dailyCharge.toString(), key.spendCurrencyCode)} /{" "}
+                                {formatNanos(key.spendPerDayNanos, key.spendCurrencyCode)}
+                              </span>
+                            </div>
+                            <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-muted">
+                              <div
+                                className="h-full rounded-full bg-[var(--indigo-night)]"
+                                style={{
+                                  width: `${usagePercent(dailyCharge.toString(), key.spendPerDayNanos)}%`,
+                                }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        <p className="text-[9px] text-muted-foreground">
+                          Current minute {usage?.minuteRequestCount ?? 0}/{key.requestsPerMinute} ·
+                          month {usage?.monthRequestCount ?? 0}/{key.requestsPerMonth} · month
+                          charge{" "}
+                          {formatExactNanos(usage?.monthSpentNanos ?? "0", key.spendCurrencyCode)}
+                          {usage && BigInt(usage.monthReservedNanos) > 0n
+                            ? ` + ${formatExactNanos(usage.monthReservedNanos, key.spendCurrencyCode)} reserved`
+                            : ""}
                         </p>
-                        <p className="mt-1 text-[9px] text-muted-foreground">
-                          {key.requestsPerMinute}/min · {key.requestsPerDay}/day ·{" "}
-                          {key.requestsPerMonth}/month ·{" "}
-                          {formatNanos(key.spendPerDayNanos, key.spendCurrencyCode)}
-                          /day · {formatNanos(key.spendPerMonthNanos, key.spendCurrencyCode)}/month
-                        </p>
-                      </div>
-                      <Badge
-                        variant="outline"
-                        className={cn(
-                          "w-fit text-[9px] uppercase",
-                          key.status === "active"
-                            ? "border-emerald-300 text-emerald-800"
-                            : "border-border text-muted-foreground",
-                        )}
-                      >
-                        {key.status}
-                      </Badge>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="ghost"
-                        className="h-7 w-fit px-2 text-[10px] text-destructive"
-                        disabled={key.status !== "active" || apiKeyBusy !== null}
-                        onClick={() => void revokeApiKey(key.id)}
-                      >
-                        {apiKeyBusy === key.id ? (
-                          <LoaderCircle className="animate-spin" />
-                        ) : (
-                          <Trash2 />
-                        )}
-                        Revoke
-                      </Button>
-                    </article>
-                  ))
+                      </article>
+                    );
+                  })
                 ) : (
                   <p className="px-3 py-4 text-[11px] text-muted-foreground">
                     No API keys exist for this workspace.

@@ -58,6 +58,8 @@ Responses include protocol-standard bodies/events plus `x-io-request-id`, `x-io-
 
 The Released beta-key policy defaults to 30-day expiry, 20 requests/minute, 200/day, 2,000/month, USD 1/day and USD 10/month. Minute/day/month request counters and daily/monthly customer-charge reservations are atomic. Standard minute headers remain, and I/O-specific daily/monthly limit, remaining and reset headers are added. Browser-origin requests remain rejected.
 
+The member key list now consumes hosted `list_my_io_api_key_usage(uuid)`. Each key shows current day request and charge utilization, current minute/month counters, spent versus reserved evidence, last use and a seven-day rotation warning. This RPC is caller-bound to active workspace membership and returns neither a credential nor request content. Historical key analytics and operator anomaly suspension remain separate reviewed-policy work.
+
 Every CN-resident endpoint is excluded from both the member catalogue and API-key catalogue unless the workspace owner/admin accepts China processing/storage and possible training use together. OpenAI requests use a dedicated HMAC safety-identifier secret and never send a raw member ID or email.
 
 ## Deliberately bounded in the current release
