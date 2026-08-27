@@ -359,7 +359,7 @@ function BrandPage() {
             Wearable orbit — 2026 drop
           </h2>
           <p className="mt-3 max-w-2xl text-foreground/70">
-            Two print families only. The <strong>mark drop</strong> carries just the pixel planet
+            Two print families only. The <strong>mark drop</strong> carries just the io monogram
             and the wordmark. The <strong>statement drop</strong> carries the full line — General
             Intelligence Company of India. Never mix both on one garment.
           </p>
@@ -370,7 +370,7 @@ function BrandPage() {
                 src: merchTshirt,
                 w: 1024,
                 h: 1024,
-                alt: "Pixel-art parchment t-shirt printed with General Intelligence of India and the saffron ringed planet",
+                alt: "Cream cotton t-shirt printed with the saffron io monogram and General Intelligence of India",
                 title: "Statement tee",
                 drop: "Statement drop",
                 spec: "Parchment 240gsm boxy cut · indigo chest print · saffron mark",
@@ -379,7 +379,7 @@ function BrandPage() {
                 src: merchHoodie,
                 w: 1024,
                 h: 1024,
-                alt: "Pixel-art indigo hoodie with a small saffron Indus Orbit mark on the chest",
+                alt: "Indigo hoodie with a small embroidered saffron io monogram on the left chest",
                 title: "Orbit hoodie",
                 drop: "Mark drop",
                 spec: "Indigo night 400gsm · left-chest mark · saffron drawcord tips",
@@ -388,7 +388,7 @@ function BrandPage() {
                 src: merchMug,
                 w: 1024,
                 h: 1024,
-                alt: "Pixel-art indigo ceramic mug with the saffron Indus Orbit ringed planet and wordmark",
+                alt: "Matte indigo ceramic mug with the saffron io monogram and Indus Orbit wordmark",
                 title: "Ledger mug",
                 drop: "Mark drop",
                 spec: "350ml matte indigo glaze · saffron single-colour transfer",
@@ -404,7 +404,7 @@ function BrandPage() {
                   width={m.w}
                   height={m.h}
                   loading="lazy"
-                  className="pixelated aspect-square w-full object-cover"
+                  className="aspect-square w-full object-cover"
                 />
                 <figcaption className="p-6">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">
@@ -420,11 +420,11 @@ function BrandPage() {
           <figure className="mt-6 overflow-hidden rounded-3xl border border-border bg-card">
             <img
               src={merchKit}
-              alt="Pixel-art flat lay of Indus Orbit small goods: enamel pin, tote bag, sticker sheet, notebook and cap"
+              alt="Flat lay of Indus Orbit small goods: io enamel pin, canvas tote, sticker sheet, notebook and cap"
               width={1536}
               height={1024}
               loading="lazy"
-              className="pixelated w-full object-cover"
+              className="w-full object-cover"
             />
             <figcaption className="flex flex-wrap items-center justify-between gap-3 p-6">
               <div>
@@ -445,7 +445,7 @@ function BrandPage() {
             {[
               { k: "Print rule", v: "One colour per side. Mark left chest, statement centre chest." },
               { k: "Fabric", v: "Undyed parchment cotton or indigo-night pigment dye. No white." },
-              { k: "Clear space", v: "Mark keeps one ring-width of blank fabric on every side." },
+              { k: "Clear space", v: "The io monogram keeps one o-width of blank fabric on every side." },
             ].map((r) => (
               <div key={r.k} className="rounded-3xl border border-border bg-card p-5">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-foreground/50">
