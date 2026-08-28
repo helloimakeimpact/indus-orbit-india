@@ -87,11 +87,35 @@ import {
   type SpaceSearchCursor,
   type SpaceNotificationPreference,
 } from "@/features/spaces/space-client";
+import { createSpaceSendRequestIds } from "@/features/spaces/space-send-recovery";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 
 type Room = Database["public"]["Tables"]["conversation_rooms"]["Row"];
 type ActiveThread = { summary: SpaceThreadSummary; parent: SpaceMessage };
+type RoomSendAttempt = {
+  roomId: string;
+  roomName: string;
+  content: string;
+  composerValue: string;
+  mentionedUserIds: string[];
+  mentionedRoleIds: string[];
+  file: File | null;
+  messageClientRequestId: string;
+  attachmentClientRequestId: string;
+  messageId?: string;
+  errorMessage?: string;
+};
+type ThreadSendAttempt = {
+  roomId: string;
+  threadId: string;
+  threadLabel: string;
+  content: string;
+  mentionedUserIds: string[];
+  mentionedRoleIds: string[];
+  clientRequestId: string;
+  errorMessage?: string;
+};
 
 const emptyFeed: SpaceFeed = {
   items: [],
@@ -205,6 +229,11 @@ function SpacePage() {
   const [loadingEarlier, setLoadingEarlier] = useState(false);
   const [sending, setSending] = useState(false);
   const [threadSending, setThreadSending] = useState(false);
+  const [isOnline, setIsOnline] = useState(() =>
+    typeof navigator === "undefined" ? true : navigator.onLine,
+  );
+  const [failedRoomSend, setFailedRoomSend] = useState<RoomSendAttempt | null>(null);
+  const [failedThreadSend, setFailedThreadSend] = useState<ThreadSendAttempt | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [reportTarget, setReportTarget] = useState<SpaceMessage | null>(null);
   const [reportCategory, setReportCategory] = useState("safety");
@@ -318,6 +347,17 @@ function SpacePage() {
   }, [loadWorkspace]);
 
   useEffect(() => {
+    const markOnline = () => setIsOnline(true);
+    const markOffline = () => setIsOnline(false);
+    window.addEventListener("online", markOnline);
+    window.addEventListener("offline", markOffline);
+    return () => {
+      window.removeEventListener("online", markOnline);
+      window.removeEventListener("offline", markOffline);
+    };
+  }, []);
+
+  useEffect(() => {
     if (!selectedRoomId) return;
     void Promise.resolve().then(() => loadRoom(selectedRoomId));
     const channel = supabase
@@ -377,32 +417,65 @@ function SpacePage() {
     }));
   }, [workspace]);
 
-  async function sendMessage() {
-    if (!selectedRoom || (!composer.trim() && !selectedFile)) return;
+  async function executeRoomSend(attempt: RoomSendAttempt) {
     setSending(true);
+    let completedMessageId = attempt.messageId;
     try {
-      const messageId = await sendSpaceMessage(
-        selectedRoom.id,
-        composer.trim() || `Shared ${selectedFile?.name ?? "an attachment"}`,
+      if (!isOnline) throw new Error("You are offline. Reconnect to send this message.");
+      completedMessageId ??= await sendSpaceMessage(
+        attempt.roomId,
+        attempt.content,
         undefined,
-        mentionedUserIds,
-        mentionedRoleIds,
+        attempt.mentionedUserIds,
+        attempt.mentionedRoleIds,
+        attempt.messageClientRequestId,
       );
-      if (selectedFile) {
-        await uploadSpaceAttachment(messageId, selectedFile);
+      if (attempt.file) {
+        await uploadSpaceAttachment(
+          completedMessageId,
+          attempt.file,
+          attempt.attachmentClientRequestId,
+        );
         toast.success("Attachment uploaded to security review");
       }
-      setComposer("");
-      setMentionedUserIds([]);
-      setMentionedRoleIds([]);
-      setSelectedFile(null);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-      await loadRoom(selectedRoom.id);
+      setFailedRoomSend(null);
+      if (composer === attempt.composerValue) {
+        setComposer("");
+        setMentionedUserIds([]);
+        setMentionedRoleIds([]);
+      }
+      if (selectedFile === attempt.file) {
+        setSelectedFile(null);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+      }
+      if (selectedRoomId === attempt.roomId) await loadRoom(attempt.roomId);
     } catch (sendError) {
-      toast.error(sendError instanceof Error ? sendError.message : "Could not send message");
+      const errorMessage =
+        sendError instanceof Error ? sendError.message : "Could not send message";
+      setFailedRoomSend({ ...attempt, messageId: completedMessageId, errorMessage });
+      toast.error(errorMessage);
     } finally {
       setSending(false);
     }
+  }
+
+  async function sendMessage() {
+    if (!selectedRoom || (!composer.trim() && !selectedFile)) return;
+    if (failedRoomSend) {
+      toast.error("Retry or discard the uncertain delivery before sending another message");
+      return;
+    }
+    const requestIds = createSpaceSendRequestIds();
+    await executeRoomSend({
+      roomId: selectedRoom.id,
+      roomName: selectedRoom.display_name,
+      content: composer.trim() || `Shared ${selectedFile?.name ?? "an attachment"}`,
+      composerValue: composer,
+      mentionedUserIds: [...mentionedUserIds],
+      mentionedRoleIds: [...mentionedRoleIds],
+      file: selectedFile,
+      ...requestIds,
+    });
   }
 
   async function runSearch() {
@@ -478,29 +551,57 @@ function SpacePage() {
     await loadThread(result.roomId, result.thread.id);
   }
 
-  async function sendThreadReply() {
-    if (!selectedRoom || !activeThread || !threadComposer.trim()) return;
+  async function executeThreadSend(attempt: ThreadSendAttempt) {
     setThreadSending(true);
     try {
+      if (!isOnline) throw new Error("You are offline. Reconnect to send this reply.");
       await sendSpaceMessage(
-        selectedRoom.id,
-        threadComposer,
-        activeThread.summary.id,
-        threadMentionedUserIds,
-        threadMentionedRoleIds,
+        attempt.roomId,
+        attempt.content,
+        attempt.threadId,
+        attempt.mentionedUserIds,
+        attempt.mentionedRoleIds,
+        attempt.clientRequestId,
       );
-      setThreadComposer("");
-      setThreadMentionedUserIds([]);
-      setThreadMentionedRoleIds([]);
-      await Promise.all([
-        loadThread(selectedRoom.id, activeThread.summary.id),
-        loadRoom(selectedRoom.id),
-      ]);
+      setFailedThreadSend(null);
+      if (activeThread?.summary.id === attempt.threadId && threadComposer === attempt.content) {
+        setThreadComposer("");
+        setThreadMentionedUserIds([]);
+        setThreadMentionedRoleIds([]);
+      }
+      if (selectedRoomId === attempt.roomId) {
+        await Promise.all([
+          activeThread?.summary.id === attempt.threadId
+            ? loadThread(attempt.roomId, attempt.threadId)
+            : Promise.resolve(null),
+          loadRoom(attempt.roomId),
+        ]);
+      }
     } catch (sendError) {
-      toast.error(sendError instanceof Error ? sendError.message : "Could not send Thread reply");
+      const errorMessage =
+        sendError instanceof Error ? sendError.message : "Could not send Thread reply";
+      setFailedThreadSend({ ...attempt, errorMessage });
+      toast.error(errorMessage);
     } finally {
       setThreadSending(false);
     }
+  }
+
+  async function sendThreadReply() {
+    if (!selectedRoom || !activeThread || !threadComposer.trim()) return;
+    if (failedThreadSend) {
+      toast.error("Retry or discard the uncertain Thread reply before sending another one");
+      return;
+    }
+    await executeThreadSend({
+      roomId: selectedRoom.id,
+      threadId: activeThread.summary.id,
+      threadLabel: activeThread.summary.title ?? "Thread",
+      content: threadComposer.trim(),
+      mentionedUserIds: [...threadMentionedUserIds],
+      mentionedRoleIds: [...threadMentionedRoleIds],
+      clientRequestId: crypto.randomUUID(),
+    });
   }
 
   async function openThread(message: SpaceMessage, visibility: "room" | "private" = "room") {
@@ -1116,6 +1217,50 @@ function SpacePage() {
               <div ref={timelineEndRef} />
             </section>
             <footer className="border-t border-border bg-card p-4 sm:p-5">
+              {!isOnline ? (
+                <div
+                  role="status"
+                  className="mb-3 flex items-center gap-2 rounded-xl border border-[var(--saffron)]/45 bg-[var(--saffron)]/10 px-3 py-2 text-xs font-medium text-foreground"
+                >
+                  <Radio className="h-4 w-4 shrink-0 text-[var(--saffron)]" />
+                  You are offline. This draft stays in this tab; reconnect to send it.
+                </div>
+              ) : null}
+              {failedRoomSend ? (
+                <div
+                  role="alert"
+                  className="mb-3 rounded-xl border border-destructive/35 bg-destructive/5 px-3 py-2 text-xs text-foreground"
+                >
+                  <p className="font-semibold">
+                    Delivery to #{failedRoomSend.roomName} is uncertain
+                  </p>
+                  <p className="mt-1 text-muted-foreground">
+                    {failedRoomSend.errorMessage ?? "The route did not confirm delivery."} Retrying
+                    reuses the original request, so it cannot create a duplicate.
+                  </p>
+                  <div className="mt-2 flex gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="h-8"
+                      disabled={!isOnline || sending}
+                      onClick={() => void executeRoomSend(failedRoomSend)}
+                    >
+                      <RotateCcw className="h-3.5 w-3.5" /> Retry safely
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      className="h-8"
+                      disabled={sending}
+                      onClick={() => setFailedRoomSend(null)}
+                    >
+                      Discard retry
+                    </Button>
+                  </div>
+                </div>
+              ) : null}
               {selectedFile && (
                 <div className="mb-2 flex items-center justify-between rounded-xl bg-muted px-3 py-2 text-xs">
                   <span className="truncate">{selectedFile.name} · security review required</span>
@@ -1124,6 +1269,7 @@ function SpacePage() {
                     variant="ghost"
                     size="icon"
                     className="h-7 w-7"
+                    disabled={Boolean(failedRoomSend) || sending}
                     onClick={() => setSelectedFile(null)}
                   >
                     <X className="h-3.5 w-3.5" />
@@ -1154,6 +1300,7 @@ function SpacePage() {
                   variant="ghost"
                   className="h-9 w-9 shrink-0"
                   aria-label="Attach a file"
+                  disabled={Boolean(failedRoomSend) || sending}
                   onClick={() => fileInputRef.current?.click()}
                 >
                   <Paperclip className="h-4 w-4" />
@@ -1169,7 +1316,7 @@ function SpacePage() {
                   }}
                   rows={1}
                   maxLength={4000}
-                  disabled={!selectedRoom || sending}
+                  disabled={!selectedRoom || sending || Boolean(failedRoomSend)}
                   placeholder={
                     selectedRoom ? `Message #${selectedRoom.display_name}` : "Choose a Room"
                   }
@@ -1178,7 +1325,13 @@ function SpacePage() {
                 <Button
                   size="icon"
                   onClick={() => void sendMessage()}
-                  disabled={!selectedRoom || (!composer.trim() && !selectedFile) || sending}
+                  disabled={
+                    !selectedRoom ||
+                    (!composer.trim() && !selectedFile) ||
+                    sending ||
+                    !isOnline ||
+                    Boolean(failedRoomSend)
+                  }
                   className="h-9 w-9 shrink-0 rounded-xl bg-[var(--indigo-night)] text-white"
                 >
                   {sending ? (
@@ -1189,8 +1342,8 @@ function SpacePage() {
                 </Button>
               </div>
               <p className="mt-2 px-1 text-[10px] text-muted-foreground">
-                Enter sends · 4,000 characters · five private attachments up to 10 MB · files remain
-                quarantined until trusted security review
+                Enter sends · 4,000 characters · five private attachments up to 10 MB · safe retry
+                stays in this tab · files remain quarantined until trusted security review
               </p>
             </footer>
           </main>
@@ -1201,6 +1354,8 @@ function SpacePage() {
               feed={threadFeed}
               loading={threadLoading}
               sending={threadSending}
+              online={isOnline}
+              retryAttempt={failedThreadSend}
               composer={threadComposer}
               members={workspace.members}
               roles={workspace.roles}
@@ -1222,6 +1377,10 @@ function SpacePage() {
                 setThreadMentionedRoleIds([]);
               }}
               onSend={sendThreadReply}
+              onRetry={() =>
+                failedThreadSend ? executeThreadSend(failedThreadSend) : Promise.resolve()
+              }
+              onDiscardRetry={() => setFailedThreadSend(null)}
               onReact={(id, key) => react(id, key, true)}
               onReport={setReportTarget}
               onLock={toggleThreadLock}
@@ -2067,6 +2226,8 @@ function ThreadPane({
   feed,
   loading,
   sending,
+  online,
+  retryAttempt,
   composer,
   members,
   roles,
@@ -2083,6 +2244,8 @@ function ThreadPane({
   onManageMembers,
   onClose,
   onSend,
+  onRetry,
+  onDiscardRetry,
   onReact,
   onReport,
   onLock,
@@ -2096,6 +2259,8 @@ function ThreadPane({
   feed: SpaceFeed;
   loading: boolean;
   sending: boolean;
+  online: boolean;
+  retryAttempt: ThreadSendAttempt | null;
   composer: string;
   members: SpaceWorkspace["members"];
   roles: SpaceWorkspace["roles"];
@@ -2112,6 +2277,8 @@ function ThreadPane({
   onManageMembers: () => void;
   onClose: () => void;
   onSend: () => Promise<void>;
+  onRetry: () => Promise<void>;
+  onDiscardRetry: () => void;
   onReact: (messageId: string, key: SpaceReaction["key"]) => Promise<void>;
   onReport: (message: SpaceMessage) => void;
   onLock: () => Promise<void>;
@@ -2214,6 +2381,46 @@ function ThreadPane({
           </div>
         ) : (
           <div className="space-y-2">
+            {!online ? (
+              <div
+                role="status"
+                className="rounded-xl border border-[var(--saffron)]/45 bg-[var(--saffron)]/10 px-3 py-2 text-xs font-medium text-foreground"
+              >
+                Offline. This reply stays in this tab until you reconnect.
+              </div>
+            ) : null}
+            {retryAttempt ? (
+              <div
+                role="alert"
+                className="rounded-xl border border-destructive/35 bg-destructive/5 px-3 py-2 text-xs text-foreground"
+              >
+                <p className="font-semibold">Delivery to {retryAttempt.threadLabel} is uncertain</p>
+                <p className="mt-1 text-muted-foreground">
+                  {retryAttempt.errorMessage ?? "The route did not confirm delivery."}
+                </p>
+                <div className="mt-2 flex gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="h-8"
+                    disabled={!online || sending}
+                    onClick={() => void onRetry()}
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" /> Retry safely
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    className="h-8"
+                    disabled={sending}
+                    onClick={onDiscardRetry}
+                  >
+                    Discard retry
+                  </Button>
+                </div>
+              </div>
+            ) : null}
             <MentionPicker
               members={members}
               roles={roles}
@@ -2231,6 +2438,7 @@ function ThreadPane({
                 onChange={(event) => onComposer(event.target.value)}
                 rows={1}
                 maxLength={4000}
+                disabled={sending || Boolean(retryAttempt)}
                 placeholder="Reply in Thread"
                 className="min-h-9 flex-1 resize-none bg-transparent px-1 py-2 text-xs outline-none"
                 onKeyDown={(event) => {
@@ -2244,7 +2452,7 @@ function ThreadPane({
                 type="button"
                 size="icon"
                 className="h-8 w-8"
-                disabled={sending || !composer.trim()}
+                disabled={sending || !composer.trim() || !online || Boolean(retryAttempt)}
                 onClick={() => void onSend()}
               >
                 {sending ? (

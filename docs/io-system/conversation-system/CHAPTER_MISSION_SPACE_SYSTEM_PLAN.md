@@ -1,6 +1,6 @@
 # Chapter, Mission and Space system plan
 
-Status: database foundation Released to the demo project and first member web surface pushed to GitHub; hosted browser personas remain, updated 9 August 2026.
+Status: collaboration foundation and current database controls Released to the demo project; replay-safe Space send recovery Verified locally; hosted web deployment/personas remain, updated 28 August 2026.
 
 ## 1. Product meaning
 
@@ -96,43 +96,45 @@ The first `/app/spaces/$spaceId` route is Verified in the production build. It p
 - responsive one-column fallback for narrower screens;
 - explicit loading, empty, access and error states.
 
+The current member route also provides explicit offline state and a privacy-preserving manual retry boundary. Room messages, Thread replies and attachment reservations keep their original client request IDs after an uncertain response. A retry therefore resolves the original database record instead of creating another message; if a message succeeded before its file failed, the retry resumes at the attachment step. Draft text and `File` objects remain only in React memory for the open tab and are never placed in local or session storage.
+
 Chapter and Mission detail pages resolve their associated Space and expose **Open Space** only to active members. Before the hosted migration exists, explicit missing-schema errors trigger a compatibility path; authentication, authorization, validation and conflict errors never fall back to insecure writes.
 
 ### Verification evidence
 
-- clean local replay of all 62 checked-in migrations;
-- 516/516 pgTAP assertions across 13 database test files;
+- the connected Indus Orbit project is healthy with 107 recorded migrations; latest is `20260828181552_harden_orbit_role_mention_replay`;
+- the last recorded full database suite passes 733/733 assertions, with later collaboration contracts and hosted rollback-safe personas recorded separately;
 - Chapter/Mission/Space test coverage for schema, grants, RLS, blueprints, joins, messages, read state, privacy, Realtime publication and positive/negative function behavior;
-- 46/46 TypeScript unit tests;
+- 90/90 TypeScript unit tests, including stable replay-key generation and conflict-safe attachment recovery;
 - TypeScript check passes;
 - production application build passes;
 - generated Supabase TypeScript declarations match the clean local schema;
 - no missing covering foreign-key index in the new Chapter/Mission/Space schema.
-- hosted ledger contains all three forward migrations;
+- hosted ledger contains the current collaboration migration chain through private Threads, paged permission-filtered search and Room slow mode;
 - hosted contract has no missing Space table/function and all 19 public Space tables use RLS;
 - hosted direct Chapter/Mission browser INSERT/UPDATE privileges are false;
 - hosted Space messages belong to the Realtime publication;
 - hosted backfill contains 9 Spaces and 57 deterministic Rooms;
-- hosted public-schema lint has no error and Advisors attach no warning to a new `conversation_*` object.
+- hosted release contracts preserve all 19 Space RLS boundaries and revoked protected direct writes. Remaining Security/Performance Advisor notices are classified inherited or explicitly reviewed; production readiness is not inferred from a clean release contract.
 
 ## 4. What is still only Partial or Planned
 
-| Capability               | State    | Remaining work                                                                                                                                                                                                                                 |
-| ------------------------ | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Hosted schema            | Released | All three forward migrations and the read-only schema/RLS/RPC/Realtime contract pass on `jpwvgpnbkrktipwhvqss`; 26 historical timestamp aliases still prohibit ordinary future `db push`.                                                      |
-| Space member journey     | Partial  | Add invite links, richer request reason, role explanation, notification defaults and complete leave/rejoin UX.                                                                                                                                 |
-| Threads                  | Partial  | Timeline, follow/unfollow, lock/reopen, unread state and atomic creator/manager private membership are Released. Archive lifecycle, offline recovery and multi-persona browser evidence remain.                                                |
-| Roles and Room overrides | Partial  | Manager allow/deny/inherit editor and database-enforced Room slow mode are Released; add source-role assignment/hierarchy where domain policy permits, effective-permission explanation and view-as-role tests.                                |
-| Reactions and mentions   | Partial  | Reactions, explicit person mentions and manager-only Room/public-Thread role mentions are Released with bounded visibility and preference-aware scheduling; add worker delivery and abuse/persona evidence.                                    |
-| Attachments              | Partial  | Private quarantine-first uploads, type/size checks and signed downloads are Released; connect a trusted scanner, then add alt-text editing, expiry and download audit.                                                                         |
-| Pins and bookmarks       | Partial  | Caller-bound private bookmarks and manager Room pins are Released with member UI; add consolidated saved-item search/export and authenticated curator personas.                                                                                |
-| Moderation and reports   | Partial  | Member reporting, audited restrict/restore, separate admin triage/attachment review/appeals and Room slow mode are Released; add mute/timeout/remove, automated spam controls and approved retention/export.                                   |
-| Search                   | Released | Caller-bound indexed full-text Space search rechecks Room/private-Thread access, excludes deleted content, caps input/results and provides stable relevance/time/ID keyset pages with Load more. Run authenticated load personas before scale. |
-| Presence and typing      | Planned  | Privacy-aware, expiring private Broadcast events; never durable surveillance.                                                                                                                                                                  |
-| Notifications            | Partial  | Preferences, quiet/digest scheduling, bounded person/manager-role mentions and private outbox foundations exist; add broader event projection, fixed-template worker deployment and operator retry/dead-letter controls.                       |
-| Mobile/accessibility     | Partial  | Complete drawer navigation, focus restoration, keyboard paths, screen-reader announcements, reduced motion and visual regression.                                                                                                              |
-| Shared shell             | Partial  | Generalize the new Space geometry and existing I/O geometry into one branded rail/sidebar/workspace/inspector architecture.                                                                                                                    |
-| I/O collaboration        | Planned  | Link permissioned I/O sessions/artifacts without copying prompts, terminal output, files, credentials or provider responses into human messages.                                                                                               |
+| Capability               | State    | Remaining work                                                                                                                                                                                                                                                                                                         |
+| ------------------------ | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Hosted schema            | Released | All three forward migrations and the read-only schema/RLS/RPC/Realtime contract pass on `jpwvgpnbkrktipwhvqss`; 26 historical timestamp aliases still prohibit ordinary future `db push`.                                                                                                                              |
+| Space member journey     | Partial  | Add invite links, richer request reason, role explanation, notification defaults and complete leave/rejoin UX.                                                                                                                                                                                                         |
+| Threads                  | Partial  | Timeline, follow/unfollow, lock/reopen, unread state and atomic creator/manager private membership are Released. Replay-safe in-tab reply recovery is Verified locally. Archive lifecycle, multi-device reconciliation and hosted multi-persona browser evidence remain.                                               |
+| Roles and Room overrides | Partial  | Manager allow/deny/inherit editor and database-enforced Room slow mode are Released; add source-role assignment/hierarchy where domain policy permits, effective-permission explanation and view-as-role tests.                                                                                                        |
+| Reactions and mentions   | Partial  | Reactions, explicit person mentions and manager-only Room/public-Thread role mentions are Released with bounded visibility and preference-aware scheduling; replaying one role-mentioned message cannot duplicate its mention, in-app notification or outbox evidence. Add worker delivery and abuse/persona evidence. |
+| Attachments              | Partial  | Private quarantine-first uploads, type/size checks and signed downloads are Released; the client now resumes a failed upload/finalization against the original reservation without duplicating the message. Connect a trusted scanner, then add alt-text editing, expiry and download audit.                           |
+| Pins and bookmarks       | Partial  | Caller-bound private bookmarks and manager Room pins are Released with member UI; add consolidated saved-item search/export and authenticated curator personas.                                                                                                                                                        |
+| Moderation and reports   | Partial  | Member reporting, audited restrict/restore, separate admin triage/attachment review/appeals and Room slow mode are Released; add mute/timeout/remove, automated spam controls and approved retention/export.                                                                                                           |
+| Search                   | Released | Caller-bound indexed full-text Space search rechecks Room/private-Thread access, excludes deleted content, caps input/results and provides stable relevance/time/ID keyset pages with Load more. Run authenticated load personas before scale.                                                                         |
+| Presence and typing      | Planned  | Privacy-aware, expiring private Broadcast events; never durable surveillance.                                                                                                                                                                                                                                          |
+| Notifications            | Partial  | Preferences, quiet/digest scheduling, bounded person/manager-role mentions and private outbox foundations exist; add broader event projection, fixed-template worker deployment and operator retry/dead-letter controls.                                                                                               |
+| Mobile/accessibility     | Partial  | Complete drawer navigation, focus restoration, keyboard paths, screen-reader announcements, reduced motion and visual regression.                                                                                                                                                                                      |
+| Shared shell             | Partial  | Generalize the new Space geometry and existing I/O geometry into one branded rail/sidebar/workspace/inspector architecture.                                                                                                                                                                                            |
+| I/O collaboration        | Planned  | Link permissioned I/O sessions/artifacts without copying prompts, terminal output, files, credentials or provider responses into human messages.                                                                                                                                                                       |
 
 ## 5. Safe hosted rollout
 
@@ -159,7 +161,7 @@ The rollout does not require a paid Supabase branch and must not rewrite or repa
 - reaction, mention, pin and bookmark UI;
 - role/Room effective-permission evaluator and admin surfaces;
 - report/moderation queue and audited actions;
-- pagination, offline/retry states and shared conversation store;
+- direct-message/cross-surface reconnect, multi-device reconciliation and a shared conversation store;
 - component, route, RLS persona, accessibility and load tests;
 - shared branded spatial shell extraction;
 - attachment client contracts and Storage migration source without activating a production bucket;
@@ -195,9 +197,10 @@ The Chapter/Mission Space system is code-complete for a public release only when
 
 1. **Completed:** commit and push the rolling-compatible frontend and locally Verified migration/test package.
 2. **Completed:** apply and verify the three forward migrations through the alias-safe deployment view.
-3. Prove the core hosted Chapter/Mission/Space personas.
-4. Deliver Threads plus role/Room administration.
-5. Deliver mentions, reactions, pins, bookmarks and notification preferences.
-6. Deliver private attachments and moderation/reporting.
-7. Extract the shared branded shell and finish mobile/accessibility.
-8. Add I/O handoffs only after durable I/O sessions and their separate permissions exist.
+3. **Completed in code/database:** Threads, private audiences, role/Room overrides, slow mode, mentions, reactions, pins, bookmarks, attention preferences, private attachments, moderation/reporting and paged permission-filtered search.
+4. **Verified locally:** explicit offline state plus replay-safe Room/Thread/attachment manual recovery using the released idempotency contracts.
+5. Prove the current collaboration journey with hosted member/manager/outsider personas and load evidence.
+6. Connect trusted attachment scanning and fixed-template notification delivery.
+7. Deliver Boards, source-role hierarchy/view-as-role and saved-item aggregation.
+8. Extract the shared branded shell and finish mobile/accessibility/cross-surface reconnect.
+9. Add I/O handoffs only through deliberate references after the separate terminal permission boundary passes real-daemon evidence.

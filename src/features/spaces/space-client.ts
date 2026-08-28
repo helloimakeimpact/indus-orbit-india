@@ -27,6 +27,7 @@ import {
   type SpaceThreadSummary,
   type SpaceThreadControls,
 } from "./space-feed";
+import { isExistingSpaceAttachmentUpload } from "./space-send-recovery";
 
 export type {
   SpaceAttachment,
@@ -377,6 +378,7 @@ export async function sendSpaceMessage(
   threadId?: string,
   mentionedUserIds: readonly string[] = [],
   mentionedRoleIds: readonly string[] = [],
+  clientRequestId: string = crypto.randomUUID(),
 ): Promise<string> {
   const cleanContent = content.trim();
   if (!cleanContent) throw new Error("Write a message first");
@@ -386,7 +388,7 @@ export async function sendSpaceMessage(
     _room_id: roomId,
     _thread_id: (threadId ?? null) as unknown as string,
     _content: cleanContent,
-    _client_request_id: crypto.randomUUID(),
+    _client_request_id: clientRequestId,
     _mentioned_user_ids: mentions,
     _mentioned_role_ids: roleMentions,
   });
@@ -487,7 +489,11 @@ export async function setSpaceThreadLock(
   if (error) throw new Error(error.message);
 }
 
-export async function uploadSpaceAttachment(messageId: string, file: File): Promise<void> {
+export async function uploadSpaceAttachment(
+  messageId: string,
+  file: File,
+  clientRequestId: string = crypto.randomUUID(),
+): Promise<void> {
   if (!attachmentTypes.has(file.type)) throw new Error("This file type is not supported");
   if (file.size < 1 || file.size > 10 * 1024 * 1024) {
     throw new Error("Attachments must be 10 MB or smaller");
@@ -498,7 +504,7 @@ export async function uploadSpaceAttachment(messageId: string, file: File): Prom
     _content_type: file.type,
     _byte_size: file.size,
     _alt_text: null as unknown as string,
-    _client_request_id: crypto.randomUUID(),
+    _client_request_id: clientRequestId,
   });
   if (error) throw new Error(error.message);
   const attachment = objectValue(data);
@@ -511,7 +517,9 @@ export async function uploadSpaceAttachment(messageId: string, file: File): Prom
     contentType: file.type,
     upsert: false,
   });
-  if (upload.error) throw new Error(upload.error.message);
+  if (upload.error && !isExistingSpaceAttachmentUpload(upload.error)) {
+    throw new Error(upload.error.message);
+  }
   const finalized = await supabase.rpc("finalize_my_conversation_attachment", {
     _attachment_id: id,
   });

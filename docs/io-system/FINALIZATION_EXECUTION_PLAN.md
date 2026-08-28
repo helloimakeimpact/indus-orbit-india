@@ -1,6 +1,6 @@
 # Indus Orbit full finalization execution plan
 
-Status: active, evidence-gated plan updated 25 August 2026. The hosted project has 90 migrations. The router, OpenAI-compatible API, OpenCode client, collaboration controls, independent Trust operations and financial control-plane schema are Released; external provider and payment activation remain policy-gated. Production readiness is not claimed.
+Status: active, evidence-gated plan updated 28 August 2026. The hosted project has 107 migrations. The router, OpenAI-compatible API, OpenCode client, collaboration controls, independent Trust operations and financial control-plane schema have substantial Released/Verified slices; external provider and payment activation remain policy-gated. Production readiness is not claimed.
 
 This plan covers the whole product: public brand site, identity, Community, conversation, I/O Port, terminal/OpenCode, admin, data, operations and commercial readiness. “Done” means code, authorization, data migration, browser behavior, deployment and operating evidence all agree. A source file or attractive UI alone is not completion.
 
@@ -15,6 +15,8 @@ Execution update, 24 August 2026 (authenticated I/O audit): the signed-in produc
 Execution update, 24 August 2026 (request cancellation and web delivery): client cancellation now propagates through Released `io-gateway` v27 and `io-openai` v9 to the upstream provider fetch. A cancelled request releases its reservation and stops fallback without recording a provider failure, preventing abandoned work from charging the customer or degrading circuit health. Both active functions returned the expected unauthenticated `401` after deployment; no provider route or billing path was entered. The member suite passes 68/68. Route/vendor splitting reduces the main application chunk to 142.48 kB, and CI now enforces 500 KiB JavaScript and 250 KiB CSS chunk ceilings. Direct upstream token streaming and authenticated field Core Web Vitals remain separate release work.
 
 Execution update, 25 August 2026 (Razorpay/GST/FX hardening): hosted migration `20260825121136_harden_razorpay_gst_and_refunds.sql` adds environment-bound test/live payment evidence, mandatory server verification of Razorpay Standard Checkout signatures, one-open-checkout enforcement, deterministic Order recovery, semantic capture/refund idempotency, out-of-order refund completion, refund API idempotency and immutable approved-FX invoice conversion. Export and exemption are now distinct invoice tax statuses. `io-payments` v3 and `io-payment-webhook` v2 are active, 23/23 hosted finance contracts pass, and unauthenticated payment smoke returns `401`. The unsigned webhook returns `503` because the required environment-specific webhook secret is intentionally absent. No tax/FX/processor policy was approved and no payment was attempted. Production remains live-only; the Razorpay test journey requires a separate staging project and staging-only adapter.
+
+Execution update, 28 August 2026 (Orbit collaboration recovery): hosted migrations through `20260828181552_harden_orbit_role_mention_replay` bring the project ledger to 107 and release private Threads, permission-filtered keyset-paged search, manager-configured Room slow mode and replay-safe role-mention notifications. The member code now adds explicit offline status and manual replay-safe recovery for Room messages, Thread replies and quarantined attachments. Retry preserves the original database request/reservation IDs, resumes an attachment after a confirmed message, and keeps draft/file content only in open-tab memory. A rolled-back manager/recipient persona proves two identical role-mentioned sends leave exactly one message, mention, notification and outbox record. The member suite passes 90/90. This browser path is **Verified locally**, not Released to Netlify; the local browser reaches the current app but an authenticated visual journey still requires a local signed-in persona.
 
 ## Current release checkpoint
 
@@ -114,11 +116,11 @@ User input needed: choose/verify the transactional email provider and sender dom
 Deliverables:
 
 1. Extract one branded Orbit rail/context sidebar/workspace/inspector shell for Messages, Missions, Chapters and I/O.
-2. Add a shared conversation cache/store, cursor pagination, deterministic retries, reconnect and multi-device unread resolution.
+2. Add a shared conversation cache/store and cross-surface/multi-device unread resolution. **Verified Space slice:** Room/Thread sends have explicit offline state and deterministic, manual, in-tab retries; direct-message and multi-device reconnect remain.
 3. **Released:** explicit caller-owned block/unblock state revokes direct-message history, send/read mutations and future broadcasts in both directions while exposing the block list only to its owner.
 4. **Released:** direct-message Postgres Changes subscriptions are replaced by participant-authorized private Broadcast topics with database-side blocked-pair suppression.
-5. **Released foundation:** Chapter/Mission Spaces, grouped Rooms, role-aware membership projection, Threads/message/read schema and first branded web surface exist. Complete Thread/role/Room administration, Boards and hosted browser personas without copying Discord branding or engagement mechanics.
-6. Add presence, typing, mentions, reactions, pins, bookmarks, attachments, search, retention/export/deletion, reports and moderation in evidence-gated slices.
+5. **Released/Verified collaboration slice:** Chapter/Mission Spaces, grouped Rooms, role-aware membership projection, paged Room/Thread feeds and search, public/private Threads, Room permission overrides/slow mode, reactions, mentions, pins, bookmarks, attention/read state, quarantined attachments, reports and bounded moderation exist. Complete source-role hierarchy/view-as-role, Boards, scanner/worker activation and hosted browser personas without copying Discord branding or engagement mechanics.
+6. Add privacy-aware presence/typing, saved-item aggregation, retention/export/deletion and stronger member timeout/remove/spam controls in evidence-gated slices.
 7. Keep prompts, terminal output, files and tools outside human-message storage; handoffs carry permissioned references only.
 
 Exit criteria:
@@ -159,10 +161,10 @@ User input needed: verify/add the safety-identifier secret, obtain written OpenA
 
 Deliverables:
 
-1. **Released to demo:** safe creator-only sessions, lifecycle, replay-safe ordered metadata events and non-executable request/owner-decision boundaries. Still required: realtime delivery, executable approval/tool contracts, artifacts and handoffs.
-2. **Released/Verified slice:** browser cancellation propagates to OpenCode session abort; completed runs expose only a local changed-file count; private terminal metadata Broadcast resumes the safe timeline; and a validated device-local binding reconnects to the exact OpenCode session for status/task/diff counts. Still add OpenCode SSE ingestion, continued prompts, task trees, commands, full diff/revert, verified abort/recovery and daemon-enforced approval states.
-3. Authenticate the local daemon with short-lived pairing, origin binding and revocation instead of an in-memory password alone.
-4. Package the local client and define compatibility/version negotiation with OpenCode.
+1. **Released to demo:** safe creator-only sessions, lifecycle, replay-safe ordered metadata events, private metadata Broadcast and non-executable request/owner-decision boundaries. Artifacts and explicit handoffs remain.
+2. **Verified source/client slice:** the separately buildable packaged client consumes OpenCode global SSE with bounded reconnect and REST reconciliation, continues/forks sessions, renders bounded task trees, trails and full diffs, propagates abort, acknowledges checkpoint revert/restore and applies Observe/Plan/Build/Run approval allowlists. Critical/external-directory actions fail closed and the daemon must positively acknowledge mutations. A pinned authenticated real-daemon browser journey remains required.
+3. Replace the current 16+ character, fifteen-minute tab-memory password lease with daemon-issued short-lived pairing tokens that bind origin/session and support explicit revocation; add step-up and expiry/revoke race evidence.
+4. Publish signed OS installers and pin the supported OpenCode/version negotiation matrix.
 5. Keep local execution local; the hosted service stores only deliberate, permissioned session metadata/artifacts.
 6. Design hosted runners separately with workload identity, sandboxing, network/filesystem policy, secret isolation, quotas and funded operations.
 

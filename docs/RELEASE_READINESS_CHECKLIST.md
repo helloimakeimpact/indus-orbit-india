@@ -244,7 +244,7 @@ Decision: Not passed
 
 - [ ] Shared Indus Orbit shell and components are used consistently. Evidence: —
 - [ ] Workspace rail, contextual navigation, content canvas, inspector, and mobile drawers behave consistently. Evidence: —
-- [ ] Every critical screen has reviewed loading, empty, error, offline/retry, success, and permission-denied states. Evidence: —
+- [ ] Every critical screen has reviewed loading, empty, error, offline/retry, success, and permission-denied states. Evidence: Space Room/Thread composers now expose offline state and replay-safe in-tab message/attachment retry with 90/90 member tests; other critical routes and authenticated visual personas remain.
 - [ ] Keyboard-only and screen-reader journeys pass for critical workflows. Evidence: —
 - [ ] Focus, contrast, zoom, reduced motion, touch targets, labels, headings, landmarks, and announcements meet WCAG 2.2 AA. Evidence: —
 - [ ] Automated accessibility checks and manual audits have no critical failures. Evidence: —

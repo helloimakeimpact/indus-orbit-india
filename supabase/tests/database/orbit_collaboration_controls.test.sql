@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
 
-select plan(43);
+select plan(44);
 
 select has_function('public', 'list_my_conversation_room_feed', array['uuid','uuid','integer','timestamptz','uuid']);
 select has_function('public', 'toggle_my_conversation_reaction', array['uuid','text']);
@@ -21,11 +21,11 @@ select has_function('public', 'get_my_conversation_thread_controls', array['uuid
 select has_function('public', 'replace_managed_conversation_thread_members', array['uuid','uuid[]']);
 select has_function('public', 'search_my_conversation_messages_v2', array['uuid','text','integer','real','timestamptz','uuid']);
 
-select has_column('public', 'conversation_reports', 'client_request_id');
-select has_column('public', 'conversation_rooms', 'slow_mode_seconds');
-select has_column('private', 'conversation_moderation_actions', 'target_message_id');
-select has_column('private', 'conversation_moderation_actions', 'target_thread_id');
-select has_column('private', 'conversation_moderation_actions', 'client_request_id');
+select has_column('public', 'conversation_reports', 'client_request_id', 'reports retain replay-safe request IDs');
+select has_column('public', 'conversation_rooms', 'slow_mode_seconds', 'Rooms retain bounded slow-mode policy');
+select has_column('private', 'conversation_moderation_actions', 'target_message_id', 'moderation evidence identifies the target message');
+select has_column('private', 'conversation_moderation_actions', 'target_thread_id', 'moderation evidence identifies the target Thread');
+select has_column('private', 'conversation_moderation_actions', 'client_request_id', 'moderation evidence retains replay-safe request IDs');
 
 select ok(
   exists (select 1 from storage.buckets where id = 'orbit-attachments' and public = false),
@@ -97,6 +97,14 @@ select ok(
       and indexname = 'conversation_messages_room_author_created_idx'
   ),
   'Room slow mode has an author/time covering index'
+);
+select ok(
+  position(
+    'if found then' in lower(pg_get_functiondef(
+      'public.send_my_conversation_message_with_audience(uuid,uuid,text,uuid,uuid[],uuid[])'::regprocedure
+    ))
+  ) > 0,
+  'role mention delivery side effects are gated by the first durable mention insert'
 );
 
 select * from finish();
