@@ -442,10 +442,10 @@ function BrandPage() {
               },
               {
                 src: merchTeeGeneralMinimal,
-                alt: "Parchment cream minimal tee with the pixel io logo, Indus Orbit wordmark and General Intelligence Company of India",
-                title: "General minimal tee",
+                alt: "Parchment cream Parisian minimal tee with the io mark and Indus Orbit on the chest, General Intelligence Company of India running vertically down the side",
+                title: "Parisian statement tee",
                 drop: "Statement drop",
-                spec: "Parchment 240gsm boxy cut · io mark + wordmark + full statement line",
+                spec: "Parchment 240gsm · left-chest mark + wordmark · side-seam statement",
               },
               {
                 src: merchTeePocket,
