@@ -7993,6 +7993,17 @@ export type Database = {
         Args: { _limit?: number; _query: string; _space_id: string }
         Returns: Json
       }
+      search_my_conversation_messages_v2: {
+        Args: {
+          _before_created_at?: string
+          _before_id?: string
+          _before_relevance?: number
+          _limit?: number
+          _query: string
+          _space_id: string
+        }
+        Returns: Json
+      }
       send_my_conversation_message: {
         Args: {
           _client_request_id: string
