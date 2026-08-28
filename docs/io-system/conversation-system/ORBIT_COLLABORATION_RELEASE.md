@@ -11,6 +11,7 @@ The existing branded Chapter/Mission Space shell is now backed by working collab
 - four purposeful, deduplicated reactions: acknowledge, support, question and complete;
 - idempotent member reports without copying message content into the report description automatically;
 - scoped Room name, description and posting-policy administration;
+- database-enforced Room slow mode with twelve bounded intervals from off through one hour, idempotent retry preservation, exact retry evidence and an explicit Space-manager bypass;
 - role/member Room permission overrides, with explicit deny precedence;
 - moderator-only content restriction/restoration and Thread lock/reopen actions;
 - private moderation evidence with actor, reason, target and retry-safe client operation IDs;
@@ -33,7 +34,7 @@ The Chapter/Mission Space surface now provides:
 - accessible reaction buttons with counts and caller state;
 - report dialog with category and explanation;
 - moderator restrict/restore actions with stable tombstones;
-- Room administration for the display name, description and posting policy;
+- Room administration for the display name, description, posting policy and slow mode, with the active interval visible in the Room header;
 - composer attachment selection, private upload and honest security-review state;
 - signed ten-minute downloads only when Storage policy permits them;
 - Realtime message/reaction reconciliation followed by an authoritative feed fetch;
@@ -47,14 +48,14 @@ The Chapter/Mission Space surface now provides:
 - manager Room access editing for role/member allow, deny and inherited policy across the five bounded Room capabilities, with direct self-lockout prevention;
 - the existing grouped Room rail, main workspace and people/thread inspector geometry.
 
-The pure feed/attention/mention/search/permission/Thread-control decoders are regression-tested for ordering, cursors, tombstones, reaction allowlisting, malformed rows, quiet-hour policy, bounded unique person/role mention IDs, creator-inclusive private audiences, complete paged search-result shapes and valid exclusive override subjects. Member format, TypeScript and ESLint pass; all 87 unit tests pass.
+The pure feed/attention/mention/search/permission/Thread-control decoders are regression-tested for ordering, cursors, tombstones, reaction allowlisting, malformed rows, quiet-hour and slow-mode policy, bounded unique person/role mention IDs, creator-inclusive private audiences, complete paged search-result shapes and valid exclusive override subjects. Member format, TypeScript and ESLint pass; all 88 unit tests pass.
 
 ## Deliberately not claimed as complete
 
 - No trusted malware/content scanner worker is connected. Pending files are not shared with other members.
 - Room role/member allow/deny/inherit editing is Released. Source-role assignment/hierarchy explanation, effective-permission summaries and view-as-role simulation remain.
-- Report triage, moderator assignment, appeals and attachment scan decisions belong in the separate admin application and are not yet released there.
-- The fixed-template delivery worker/dead-letter operations, presence/typing, Boards, slow mode and offline/retry UX remain. Search pagination, private Thread membership editing, eligible public-Thread role selection, Thread follow/read/unread, person mentions, manager-only Room role mentions, pins, bookmarks, permission-filtered Space search and validated Room preference/quiet/digest scheduling are Released.
+- Report triage, moderator assignment, appeals and attachment scan decisions are Released in the separate admin application; authenticated duty-persona and scanner-provider journeys remain.
+- The fixed-template delivery worker/dead-letter operations, presence/typing, Boards and offline/retry UX remain. Slow mode, search pagination, private Thread membership editing, eligible public-Thread role selection, Thread follow/read/unread, person mentions, manager-only Room role mentions, pins, bookmarks, permission-filtered Space search and validated Room preference/quiet/digest scheduling are Released.
 - Messages, Chapter/Mission Spaces and I/O share the Indus Orbit navigation language and spatial pattern, but have not yet been refactored onto one reusable React frame/store.
 - Authenticated multi-persona, mobile, accessibility and visual-regression browser journeys remain required after web deployment.
 
@@ -69,6 +70,7 @@ The pure feed/attention/mention/search/permission/Thread-control decoders are re
 - Room permission-editor migration: `20260827150000_release_orbit_room_permission_editor.sql`.
 - Private Thread migrations: `20260828080654_release_orbit_private_thread_controls.sql`, `20260828081253_harden_orbit_private_thread_feed.sql` and `20260828081747_harden_orbit_private_thread_reuse.sql`; hosted apply versions are `20260828081023`, `20260828081351` and `20260828081833`.
 - Search pagination migration: `20260828082754_release_orbit_search_pagination.sql`; hosted apply version `20260828082858`.
-- Hosted verification: rolled-back creator/member/non-member personas prove atomic two-person membership, creator retention, non-manager rejection, private feed-summary isolation and access-checked idempotent Thread reuse. A separate rolled-back search fixture proves stable two-page traversal without overlap and continued deleted-content exclusion. No fixture content was retained.
-- Database contract: `orbit_collaboration_controls.test.sql` now contains 38 schema/ACL/storage assertions for the next complete replay.
-- Post-DDL Advisors: 208 security notices (52 private/no-policy informational notices, 155 intentionally callable authenticated security-definer reviews and one project-level password-protection setting) and 411 performance notices (116 inherited auth init-plan opportunities, 246 workload-dependent unused-index observations and 49 inherited permissive-policy overlaps). The newest authenticated search review is an intentional caller-bound product API; no new table, RLS, FK or primary-key defect was introduced. See the [security-definer review](https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable).
+- Room slow-mode migration: `20260828174751_release_orbit_room_slow_mode.sql`; hosted apply version `20260828175323`.
+- Hosted verification: rolled-back creator/member/non-member personas prove atomic two-person private membership, creator retention, non-manager rejection, private feed-summary isolation and access-checked idempotent Thread reuse. Separate rolled-back fixtures prove stable two-page search without overlap and a slow-mode member first-send/idempotent-retry/second-send rejection plus manager bypass. No fixture content or configuration was retained.
+- Database contract: `orbit_collaboration_controls.test.sql` now contains 43 schema/ACL/storage assertions for the next complete replay.
+- Post-DDL Advisors: 209 security notices (52 private/no-policy informational notices, 156 intentionally callable authenticated security-definer reviews and one project-level password-protection setting) and 411 performance notices (116 inherited auth init-plan opportunities, 246 workload-dependent unused-index observations and 49 inherited permissive-policy overlaps). The newest authenticated Room-settings review is an intentional caller-bound product API; the new slow-mode lookup has a covering index and no new RLS, FK or primary-key defect was introduced. See the [security-definer review](https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable).

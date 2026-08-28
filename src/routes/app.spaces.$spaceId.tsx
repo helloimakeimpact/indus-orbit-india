@@ -50,6 +50,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import {
+  SPACE_SLOW_MODE_OPTIONS,
   createMessageThread,
   getRoomFeed,
   getManagedSpaceRoomPermissions,
@@ -174,6 +175,13 @@ function formatMoment(value: string) {
   }).format(new Date(value));
 }
 
+function slowModeLabel(seconds: number) {
+  if (seconds === 0) return "Off";
+  if (seconds < 60) return `${seconds} seconds`;
+  const minutes = seconds / 60;
+  return `${minutes} ${minutes === 1 ? "minute" : "minutes"}`;
+}
+
 function SpacePage() {
   const { spaceId } = Route.useParams();
   const { user } = useAuth();
@@ -206,6 +214,7 @@ function SpacePage() {
   const [roomName, setRoomName] = useState("");
   const [roomDescription, setRoomDescription] = useState("");
   const [roomPostingPolicy, setRoomPostingPolicy] = useState("members");
+  const [roomSlowModeSeconds, setRoomSlowModeSeconds] = useState(0);
   const [roomSaving, setRoomSaving] = useState(false);
   const [roomPermissions, setRoomPermissions] = useState<SpaceRoomPermission[]>([]);
   const [permissionSubjectType, setPermissionSubjectType] = useState<"role" | "member">("role");
@@ -749,6 +758,7 @@ function SpacePage() {
     setRoomName(selectedRoom.display_name);
     setRoomDescription(selectedRoom.description);
     setRoomPostingPolicy(selectedRoom.posting_policy);
+    setRoomSlowModeSeconds(selectedRoom.slow_mode_seconds);
     setPermissionSubjectType(workspace.roles.length ? "role" : "member");
     setPermissionSubjectId(workspace.roles[0]?.id ?? workspace.members[0]?.user_id ?? "");
     setRoomSettingsOpen(true);
@@ -802,7 +812,13 @@ function SpacePage() {
     if (!selectedRoom || !roomName.trim()) return;
     setRoomSaving(true);
     try {
-      await updateSpaceRoom(selectedRoom.id, roomName, roomDescription, roomPostingPolicy);
+      await updateSpaceRoom(
+        selectedRoom.id,
+        roomName,
+        roomDescription,
+        roomPostingPolicy,
+        roomSlowModeSeconds,
+      );
       await loadWorkspace();
       setRoomSettingsOpen(false);
       toast.success("Room settings updated");
@@ -1029,6 +1045,11 @@ function SpacePage() {
                 <Badge variant="outline" className="hidden sm:inline-flex">
                   {selectedRoom?.posting_policy ?? "members"}
                 </Badge>
+                {selectedRoom?.slow_mode_seconds ? (
+                  <Badge variant="outline" className="hidden sm:inline-flex">
+                    Slow {slowModeLabel(selectedRoom.slow_mode_seconds)}
+                  </Badge>
+                ) : null}
                 {feed.canManage && (
                   <Button
                     type="button"
@@ -1483,6 +1504,24 @@ function SpacePage() {
               <option value="owners">Leads only</option>
               <option value="read_only">Read only</option>
             </select>
+          </label>
+          <label className="space-y-2 text-sm">
+            <span className="font-medium">Slow mode</span>
+            <select
+              value={roomSlowModeSeconds}
+              onChange={(event) => setRoomSlowModeSeconds(Number(event.target.value))}
+              className="h-10 w-full rounded-md border border-input bg-background px-3"
+            >
+              {SPACE_SLOW_MODE_OPTIONS.map((seconds) => (
+                <option key={seconds} value={seconds}>
+                  {slowModeLabel(seconds)}
+                </option>
+              ))}
+            </select>
+            <span className="block text-xs text-muted-foreground">
+              Members wait between Room or Thread posts. Space managers can moderate without the
+              delay; the database enforces the interval.
+            </span>
           </label>
           <div className="space-y-3 rounded-2xl border border-border p-4">
             <div>

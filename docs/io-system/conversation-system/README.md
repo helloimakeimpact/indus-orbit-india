@@ -39,6 +39,7 @@ Implemented:
 - manager Room role/member permission editing across view, post, Thread, moderation and management capabilities, including inherited-policy removal and direct self-lockout prevention;
 - four purposeful reaction toggles, member reporting, stable moderated-message tombstones and capability-checked restrict/restore evidence;
 - manager-only Room name/description/posting controls plus a role/member permission-override RPC boundary;
+- manager-configured, database-enforced Room slow mode with exact retry evidence, idempotent retry preservation and a visible active-policy badge;
 - a private 10 MB quarantine-first attachment bucket, author-owned reservation/upload/finalization, MIME/size reconciliation and short signed downloads only for authorized objects;
 - rolling schema compatibility so the frontend can release before the hosted migration without hiding genuine authorization or validation errors.
 
@@ -48,9 +49,9 @@ Still left:
 - retain the Released `20260819225550_add_direct_message_pagination_rpc.sql`, then add one cross-surface conversation store, retry/offline/reconnect and multi-device conflict handling;
 - run hosted authenticated browser personas across proposal/approval, Chapter/Mission lifecycle, membership, Room send/read and outsider privacy;
 - Boards/forums, source-role assignment/hierarchy, effective-permission explanation and view-as-role simulation;
-- presence, typing, slow mode, offline recovery, a trusted attachment scanner and notification worker/dead-letter operations;
+- presence, typing, offline recovery, a trusted attachment scanner and notification worker/dead-letter operations;
 - retention/export/deletion and additional redacted admin operator tools; report triage/assignment/appeals and attachment-review boundaries now exist in the separate admin app;
 - one reusable Indus Orbit rail/sidebar/workspace/inspector shell across product systems;
 - I/O session collaboration that never leaks prompts, terminal output, files or tools through human messaging.
 
-The latest collaboration migrations are Released to hosted Indus Orbit with RLS, explicit grants and synchronized client contracts. The member unit suite passes 87/87; the collaboration database contract now contains 38 assertions. Person/role mentions, private Thread access/membership, Room permissions, attention and keyset-paged search RPCs also have separate rolled-back hosted evidence pending the next full replay. Exact current behavior and limits are in `ORBIT_COLLABORATION_RELEASE.md`. The original delivery split is in `CHAPTER_MISSION_SPACE_SYSTEM_PLAN.md`; the wider engineering plan remains in `CONVERSATION_SYSTEM_IMPLEMENTATION_PLAN.md`.
+The latest collaboration migrations are Released to hosted Indus Orbit with RLS, explicit grants and synchronized client contracts. The member unit suite passes 88/88; the collaboration database contract now contains 43 assertions. Person/role mentions, private Thread access/membership, Room permissions, slow mode, attention and keyset-paged search RPCs also have separate rolled-back hosted evidence pending the next full replay. Exact current behavior and limits are in `ORBIT_COLLABORATION_RELEASE.md`. The original delivery split is in `CHAPTER_MISSION_SPACE_SYSTEM_PLAN.md`; the wider engineering plan remains in `CONVERSATION_SYSTEM_IMPLEMENTATION_PLAN.md`.

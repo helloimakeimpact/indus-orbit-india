@@ -3,8 +3,10 @@ import { isMissingSchemaContract } from "@/integrations/supabase/schema-compat";
 import type { Database } from "@/integrations/supabase/types";
 import {
   objectValue,
+  formatSpaceMessageSendError,
   normalizeSpaceMentionIds,
   normalizeSpaceRoleMentionIds,
+  normalizeSpaceSlowModeSeconds,
   parseSpaceFeedPayload,
   parseSpaceRoomControls,
   parseSpaceRoomPermissions,
@@ -43,6 +45,7 @@ export type {
   SpaceThreadSummary,
   SpaceThreadControls,
 } from "./space-feed";
+export { SPACE_SLOW_MODE_OPTIONS } from "./space-feed";
 
 type Space = Database["public"]["Tables"]["conversation_spaces"]["Row"];
 type ContextGroup = Database["public"]["Tables"]["conversation_context_groups"]["Row"];
@@ -387,7 +390,7 @@ export async function sendSpaceMessage(
     _mentioned_user_ids: mentions,
     _mentioned_role_ids: roleMentions,
   });
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(formatSpaceMessageSendError(error));
   return data.id;
 }
 
@@ -444,12 +447,14 @@ export async function updateSpaceRoom(
   displayName: string,
   description: string,
   postingPolicy: string,
+  slowModeSeconds: number,
 ): Promise<void> {
-  const { error } = await supabase.rpc("update_managed_conversation_room", {
+  const { error } = await supabase.rpc("update_managed_conversation_room_v2", {
     _room_id: roomId,
     _display_name: displayName.trim(),
     _description: description.trim(),
     _posting_policy: postingPolicy,
+    _slow_mode_seconds: normalizeSpaceSlowModeSeconds(slowModeSeconds),
   });
   if (error) throw new Error(error.message);
 }

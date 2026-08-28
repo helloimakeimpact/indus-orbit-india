@@ -1216,6 +1216,7 @@ export type Database = {
           position: number;
           posting_policy: string;
           room_type: string;
+          slow_mode_seconds: number;
           space_id: string;
           system_key: string;
           updated_at: string;
@@ -1232,6 +1233,7 @@ export type Database = {
           position?: number;
           posting_policy?: string;
           room_type: string;
+          slow_mode_seconds?: number;
           space_id: string;
           system_key: string;
           updated_at?: string;
@@ -1248,6 +1250,7 @@ export type Database = {
           position?: number;
           posting_policy?: string;
           room_type?: string;
+          slow_mode_seconds?: number;
           space_id?: string;
           system_key?: string;
           updated_at?: string;
@@ -8348,6 +8351,39 @@ export type Database = {
           position: number;
           posting_policy: string;
           room_type: string;
+          slow_mode_seconds: number;
+          space_id: string;
+          system_key: string;
+          updated_at: string;
+          visibility: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "conversation_rooms";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      update_managed_conversation_room_v2: {
+        Args: {
+          _description: string;
+          _display_name: string;
+          _posting_policy: string;
+          _room_id: string;
+          _slow_mode_seconds: number;
+        };
+        Returns: {
+          archived_at: string | null;
+          context_group_id: string | null;
+          created_at: string;
+          created_by: string | null;
+          description: string;
+          display_name: string;
+          id: string;
+          position: number;
+          posting_policy: string;
+          room_type: string;
+          slow_mode_seconds: number;
           space_id: string;
           system_key: string;
           updated_at: string;

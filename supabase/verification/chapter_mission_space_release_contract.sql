@@ -5,7 +5,8 @@ with expected_migrations(version) as (
   values
     ('20260809142000'),
     ('20260809150000'),
-    ('20260809152439')
+    ('20260809152439'),
+    ('20260828175323')
 ),
 expected_space_tables(table_name) as (
   values
@@ -52,6 +53,7 @@ expected_functions(function_name) as (
     ('get_my_conversation_thread_controls'),
     ('replace_managed_conversation_thread_members'),
     ('search_my_conversation_messages_v2'),
+    ('update_managed_conversation_room_v2'),
     ('send_my_conversation_message'),
     ('mark_my_conversation_room_read')
 ),

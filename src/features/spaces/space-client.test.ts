@@ -1,8 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  formatSpaceMessageSendError,
   normalizeSpaceMentionIds,
   normalizeSpaceRoleMentionIds,
+  normalizeSpaceSlowModeSeconds,
   parseSpaceFeedPayload,
   parseSpaceRoomControls,
   parseSpaceRoomPermissions,
@@ -10,6 +12,22 @@ import {
   parseSpaceSearchPage,
   parseSpaceThreadControls,
 } from "./space-feed";
+
+test("Orbit Room slow mode accepts only bounded policy values and preserves retry evidence", () => {
+  assert.equal(normalizeSpaceSlowModeSeconds(30), 30);
+  assert.throws(() => normalizeSpaceSlowModeSeconds(31), /supported/);
+  assert.equal(
+    formatSpaceMessageSendError({
+      message: "Room slow mode is active",
+      details: JSON.stringify({ retryAfterSeconds: 17 }),
+    }),
+    "Slow mode is active. Try again in 17 seconds.",
+  );
+  assert.equal(
+    formatSpaceMessageSendError({ message: "Posting is not allowed in this Room" }),
+    "Posting is not allowed in this Room",
+  );
+});
 
 test("Orbit Space feed preserves chronological collaboration evidence", () => {
   const feed = parseSpaceFeedPayload({
