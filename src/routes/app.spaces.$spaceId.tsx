@@ -83,6 +83,7 @@ import {
   type SpaceRoomPermission,
   type SpaceRoomPermissionCapability,
   type SpaceSearchResult,
+  type SpaceSearchCursor,
   type SpaceNotificationPreference,
 } from "@/features/spaces/space-client";
 import { supabase } from "@/integrations/supabase/client";
@@ -228,6 +229,9 @@ function SpacePage() {
   const [searchResults, setSearchResults] = useState<SpaceSearchResult[]>([]);
   const [searchedQuery, setSearchedQuery] = useState("");
   const [searching, setSearching] = useState(false);
+  const [searchCursor, setSearchCursor] = useState<SpaceSearchCursor | null>(null);
+  const [searchHasMore, setSearchHasMore] = useState(false);
+  const [searchingMore, setSearchingMore] = useState(false);
   const [threadMembersOpen, setThreadMembersOpen] = useState(false);
   const [threadMemberUserIds, setThreadMemberUserIds] = useState<string[]>([]);
   const [threadMemberSaving, setThreadMemberSaving] = useState(false);
@@ -395,13 +399,39 @@ function SpacePage() {
   async function runSearch() {
     if (!workspace || searching || searchQuery.trim().length < 2) return;
     setSearching(true);
+    setSearchCursor(null);
+    setSearchHasMore(false);
     try {
-      setSearchResults(await searchSpaceMessages(workspace.space.id, searchQuery));
-      setSearchedQuery(searchQuery.trim());
+      const cleanQuery = searchQuery.trim();
+      const page = await searchSpaceMessages(workspace.space.id, cleanQuery);
+      setSearchResults(page.items);
+      setSearchCursor(page.nextCursor);
+      setSearchHasMore(page.hasMore);
+      setSearchedQuery(cleanQuery);
     } catch (searchError) {
       toast.error(searchError instanceof Error ? searchError.message : "Could not search Space");
     } finally {
       setSearching(false);
+    }
+  }
+
+  async function loadMoreSearchResults() {
+    if (!workspace || !searchedQuery || !searchCursor || !searchHasMore || searchingMore) return;
+    setSearchingMore(true);
+    try {
+      const page = await searchSpaceMessages(workspace.space.id, searchedQuery, 30, searchCursor);
+      setSearchResults((current) => {
+        const seen = new Set(current.map((result) => result.messageId));
+        return [...current, ...page.items.filter((result) => !seen.has(result.messageId))];
+      });
+      setSearchCursor(page.nextCursor);
+      setSearchHasMore(page.hasMore);
+    } catch (searchError) {
+      toast.error(
+        searchError instanceof Error ? searchError.message : "Could not load more search results",
+      );
+    } finally {
+      setSearchingMore(false);
     }
   }
 
@@ -1212,6 +1242,8 @@ function SpacePage() {
                 setSearchQuery(event.target.value);
                 setSearchedQuery("");
                 setSearchResults([]);
+                setSearchCursor(null);
+                setSearchHasMore(false);
               }}
             />
             <Button type="submit" disabled={searching || searchQuery.trim().length < 2}>
@@ -1251,6 +1283,18 @@ function SpacePage() {
               <div className="rounded-2xl bg-muted/50 p-6 text-center text-sm text-muted-foreground">
                 No visible messages match this search.
               </div>
+            ) : null}
+            {searchHasMore && searchCursor ? (
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                disabled={searchingMore}
+                onClick={() => void loadMoreSearchResults()}
+              >
+                {searchingMore ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                Load more results
+              </Button>
             ) : null}
           </div>
         </DialogContent>

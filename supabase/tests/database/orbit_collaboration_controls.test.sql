@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
 
-select plan(35);
+select plan(38);
 
 select has_function('public', 'list_my_conversation_room_feed', array['uuid','uuid','integer','timestamptz','uuid']);
 select has_function('public', 'toggle_my_conversation_reaction', array['uuid','text']);
@@ -18,6 +18,7 @@ select has_function('private', 'can_moderate_conversation_room', array['uuid']);
 select has_function('private', 'can_create_conversation_thread', array['uuid']);
 select has_function('public', 'get_my_conversation_thread_controls', array['uuid']);
 select has_function('public', 'replace_managed_conversation_thread_members', array['uuid','uuid[]']);
+select has_function('public', 'search_my_conversation_messages_v2', array['uuid','text','integer','real','timestamptz','uuid']);
 
 select has_column('public', 'conversation_reports', 'client_request_id');
 select has_column('private', 'conversation_moderation_actions', 'target_message_id');
@@ -71,9 +72,11 @@ select ok(has_function_privilege('authenticated', 'public.report_my_conversation
 select ok(has_function_privilege('authenticated', 'public.update_managed_conversation_room(uuid,text,text,text)', 'EXECUTE'), 'authenticated managers can reach the room command');
 select ok(has_function_privilege('authenticated', 'public.get_my_conversation_thread_controls(uuid)', 'EXECUTE'), 'members can read caller-bound Thread controls');
 select ok(has_function_privilege('authenticated', 'public.replace_managed_conversation_thread_members(uuid,uuid[])', 'EXECUTE'), 'authorized creators and managers can reach atomic Thread membership replacement');
+select ok(has_function_privilege('authenticated', 'public.search_my_conversation_messages_v2(uuid,text,integer,real,timestamptz,uuid)', 'EXECUTE'), 'members can execute keyset-paged permission-filtered search');
 select ok(not has_function_privilege('anon', 'public.list_my_conversation_room_feed(uuid,uuid,integer,timestamptz,uuid)', 'EXECUTE'), 'anonymous callers cannot execute the feed');
 select ok(not has_function_privilege('anon', 'public.get_my_conversation_thread_controls(uuid)', 'EXECUTE'), 'anonymous callers cannot inspect private Thread membership');
 select ok(not has_function_privilege('anon', 'public.replace_managed_conversation_thread_members(uuid,uuid[])', 'EXECUTE'), 'anonymous callers cannot replace private Thread membership');
+select ok(not has_function_privilege('anon', 'public.search_my_conversation_messages_v2(uuid,text,integer,real,timestamptz,uuid)', 'EXECUTE'), 'anonymous callers cannot page Space search');
 select ok(not has_function_privilege('anon', 'public.moderate_conversation_message(uuid,text,text,uuid)', 'EXECUTE'), 'anonymous callers cannot execute moderation');
 select ok(not has_function_privilege('anon', 'public.prepare_my_conversation_attachment(uuid,text,text,bigint,text,uuid)', 'EXECUTE'), 'anonymous callers cannot reserve attachment paths');
 select ok(

@@ -51,6 +51,7 @@ expected_functions(function_name) as (
     ('create_my_conversation_thread'),
     ('get_my_conversation_thread_controls'),
     ('replace_managed_conversation_thread_members'),
+    ('search_my_conversation_messages_v2'),
     ('send_my_conversation_message'),
     ('mark_my_conversation_room_read')
 ),

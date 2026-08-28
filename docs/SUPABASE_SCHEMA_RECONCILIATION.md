@@ -1,6 +1,12 @@
 # Supabase schema-reconciliation record
 
-Status: the linked Indus Orbit demo has 104 hosted migrations. The local directory has 105 files because `20260628124500_seed_builder_courses_and_soda_ideas.sql` remains an intentional local/demo-only seed. The newest workspace/key, conformance, finance, schema-advisor, Orbit-attention, person/role-mention, Room-permission, quiet-hours/search, private-Thread and admin-domain migrations were applied through the connected Supabase project API and verified there. The last retained clean local baseline predates the current 105-file chain; historical aliases remain, updated 28 August 2026.
+Status: the linked Indus Orbit demo has 105 hosted migrations. The local directory has 106 files because `20260628124500_seed_builder_courses_and_soda_ideas.sql` remains an intentional local/demo-only seed. The newest workspace/key, conformance, finance, schema-advisor, Orbit-attention, person/role-mention, Room-permission, quiet-hours/paged-search, private-Thread and admin-domain migrations were applied through the connected Supabase project API and verified there. The last retained clean local baseline predates the current 106-file chain; historical aliases remain, updated 28 August 2026.
+
+## 28 August 2026 permission-filtered search pagination
+
+Hosted version `20260828082858` releases `search_my_conversation_messages_v2(...)` with a complete relevance/time/ID keyset cursor. The caller-bound RPC retains the existing Space, Room, private-Thread and deleted-content visibility checks, rejects partial and non-finite cursors, caps pages at fifty items and returns an explicit `hasMore` plus `nextCursor` envelope. The member search dialog now exposes Load more and suppresses duplicate IDs across pages.
+
+A rolled-back hosted fixture proved a two-item first page, one-item second page, no page overlap and continued exclusion of deleted content. Anonymous execution is denied and authenticated execution is explicit. The local source is `20260828082754_release_orbit_search_pagination.sql`; the database contract now contains 38 assertions for the next full replay.
 
 ## 28 August 2026 private Thread audiences
 
@@ -40,7 +46,7 @@ Hosted version `20260826144354` releases four authenticated-only RPCs for the se
 
 Hosted versions `20260826142300` and `20260826143056` release caller-bound Thread follows/read pointers, Room notification preferences, personal bookmarks and manager-only Room pins. Browser table access remains SELECT-only: every write rechecks authentication and current Space/Room/Thread access inside a narrow RPC. The follow table has RLS, owner-only SELECT, a composite primary key and covering indexes for user activity and last-read message cleanup. Matching generated client contracts are checked in.
 
-The post-release hosted advisors report zero uncovered foreign keys and zero tables without primary keys. The remaining notices are 116 legacy auth-RLS initialization plans, 49 multiple-permissive-policy overlaps, 246 workload-dependent unused-index observations, 52 intentionally private RLS tables with no browser policy, 154 authenticated security-definer execution reviews and one project-level leaked-password-protection setting. The newest reviews cover the caller-bound private-Thread controls; their authenticated execution is intentional and every function derives `auth.uid()`, validates authority and uses an empty search path. These notices are retained for explicit policy-by-policy review; no broad automated RLS rewrite is approved.
+The post-release hosted advisors report zero uncovered foreign keys and zero tables without primary keys. The remaining notices are 116 legacy auth-RLS initialization plans, 49 multiple-permissive-policy overlaps, 246 workload-dependent unused-index observations, 52 intentionally private RLS tables with no browser policy, 155 authenticated security-definer execution reviews and one project-level leaked-password-protection setting. The newest review covers the caller-bound paged-search boundary; authenticated execution is intentional and the function derives `auth.uid()`, validates authority and uses an empty search path. These notices are retained for explicit policy-by-policy review; no broad automated RLS rewrite is approved.
 
 ## 26 August 2026 schema-advisor closure
 
@@ -101,7 +107,7 @@ The read-only `chapter_mission_space_release_contract.sql` result is:
 
 The new Advisor findings are bounded: private operational tables use RLS with no client policies as deny-by-default defense, and authenticated `SECURITY DEFINER` functions perform internal caller/capability checks with empty search paths. The four new conformance unindexed-FK notices were closed by hosted migration `20260820191815`. See the [Supabase database linter remediation index](https://supabase.com/docs/guides/database/database-linter).
 
-The latest connected Advisor run reports 207 security notices and 411 performance notices across the historical project. The two new private-Thread RPC notices are intentional authenticated `SECURITY DEFINER` product boundaries with internal caller/authority validation; this phase introduced no table, RLS, foreign-key or primary-key defect. Advisor remediation remains tracked through the [Supabase database linter](https://supabase.com/docs/guides/database/database-advisors).
+The latest connected Advisor run reports 208 security notices and 411 performance notices across the historical project. The new paged-search RPC notice is an intentional authenticated `SECURITY DEFINER` product boundary with internal caller/authority validation; this phase introduced no table, RLS, foreign-key or primary-key defect. Advisor remediation remains tracked through the [Supabase database linter](https://supabase.com/docs/guides/database/database-advisors).
 
 ## Empty local replay evidence — 8 August 2026
 

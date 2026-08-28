@@ -7,6 +7,7 @@ import {
   parseSpaceRoomControls,
   parseSpaceRoomPermissions,
   parseSpaceSearchPayload,
+  parseSpaceSearchPage,
   parseSpaceThreadControls,
 } from "./space-feed";
 
@@ -275,6 +276,38 @@ test("Orbit search keeps only complete authorized-result shapes", () => {
       },
     ],
   );
+});
+
+test("Orbit search pagination accepts only a complete finite keyset cursor", () => {
+  assert.deepEqual(
+    parseSpaceSearchPage({
+      items: [],
+      hasMore: true,
+      nextCursor: {
+        relevance: 0.1,
+        createdAt: "2026-08-28T09:00:00Z",
+        id: "10000000-0000-4000-8000-000000000001",
+      },
+    }),
+    {
+      items: [],
+      hasMore: true,
+      nextCursor: {
+        relevance: 0.1,
+        createdAt: "2026-08-28T09:00:00Z",
+        id: "10000000-0000-4000-8000-000000000001",
+      },
+    },
+  );
+  assert.throws(
+    () => parseSpaceSearchPage({ items: [], hasMore: true, nextCursor: { relevance: 0.1 } }),
+    /cursor is invalid/,
+  );
+  assert.deepEqual(parseSpaceSearchPage({ items: [], hasMore: false, nextCursor: null }), {
+    items: [],
+    hasMore: false,
+    nextCursor: null,
+  });
 });
 
 test("Orbit Room permission decoder drops incomplete or unsafe overrides", () => {

@@ -101,6 +101,12 @@ export type SpaceSearchResult = {
     parentCreatedAt: string;
   } | null;
 };
+export type SpaceSearchCursor = { relevance: number; createdAt: string; id: string };
+export type SpaceSearchPage = {
+  items: SpaceSearchResult[];
+  hasMore: boolean;
+  nextCursor: SpaceSearchCursor | null;
+};
 export type SpaceRoomPermissionCapability =
   | "room.view"
   | "message.create"
@@ -299,6 +305,31 @@ export function parseSpaceSearchPayload(value: Json): SpaceSearchResult[] {
       },
     ];
   });
+}
+
+export function parseSpaceSearchPage(value: Json): SpaceSearchPage {
+  const root = objectValue(value);
+  const items = parseSpaceSearchPayload(value);
+  const hasMore = root.hasMore === true;
+  const cursor = objectValue(root.nextCursor);
+  const relevance = cursor.relevance;
+  const createdAt = textValue(cursor.createdAt);
+  const id = textValue(cursor.id);
+  if (
+    hasMore &&
+    (typeof relevance !== "number" ||
+      !Number.isFinite(relevance) ||
+      relevance < 0 ||
+      !createdAt ||
+      !uuidPattern.test(id))
+  ) {
+    throw new Error("The search cursor is invalid");
+  }
+  return {
+    items,
+    hasMore,
+    nextCursor: hasMore && typeof relevance === "number" ? { relevance, createdAt, id } : null,
+  };
 }
 
 const roomPermissionCapabilities = new Set<SpaceRoomPermissionCapability>([

@@ -40,20 +40,21 @@ The Chapter/Mission Space surface now provides:
 - explicit person mention selection in Room and Thread composers, with removable chips and a ten-person limit;
 - an attention dialog for Room preference, IANA timezone, cross-midnight quiet hours, digest hour, current quiet state and next scheduled delivery;
 - a Space search dialog backed by an authenticated-only indexed RPC that rechecks Room/private-Thread access and excludes deleted content;
+- relevance/time/ID keyset pagination with a Load more results control, cursor validation and client-side duplicate suppression;
 - manager-only role selection in the Room composer, capped at three roles and thirty actually visible recipients while private Threads reject role fan-out;
 - explicit private-Thread creation and creator/manager audience editing in the member UI, with creator retention and server-side Room eligibility enforcement;
 - manager-only role selection in eligible public-Thread composers under the same three-role/thirty-visible-recipient policy; private Thread composers do not expose role fan-out;
 - manager Room access editing for role/member allow, deny and inherited policy across the five bounded Room capabilities, with direct self-lockout prevention;
 - the existing grouped Room rail, main workspace and people/thread inspector geometry.
 
-The pure feed/attention/mention/search/permission/Thread-control decoders are regression-tested for ordering, cursors, tombstones, reaction allowlisting, malformed rows, quiet-hour policy, bounded unique person/role mention IDs, creator-inclusive private audiences, complete search-result shapes and valid exclusive override subjects. Member format, TypeScript and ESLint pass; all 86 unit tests pass.
+The pure feed/attention/mention/search/permission/Thread-control decoders are regression-tested for ordering, cursors, tombstones, reaction allowlisting, malformed rows, quiet-hour policy, bounded unique person/role mention IDs, creator-inclusive private audiences, complete paged search-result shapes and valid exclusive override subjects. Member format, TypeScript and ESLint pass; all 87 unit tests pass.
 
 ## Deliberately not claimed as complete
 
 - No trusted malware/content scanner worker is connected. Pending files are not shared with other members.
 - Room role/member allow/deny/inherit editing is Released. Source-role assignment/hierarchy explanation, effective-permission summaries and view-as-role simulation remain.
 - Report triage, moderator assignment, appeals and attachment scan decisions belong in the separate admin application and are not yet released there.
-- The fixed-template delivery worker/dead-letter operations, search pagination, presence/typing, Boards, slow mode and offline/retry UX remain. Private Thread membership editing, eligible public-Thread role selection, Thread follow/read/unread, person mentions, manager-only Room role mentions, pins, bookmarks, permission-filtered Space search and validated Room preference/quiet/digest scheduling are Released.
+- The fixed-template delivery worker/dead-letter operations, presence/typing, Boards, slow mode and offline/retry UX remain. Search pagination, private Thread membership editing, eligible public-Thread role selection, Thread follow/read/unread, person mentions, manager-only Room role mentions, pins, bookmarks, permission-filtered Space search and validated Room preference/quiet/digest scheduling are Released.
 - Messages, Chapter/Mission Spaces and I/O share the Indus Orbit navigation language and spatial pattern, but have not yet been refactored onto one reusable React frame/store.
 - Authenticated multi-persona, mobile, accessibility and visual-regression browser journeys remain required after web deployment.
 
@@ -67,6 +68,7 @@ The pure feed/attention/mention/search/permission/Thread-control decoders are re
 - Bounded role-mention migration: `20260827140000_release_orbit_bounded_role_mentions.sql`.
 - Room permission-editor migration: `20260827150000_release_orbit_room_permission_editor.sql`.
 - Private Thread migrations: `20260828080654_release_orbit_private_thread_controls.sql`, `20260828081253_harden_orbit_private_thread_feed.sql` and `20260828081747_harden_orbit_private_thread_reuse.sql`; hosted apply versions are `20260828081023`, `20260828081351` and `20260828081833`.
-- Hosted verification: rolled-back creator/member/non-member personas prove atomic two-person membership, creator retention, non-manager rejection, private feed-summary isolation and access-checked idempotent Thread reuse. No fixture content was retained.
-- Database contract: `orbit_collaboration_controls.test.sql` now contains 35 schema/ACL/storage assertions for the next complete replay.
-- Post-DDL Advisors: 207 security notices (52 private/no-policy informational notices, 154 intentionally callable authenticated security-definer reviews and one project-level password-protection setting) and 411 performance notices (116 inherited auth init-plan opportunities, 246 workload-dependent unused-index observations and 49 inherited permissive-policy overlaps). The two new authenticated RPC reviews are intentional caller-bound product APIs; no new table, RLS, FK or primary-key defect was introduced. See the [security-definer review](https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable).
+- Search pagination migration: `20260828082754_release_orbit_search_pagination.sql`; hosted apply version `20260828082858`.
+- Hosted verification: rolled-back creator/member/non-member personas prove atomic two-person membership, creator retention, non-manager rejection, private feed-summary isolation and access-checked idempotent Thread reuse. A separate rolled-back search fixture proves stable two-page traversal without overlap and continued deleted-content exclusion. No fixture content was retained.
+- Database contract: `orbit_collaboration_controls.test.sql` now contains 38 schema/ACL/storage assertions for the next complete replay.
+- Post-DDL Advisors: 208 security notices (52 private/no-policy informational notices, 155 intentionally callable authenticated security-definer reviews and one project-level password-protection setting) and 411 performance notices (116 inherited auth init-plan opportunities, 246 workload-dependent unused-index observations and 49 inherited permissive-policy overlaps). The newest authenticated search review is an intentional caller-bound product API; no new table, RLS, FK or primary-key defect was introduced. See the [security-definer review](https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable).

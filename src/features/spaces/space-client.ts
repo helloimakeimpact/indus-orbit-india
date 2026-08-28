@@ -8,7 +8,7 @@ import {
   parseSpaceFeedPayload,
   parseSpaceRoomControls,
   parseSpaceRoomPermissions,
-  parseSpaceSearchPayload,
+  parseSpaceSearchPage,
   parseSpaceThreadControls,
   textValue,
   type SpaceFeed,
@@ -20,7 +20,8 @@ import {
   type SpaceRoomControls,
   type SpaceRoomPermission,
   type SpaceRoomPermissionCapability,
-  type SpaceSearchResult,
+  type SpaceSearchCursor,
+  type SpaceSearchPage,
   type SpaceThreadSummary,
   type SpaceThreadControls,
 } from "./space-feed";
@@ -37,6 +38,8 @@ export type {
   SpaceRoomPermission,
   SpaceRoomPermissionCapability,
   SpaceSearchResult,
+  SpaceSearchCursor,
+  SpaceSearchPage,
   SpaceThreadSummary,
   SpaceThreadControls,
 } from "./space-feed";
@@ -236,7 +239,8 @@ export async function searchSpaceMessages(
   spaceId: string,
   query: string,
   limit = 30,
-): Promise<SpaceSearchResult[]> {
+  cursor?: SpaceSearchCursor,
+): Promise<SpaceSearchPage> {
   const cleanQuery = query.trim();
   if (cleanQuery.length < 2 || cleanQuery.length > 100) {
     throw new Error("Search must contain between 2 and 100 characters");
@@ -244,13 +248,16 @@ export async function searchSpaceMessages(
   if (!Number.isInteger(limit) || limit < 1 || limit > 50) {
     throw new Error("Search limit must be between 1 and 50");
   }
-  const { data, error } = await supabase.rpc("search_my_conversation_messages", {
+  const { data, error } = await supabase.rpc("search_my_conversation_messages_v2", {
     _space_id: spaceId,
     _query: cleanQuery,
     _limit: limit,
+    _before_relevance: (cursor?.relevance ?? null) as unknown as number,
+    _before_created_at: (cursor?.createdAt ?? null) as unknown as string,
+    _before_id: (cursor?.id ?? null) as unknown as string,
   });
   if (error) throw new Error(error.message);
-  return parseSpaceSearchPayload(data);
+  return parseSpaceSearchPage(data);
 }
 
 export async function toggleSpaceBookmark(messageId: string): Promise<boolean> {
