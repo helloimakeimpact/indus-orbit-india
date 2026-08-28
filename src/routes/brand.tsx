@@ -13,6 +13,7 @@ import merchTeePocket from "@/assets/merch-tee-pocket.jpg";
 import merchTeeBackprint from "@/assets/merch-tee-backprint.jpg";
 import merchTeePattern from "@/assets/merch-tee-pattern.jpg";
 import merchTeeLine from "@/assets/merch-tee-line.jpg";
+import merchTeeGeneralMinimal from "@/assets/merch-tee-general-minimal.jpg";
 import merchCap from "@/assets/merch-cap.jpg";
 import merchTote from "@/assets/merch-tote.jpg";
 import merchBottle from "@/assets/merch-bottle.jpg";
@@ -441,11 +442,11 @@ function BrandPage() {
                 spec: "Cream 240gsm · pixel mark + wordmark + tagline, centre chest",
               },
               {
-                src: merchTeeTagline,
-                alt: "Cream oversized tee with the pixel io logo and General Intelligence Company of India",
-                title: "General tee",
+                src: merchTeeGeneralMinimal,
+                alt: "Parchment cream minimal tee with the pixel io logo, Indus Orbit wordmark and General Intelligence Company of India",
+                title: "General minimal tee",
                 drop: "Statement drop",
-                spec: "Cream oversized · large centre mark · indigo statement line",
+                spec: "Parchment 240gsm boxy cut · io mark + wordmark + full statement line",
               },
               {
                 src: merchTeePocket,
