@@ -427,6 +427,129 @@ function BrandPage() {
             ))}
           </div>
 
+          {/* 2026 tee collection */}
+          <p className="mt-14 text-[10px] font-semibold uppercase tracking-[0.25em] text-foreground/50">
+            Tee collection — five cuts
+          </p>
+          <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              {
+                src: merchTeeSignature,
+                alt: "Cream tee with the pixel io logo, Indus Orbit wordmark and the tagline Bharat ka dimaag.",
+                title: "Signature tee",
+                drop: "Statement drop",
+                spec: "Cream 240gsm · pixel mark + wordmark + tagline, centre chest",
+              },
+              {
+                src: merchTeeTagline,
+                alt: "Cream oversized tee with the pixel io logo and General Intelligence Company of India",
+                title: "General tee",
+                drop: "Statement drop",
+                spec: "Cream oversized · large centre mark · indigo statement line",
+              },
+              {
+                src: merchTeePocket,
+                alt: "Indigo boxy tee with a small embroidered pixel io mark on the left chest",
+                title: "Quiet tee",
+                drop: "Mark drop",
+                spec: "Indigo boxy fit · left-chest embroidered mark only",
+              },
+              {
+                src: merchTeeBackprint,
+                alt: "Black oversized tee with a giant pixel io back print and Indus Orbit pixel text",
+                title: "Backprint tee",
+                drop: "Mark drop",
+                spec: "Black oversized · giant back mark · front blank",
+              },
+              {
+                src: merchTeePattern,
+                alt: "Saffron tee with an all-over tiled pixel io pattern and Bharat ka dimaag. under the collar",
+                title: "Monsoon tee",
+                drop: "Statement drop",
+                spec: "Saffron · all-over io repeat · collar tagline",
+              },
+              {
+                src: merchTeeLine,
+                alt: "Sand longline tee with a thin indigo line ending in a small pixel io mark",
+                title: "Baseline tee",
+                drop: "Mark drop",
+                spec: "Sand longline · hairline chest rule · io signature",
+              },
+            ].map((m) => (
+              <figure
+                key={m.title}
+                className="overflow-hidden rounded-3xl border border-border bg-card"
+              >
+                <img
+                  src={m.src}
+                  alt={m.alt}
+                  width={1024}
+                  height={1024}
+                  loading="lazy"
+                  className="aspect-square w-full object-cover"
+                />
+                <figcaption className="p-6">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">
+                    {m.drop}
+                  </p>
+                  <p className="mt-2 font-display text-2xl">{m.title}</p>
+                  <p className="mt-2 text-xs text-foreground/65">{m.spec}</p>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+
+          {/* Objects */}
+          <p className="mt-14 text-[10px] font-semibold uppercase tracking-[0.25em] text-foreground/50">
+            Objects
+          </p>
+          <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              {
+                src: merchCap,
+                alt: "Indigo dad cap with an embroidered pixel io mark",
+                title: "Orbit cap",
+                spec: "Indigo six-panel · embroidered mark",
+              },
+              {
+                src: merchTote,
+                alt: "Ecru canvas tote with the pixel io logo and Indus Orbit statement line",
+                title: "Ledger tote",
+                spec: "Ecru canvas · centre mark + statement",
+              },
+              {
+                src: merchBottle,
+                alt: "Matte indigo insulated bottle with the pixel io logo and Indus Orbit wordmark",
+                title: "Field bottle",
+                spec: "750ml matte indigo · vertical mark",
+              },
+              {
+                src: merchNotebook,
+                alt: "Parchment notebook with the pixel io logo, Indus Orbit 2026 and a saffron elastic band",
+                title: "Grid notebook",
+                spec: "Dotted A5 · parchment cover · saffron band",
+              },
+            ].map((m) => (
+              <figure
+                key={m.title}
+                className="overflow-hidden rounded-3xl border border-border bg-card"
+              >
+                <img
+                  src={m.src}
+                  alt={m.alt}
+                  width={1024}
+                  height={1024}
+                  loading="lazy"
+                  className="aspect-square w-full object-cover"
+                />
+                <figcaption className="p-5">
+                  <p className="font-display text-xl">{m.title}</p>
+                  <p className="mt-1 text-xs text-foreground/65">{m.spec}</p>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+
           <figure className="mt-6 overflow-hidden rounded-3xl border border-border bg-card">
             <img
               src={merchKit}
