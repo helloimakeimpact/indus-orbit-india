@@ -7,6 +7,16 @@ import merchMug from "@/assets/merch-mug.jpg";
 import merchTshirt from "@/assets/merch-tshirt.jpg";
 import merchHoodie from "@/assets/merch-hoodie.jpg";
 import merchKit from "@/assets/merch-kit.jpg";
+import merchTeeSignature from "@/assets/merch-tee-signature.jpg";
+import merchTeeTagline from "@/assets/merch-tee-tagline.jpg";
+import merchTeePocket from "@/assets/merch-tee-pocket.jpg";
+import merchTeeBackprint from "@/assets/merch-tee-backprint.jpg";
+import merchTeePattern from "@/assets/merch-tee-pattern.jpg";
+import merchTeeLine from "@/assets/merch-tee-line.jpg";
+import merchCap from "@/assets/merch-cap.jpg";
+import merchTote from "@/assets/merch-tote.jpg";
+import merchBottle from "@/assets/merch-bottle.jpg";
+import merchNotebook from "@/assets/merch-notebook.jpg";
 import { Download, Mail, MapPin, Phone, Palette, Type, Sparkles, Shirt } from "lucide-react";
 
 export const Route = createFileRoute("/brand")({
