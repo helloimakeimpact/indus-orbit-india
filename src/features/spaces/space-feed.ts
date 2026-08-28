@@ -23,6 +23,16 @@ export type SpaceThreadSummary = {
   updatedAt: string;
   lockedAt: string | null;
 };
+export type SpaceThreadControls = {
+  threadId: string;
+  roomId: string;
+  visibility: "room" | "private";
+  createdBy: string;
+  memberUserIds: string[];
+  memberCount: number;
+  canManageMembers: boolean;
+  maxMembers: number;
+};
 export type SpaceMessage = {
   id: string;
   roomId: string;
@@ -199,6 +209,44 @@ export function parseSpaceRoomControls(value: Json): SpaceRoomControls {
     followedThreadIds: stringArray(controls.followedThreadIds),
     unreadThreadIds: stringArray(controls.unreadThreadIds),
     canManagePins: controls.canManagePins === true,
+  };
+}
+
+export function parseSpaceThreadControls(value: Json): SpaceThreadControls {
+  const controls = objectValue(value);
+  const threadId = textValue(controls.threadId);
+  const roomId = textValue(controls.roomId);
+  const createdBy = textValue(controls.createdBy);
+  const visibility = textValue(controls.visibility);
+  const memberUserIds = Array.from(
+    new Set(stringArray(controls.memberUserIds).filter((id) => uuidPattern.test(id))),
+  );
+  const memberCount = Math.trunc(numberValue(controls.memberCount));
+  const maxMembers = Math.trunc(numberValue(controls.maxMembers));
+  if (
+    !uuidPattern.test(threadId) ||
+    !uuidPattern.test(roomId) ||
+    !uuidPattern.test(createdBy) ||
+    (visibility !== "room" && visibility !== "private") ||
+    memberCount < 0 ||
+    maxMembers < 1 ||
+    maxMembers > 100 ||
+    memberUserIds.length > maxMembers ||
+    (visibility === "private" &&
+      (memberCount !== memberUserIds.length || !memberUserIds.includes(createdBy))) ||
+    (visibility === "room" && (memberCount !== 0 || memberUserIds.length !== 0))
+  ) {
+    throw new Error("The Thread controls are invalid");
+  }
+  return {
+    threadId,
+    roomId,
+    visibility,
+    createdBy,
+    memberUserIds,
+    memberCount,
+    canManageMembers: controls.canManageMembers === true,
+    maxMembers,
   };
 }
 

@@ -1,6 +1,6 @@
 # Orbit collaboration release
 
-Status: hosted database boundary **Released**, including attention controls and explicit member mentions through 27 August 2026; member web experience **Verified locally** and awaiting the next web deployment.
+Status: hosted database boundary **Released**, including private Thread audiences through 28 August 2026; member web experience **Verified locally** and awaiting the next web deployment.
 
 The existing branded Chapter/Mission Space shell is now backed by working collaboration commands rather than dormant tables or visual affordances.
 
@@ -19,6 +19,8 @@ The existing branded Chapter/Mission Space shell is now backed by working collab
 - attachment metadata/object size and MIME reconciliation after upload;
 - quarantine-first attachment visibility: the author may inspect a pending upload, while other members receive it only after `scan_status = clean` is set by a trusted scanner;
 - no direct anonymous or authenticated mutation privilege on messages, Threads, reactions, attachments, reports or moderation records.
+- atomic private Thread audiences capped at thirty Room-eligible people; only the creator or a Space manager may replace the list and the creator cannot be removed;
+- private Thread summaries and idempotent create/reuse results are withheld from Room members outside the explicit audience.
 
 The Supabase security advisor reports authenticated `security definer` RPC notices. These are intentional callable product boundaries: every RPC derives `auth.uid()`, checks Room/Space authority, validates shapes and uses an empty `search_path`. Private moderation tables intentionally have RLS with no browser policies because direct browser privileges are revoked. See the [Supabase linter notice](https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable).
 
@@ -39,17 +41,19 @@ The Chapter/Mission Space surface now provides:
 - an attention dialog for Room preference, IANA timezone, cross-midnight quiet hours, digest hour, current quiet state and next scheduled delivery;
 - a Space search dialog backed by an authenticated-only indexed RPC that rechecks Room/private-Thread access and excludes deleted content;
 - manager-only role selection in the Room composer, capped at three roles and thirty actually visible recipients while private Threads reject role fan-out;
+- explicit private-Thread creation and creator/manager audience editing in the member UI, with creator retention and server-side Room eligibility enforcement;
+- manager-only role selection in eligible public-Thread composers under the same three-role/thirty-visible-recipient policy; private Thread composers do not expose role fan-out;
 - manager Room access editing for role/member allow, deny and inherited policy across the five bounded Room capabilities, with direct self-lockout prevention;
 - the existing grouped Room rail, main workspace and people/thread inspector geometry.
 
-The pure feed/attention/mention/search/permission decoders are regression-tested for ordering, cursors, tombstones, reaction allowlisting, malformed rows, quiet-hour policy, bounded unique person/role mention IDs, complete search-result shapes and valid exclusive override subjects. Member format, TypeScript, ESLint and all 85 unit tests pass.
+The pure feed/attention/mention/search/permission/Thread-control decoders are regression-tested for ordering, cursors, tombstones, reaction allowlisting, malformed rows, quiet-hour policy, bounded unique person/role mention IDs, creator-inclusive private audiences, complete search-result shapes and valid exclusive override subjects. Member format, TypeScript and ESLint pass; all 86 unit tests pass.
 
 ## Deliberately not claimed as complete
 
 - No trusted malware/content scanner worker is connected. Pending files are not shared with other members.
 - Room role/member allow/deny/inherit editing is Released. Source-role assignment/hierarchy explanation, effective-permission summaries and view-as-role simulation remain.
 - Report triage, moderator assignment, appeals and attachment scan decisions belong in the separate admin application and are not yet released there.
-- Private Thread membership editing, role selection in eligible public-Thread composers, the fixed-template delivery worker/dead-letter operations, search pagination, presence/typing, Boards and slow mode remain. Thread follow/read/unread, person mentions, manager-only Room role mentions, pins, bookmarks, permission-filtered Space search and validated Room preference/quiet/digest scheduling are Released.
+- The fixed-template delivery worker/dead-letter operations, search pagination, presence/typing, Boards, slow mode and offline/retry UX remain. Private Thread membership editing, eligible public-Thread role selection, Thread follow/read/unread, person mentions, manager-only Room role mentions, pins, bookmarks, permission-filtered Space search and validated Room preference/quiet/digest scheduling are Released.
 - Messages, Chapter/Mission Spaces and I/O share the Indus Orbit navigation language and spatial pattern, but have not yet been refactored onto one reusable React frame/store.
 - Authenticated multi-persona, mobile, accessibility and visual-regression browser journeys remain required after web deployment.
 
@@ -62,5 +66,7 @@ The pure feed/attention/mention/search/permission decoders are regression-tested
 - Permission-filtered search migration: `20260827130000_release_orbit_permission_filtered_search.sql`.
 - Bounded role-mention migration: `20260827140000_release_orbit_bounded_role_mentions.sql`.
 - Room permission-editor migration: `20260827150000_release_orbit_room_permission_editor.sql`.
-- Hosted verification: ten public product RPCs, private bucket, two Storage policies, zero direct browser table writes and zero existing collaboration content.
-- Database contract: `orbit_collaboration_controls.test.sql` adds 29 schema/ACL/storage assertions for the next complete replay.
+- Private Thread migrations: `20260828080654_release_orbit_private_thread_controls.sql`, `20260828081253_harden_orbit_private_thread_feed.sql` and `20260828081747_harden_orbit_private_thread_reuse.sql`; hosted apply versions are `20260828081023`, `20260828081351` and `20260828081833`.
+- Hosted verification: rolled-back creator/member/non-member personas prove atomic two-person membership, creator retention, non-manager rejection, private feed-summary isolation and access-checked idempotent Thread reuse. No fixture content was retained.
+- Database contract: `orbit_collaboration_controls.test.sql` now contains 35 schema/ACL/storage assertions for the next complete replay.
+- Post-DDL Advisors: 207 security notices (52 private/no-policy informational notices, 154 intentionally callable authenticated security-definer reviews and one project-level password-protection setting) and 411 performance notices (116 inherited auth init-plan opportunities, 246 workload-dependent unused-index observations and 49 inherited permissive-policy overlaps). The two new authenticated RPC reviews are intentional caller-bound product APIs; no new table, RLS, FK or primary-key defect was introduced. See the [security-definer review](https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable).

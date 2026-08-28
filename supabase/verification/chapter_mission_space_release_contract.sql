@@ -49,6 +49,8 @@ expected_functions(function_name) as (
     ('transition_my_mission'),
     ('update_my_chapter_details'),
     ('create_my_conversation_thread'),
+    ('get_my_conversation_thread_controls'),
+    ('replace_managed_conversation_thread_members'),
     ('send_my_conversation_message'),
     ('mark_my_conversation_room_read')
 ),

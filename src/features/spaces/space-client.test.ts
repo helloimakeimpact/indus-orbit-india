@@ -7,6 +7,7 @@ import {
   parseSpaceRoomControls,
   parseSpaceRoomPermissions,
   parseSpaceSearchPayload,
+  parseSpaceThreadControls,
 } from "./space-feed";
 
 test("Orbit Space feed preserves chronological collaboration evidence", () => {
@@ -133,6 +134,47 @@ test("Orbit Room controls preserve only recognized caller-bound attention state"
   );
   assert.throws(
     () => parseSpaceRoomControls({ roomId: "room-1", preference: "everything" }),
+    /invalid/,
+  );
+});
+
+test("Orbit private Thread controls require a bounded creator-inclusive audience", () => {
+  const creator = "10000000-0000-4000-8000-000000000001";
+  const member = "20000000-0000-4000-8000-000000000001";
+  assert.deepEqual(
+    parseSpaceThreadControls({
+      threadId: "30000000-0000-4000-8000-000000000001",
+      roomId: "40000000-0000-4000-8000-000000000001",
+      visibility: "private",
+      createdBy: creator,
+      memberUserIds: [creator, member, member, "not-a-user"],
+      memberCount: 2,
+      canManageMembers: true,
+      maxMembers: 30,
+    }),
+    {
+      threadId: "30000000-0000-4000-8000-000000000001",
+      roomId: "40000000-0000-4000-8000-000000000001",
+      visibility: "private",
+      createdBy: creator,
+      memberUserIds: [creator, member],
+      memberCount: 2,
+      canManageMembers: true,
+      maxMembers: 30,
+    },
+  );
+  assert.throws(
+    () =>
+      parseSpaceThreadControls({
+        threadId: "30000000-0000-4000-8000-000000000001",
+        roomId: "40000000-0000-4000-8000-000000000001",
+        visibility: "private",
+        createdBy: creator,
+        memberUserIds: [member],
+        memberCount: 1,
+        canManageMembers: false,
+        maxMembers: 30,
+      }),
     /invalid/,
   );
 });

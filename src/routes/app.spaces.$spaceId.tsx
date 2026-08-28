@@ -54,11 +54,13 @@ import {
   getRoomFeed,
   getManagedSpaceRoomPermissions,
   getSpaceRoomControls,
+  getSpaceThreadControls,
   getSpaceWorkspace,
   markSpaceRoomRead,
   markSpaceThreadRead,
   moderateSpaceMessage,
   reportSpaceMessage,
+  replaceManagedSpaceThreadMembers,
   searchSpaceMessages,
   sendSpaceMessage,
   setSpaceAttentionPolicy,
@@ -75,6 +77,7 @@ import {
   type SpaceMessage,
   type SpaceReaction,
   type SpaceThreadSummary,
+  type SpaceThreadControls,
   type SpaceWorkspace,
   type SpaceRoomControls,
   type SpaceRoomPermission,
@@ -179,10 +182,12 @@ function SpacePage() {
   const [roomControls, setRoomControls] = useState<SpaceRoomControls>(emptyRoomControls);
   const [activeThread, setActiveThread] = useState<ActiveThread | null>(null);
   const [threadFeed, setThreadFeed] = useState<SpaceFeed>(emptyFeed);
+  const [threadControls, setThreadControls] = useState<SpaceThreadControls | null>(null);
   const [composer, setComposer] = useState("");
   const [threadComposer, setThreadComposer] = useState("");
   const [mentionedUserIds, setMentionedUserIds] = useState<string[]>([]);
   const [threadMentionedUserIds, setThreadMentionedUserIds] = useState<string[]>([]);
+  const [threadMentionedRoleIds, setThreadMentionedRoleIds] = useState<string[]>([]);
   const [mentionedRoleIds, setMentionedRoleIds] = useState<string[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(true);
@@ -223,6 +228,9 @@ function SpacePage() {
   const [searchResults, setSearchResults] = useState<SpaceSearchResult[]>([]);
   const [searchedQuery, setSearchedQuery] = useState("");
   const [searching, setSearching] = useState(false);
+  const [threadMembersOpen, setThreadMembersOpen] = useState(false);
+  const [threadMemberUserIds, setThreadMemberUserIds] = useState<string[]>([]);
+  const [threadMemberSaving, setThreadMemberSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const timelineEndRef = useRef<HTMLDivElement | null>(null);
   const threadEndRef = useRef<HTMLDivElement | null>(null);
@@ -266,12 +274,14 @@ function SpacePage() {
   const loadThread = useCallback(async (roomId: string, threadId: string) => {
     setThreadLoading(true);
     try {
-      const [next, controls] = await Promise.all([
+      const [next, controls, nextThreadControls] = await Promise.all([
         getRoomFeed(roomId, { threadId }),
         getSpaceRoomControls(roomId),
+        getSpaceThreadControls(threadId),
       ]);
       setThreadFeed(next);
       setRoomControls(controls);
+      setThreadControls(nextThreadControls);
       const lastMessage = next.items.at(-1);
       if (lastMessage && controls.followedThreadIds.includes(threadId)) {
         await markSpaceThreadRead(threadId, lastMessage.id);
@@ -280,8 +290,11 @@ function SpacePage() {
           unreadThreadIds: controls.unreadThreadIds.filter((id) => id !== threadId),
         });
       }
+      return nextThreadControls;
     } catch (loadError) {
+      setThreadControls(null);
       toast.error(loadError instanceof Error ? loadError.message : "Could not load Thread");
+      return null;
     } finally {
       setThreadLoading(false);
     }
@@ -320,8 +333,10 @@ function SpacePage() {
   function chooseRoom(roomId: string) {
     setActiveThread(null);
     setThreadFeed(emptyFeed);
+    setThreadControls(null);
     setMentionedUserIds([]);
     setThreadMentionedUserIds([]);
+    setThreadMentionedRoleIds([]);
     setMentionedRoleIds([]);
     setSelectedFile(null);
     setRoomControls(emptyRoomControls);
@@ -418,6 +433,9 @@ function SpacePage() {
       thread: summary,
     };
     setActiveThread({ summary, parent });
+    setThreadControls(null);
+    setThreadMentionedUserIds([]);
+    setThreadMentionedRoleIds([]);
     await loadThread(result.roomId, result.thread.id);
   }
 
@@ -430,9 +448,11 @@ function SpacePage() {
         threadComposer,
         activeThread.summary.id,
         threadMentionedUserIds,
+        threadMentionedRoleIds,
       );
       setThreadComposer("");
       setThreadMentionedUserIds([]);
+      setThreadMentionedRoleIds([]);
       await Promise.all([
         loadThread(selectedRoom.id, activeThread.summary.id),
         loadRoom(selectedRoom.id),
@@ -444,16 +464,50 @@ function SpacePage() {
     }
   }
 
-  async function openThread(message: SpaceMessage) {
+  async function openThread(message: SpaceMessage, visibility: "room" | "private" = "room") {
     if (!selectedRoom) return;
     try {
       const summary =
-        message.thread ?? (await createMessageThread(selectedRoom.id, message.id, undefined));
+        message.thread ??
+        (await createMessageThread(selectedRoom.id, message.id, undefined, visibility));
       setActiveThread({ summary, parent: message });
+      setThreadControls(null);
       setThreadMentionedUserIds([]);
-      await loadThread(selectedRoom.id, summary.id);
+      setThreadMentionedRoleIds([]);
+      const controls = await loadThread(selectedRoom.id, summary.id);
+      if (visibility === "private" && controls?.canManageMembers) {
+        setThreadMemberUserIds(controls.memberUserIds);
+        setThreadMembersOpen(true);
+      }
     } catch (threadError) {
       toast.error(threadError instanceof Error ? threadError.message : "Could not open Thread");
+    }
+  }
+
+  function openThreadMemberEditor() {
+    if (!threadControls?.canManageMembers) return;
+    setThreadMemberUserIds(threadControls.memberUserIds);
+    setThreadMembersOpen(true);
+  }
+
+  async function saveThreadMembers() {
+    if (!activeThread || !threadControls?.canManageMembers || threadMemberSaving) return;
+    setThreadMemberSaving(true);
+    try {
+      const next = await replaceManagedSpaceThreadMembers(
+        activeThread.summary.id,
+        threadMemberUserIds,
+      );
+      setThreadControls(next);
+      setThreadMemberUserIds(next.memberUserIds);
+      setThreadMembersOpen(false);
+      toast.success("Private Thread audience updated");
+    } catch (memberError) {
+      toast.error(
+        memberError instanceof Error ? memberError.message : "Could not update Thread members",
+      );
+    } finally {
+      setThreadMemberSaving(false);
     }
   }
 
@@ -1000,6 +1054,7 @@ function SpacePage() {
                   bookmarkedMessageIds={roomControls.bookmarkedMessageIds}
                   pinnedMessageIds={roomControls.pinnedMessageIds}
                   onThread={openThread}
+                  onPrivateThread={(message) => openThread(message, "private")}
                   onReact={react}
                   onBookmark={toggleBookmark}
                   onPin={togglePin}
@@ -1097,13 +1152,24 @@ function SpacePage() {
               sending={threadSending}
               composer={threadComposer}
               members={workspace.members}
+              roles={workspace.roles}
               actorUserId={user?.id ?? null}
               mentionedUserIds={threadMentionedUserIds}
+              mentionedRoleIds={threadMentionedRoleIds}
+              controls={threadControls}
               canModerate={feed.canModerate}
+              canMentionRoles={feed.canManage && threadControls?.visibility === "room"}
               endRef={threadEndRef}
               onComposer={setThreadComposer}
               onMentionedUserIds={setThreadMentionedUserIds}
-              onClose={() => setActiveThread(null)}
+              onMentionedRoleIds={setThreadMentionedRoleIds}
+              onManageMembers={openThreadMemberEditor}
+              onClose={() => {
+                setActiveThread(null);
+                setThreadControls(null);
+                setThreadMentionedUserIds([]);
+                setThreadMentionedRoleIds([]);
+              }}
               onSend={sendThreadReply}
               onReact={(id, key) => react(id, key, true)}
               onReport={setReportTarget}
@@ -1505,6 +1571,87 @@ function SpacePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={threadMembersOpen} onOpenChange={setThreadMembersOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Private Thread members</DialogTitle>
+            <DialogDescription>
+              Choose up to {threadControls?.maxMembers ?? 30} people who already belong to this
+              Space. Room access rules are checked again when you save.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center justify-between rounded-xl bg-muted/45 px-3 py-2 text-xs">
+            <span>Explicit audience</span>
+            <Badge variant="secondary">
+              {threadMemberUserIds.length}/{threadControls?.maxMembers ?? 30}
+            </Badge>
+          </div>
+          <div className="max-h-80 space-y-1 overflow-y-auto rounded-xl border border-border p-2">
+            {workspace.members.map((member) => {
+              const checked = threadMemberUserIds.includes(member.user_id);
+              const isCreator = member.user_id === threadControls?.createdBy;
+              return (
+                <label
+                  key={member.user_id}
+                  className="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-2 hover:bg-muted/55"
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    disabled={isCreator || threadMemberSaving}
+                    onChange={(event) => {
+                      if (event.target.checked) {
+                        if (threadMemberUserIds.length >= (threadControls?.maxMembers ?? 30)) {
+                          toast.error("This private Thread has reached its member limit");
+                          return;
+                        }
+                        setThreadMemberUserIds((current) => [...current, member.user_id]);
+                      } else {
+                        setThreadMemberUserIds((current) =>
+                          current.filter((id) => id !== member.user_id),
+                        );
+                      }
+                    }}
+                  />
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={member.profiles?.avatar_url ?? undefined} />
+                    <AvatarFallback>
+                      {member.profiles?.display_name?.slice(0, 2).toUpperCase() ?? "IO"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="min-w-0 flex-1 truncate text-sm">
+                    {member.profiles?.display_name ?? "Member"}
+                  </span>
+                  {isCreator ? <Badge variant="outline">Creator</Badge> : null}
+                </label>
+              );
+            })}
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={threadMemberSaving}
+              onClick={() => setThreadMembersOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              disabled={
+                threadMemberSaving ||
+                !threadControls ||
+                !threadMemberUserIds.includes(threadControls.createdBy)
+              }
+              onClick={() => void saveThreadMembers()}
+            >
+              {threadMemberSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Save audience
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
@@ -1516,6 +1663,7 @@ function MessageList({
   bookmarkedMessageIds = [],
   pinnedMessageIds = [],
   onThread,
+  onPrivateThread,
   onReact,
   onBookmark = async () => undefined,
   onPin = async () => undefined,
@@ -1529,6 +1677,7 @@ function MessageList({
   bookmarkedMessageIds?: string[];
   pinnedMessageIds?: string[];
   onThread: (message: SpaceMessage) => Promise<void>;
+  onPrivateThread?: (message: SpaceMessage) => Promise<void>;
   onReact: (messageId: string, key: SpaceReaction["key"]) => Promise<void>;
   onBookmark?: (messageId: string) => Promise<void>;
   onPin?: (messageId: string) => Promise<void>;
@@ -1613,6 +1762,19 @@ function MessageList({
                     {message.thread ? `${message.thread.replyCount} replies` : "Thread"}
                   </Button>
                 )}
+                {allowThreads && !message.thread && onPrivateThread ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 gap-1 px-2 text-[11px]"
+                    disabled={Boolean(message.deletedAt)}
+                    title="Start a private Thread with an explicit member list"
+                    onClick={() => void onPrivateThread(message)}
+                  >
+                    <Lock className="h-3.5 w-3.5" /> Private
+                  </Button>
+                ) : null}
                 <Button
                   type="button"
                   variant={bookmarked ? "secondary" : "ghost"}
@@ -1824,12 +1986,18 @@ function ThreadPane({
   sending,
   composer,
   members,
+  roles,
   actorUserId,
   mentionedUserIds,
+  mentionedRoleIds,
+  controls,
   canModerate,
+  canMentionRoles,
   endRef,
   onComposer,
   onMentionedUserIds,
+  onMentionedRoleIds,
+  onManageMembers,
   onClose,
   onSend,
   onReact,
@@ -1847,12 +2015,18 @@ function ThreadPane({
   sending: boolean;
   composer: string;
   members: SpaceWorkspace["members"];
+  roles: SpaceWorkspace["roles"];
   actorUserId: string | null;
   mentionedUserIds: string[];
+  mentionedRoleIds: string[];
+  controls: SpaceThreadControls | null;
   canModerate: boolean;
+  canMentionRoles: boolean;
   endRef: React.RefObject<HTMLDivElement | null>;
   onComposer: (value: string) => void;
   onMentionedUserIds: (value: string[]) => void;
+  onMentionedRoleIds: (value: string[]) => void;
+  onManageMembers: () => void;
   onClose: () => void;
   onSend: () => Promise<void>;
   onReact: (messageId: string, key: SpaceReaction["key"]) => Promise<void>;
@@ -1872,9 +2046,23 @@ function ThreadPane({
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold">{thread.summary.title ?? "Thread"}</p>
           <p className="text-[10px] text-muted-foreground">
+            {controls?.visibility === "private"
+              ? `Private · ${controls.memberCount} ${controls.memberCount === 1 ? "member" : "members"} · `
+              : ""}
             {feed.items.length} loaded replies{unread ? " · unread activity" : ""}
           </p>
         </div>
+        {controls?.canManageMembers ? (
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            className="h-8 px-2 text-[10px]"
+            onClick={onManageMembers}
+          >
+            <Users className="h-3.5 w-3.5" /> Members
+          </Button>
+        ) : null}
         <Button
           type="button"
           size="sm"
@@ -1945,9 +2133,13 @@ function ThreadPane({
           <div className="space-y-2">
             <MentionPicker
               members={members}
+              roles={roles}
               actorUserId={actorUserId}
               selectedIds={mentionedUserIds}
               onChange={onMentionedUserIds}
+              selectedRoleIds={mentionedRoleIds}
+              onRoleChange={onMentionedRoleIds}
+              canMentionRoles={canMentionRoles}
               compact
             />
             <div className="flex items-end gap-2 rounded-xl border border-border px-2 py-1">

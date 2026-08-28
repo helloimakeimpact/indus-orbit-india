@@ -7269,6 +7269,10 @@ export type Database = {
         Args: { _room_id: string };
         Returns: Json;
       };
+      get_my_conversation_thread_controls: {
+        Args: { _thread_id: string };
+        Returns: Json;
+      };
       get_my_io_billing_profile: {
         Args: { _workspace_id: string };
         Returns: Json;
@@ -7975,6 +7979,10 @@ export type Database = {
         };
       };
       revoke_my_io_api_key: { Args: { _key_id: string }; Returns: Json };
+      replace_managed_conversation_thread_members: {
+        Args: { _member_user_ids: string[]; _thread_id: string };
+        Returns: Json;
+      };
       send_my_conversation_message: {
         Args: {
           _client_request_id: string;

@@ -9,6 +9,7 @@ import {
   parseSpaceRoomControls,
   parseSpaceRoomPermissions,
   parseSpaceSearchPayload,
+  parseSpaceThreadControls,
   textValue,
   type SpaceFeed,
   type SpaceFeedCursor,
@@ -21,6 +22,7 @@ import {
   type SpaceRoomPermissionCapability,
   type SpaceSearchResult,
   type SpaceThreadSummary,
+  type SpaceThreadControls,
 } from "./space-feed";
 
 export type {
@@ -36,6 +38,7 @@ export type {
   SpaceRoomPermissionCapability,
   SpaceSearchResult,
   SpaceThreadSummary,
+  SpaceThreadControls,
 } from "./space-feed";
 
 type Space = Database["public"]["Tables"]["conversation_spaces"]["Row"];
@@ -168,6 +171,27 @@ export async function getSpaceRoomControls(roomId: string): Promise<SpaceRoomCon
   });
   if (error) throw new Error(error.message);
   return parseSpaceRoomControls(data);
+}
+
+export async function getSpaceThreadControls(threadId: string): Promise<SpaceThreadControls> {
+  const { data, error } = await supabase.rpc("get_my_conversation_thread_controls", {
+    _thread_id: threadId,
+  });
+  if (error) throw new Error(error.message);
+  return parseSpaceThreadControls(data);
+}
+
+export async function replaceManagedSpaceThreadMembers(
+  threadId: string,
+  memberUserIds: readonly string[],
+): Promise<SpaceThreadControls> {
+  const normalized = Array.from(new Set(memberUserIds.filter((id) => Boolean(id))));
+  const { data, error } = await supabase.rpc("replace_managed_conversation_thread_members", {
+    _thread_id: threadId,
+    _member_user_ids: normalized,
+  });
+  if (error) throw new Error(error.message);
+  return parseSpaceThreadControls(data);
 }
 
 export async function getManagedSpaceRoomPermissions(
@@ -364,12 +388,13 @@ export async function createMessageThread(
   roomId: string,
   parentMessageId: string,
   title?: string,
+  visibility: "room" | "private" = "room",
 ): Promise<SpaceThreadSummary> {
   const { data, error } = await supabase.rpc("create_my_conversation_thread", {
     _room_id: roomId,
     _parent_message_id: parentMessageId,
     _title: (title?.trim() || null) as unknown as string,
-    _visibility: "room",
+    _visibility: visibility,
     _client_request_id: crypto.randomUUID(),
   });
   if (error) throw new Error(error.message);
