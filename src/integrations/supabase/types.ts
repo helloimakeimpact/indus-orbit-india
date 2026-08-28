@@ -7271,6 +7271,10 @@ export type Database = {
         Args: { _room_id: string }
         Returns: Json
       }
+      get_my_conversation_thread_controls: {
+        Args: { _thread_id: string }
+        Returns: Json
+      }
       get_my_io_billing_profile: {
         Args: { _workspace_id: string }
         Returns: Json
@@ -7578,6 +7582,10 @@ export type Database = {
         Args: { _expected_version: number; _space_id: string }
         Returns: undefined
       }
+      list_managed_conversation_room_permissions: {
+        Args: { _room_id: string }
+        Returns: Json
+      }
       list_my_conversation_room_feed: {
         Args: {
           _before_created_at?: string
@@ -7859,6 +7867,10 @@ export type Database = {
         Args: { _proposal_id: string }
         Returns: undefined
       }
+      replace_managed_conversation_thread_members: {
+        Args: { _member_user_ids: string[]; _thread_id: string }
+        Returns: Json
+      }
       report_my_conversation_message: {
         Args: {
           _category: string
@@ -7977,10 +7989,44 @@ export type Database = {
         }
       }
       revoke_my_io_api_key: { Args: { _key_id: string }; Returns: Json }
+      search_my_conversation_messages: {
+        Args: { _limit?: number; _query: string; _space_id: string }
+        Returns: Json
+      }
       send_my_conversation_message: {
         Args: {
           _client_request_id: string
           _content: string
+          _room_id: string
+          _thread_id: string
+        }
+        Returns: {
+          author_id: string
+          client_request_id: string | null
+          content: string
+          created_at: string
+          deleted_at: string | null
+          edited_at: string | null
+          id: string
+          message_type: string
+          provenance: Json
+          reply_to_message_id: string | null
+          room_id: string
+          thread_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "conversation_messages"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      send_my_conversation_message_with_audience: {
+        Args: {
+          _client_request_id: string
+          _content: string
+          _mentioned_role_ids?: string[]
+          _mentioned_user_ids?: string[]
           _room_id: string
           _thread_id: string
         }
@@ -8066,6 +8112,16 @@ export type Database = {
         Returns: string
       }
       set_managed_conversation_room_permission: {
+        Args: {
+          _capability: string
+          _effect: string
+          _role_id: string
+          _room_id: string
+          _user_id: string
+        }
+        Returns: Json
+      }
+      set_managed_conversation_room_permission_v2: {
         Args: {
           _capability: string
           _effect: string
