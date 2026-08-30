@@ -3,6 +3,7 @@ import { AppSidebar } from "./AppSidebar";
 import { NotificationSheet } from "./NotificationSheet";
 import { ChatDropdown } from "./ChatDropdown";
 import { cn } from "@/lib/utils";
+import { useOrbitStore } from "@/features/orbit/OrbitStore";
 
 const SETTINGS_KEY = "indus-orbit:settings";
 
@@ -31,6 +32,7 @@ function readPrefs(): AppPrefs {
 
 export function AppShell({ children, title }: { children: ReactNode; title?: string }) {
   const [prefs, setPrefs] = useState<AppPrefs>(readPrefs);
+  const { connectionState } = useOrbitStore();
 
   useEffect(() => {
     const syncPrefs = () => setPrefs(readPrefs());
@@ -59,6 +61,14 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
             {title ?? "Indus Orbit"}
           </h1>
           <div className="flex items-center gap-1">
+            {connectionState !== "online" ? (
+              <span
+                className="mr-1 rounded-full border border-amber-300/70 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-900"
+                role="status"
+              >
+                {connectionState === "offline" ? "Offline" : "Reconnecting"}
+              </span>
+            ) : null}
             <ChatDropdown />
             <NotificationSheet />
           </div>

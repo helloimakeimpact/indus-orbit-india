@@ -1,6 +1,7 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { OrbitStoreProvider } from "@/features/orbit/OrbitStore";
 
 import appCss from "../styles.css?url";
 import logo from "../assets/indus-orbit-logo.png?url";
@@ -70,8 +71,10 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   return (
     <AuthProvider>
-      <Outlet />
-      <Toaster position="bottom-right" richColors />
+      <OrbitStoreProvider>
+        <Outlet />
+        <Toaster position="bottom-right" richColors />
+      </OrbitStoreProvider>
     </AuthProvider>
   );
 }

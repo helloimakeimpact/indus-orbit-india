@@ -99,7 +99,11 @@ export async function getConversation(otherUserId: string, before?: DirectConver
 }
 
 // Send a message
-export async function sendMessage(recipientId: string, content: string) {
+export async function sendMessage(
+  recipientId: string,
+  content: string,
+  clientRequestId: string = crypto.randomUUID(),
+) {
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) throw new Error("Unauthorized");
   const userId = userData.user.id;
@@ -113,7 +117,7 @@ export async function sendMessage(recipientId: string, content: string) {
     .rpc("send_my_direct_message", {
       _recipient_id: recipientId,
       _content: message,
-      _client_request_id: crypto.randomUUID(),
+      _client_request_id: clientRequestId,
     })
     .single();
 

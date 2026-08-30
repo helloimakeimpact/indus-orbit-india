@@ -49,4 +49,19 @@ describe("conversation state", () => {
     assert.equal(parseDirectMessageBroadcast({ payload: { new: { id: "incomplete" } } }), null);
     assert.equal(parseDirectMessageBroadcast({ payload: "not-an-object" }), null);
   });
+
+  it("reconciles an optimistic send with its replay-safe durable row", () => {
+    const optimistic: DirectMessage = {
+      ...message("pending:req-1", "a", "b", "2026-01-01T00:00:00Z"),
+      client_request_id: "req-1",
+      delivery_state: "queued",
+    };
+    const durable: DirectMessage = {
+      ...message("durable-1", "a", "b", "2026-01-01T00:00:01Z"),
+      client_request_id: "req-1",
+    };
+
+    assert.deepEqual(mergeConversationMessages([optimistic], [durable]), [durable]);
+    assert.deepEqual(mergeConversationMessages([durable], [optimistic]), [durable]);
+  });
 });

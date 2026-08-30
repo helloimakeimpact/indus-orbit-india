@@ -18,6 +18,8 @@ Execution update, 25 August 2026 (Razorpay/GST/FX hardening): hosted migration `
 
 Execution update, 28 August 2026 (Orbit collaboration recovery): hosted migrations through `20260828181552_harden_orbit_role_mention_replay` bring the project ledger to 107 and release private Threads, permission-filtered keyset-paged search, manager-configured Room slow mode and replay-safe role-mention notifications. The member code now adds explicit offline status and manual replay-safe recovery for Room messages, Thread replies and quarantined attachments. Retry preserves the original database request/reservation IDs, resumes an attachment after a confirmed message, and keeps draft/file content only in open-tab memory. A rolled-back manager/recipient persona proves two identical role-mentioned sends leave exactly one message, mention, notification and outbox record. The member suite passes 90/90. This browser path is **Verified locally**, not Released to Netlify; the local browser reaches the current app but an authenticated visual journey still requires a local signed-in persona.
 
+Execution update, 30 August 2026 (shared Orbit state and direct-message recovery): one root Orbit store now serves both the Community and I/O shells, reconciles direct-message attention on Realtime subscribe, focus, visibility, network recovery and cross-tab signals, and exposes a single connection state. Direct-message sends use a stable client request ID, reconcile optimistic and durable rows, queue only in open-tab memory while offline and expose explicit retry/discard after failure. Typing is opt-out, active-conversation-only, expires after seconds and stores no last-seen history. Hosted migration `20260830195048_release_orbit_dm_reconnect_presence` is migration 108 and restricts typing Broadcast inserts to the exact unblocked pair; its four-assertion contract passes. Member typecheck/lint and 91/91 tests pass. Authenticated two-device visual evidence remains.
+
 ## Current release checkpoint
 
 Completed in the demo environment:
@@ -116,11 +118,11 @@ User input needed: choose/verify the transactional email provider and sender dom
 Deliverables:
 
 1. Extract one branded Orbit rail/context sidebar/workspace/inspector shell for Messages, Missions, Chapters and I/O.
-2. Add a shared conversation cache/store and cross-surface/multi-device unread resolution. **Verified Space slice:** Room/Thread sends have explicit offline state and deterministic, manual, in-tab retries; direct-message and multi-device reconnect remain.
+2. **Released/Verified:** one root Orbit store spans Community and I/O; direct messages reconcile on reconnect/focus/visibility/cross-tab changes and use replay-safe in-tab queue/retry. Space Room/Thread sends retain explicit offline state and deterministic manual in-tab retries. Authenticated two-device browser evidence remains.
 3. **Released:** explicit caller-owned block/unblock state revokes direct-message history, send/read mutations and future broadcasts in both directions while exposing the block list only to its owner.
 4. **Released:** direct-message Postgres Changes subscriptions are replaced by participant-authorized private Broadcast topics with database-side blocked-pair suppression.
 5. **Released/Verified collaboration slice:** Chapter/Mission Spaces, grouped Rooms, role-aware membership projection, paged Room/Thread feeds and search, public/private Threads, Room permission overrides/slow mode, reactions, mentions, pins, bookmarks, attention/read state, quarantined attachments, reports and bounded moderation exist. Complete source-role hierarchy/view-as-role, Boards, scanner/worker activation and hosted browser personas without copying Discord branding or engagement mechanics.
-6. Add privacy-aware presence/typing, saved-item aggregation, retention/export/deletion and stronger member timeout/remove/spam controls in evidence-gated slices.
+6. **Released/Verified typing slice:** active-conversation typing is exact-pair, opt-out, expiring and non-durable. Saved-item aggregation, retention/export/deletion and stronger member timeout/remove/spam controls remain.
 7. Keep prompts, terminal output, files and tools outside human-message storage; handoffs carry permissioned references only.
 
 Exit criteria:

@@ -48,6 +48,9 @@ The Chapter/Mission Space surface now provides:
 - explicit offline status and replay-safe manual recovery for Room messages, Thread replies and attachment uploads; request IDs and file objects remain only in the open tab;
 - manager Room access editing for role/member allow, deny and inherited policy across the five bounded Room capabilities, with direct self-lockout prevention;
 - the existing grouped Room rail, main workspace and people/thread inspector geometry.
+- one root Orbit store shared by Community and I/O for network recovery and direct-message attention;
+- replay-safe direct-message optimistic sends, in-tab offline queueing, automatic queued replay after authoritative reconnect, explicit failed retry/discard and cross-tab unread reconciliation;
+- opt-out active-conversation typing with a seconds-long expiry and no durable last-seen record.
 
 The pure feed/attention/mention/search/permission/Thread-control decoders are regression-tested for ordering, cursors, tombstones, reaction allowlisting, malformed rows, quiet-hour and slow-mode policy, bounded unique person/role mention IDs, creator-inclusive private audiences, complete paged search-result shapes and valid exclusive override subjects. Replay-key generation and conflict-safe attachment recovery are separately tested. Member format, TypeScript and ESLint pass; all 90 unit tests pass.
 
@@ -56,8 +59,8 @@ The pure feed/attention/mention/search/permission/Thread-control decoders are re
 - No trusted malware/content scanner worker is connected. Pending files are not shared with other members.
 - Room role/member allow/deny/inherit editing is Released. Source-role assignment/hierarchy explanation, effective-permission summaries and view-as-role simulation remain.
 - Report triage, moderator assignment, appeals and attachment scan decisions are Released in the separate admin application; authenticated duty-persona and scanner-provider journeys remain.
-- The fixed-template delivery worker/dead-letter operations, presence/typing, Boards and direct-message/cross-surface multi-device reconnect remain. Space Room/Thread/attachment in-tab retry is Verified; slow mode, search pagination, private Thread membership editing, eligible public-Thread role selection, Thread follow/read/unread, person mentions, manager-only Room role mentions, pins, bookmarks, permission-filtered Space search and validated Room preference/quiet/digest scheduling are Released.
-- Messages, Chapter/Mission Spaces and I/O share the Indus Orbit navigation language and spatial pattern, but have not yet been refactored onto one reusable React frame/store.
+- The fixed-template delivery schedule/dead-letter operator controls, Boards and authenticated two-device reconnect evidence remain. Direct-message recovery/typing and Space Room/Thread/attachment in-tab retry are Verified; slow mode, search pagination, private Thread membership editing, eligible public-Thread role selection, Thread follow/read/unread, person mentions, manager-only Room role mentions, pins, bookmarks, permission-filtered Space search and validated Room preference/quiet/digest scheduling are Released.
+- Messages, Chapter/Mission Spaces and I/O now share one root attention/connectivity store while retaining purpose-specific frames. Further reusable rail/inspector primitives remain.
 - Authenticated multi-persona, mobile, accessibility and visual-regression browser journeys remain required after web deployment.
 
 ## Evidence
@@ -73,6 +76,7 @@ The pure feed/attention/mention/search/permission/Thread-control decoders are re
 - Search pagination migration: `20260828082754_release_orbit_search_pagination.sql`; hosted apply version `20260828082858`.
 - Room slow-mode migration: `20260828174751_release_orbit_room_slow_mode.sql`; hosted apply version `20260828175323`.
 - Role-mention replay migration: `20260828181404_harden_orbit_role_mention_replay.sql`; hosted apply version `20260828181552`.
+- Direct-message reconnect/typing migration: `20260830194656_release_orbit_dm_reconnect_presence.sql`; hosted apply version `20260830195048`. Its four-assertion rollback contract passes and confirms that no durable presence field was added.
 - Hosted verification: rolled-back creator/member/non-member personas prove atomic two-person private membership, creator retention, non-manager rejection, private feed-summary isolation and access-checked idempotent Thread reuse. Separate rolled-back fixtures prove stable two-page search without overlap, a slow-mode member first-send/idempotent-retry/second-send rejection plus manager bypass, and identical role-mentioned replay leaving exactly one message, mention, notification and outbox record. No fixture content or configuration was retained.
 - Database contract: `orbit_collaboration_controls.test.sql` now contains 44 schema/ACL/storage/replay assertions for the next complete replay.
 - Post-DDL Advisors: 209 security notices (52 private/no-policy informational notices, 156 intentionally callable authenticated security-definer reviews and one project-level password-protection setting) and 410 performance notices (116 inherited auth init-plan opportunities, 245 workload-dependent unused-index observations and 49 inherited permissive-policy overlaps). The replaced audience RPC produces the same one intentional authenticated security-definer review and no new performance finding, RLS, FK or primary-key defect. See the [security-definer review](https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable) and [database advisors](https://supabase.com/docs/guides/database/database-advisors).

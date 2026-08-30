@@ -13,4 +13,6 @@ export type DirectMessage = {
   client_request_id: string | null;
   created_at: string;
   read_at: string | null;
+  /** Browser-only delivery evidence. Durable rows do not carry this field. */
+  delivery_state?: "queued" | "sending" | "failed";
 };

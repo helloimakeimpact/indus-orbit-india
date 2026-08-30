@@ -34,6 +34,7 @@ type AppPrefs = {
   glassSurfaces: boolean;
   reduceMotion: boolean;
   quietNotifications: boolean;
+  shareActiveTyping: boolean;
 };
 
 const defaultPrefs: AppPrefs = {
@@ -42,6 +43,7 @@ const defaultPrefs: AppPrefs = {
   glassSurfaces: true,
   reduceMotion: false,
   quietNotifications: false,
+  shareActiveTyping: true,
 };
 
 function readPrefs(): AppPrefs {
@@ -174,6 +176,13 @@ function SettingsPage() {
               description="Keep local notification surfaces calm and less visually loud."
               checked={prefs.quietNotifications}
               onCheckedChange={(checked) => updatePref("quietNotifications", checked)}
+            />
+            <SettingToggle
+              emoji="⌨️"
+              title="Active-conversation typing"
+              description="Share a short-lived typing signal only with the member whose direct conversation is open. No last-seen history is stored."
+              checked={prefs.shareActiveTyping}
+              onCheckedChange={(checked) => updatePref("shareActiveTyping", checked)}
             />
             <div className="grid gap-2 sm:grid-cols-2">
               <ActionLink

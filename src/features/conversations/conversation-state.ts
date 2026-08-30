@@ -48,11 +48,32 @@ export function isConversationMessage(message: DirectMessage, userId: string, ot
 }
 
 export function mergeConversationMessages(current: DirectMessage[], incoming: DirectMessage[]) {
-  const byId = new Map(current.map((message) => [message.id, message]));
-  for (const message of incoming) byId.set(message.id, message);
+  const messageKey = (message: DirectMessage) =>
+    message.client_request_id
+      ? `request:${message.sender_id}:${message.client_request_id}`
+      : `message:${message.id}`;
+  const byId = new Map(current.map((message) => [messageKey(message), message]));
+  for (const message of incoming) {
+    const key = messageKey(message);
+    const existing = byId.get(key);
+    // A durable server row replaces its optimistic browser projection. A late
+    // optimistic state must never replace already-reconciled database evidence.
+    if (!existing?.delivery_state && message.delivery_state) continue;
+    byId.set(key, message);
+  }
 
   return [...byId.values()].sort((left, right) => {
     const timeDifference = Date.parse(left.created_at) - Date.parse(right.created_at);
     return timeDifference || left.id.localeCompare(right.id);
   });
+}
+
+export function updateDirectMessageDelivery(
+  messages: DirectMessage[],
+  clientRequestId: string,
+  state: DirectMessage["delivery_state"],
+) {
+  return messages.map((message) =>
+    message.client_request_id === clientRequestId ? { ...message, delivery_state: state } : message,
+  );
 }

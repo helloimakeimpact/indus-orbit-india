@@ -5,6 +5,7 @@ import logo from "@/assets/indus-orbit-logo.png";
 import { useAuth } from "@/contexts/AuthContext";
 import { IoWorkspaceShell } from "@/features/io/IoWorkspaceShell";
 import { Button } from "@/components/ui/button";
+import { useOrbitStore } from "@/features/orbit/OrbitStore";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,6 +18,7 @@ import {
 export function IoProductShell({ children }: { children: ReactNode }) {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const { connectionState } = useOrbitStore();
   const initial = (user?.email ?? "?").charAt(0).toUpperCase();
 
   return (
@@ -40,6 +42,14 @@ export function IoProductShell({ children }: { children: ReactNode }) {
         </div>
 
         <nav aria-label="Product switcher" className="flex items-center gap-1.5">
+          {connectionState !== "online" ? (
+            <span
+              className="hidden rounded-full border border-amber-300/30 bg-amber-300/10 px-2.5 py-1 text-[10px] font-semibold text-amber-100 sm:inline-flex"
+              role="status"
+            >
+              {connectionState === "offline" ? "Offline" : "Reconnecting"}
+            </span>
+          ) : null}
           <Button
             asChild
             variant="ghost"

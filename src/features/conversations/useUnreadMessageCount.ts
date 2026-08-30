@@ -1,50 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { getUnreadMessageCount } from "@/server/messages.functions";
-import type { DirectMessage } from "@/features/conversations/types";
+import { useOrbitStore } from "@/features/orbit/OrbitStore";
 
-export function useUnreadMessageCount(userId: string | undefined) {
-  const [unreadCount, setUnreadCount] = useState(0);
-
-  const refresh = useCallback(async () => {
-    try {
-      setUnreadCount(await getUnreadMessageCount());
-    } catch {
-      setUnreadCount(0);
-    }
-  }, []);
-
-  useEffect(() => {
-    let active = true;
-    let channel: ReturnType<typeof supabase.channel> | null = null;
-
-    void Promise.resolve().then(() => {
-      if (!active) return;
-
-      if (!userId) {
-        setUnreadCount(0);
-        return;
-      }
-
-      void Promise.resolve().then(refresh);
-      channel = supabase
-        .channel(`user:${userId}:direct-message-unread`)
-        .on(
-          "postgres_changes",
-          { event: "*", schema: "public", table: "direct_messages" },
-          (payload) => {
-            const message = payload.new as DirectMessage;
-            if (message?.recipient_id === userId) void refresh();
-          },
-        )
-        .subscribe();
-    });
-
-    return () => {
-      active = false;
-      if (channel) void supabase.removeChannel(channel);
-    };
-  }, [refresh, userId]);
-
-  return { unreadCount, refresh };
+export function useUnreadMessageCount(_userId: string | undefined) {
+  const { unreadDirectMessages, refreshAttention } = useOrbitStore();
+  return { unreadCount: unreadDirectMessages, refresh: refreshAttention };
 }

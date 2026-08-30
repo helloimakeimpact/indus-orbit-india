@@ -1,7 +1,16 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { MessageSquare, Send, ArrowLeft, Search, Ban, Undo2 } from "lucide-react";
+import {
+  MessageSquare,
+  Send,
+  ArrowLeft,
+  Search,
+  Ban,
+  Undo2,
+  RefreshCw,
+  Trash2,
+} from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import {
@@ -51,6 +60,9 @@ function MessagesPage() {
   const [newMessage, setNewMessage] = useState("");
   const [search, setSearch] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
+  const typingThrottle = useRef(0);
+  const typingStopTimer = useRef<number | null>(null);
+  const [shareActiveTyping, setShareActiveTyping] = useState(true);
   const {
     messages,
     loading: loadingMsgs,
@@ -60,6 +72,12 @@ function MessagesPage() {
     loadingEarlier,
     loadEarlier,
     send,
+    retrySend,
+    discardSend,
+    broadcastTyping,
+    isOtherTyping,
+    conversationConnected,
+    connectionState,
   } = useDirectConversation(user?.id, activeContact?.user_id);
   const lastMessageId = messages.at(-1)?.id;
 
@@ -89,13 +107,57 @@ function MessagesPage() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [lastMessageId]);
 
+  useEffect(() => {
+    const read = () => {
+      try {
+        const settings = JSON.parse(
+          window.localStorage.getItem("indus-orbit:settings") ?? "{}",
+        ) as Record<string, unknown>;
+        setShareActiveTyping(settings.shareActiveTyping !== false);
+      } catch {
+        setShareActiveTyping(true);
+      }
+    };
+    read();
+    window.addEventListener("storage", read);
+    window.addEventListener("indus-orbit:settings-change", read);
+    return () => {
+      window.removeEventListener("storage", read);
+      window.removeEventListener("indus-orbit:settings-change", read);
+    };
+  }, []);
+
+  useEffect(
+    () => () => {
+      if (typingStopTimer.current !== null) window.clearTimeout(typingStopTimer.current);
+      void broadcastTyping(false);
+    },
+    [broadcastTyping],
+  );
+
+  function publishTyping(value: string) {
+    if (!shareActiveTyping || !value.trim()) {
+      void broadcastTyping(false);
+      return;
+    }
+    const now = Date.now();
+    if (now - typingThrottle.current > 2_000) {
+      typingThrottle.current = now;
+      void broadcastTyping(true);
+    }
+    if (typingStopTimer.current !== null) window.clearTimeout(typingStopTimer.current);
+    typingStopTimer.current = window.setTimeout(() => void broadcastTyping(false), 3_000);
+  }
+
   async function handleSend() {
     if (!activeContact || !newMessage.trim()) return;
     try {
       await send(newMessage);
       setNewMessage("");
+      void broadcastTyping(false);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not send message.");
+      setNewMessage("");
     }
   }
 
@@ -243,7 +305,15 @@ function MessagesPage() {
             </Avatar>
             <div>
               <p className="font-semibold text-sm">{activeContact.display_name}</p>
-              <p className="text-xs text-muted-foreground">{activeContact.headline}</p>
+              <p className="text-xs text-muted-foreground" role="status">
+                {isOtherTyping
+                  ? "Typing…"
+                  : connectionState === "offline"
+                    ? "Offline · new messages will queue"
+                    : conversationConnected
+                      ? activeContact.headline
+                      : "Reconnecting conversation…"}
+              </p>
             </div>
             <Button
               type="button"
@@ -311,7 +381,32 @@ function MessagesPage() {
                           hour: "2-digit",
                           minute: "2-digit",
                         })}
+                        {msg.delivery_state ? ` · ${msg.delivery_state}` : ""}
                       </p>
+                      {msg.delivery_state === "failed" && msg.client_request_id ? (
+                        <div className="mt-1.5 flex justify-end gap-1">
+                          <button
+                            type="button"
+                            className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-1 text-[10px] font-semibold"
+                            onClick={() =>
+                              void retrySend(msg.client_request_id!).catch((error) =>
+                                toast.error(
+                                  error instanceof Error ? error.message : "Retry failed.",
+                                ),
+                              )
+                            }
+                          >
+                            <RefreshCw className="h-3 w-3" /> Retry
+                          </button>
+                          <button
+                            type="button"
+                            className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-1 text-[10px] font-semibold"
+                            onClick={() => discardSend(msg.client_request_id!)}
+                          >
+                            <Trash2 className="h-3 w-3" /> Discard
+                          </button>
+                        </div>
+                      ) : null}
                     </div>
                   </div>
                 );
@@ -328,7 +423,11 @@ function MessagesPage() {
                 placeholder={`Message ${activeContact.display_name}…`}
                 rows={1}
                 value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
+                onChange={(e) => {
+                  setNewMessage(e.target.value);
+                  publishTyping(e.target.value);
+                }}
+                onBlur={() => void broadcastTyping(false)}
                 onKeyDown={handleKeyDown}
               />
               <Button
@@ -341,7 +440,9 @@ function MessagesPage() {
               </Button>
             </div>
             <p className="mt-1.5 text-center text-xs text-muted-foreground">
-              Press Enter to send, Shift+Enter for a new line
+              {connectionState === "offline"
+                ? "Offline: this tab will retry queued messages when the connection returns."
+                : "Press Enter to send, Shift+Enter for a new line"}
             </p>
           </div>
         </div>
