@@ -26,6 +26,7 @@ import {
   PanelLeftClose,
   MessageCircle,
   Terminal,
+  BookmarkCheck,
 } from "lucide-react";
 import logo from "@/assets/indus-orbit-logo.png";
 import { useAuth } from "@/contexts/AuthContext";
@@ -57,6 +58,7 @@ const BASE_GROUPS: NavGroup[] = [
       { to: "/app/board", label: "Board", icon: Megaphone },
       { to: "/app/stories", label: "Stories", icon: BookOpen },
       { to: "/app/events", label: "Events", icon: CalendarDays },
+      { to: "/app/saved", label: "Saved work", icon: BookmarkCheck },
     ],
   },
   {

@@ -2,6 +2,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
+  ArrowDown,
+  ArrowUp,
+  Archive,
   BadgeCheck,
   Bell,
   BookOpenCheck,
@@ -23,6 +26,7 @@ import {
   MessageSquare,
   Paperclip,
   Pin,
+  Plus,
   Radio,
   RotateCcw,
   Search,
@@ -51,9 +55,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import {
   SPACE_SLOW_MODE_OPTIONS,
+  archiveManagedSpaceRoom,
+  createManagedSpaceRoom,
   createMessageThread,
+  createSpaceBoardTopic,
+  explainManagedSpaceRoomPermission,
   getRoomFeed,
   getManagedSpaceRoomPermissions,
+  getSpaceBoardTopics,
   getSpaceRoomControls,
   getSpaceThreadControls,
   getSpaceWorkspace,
@@ -62,9 +71,11 @@ import {
   moderateSpaceMessage,
   reportSpaceMessage,
   replaceManagedSpaceThreadMembers,
+  reorderManagedSpaceRooms,
   searchSpaceMessages,
   sendSpaceMessage,
   setSpaceAttentionPolicy,
+  setSpaceBoardTopicState,
   setManagedSpaceRoomPermission,
   setSpaceThreadLock,
   setSpaceThreadFollowing,
@@ -74,6 +85,7 @@ import {
   toggleSpacePin,
   updateSpaceRoom,
   uploadSpaceAttachment,
+  type SpaceBoardTopic,
   type SpaceFeed,
   type SpaceMessage,
   type SpaceReaction,
@@ -83,11 +95,13 @@ import {
   type SpaceRoomControls,
   type SpaceRoomPermission,
   type SpaceRoomPermissionCapability,
+  type SpacePermissionExplanation,
   type SpaceSearchResult,
   type SpaceSearchCursor,
   type SpaceNotificationPreference,
 } from "@/features/spaces/space-client";
 import { createSpaceSendRequestIds } from "@/features/spaces/space-send-recovery";
+import { setMyOrbitSavedItem } from "@/features/orbit/saved-items";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -273,6 +287,19 @@ function SpacePage() {
   const [threadMembersOpen, setThreadMembersOpen] = useState(false);
   const [threadMemberUserIds, setThreadMemberUserIds] = useState<string[]>([]);
   const [threadMemberSaving, setThreadMemberSaving] = useState(false);
+  const [boardTopics, setBoardTopics] = useState<SpaceBoardTopic[]>([]);
+  const [boardTitle, setBoardTitle] = useState("");
+  const [boardBody, setBoardBody] = useState("");
+  const [boardTags, setBoardTags] = useState("");
+  const [boardSaving, setBoardSaving] = useState(false);
+  const [roomManagerOpen, setRoomManagerOpen] = useState(false);
+  const [newRoomName, setNewRoomName] = useState("");
+  const [newRoomDescription, setNewRoomDescription] = useState("");
+  const [newRoomType, setNewRoomType] = useState<Room["room_type"]>("conversation");
+  const [newRoomGroupId, setNewRoomGroupId] = useState("");
+  const [roomManagerBusy, setRoomManagerBusy] = useState(false);
+  const [permissionExplanation, setPermissionExplanation] =
+    useState<SpacePermissionExplanation | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const timelineEndRef = useRef<HTMLDivElement | null>(null);
   const threadEndRef = useRef<HTMLDivElement | null>(null);
@@ -298,12 +325,14 @@ function SpacePage() {
   const loadRoom = useCallback(async (roomId: string) => {
     setMessagesLoading(true);
     try {
-      const [next, controls] = await Promise.all([
+      const [next, controls, topics] = await Promise.all([
         getRoomFeed(roomId),
         getSpaceRoomControls(roomId),
+        getSpaceBoardTopics(roomId),
       ]);
       setFeed(next);
       setRoomControls(controls);
+      setBoardTopics(topics);
       const lastMessage = next.items.at(-1);
       if (lastMessage) void markSpaceRoomRead(roomId, lastMessage.id).catch(() => undefined);
     } catch (loadError) {
@@ -393,6 +422,7 @@ function SpacePage() {
     setMentionedRoleIds([]);
     setSelectedFile(null);
     setRoomControls(emptyRoomControls);
+    setBoardTopics([]);
     setSelectedRoomId(roomId);
   }
 
@@ -930,6 +960,134 @@ function SpacePage() {
     }
   }
 
+  async function createRoom() {
+    if (!workspace || !newRoomName.trim()) return;
+    setRoomManagerBusy(true);
+    try {
+      await createManagedSpaceRoom({
+        spaceId: workspace.space.id,
+        contextGroupId: newRoomGroupId || workspace.groups[0]?.id || null,
+        displayName: newRoomName,
+        description: newRoomDescription,
+        roomType: newRoomType,
+        visibility: "members",
+        postingPolicy: "members",
+      });
+      setNewRoomName("");
+      setNewRoomDescription("");
+      await loadWorkspace();
+      toast.success("Room created");
+    } catch (createError) {
+      toast.error(createError instanceof Error ? createError.message : "Could not create Room");
+    } finally {
+      setRoomManagerBusy(false);
+    }
+  }
+
+  async function moveRoom(roomId: string, direction: -1 | 1) {
+    if (!workspace) return;
+    const ordered = workspace.rooms.map((room) => room.id);
+    const currentIndex = ordered.indexOf(roomId);
+    const nextIndex = currentIndex + direction;
+    if (currentIndex < 0 || nextIndex < 0 || nextIndex >= ordered.length) return;
+    [ordered[currentIndex], ordered[nextIndex]] = [ordered[nextIndex]!, ordered[currentIndex]!];
+    setRoomManagerBusy(true);
+    try {
+      await reorderManagedSpaceRooms(workspace.space.id, ordered);
+      await loadWorkspace();
+      toast.success("Room order updated");
+    } catch (reorderError) {
+      toast.error(reorderError instanceof Error ? reorderError.message : "Could not reorder Rooms");
+    } finally {
+      setRoomManagerBusy(false);
+    }
+  }
+
+  async function archiveRoom(room: Room) {
+    setRoomManagerBusy(true);
+    try {
+      await archiveManagedSpaceRoom(
+        room.id,
+        "Archived by a Space manager from Room administration.",
+      );
+      await loadWorkspace();
+      toast.success("Room archived; its history remains retained");
+    } catch (archiveError) {
+      toast.error(archiveError instanceof Error ? archiveError.message : "Could not archive Room");
+    } finally {
+      setRoomManagerBusy(false);
+    }
+  }
+
+  async function createBoardTopic() {
+    if (!selectedRoom || selectedRoom.room_type !== "board") return;
+    setBoardSaving(true);
+    try {
+      await createSpaceBoardTopic({
+        roomId: selectedRoom.id,
+        title: boardTitle,
+        content: boardBody,
+        tags: boardTags
+          .split(",")
+          .map((tag) => tag.trim())
+          .filter(Boolean),
+      });
+      setBoardTitle("");
+      setBoardBody("");
+      setBoardTags("");
+      await loadRoom(selectedRoom.id);
+      toast.success("Board topic published");
+    } catch (boardError) {
+      toast.error(boardError instanceof Error ? boardError.message : "Could not create topic");
+    } finally {
+      setBoardSaving(false);
+    }
+  }
+
+  async function changeBoardState(topic: SpaceBoardTopic, state: SpaceBoardTopic["state"]) {
+    if (!selectedRoom) return;
+    try {
+      await setSpaceBoardTopicState(topic.threadId, state);
+      await loadRoom(selectedRoom.id);
+      toast.success(`Topic marked ${state}`);
+    } catch (boardError) {
+      toast.error(
+        boardError instanceof Error ? boardError.message : "Could not change topic state",
+      );
+    }
+  }
+
+  async function explainRoleAccess() {
+    if (!selectedRoom || permissionSubjectType !== "role" || !permissionSubjectId) return;
+    try {
+      setPermissionExplanation(
+        await explainManagedSpaceRoomPermission({
+          roomId: selectedRoom.id,
+          roleId: permissionSubjectId,
+          capability: permissionCapability,
+        }),
+      );
+    } catch (explainError) {
+      toast.error(
+        explainError instanceof Error ? explainError.message : "Could not explain access",
+      );
+    }
+  }
+
+  async function saveCurrentSpace() {
+    if (!workspace) return;
+    try {
+      await setMyOrbitSavedItem({
+        objectType: "space",
+        objectId: workspace.space.id,
+        saved: true,
+      });
+      toast.success("Space added to Saved work");
+    } catch (saveError) {
+      toast.error(saveError instanceof Error ? saveError.message : "Could not save Space");
+    }
+  }
+
   async function toggleThreadLock() {
     if (!selectedRoom || !activeThread) return;
     const locked = !activeThread.summary.lockedAt;
@@ -1032,6 +1190,31 @@ function SpacePage() {
               <p className="mt-2 line-clamp-2 text-xs leading-5 text-white/55">
                 {workspace.space.description}
               </p>
+              <div className="mt-4 flex gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 flex-1 bg-white/5 text-[11px] text-white hover:bg-white/10 hover:text-white"
+                  onClick={() => void saveCurrentSpace()}
+                >
+                  <Bookmark className="h-3.5 w-3.5" /> Save Space
+                </Button>
+                {feed.canManage ? (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 flex-1 bg-white/5 text-[11px] text-white hover:bg-white/10 hover:text-white"
+                    onClick={() => {
+                      setNewRoomGroupId(workspace.groups[0]?.id ?? "");
+                      setRoomManagerOpen(true);
+                    }}
+                  >
+                    <Settings className="h-3.5 w-3.5" /> Rooms
+                  </Button>
+                ) : null}
+              </div>
             </div>
             <nav className="max-h-[42vh] overflow-y-auto p-3 lg:max-h-[calc(100vh-18rem)]">
               {roomsByGroup.map(({ group, rooms }) => (
@@ -1181,6 +1364,113 @@ function SpacePage() {
               {messagesLoading ? (
                 <div className="flex h-full items-center justify-center">
                   <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                </div>
+              ) : selectedRoom?.room_type === "board" ? (
+                <div className="space-y-4">
+                  <div className="rounded-2xl border border-border bg-card p-4">
+                    <div className="flex items-center gap-2">
+                      <ClipboardList className="h-4 w-4 text-[var(--saffron)]" />
+                      <h3 className="font-semibold">Start a structured topic</h3>
+                    </div>
+                    <div className="mt-3 grid gap-3">
+                      <Input
+                        value={boardTitle}
+                        onChange={(event) => setBoardTitle(event.target.value)}
+                        maxLength={160}
+                        placeholder="A clear question or decision title"
+                      />
+                      <Textarea
+                        value={boardBody}
+                        onChange={(event) => setBoardBody(event.target.value)}
+                        maxLength={4000}
+                        placeholder="Context, evidence and the response you need"
+                      />
+                      <div className="flex flex-col gap-2 sm:flex-row">
+                        <Input
+                          value={boardTags}
+                          onChange={(event) => setBoardTags(event.target.value)}
+                          placeholder="Tags, comma separated (up to 5)"
+                        />
+                        <Button
+                          type="button"
+                          disabled={
+                            boardSaving || boardTitle.trim().length < 3 || !boardBody.trim()
+                          }
+                          onClick={() => void createBoardTopic()}
+                        >
+                          {boardSaving ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Plus className="h-4 w-4" />
+                          )}
+                          Publish topic
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                  {boardTopics.length ? (
+                    boardTopics.map((topic) => (
+                      <article
+                        key={topic.threadId}
+                        className="rounded-2xl border border-border bg-card p-4"
+                      >
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge variant={topic.state === "open" ? "secondary" : "outline"}>
+                            {topic.state}
+                          </Badge>
+                          {topic.tags.map((tag) => (
+                            <Badge key={tag} variant="outline">
+                              #{tag}
+                            </Badge>
+                          ))}
+                        </div>
+                        <h3 className="mt-3 font-display text-xl">{topic.title}</h3>
+                        <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">
+                          {topic.body}
+                        </p>
+                        <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                          <span>{topic.authorDisplayName}</span>
+                          <span>·</span>
+                          <span>{topic.replyCount} replies</span>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="ml-auto h-8"
+                            onClick={() => {
+                              const parent = feed.items.find(
+                                (message) => message.id === topic.messageId,
+                              );
+                              if (parent) openThread(parent);
+                            }}
+                          >
+                            Open discussion
+                          </Button>
+                          <select
+                            aria-label={`State for ${topic.title}`}
+                            value={topic.state}
+                            onChange={(event) =>
+                              void changeBoardState(
+                                topic,
+                                event.target.value as SpaceBoardTopic["state"],
+                              )
+                            }
+                            className="h-8 rounded-md border border-input bg-background px-2 text-xs text-foreground"
+                          >
+                            <option value="open">Open</option>
+                            <option value="answered">Answered</option>
+                            <option value="resolved">Resolved</option>
+                            <option value="closed">Closed</option>
+                          </select>
+                        </div>
+                      </article>
+                    ))
+                  ) : (
+                    <div className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+                      No board topics yet. Start with a clear title and enough context for a useful
+                      answer.
+                    </div>
+                  )}
                 </div>
               ) : feed.items.length === 0 ? (
                 <div className="flex h-full min-h-72 items-center justify-center text-center">
@@ -1627,6 +1917,119 @@ function SpacePage() {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={roomManagerOpen} onOpenChange={setRoomManagerOpen}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Room structure</DialogTitle>
+            <DialogDescription>
+              Create, order or archive Rooms. Archive is reversible in the control plane and never
+              deletes history.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            {workspace.rooms.map((room, index) => (
+              <div
+                key={room.id}
+                className="flex items-center gap-2 rounded-xl border border-border p-3"
+              >
+                {roomIcon(room.room_type)}
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">{room.display_name}</p>
+                  <p className="text-[10px] capitalize text-muted-foreground">
+                    {room.room_type.replace("_", " ")}
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8"
+                  disabled={roomManagerBusy || index === 0}
+                  aria-label={`Move ${room.display_name} up`}
+                  onClick={() => void moveRoom(room.id, -1)}
+                >
+                  <ArrowUp className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8"
+                  disabled={roomManagerBusy || index === workspace.rooms.length - 1}
+                  aria-label={`Move ${room.display_name} down`}
+                  onClick={() => void moveRoom(room.id, 1)}
+                >
+                  <ArrowDown className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8 text-destructive"
+                  disabled={roomManagerBusy || workspace.rooms.length === 1}
+                  aria-label={`Archive ${room.display_name}`}
+                  onClick={() => void archiveRoom(room)}
+                >
+                  <Archive className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            ))}
+          </div>
+          <div className="space-y-3 rounded-2xl border border-border bg-muted/35 p-4">
+            <h3 className="text-sm font-semibold">Create a Room</h3>
+            <Input
+              value={newRoomName}
+              onChange={(event) => setNewRoomName(event.target.value)}
+              maxLength={100}
+              placeholder="Room name"
+            />
+            <Textarea
+              value={newRoomDescription}
+              onChange={(event) => setNewRoomDescription(event.target.value)}
+              maxLength={1000}
+              placeholder="Purpose and participation context"
+            />
+            <div className="grid gap-2 sm:grid-cols-2">
+              <select
+                value={newRoomGroupId}
+                onChange={(event) => setNewRoomGroupId(event.target.value)}
+                className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+              >
+                {workspace.groups.map((group) => (
+                  <option key={group.id} value={group.id}>
+                    {group.display_name}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={newRoomType}
+                onChange={(event) => setNewRoomType(event.target.value as Room["room_type"])}
+                className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+              >
+                <option value="conversation">Conversation</option>
+                <option value="board">Board / forum</option>
+                <option value="announcement">Announcement</option>
+                <option value="help">Help</option>
+                <option value="evidence">Evidence</option>
+                <option value="event_index">Event index</option>
+              </select>
+            </div>
+            <Button
+              type="button"
+              disabled={roomManagerBusy || !newRoomName.trim()}
+              onClick={() => void createRoom()}
+            >
+              {roomManagerBusy ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Plus className="h-4 w-4" />
+              )}{" "}
+              Create Room
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={roomSettingsOpen} onOpenChange={setRoomSettingsOpen}>
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
@@ -1799,6 +2202,44 @@ function SpacePage() {
               {permissionSaving === "new" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Add override
             </Button>
+            {permissionSubjectType === "role" ? (
+              <div className="rounded-xl border border-border bg-background/60 p-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <p className="text-xs font-semibold">View effective access as this role</p>
+                    <p className="mt-1 text-[11px] text-muted-foreground">
+                      This explains inherited access without impersonating a member session.
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => void explainRoleAccess()}
+                  >
+                    Explain access
+                  </Button>
+                </div>
+                {permissionExplanation ? (
+                  <div className="mt-3 text-xs">
+                    <Badge
+                      variant={
+                        permissionExplanation.effective === "allow" ? "secondary" : "destructive"
+                      }
+                    >
+                      {permissionExplanation.effective}
+                    </Badge>
+                    <span className="ml-2 text-muted-foreground">
+                      {permissionExplanation.reason}
+                    </span>
+                    <p className="mt-2 text-[11px] text-muted-foreground">
+                      Role chain:{" "}
+                      {permissionExplanation.roleChain.map((role) => role.name).join(" → ")}
+                    </p>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setRoomSettingsOpen(false)}>

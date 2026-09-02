@@ -43,6 +43,7 @@ import { Route as AppMissionsRouteImport } from './routes/app.missions'
 import { Route as AppModerationRouteImport } from './routes/app.moderation'
 import { Route as AppNotificationsRouteImport } from './routes/app.notifications'
 import { Route as AppProfileRouteImport } from './routes/app.profile'
+import { Route as AppSavedRouteImport } from './routes/app.saved'
 import { Route as AppSettingsRouteImport } from './routes/app.settings'
 import { Route as AppSkillsRouteImport } from './routes/app.skills'
 import { Route as AppSodaRouteImport } from './routes/app.soda'
@@ -254,6 +255,11 @@ const AppNotificationsRoute = AppNotificationsRouteImport.update({
 const AppProfileRoute = AppProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSavedRoute = AppSavedRouteImport.update({
+  id: '/saved',
+  path: '/saved',
   getParentRoute: () => AppRoute,
 } as any)
 const AppSettingsRoute = AppSettingsRouteImport.update({
@@ -503,6 +509,7 @@ export interface FileRoutesByFullPath {
   '/app/moderation': typeof AppModerationRoute
   '/app/notifications': typeof AppNotificationsRoute
   '/app/profile': typeof AppProfileRoute
+  '/app/saved': typeof AppSavedRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/skills': typeof AppSkillsRouteWithChildren
   '/app/soda': typeof AppSodaRouteWithChildren
@@ -575,6 +582,7 @@ export interface FileRoutesByTo {
   '/app/moderation': typeof AppModerationRoute
   '/app/notifications': typeof AppNotificationsRoute
   '/app/profile': typeof AppProfileRoute
+  '/app/saved': typeof AppSavedRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/vouch': typeof AppVouchRoute
   '/profile/$id': typeof ProfileIdRoute
@@ -650,6 +658,7 @@ export interface FileRoutesById {
   '/app/moderation': typeof AppModerationRoute
   '/app/notifications': typeof AppNotificationsRoute
   '/app/profile': typeof AppProfileRoute
+  '/app/saved': typeof AppSavedRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/skills': typeof AppSkillsRouteWithChildren
   '/app/soda': typeof AppSodaRouteWithChildren
@@ -730,6 +739,7 @@ export interface FileRouteTypes {
     | '/app/moderation'
     | '/app/notifications'
     | '/app/profile'
+    | '/app/saved'
     | '/app/settings'
     | '/app/skills'
     | '/app/soda'
@@ -802,6 +812,7 @@ export interface FileRouteTypes {
     | '/app/moderation'
     | '/app/notifications'
     | '/app/profile'
+    | '/app/saved'
     | '/app/settings'
     | '/app/vouch'
     | '/profile/$id'
@@ -876,6 +887,7 @@ export interface FileRouteTypes {
     | '/app/moderation'
     | '/app/notifications'
     | '/app/profile'
+    | '/app/saved'
     | '/app/settings'
     | '/app/skills'
     | '/app/soda'
@@ -1184,6 +1196,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/app/profile'
       preLoaderRoute: typeof AppProfileRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/saved': {
+      id: '/app/saved'
+      path: '/saved'
+      fullPath: '/app/saved'
+      preLoaderRoute: typeof AppSavedRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/settings': {
@@ -1637,6 +1656,7 @@ interface AppRouteChildren {
   AppModerationRoute: typeof AppModerationRoute
   AppNotificationsRoute: typeof AppNotificationsRoute
   AppProfileRoute: typeof AppProfileRoute
+  AppSavedRoute: typeof AppSavedRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppSkillsRoute: typeof AppSkillsRouteWithChildren
   AppSodaRoute: typeof AppSodaRouteWithChildren
@@ -1665,6 +1685,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppModerationRoute: AppModerationRoute,
   AppNotificationsRoute: AppNotificationsRoute,
   AppProfileRoute: AppProfileRoute,
+  AppSavedRoute: AppSavedRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppSkillsRoute: AppSkillsRouteWithChildren,
   AppSodaRoute: AppSodaRouteWithChildren,

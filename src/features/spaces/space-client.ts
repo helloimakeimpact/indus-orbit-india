@@ -67,6 +67,29 @@ export type SpaceWorkspace = {
   members: SpaceMember[];
 };
 
+export type SpaceBoardTopic = {
+  threadId: string;
+  messageId: string;
+  title: string;
+  body: string | null;
+  state: "open" | "answered" | "resolved" | "closed";
+  tags: string[];
+  authorId: string;
+  authorDisplayName: string;
+  replyCount: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type SpacePermissionExplanation = {
+  roomId: string;
+  roleId: string;
+  capability: SpaceRoomPermissionCapability;
+  effective: "allow" | "deny";
+  reason: string;
+  roleChain: Array<{ id: string; name: string }>;
+};
+
 const notificationPreferences = new Set<SpaceNotificationPreference>([
   "default",
   "all",
@@ -459,6 +482,188 @@ export async function updateSpaceRoom(
     _slow_mode_seconds: normalizeSpaceSlowModeSeconds(slowModeSeconds),
   });
   if (error) throw new Error(error.message);
+}
+
+function parseBoardTopics(value: unknown): SpaceBoardTopic[] {
+  if (!Array.isArray(value)) return [];
+  const states = new Set(["open", "answered", "resolved", "closed"]);
+  return value.flatMap((candidate) => {
+    const row = objectValue(candidate);
+    const required = [
+      textValue(row.threadId),
+      textValue(row.messageId),
+      textValue(row.title),
+      textValue(row.authorId),
+      textValue(row.authorDisplayName),
+      textValue(row.createdAt),
+      textValue(row.updatedAt),
+    ];
+    const state = textValue(row.state);
+    if (required.some((item) => !item) || !states.has(state) || !Number.isInteger(row.replyCount)) {
+      return [];
+    }
+    return [
+      {
+        threadId: required[0]!,
+        messageId: required[1]!,
+        title: required[2]!,
+        body: typeof row.body === "string" ? row.body : null,
+        state: state as SpaceBoardTopic["state"],
+        tags: Array.isArray(row.tags)
+          ? row.tags.filter((tag): tag is string => typeof tag === "string")
+          : [],
+        authorId: required[3]!,
+        authorDisplayName: required[4]!,
+        replyCount: row.replyCount as number,
+        createdAt: required[5]!,
+        updatedAt: required[6]!,
+      },
+    ];
+  });
+}
+
+export async function createManagedSpaceRoom(input: {
+  spaceId: string;
+  contextGroupId: string | null;
+  displayName: string;
+  description: string;
+  roomType: Room["room_type"];
+  visibility: Room["visibility"];
+  postingPolicy: Room["posting_policy"];
+}): Promise<void> {
+  const { error } = await supabase.rpc(
+    "create_managed_conversation_room" as never,
+    {
+      _space_id: input.spaceId,
+      _context_group_id: input.contextGroupId,
+      _display_name: input.displayName.trim(),
+      _description: input.description.trim(),
+      _room_type: input.roomType,
+      _visibility: input.visibility,
+      _posting_policy: input.postingPolicy,
+      _client_request_id: crypto.randomUUID(),
+    } as never,
+  );
+  if (error) throw new Error(error.message);
+}
+
+export async function reorderManagedSpaceRooms(
+  spaceId: string,
+  orderedRoomIds: readonly string[],
+): Promise<void> {
+  const { error } = await supabase.rpc(
+    "reorder_managed_conversation_rooms" as never,
+    {
+      _space_id: spaceId,
+      _ordered_room_ids: [...orderedRoomIds],
+      _client_request_id: crypto.randomUUID(),
+    } as never,
+  );
+  if (error) throw new Error(error.message);
+}
+
+export async function archiveManagedSpaceRoom(roomId: string, reason: string): Promise<void> {
+  const { error } = await supabase.rpc(
+    "set_managed_conversation_room_archive" as never,
+    {
+      _room_id: roomId,
+      _archived: true,
+      _reason: reason.trim(),
+      _client_request_id: crypto.randomUUID(),
+    } as never,
+  );
+  if (error) throw new Error(error.message);
+}
+
+export async function getSpaceBoardTopics(roomId: string): Promise<SpaceBoardTopic[]> {
+  const { data, error } = await supabase.rpc(
+    "list_my_conversation_board_topics" as never,
+    {
+      _room_id: roomId,
+    } as never,
+  );
+  // Expand/migrate/contract safety: an older deployment must keep its Room
+  // feed usable while the additive board contract awaits release approval.
+  if (isMissingSchemaContract(error)) return [];
+  if (error) throw new Error(error.message);
+  return parseBoardTopics(data);
+}
+
+export async function createSpaceBoardTopic(input: {
+  roomId: string;
+  title: string;
+  content: string;
+  tags: readonly string[];
+}): Promise<void> {
+  const { error } = await supabase.rpc(
+    "create_my_conversation_board_topic" as never,
+    {
+      _room_id: input.roomId,
+      _title: input.title.trim(),
+      _content: input.content.trim(),
+      _tags: [...input.tags],
+      _client_request_id: crypto.randomUUID(),
+    } as never,
+  );
+  if (error) throw new Error(error.message);
+}
+
+export async function setSpaceBoardTopicState(
+  threadId: string,
+  state: SpaceBoardTopic["state"],
+): Promise<void> {
+  const { error } = await supabase.rpc(
+    "set_my_conversation_board_topic_state" as never,
+    {
+      _thread_id: threadId,
+      _state: state,
+      _client_request_id: crypto.randomUUID(),
+    } as never,
+  );
+  if (error) throw new Error(error.message);
+}
+
+export async function explainManagedSpaceRoomPermission(input: {
+  roomId: string;
+  roleId: string;
+  capability: SpaceRoomPermissionCapability;
+}): Promise<SpacePermissionExplanation> {
+  const { data, error } = await supabase.rpc(
+    "explain_managed_conversation_room_permission" as never,
+    {
+      _room_id: input.roomId,
+      _role_id: input.roleId,
+      _capability: input.capability,
+    } as never,
+  );
+  if (error) throw new Error(error.message);
+  const row = objectValue(data);
+  const effective = textValue(row.effective);
+  const roleChain = Array.isArray(row.roleChain)
+    ? row.roleChain.flatMap((candidate) => {
+        const role = objectValue(candidate);
+        const id = textValue(role.id);
+        const name = textValue(role.name);
+        return id && name ? [{ id, name }] : [];
+      })
+    : [];
+  if (
+    textValue(row.roomId) !== input.roomId ||
+    textValue(row.roleId) !== input.roleId ||
+    textValue(row.capability) !== input.capability ||
+    (effective !== "allow" && effective !== "deny") ||
+    !textValue(row.reason)
+  ) {
+    throw new Error("The Room permission explanation was incomplete");
+  }
+  return {
+    roomId: input.roomId,
+    roleId: input.roleId,
+    capability: input.capability,
+    effective,
+    reason: textValue(row.reason),
+    roleChain,
+  };
 }
 
 export async function moderateSpaceMessage(
