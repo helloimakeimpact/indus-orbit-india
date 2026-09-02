@@ -15,7 +15,7 @@ Related documents:
 
 ## 1. Current implemented proof
 
-The demo project has an RLS-protected I/O control plane, three clearly labelled demo capacity sources, custom-authenticated `io-gateway` v27, custom-key `io-openai` v9 and custom-authenticated `io-provider-conformance` v3. Released web source moves the authenticated product to `/io`; it uses its own shell and does not require Community onboarding. Provider traffic remains off.
+The demo project has an RLS-protected I/O control plane, three clearly labelled demo capacity sources, custom-authenticated `io-gateway` v28, custom-key `io-openai` v10, custom-authenticated `io-provider-conformance` v3 and service-authenticated `io-health-probe` v1. Released web source moves the authenticated product to `/io`; it uses its own shell and does not require Community onboarding. Provider traffic remains off.
 
 The existing people-messaging system is also now hardened in the demo project: only accepted, non-suspended connections can insert a direct message, recipients can update only `read_at`, and new messages are capped at 4,000 characters.
 
@@ -25,7 +25,7 @@ The shared-message client extraction in `src/features/conversations/` provides c
 | ------------------------ | --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Web control room         | `src/features/io/IoOverview.tsx`                                      | Member UI with local/OpenCode, provider catalogue, route/model selection, budget status, settled cost and safe session/receipt history.                                                  |
 | Local terminal connector | `src/features/io/opencode.ts`                                         | Loopback-only health → session → prompt with durable lifecycle, cancellation, time/input/1 MiB response bounds. Daemon-confirmed abort and Realtime remain.                              |
-| Provider gateway         | `supabase/functions/io-gateway/index.ts`                              | Demo v27 is Released with bounded SSE/JSON transport, strict validation, transparent fee settlement, client-to-provider cancellation and a shared execution core used by `io-openai` v9. |
+| Provider gateway         | `supabase/functions/io-gateway/index.ts`                              | Demo v28 is Released with bounded SSE/JSON transport, strict validation, transparent fee settlement, client-to-provider cancellation, corrected health evidence and a shared execution core used by `io-openai` v10. |
 | Browser data access      | `src/features/io/io.client.ts`                                        | Browser-facing I/O data access, explicitly separated from privileged Edge/RPC work.                                                                                                      |
 | Control-plane schema     | `supabase/migrations/20260730155210_create_io_port_control_plane.sql` | Workspaces, memberships, sources, grants, policy records, key metadata and safe audit events.                                                                                            |
 | I/O nested shell         | `src/features/io/IoWorkspaceShell.tsx`                                | Working in-page context navigation and evidence guide; preview-only workspace/health/activity claims are removed.                                                                        |

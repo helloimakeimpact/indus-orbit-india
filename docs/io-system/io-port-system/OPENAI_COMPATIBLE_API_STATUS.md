@@ -1,6 +1,6 @@
 # OpenAI-compatible I/O API status
 
-Status: **Partial**, with the bounded v1 foundation, transparent fee/commercial gate, multi-window key limits, per-key spend cap, CN workspace policy and HMAC safety identifier **Released** to the hosted Indus Orbit control plane. On 24 August 2026, `io-openai` v8 released the stateless Responses endpoint, SSE response transport, and fail-closed request/response contracts for function tools, strict JSON output and HTTPS image input; v9 added provider-fetch cancellation. Provider routing remains disabled, so no paid model traffic was created and advanced provider behavior is not yet end-to-end Released.
+Status: **Partial**, with the bounded v1 foundation, transparent fee/commercial gate, multi-window key limits, per-key spend cap, CN workspace policy and HMAC safety identifier **Released** to the hosted Indus Orbit control plane. On 24 August 2026, `io-openai` v8 released the stateless Responses endpoint, SSE response transport, and fail-closed request/response contracts for function tools, strict JSON output and HTTPS image input; v9 added provider-fetch cancellation. On 2 September 2026, v10 corrected the shared endpoint-outcome RPC contract so live route health evidence is recorded reliably. Provider routing remains disabled, so no paid model traffic was created and advanced provider behavior is not yet end-to-end Released.
 
 ## Released contract
 
@@ -43,7 +43,7 @@ Migration `20260819232624_add_io_openai_api_foundation.sql` provides:
 
 `io-openai` has Supabase JWT verification disabled because an I/O API key is not a Supabase JWT. The function itself rejects any request carrying a browser `Origin`, validates the exact Bearer-key shape, hashes the supplied value, calls the service-only authentication/rate RPC and checks the required scope before loading any catalogue or route. Persistent I/O keys are only for servers, CLIs and local agents. The signed-in web product uses the JWT-protected gateway instead.
 
-Every inference request uses `executePartnerRoute`, shared with `io-gateway` v27. The signed-in member gateway also exposes a no-dispatch preflight for route/cost explanation. The common execution path performs:
+Every inference request uses `executePartnerRoute`, shared with `io-gateway` v28. The signed-in member gateway also exposes a no-dispatch preflight for route/cost explanation. The common execution path performs:
 
 1. active workspace capacity-entitlement lookup;
 2. ready/provider/model/capability/price/health/circuit filtering;
@@ -73,8 +73,8 @@ This boundary prevents a broad “OpenAI-compatible” claim from hiding semanti
 - hosted migration ledger contains 90 entries, including `20260820191501` (workspace/key policy), `20260820191544` (provider conformance), `20260820191815` (conformance FK indexes), the collaboration/Trust releases and `20260825122611` (Razorpay/GST/FX hardening);
 - function grants, private-table containment, security-definer and empty-search-path contracts passed on the hosted project;
 - a rolled-back hosted functional transaction passed raw-key shape, hash-only storage, allow/rate-limit behavior, counter bound, revocation and exactly-once audit checks;
-- `io-gateway` v27 is active with custom JWT verification, no-dispatch route preflight and provider-fetch cancellation;
-- `io-openai` v9 is active with custom-key verification, browser-origin key rejection, Chat SSE, the stateless Responses endpoint and provider-fetch cancellation;
+- `io-gateway` v28 is active with custom JWT verification, no-dispatch route preflight, provider-fetch cancellation and corrected endpoint-outcome recording;
+- `io-openai` v10 is active with custom-key verification, browser-origin key rejection, Chat SSE, the stateless Responses endpoint, provider-fetch cancellation and corrected endpoint-outcome recording;
 - `io-provider-conformance` v3 is active with its reviewed custom authentication boundary, while approvals/runs remain zero;
 - a live browser-origin invalid-key probe returned `403`; the equivalent server-shaped invalid-key probe returned `401`; neither loaded provider capacity or made inference traffic;
 - the hosted 550-basis-point policy, fee-rounding boundary, commercial trigger, admin projection, OpenAI Luna price v2 and DeepSeek CN disclosure were verified;

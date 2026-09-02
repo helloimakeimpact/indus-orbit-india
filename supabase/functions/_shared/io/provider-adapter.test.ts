@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { GatewayError } from "./errors.ts";
-import { discoverProviderModel, sendProviderChat } from "./provider-adapter.ts";
+import {
+  discoverProviderModel,
+  probeProviderConnection,
+  sendProviderChat,
+} from "./provider-adapter.ts";
 import type { GatewayMessage, ProviderConnection } from "./types.ts";
 
 const messages: GatewayMessage[] = [{ role: "user", content: "Reply with a short test." }];
@@ -184,6 +188,32 @@ describe("sendProviderChat request contracts", { concurrency: false }, () => {
         Response.json(
           { object: "list", data: [{ id: "model-test", object: "model" }] },
           { headers: { "x-request-id": "req-models" } },
+        ),
+    );
+  });
+
+  it("probes the exact Gemini model without issuing inference", async () => {
+    await captureProviderRequests(
+      async (requests) => {
+        const result = await probeProviderConnection(
+          connection({
+            providerKey: "gemini",
+            integrationStyle: "native_adapter",
+            providerModelId: "gemini-test",
+            baseUrl: "https://generativelanguage.googleapis.com/v1beta",
+          }),
+        );
+        assert.equal(
+          requests[0].url,
+          "https://generativelanguage.googleapis.com/v1beta/models/gemini-test",
+        );
+        assert.equal(requests[0].headers.get("x-goog-api-key"), "fixture-secret");
+        assert.deepEqual(result, { modelIdMatched: true, providerRequestId: "req-gemini" });
+      },
+      () =>
+        Response.json(
+          { name: "models/gemini-test" },
+          { headers: { "x-request-id": "req-gemini" } },
         ),
     );
   });

@@ -344,9 +344,22 @@ export async function recordEndpointOutcome(
 ) {
   const { error } = await admin.rpc("io_record_endpoint_outcome", {
     _endpoint_id: input.endpointId,
-    _succeeded: input.succeeded,
+    _success: input.succeeded,
     _latency_ms: Math.max(0, Math.round(input.latencyMs)),
     _error_code: input.errorCode ?? null,
   });
   if (error) console.error("io-gateway health evidence failed", error.message);
+}
+
+export async function recordEndpointProbe(
+  admin: SupabaseClient,
+  input: { endpointId: string; succeeded: boolean; latencyMs: number; errorCode?: string },
+) {
+  const { error } = await admin.rpc("io_record_endpoint_probe", {
+    _endpoint_id: input.endpointId,
+    _success: input.succeeded,
+    _latency_ms: Math.max(0, Math.round(input.latencyMs)),
+    _error_code: input.errorCode ?? null,
+  });
+  if (error) throw error;
 }

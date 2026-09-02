@@ -9,6 +9,8 @@ import {
   conservativeInputTokenBound,
   fingerprintRouteRequest,
   nanosToMinorUnits,
+  recordEndpointOutcome,
+  recordEndpointProbe,
 } from "./operations.ts";
 import type { ProviderConnection, RouteSelection } from "./types.ts";
 
@@ -160,5 +162,58 @@ describe("I/O operational calculations", () => {
     assert.match(first, /^[a-f0-9]{64}$/);
     assert.equal(first, second);
     assert.equal(first.includes("private prompt"), false);
+  });
+
+  it("records endpoint health against the exact database contract", async () => {
+    let invocation: { name: string; args: Record<string, unknown> } | null = null;
+    const admin = {
+      async rpc(name: string, args: Record<string, unknown>) {
+        invocation = { name, args };
+        return { error: null };
+      },
+    };
+
+    await recordEndpointOutcome(admin as never, {
+      endpointId: "endpoint-test",
+      succeeded: true,
+      latencyMs: 12.6,
+    });
+
+    assert.deepEqual(invocation, {
+      name: "io_record_endpoint_outcome",
+      args: {
+        _endpoint_id: "endpoint-test",
+        _success: true,
+        _latency_ms: 13,
+        _error_code: null,
+      },
+    });
+  });
+
+  it("records a scheduled probe through its service-only contract", async () => {
+    let invocation: { name: string; args: Record<string, unknown> } | null = null;
+    const admin = {
+      async rpc(name: string, args: Record<string, unknown>) {
+        invocation = { name, args };
+        return { error: null };
+      },
+    };
+
+    await recordEndpointProbe(admin as never, {
+      endpointId: "endpoint-test",
+      succeeded: false,
+      latencyMs: 99.5,
+      errorCode: "provider_timeout",
+    });
+
+    assert.deepEqual(invocation, {
+      name: "io_record_endpoint_probe",
+      args: {
+        _endpoint_id: "endpoint-test",
+        _success: false,
+        _latency_ms: 100,
+        _error_code: "provider_timeout",
+      },
+    });
   });
 });

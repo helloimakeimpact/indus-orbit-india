@@ -227,6 +227,18 @@ export async function loadReadyProviderConnections(
     .flatMap((connection) => (connection ? [connection] : []));
 }
 
+export async function loadProbeableProviderConnections(
+  admin: SupabaseClient,
+): Promise<ProviderConnection[]> {
+  const { data, error } = await admin.rpc("io_get_probeable_endpoint_connections");
+  if (error) throw error;
+
+  return (Array.isArray(data) ? data : [])
+    .map((value) => asRecord(value))
+    .flatMap((row) => (row ? [readConnection(row)] : []))
+    .flatMap((connection) => (connection ? [connection] : []));
+}
+
 export async function loadConformanceProviderConnection(
   admin: SupabaseClient,
   runId: string,
@@ -451,6 +463,50 @@ export async function discoverProviderModel(connection: ProviderConnection) {
   });
   return {
     modelIdMatched,
+    providerRequestId: providerRequestId(upstream),
+  };
+}
+
+export async function probeProviderConnection(connection: ProviderConnection) {
+  if (connection.integrationStyle === "openai_compatible") {
+    return discoverProviderModel(connection);
+  }
+  if (connection.integrationStyle !== "native_adapter" || connection.providerKey !== "gemini") {
+    throw new GatewayError(
+      "not_configured",
+      503,
+      "The configured provider does not have a reviewed discovery probe.",
+    );
+  }
+
+  const apiKey = resolveSecret(connection.secretReference);
+  let upstream: Response;
+  try {
+    upstream = await fetch(
+      `${connection.baseUrl}/models/${encodeURIComponent(connection.providerModelId)}`,
+      {
+        method: "GET",
+        headers: { "x-goog-api-key": apiKey, Accept: "application/json" },
+        signal: AbortSignal.timeout(15_000),
+      },
+    );
+  } catch {
+    throw new GatewayError("upstream_failure", 502, "Provider model probe could not connect.");
+  }
+  if (!upstream.ok) {
+    throw new GatewayError(
+      upstream.status === 429 ? "rate_limited" : "upstream_failure",
+      upstream.status === 429 ? 429 : 502,
+      "Provider model probe did not complete.",
+      upstream.status,
+    );
+  }
+  const body = asRecord(await readProviderJson(upstream));
+  const modelName = body ? readString(body, "name") : null;
+  return {
+    modelIdMatched:
+      modelName === connection.providerModelId ||
+      modelName === `models/${connection.providerModelId}`,
     providerRequestId: providerRequestId(upstream),
   };
 }
