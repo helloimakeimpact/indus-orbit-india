@@ -24,6 +24,8 @@ Execution update, 2 September 2026 (structured collaboration and operations): th
 
 Execution update, 2 September 2026 (health recovery): hosted migration 111 releases a service-only probe target projection, synthetic outcome recorder and capability-checked incident trail. `io-health-probe` v1 is active with platform-JWT plus exact service-key authentication and performs only non-billable model discovery. Three failed scheduled probes open an automatic circuit; one successful probe recovers an automatic circuit; an operator-open circuit is never silently closed. The gateway's previously mismatched `_succeeded` RPC argument is corrected to `_success` and regression-tested. There are currently zero commercially eligible probe targets and no schedule credential in Vault, so no upstream request was made and scheduling remains Blocked on provider activation/secret setup.
 
+Execution update, 2 September 2026 (local command and handoff): the packaged OpenCode client and I/O web workspace now decode only the daemon-advertised command and visible-agent catalogues, pin a command's configured agent, bound arguments, create an exact five-minute review and consume it before one `POST /session/:id/command`. File, shell and network permissions remain separate once-only decisions. Members can explicitly download a private local JSON handoff containing the reviewed task tree, message/tool trail and full diffs; the browser warns that it contains code/output and does not upload it. Fixture coverage is Verified; real-daemon compatibility, daemon-issued tokens, private cloud audiences and signed installers remain separate release gates.
+
 ## Current release checkpoint
 
 Completed in the demo environment:

@@ -168,6 +168,93 @@ describe("packaged OpenCode client", () => {
     });
   });
 
+  it("executes only an advertised command with an exact, one-time review", async () => {
+    const calls: Array<{ url: string; body: string | null }> = [];
+    const client = new IOPortOpenCodeClient({
+      origin: "http://127.0.0.1:4096",
+      password: "a-strong-local-password",
+      fetch: async (input, init) => {
+        const url = String(input);
+        calls.push({ url, body: typeof init?.body === "string" ? init.body : null });
+        if (url.endsWith("/session/root/command")) {
+          return Response.json({
+            info: { id: "message-1", role: "assistant" },
+            parts: [{ type: "text", text: "Reviewed" }],
+          });
+        }
+        if (url.endsWith("/command")) {
+          return Response.json([
+            {
+              name: "review",
+              description: "Review local changes",
+              source: "command",
+              agent: "plan",
+              subtask: true,
+            },
+          ]);
+        }
+        if (url.endsWith("/agent")) {
+          return Response.json([
+            { name: "plan", description: "Read-only planner", mode: "primary" },
+            { name: "hidden", hidden: true },
+          ]);
+        }
+        return Response.json({});
+      },
+    });
+
+    const review = await client.prepareReviewedCommand({
+      sessionId: "root",
+      command: "review",
+      arguments: "branch",
+      agent: "build",
+    });
+    assert.equal(review.agent, "plan");
+    const result = await client.executeReviewedCommand({
+      review,
+      confirmationId: review.id,
+    });
+    assert.equal(result.content, "Reviewed");
+    assert.deepEqual(
+      JSON.parse(calls.find((call) => call.url.endsWith("/session/root/command"))?.body ?? "{}"),
+      { command: "review", arguments: "branch", agent: "plan" },
+    );
+    await assert.rejects(
+      client.executeReviewedCommand({ review, confirmationId: review.id }),
+      /not confirmed/,
+    );
+    await assert.rejects(
+      client.prepareReviewedCommand({
+        sessionId: "root",
+        command: "not-advertised",
+        agent: "plan",
+      }),
+      /no longer in the daemon catalogue/,
+    );
+  });
+
+  it("rejects a reviewed command when its exact fields are modified", async () => {
+    const client = new IOPortOpenCodeClient({
+      origin: "http://127.0.0.1:4096",
+      password: "a-strong-local-password",
+      fetch: async (input) =>
+        String(input).endsWith("/command")
+          ? Response.json([{ name: "review", agent: "plan" }])
+          : Response.json([{ name: "plan" }]),
+    });
+    const review = await client.prepareReviewedCommand({
+      sessionId: "root",
+      command: "review",
+    });
+    await assert.rejects(
+      client.executeReviewedCommand({
+        review: { ...review, arguments: "changed after review" },
+        confirmationId: review.id,
+      }),
+      /not confirmed/,
+    );
+  });
+
   it("fails closed when OpenCode does not acknowledge abort or revert", async () => {
     const client = new IOPortOpenCodeClient({
       origin: "http://127.0.0.1:4096",

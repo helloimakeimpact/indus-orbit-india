@@ -2,6 +2,8 @@ const MAX_JSON_BYTES = 2 * 1_024 * 1_024;
 const MAX_SSE_FRAME_BYTES = 256 * 1_024;
 const MAX_DIFF_BYTES = 4 * 1_024 * 1_024;
 const MAX_PROMPT_CHARACTERS = 24_000;
+const MAX_COMMAND_ARGUMENT_CHARACTERS = 8_000;
+const COMMAND_REVIEW_LEASE_MS = 5 * 60_000;
 
 type JsonRecord = Record<string, unknown>;
 
@@ -56,6 +58,40 @@ export type OpenCodePromptResult = {
   sessionId: string;
   content: string;
   raw: JsonRecord;
+};
+
+export type OpenCodeCommand = {
+  name: string;
+  description: string | null;
+  source: string | null;
+  agent: string | null;
+  model: string | null;
+  subtask: boolean;
+};
+
+export type OpenCodeAgent = {
+  name: string;
+  description: string | null;
+  mode: string | null;
+  model: string | null;
+};
+
+export type OpenCodeCommandReview = {
+  id: string;
+  sessionId: string;
+  command: string;
+  arguments: string;
+  agent: string;
+  model: string | null;
+  description: string | null;
+  preparedAt: string;
+  expiresAt: string;
+};
+
+export type OpenCodeCommandResult = OpenCodePromptResult & {
+  reviewId: string;
+  command: string;
+  agent: string;
 };
 
 export type OpenCodeCapabilities = {
@@ -264,6 +300,7 @@ export class IOPortOpenCodeClient {
   readonly origin: string;
   readonly #authorization: string;
   readonly #fetch: typeof fetch;
+  readonly #commandReviews = new Map<string, string>();
 
   constructor(input: { origin: string; password: string; fetch?: typeof fetch }) {
     this.origin = normalizeOpenCodeLoopbackOrigin(input.origin);
@@ -466,6 +503,144 @@ export class IOPortOpenCodeClient {
       .join("\n\n")
       .trim();
     return { sessionId, content, raw: value } satisfies OpenCodePromptResult;
+  }
+
+  async listCommands(): Promise<OpenCodeCommand[]> {
+    const value = await this.#request("/command");
+    if (!Array.isArray(value) || value.length > 256) {
+      throw new OpenCodeClientError("OpenCode returned an invalid or oversized command catalogue.");
+    }
+    return value.flatMap((raw): OpenCodeCommand[] => {
+      const command = asRecord(raw);
+      const name = command ? safeString(command.name, 128) : null;
+      if (!command || !name || !/^[a-z0-9][a-z0-9._:-]{0,127}$/i.test(name)) return [];
+      return [
+        {
+          name,
+          description: safeString(command.description, 1_000),
+          source: safeString(command.source, 64),
+          agent: safeString(command.agent, 128),
+          model: safeString(command.model, 256),
+          subtask: command.subtask === true,
+        },
+      ];
+    });
+  }
+
+  async listAgents(): Promise<OpenCodeAgent[]> {
+    const value = await this.#request("/agent");
+    if (!Array.isArray(value) || value.length > 128) {
+      throw new OpenCodeClientError("OpenCode returned an invalid or oversized agent catalogue.");
+    }
+    return value.flatMap((raw): OpenCodeAgent[] => {
+      const agent = asRecord(raw);
+      const name = agent ? safeString(agent.name, 128) : null;
+      if (
+        !agent ||
+        !name ||
+        agent.hidden === true ||
+        !/^[a-z0-9][a-z0-9._:-]{0,127}$/i.test(name)
+      ) {
+        return [];
+      }
+      return [
+        {
+          name,
+          description: safeString(agent.description, 1_000),
+          mode: safeString(agent.mode, 64),
+          model: safeString(agent.model, 256),
+        },
+      ];
+    });
+  }
+
+  async prepareReviewedCommand(input: {
+    sessionId: string;
+    command: string;
+    arguments?: string;
+    agent?: string;
+  }): Promise<OpenCodeCommandReview> {
+    const sessionId = requireSessionId(input.sessionId);
+    const commandName = input.command.trim();
+    const commandArguments = input.arguments?.trim() ?? "";
+    if (!/^[a-z0-9][a-z0-9._:-]{0,127}$/i.test(commandName)) {
+      throw new OpenCodeClientError("Choose a command advertised by the local OpenCode daemon.");
+    }
+    if (commandArguments.length > MAX_COMMAND_ARGUMENT_CHARACTERS) {
+      throw new OpenCodeClientError("OpenCode command arguments cannot exceed 8,000 characters.");
+    }
+    const [commands, agents] = await Promise.all([this.listCommands(), this.listAgents()]);
+    const command = commands.find((candidate) => candidate.name === commandName);
+    if (!command) {
+      throw new OpenCodeClientError("The reviewed command is no longer in the daemon catalogue.");
+    }
+    const requestedAgent = command.agent ?? input.agent?.trim() ?? "";
+    const agent = agents.find((candidate) => candidate.name === requestedAgent);
+    if (!agent) {
+      throw new OpenCodeClientError("Choose a visible agent advertised by the local daemon.");
+    }
+    const preparedAt = new Date();
+    const review: OpenCodeCommandReview = {
+      id: crypto.randomUUID(),
+      sessionId,
+      command: command.name,
+      arguments: commandArguments,
+      agent: agent.name,
+      model: command.model ?? agent.model,
+      description: command.description,
+      preparedAt: preparedAt.toISOString(),
+      expiresAt: new Date(preparedAt.getTime() + COMMAND_REVIEW_LEASE_MS).toISOString(),
+    };
+    this.#commandReviews.set(review.id, JSON.stringify(review));
+    return review;
+  }
+
+  async executeReviewedCommand(input: {
+    review: OpenCodeCommandReview;
+    confirmationId: string;
+    signal?: AbortSignal;
+  }): Promise<OpenCodeCommandResult> {
+    const expected = this.#commandReviews.get(input.review.id);
+    this.#commandReviews.delete(input.review.id);
+    if (
+      !expected ||
+      input.confirmationId !== input.review.id ||
+      expected !== JSON.stringify(input.review)
+    ) {
+      throw new OpenCodeClientError("The command was not confirmed for this exact review.");
+    }
+    if (Date.parse(input.review.expiresAt) <= Date.now()) {
+      throw new OpenCodeClientError("The command review expired. Review the command again.");
+    }
+    const value = asRecord(
+      await this.#request(`/session/${encodeURIComponent(input.review.sessionId)}/command`, {
+        method: "POST",
+        body: JSON.stringify({
+          command: input.review.command,
+          arguments: input.review.arguments,
+          agent: input.review.agent,
+        }),
+        signal: input.signal,
+      }),
+    );
+    if (!value || !Array.isArray(value.parts) || !asRecord(value.info)) {
+      throw new OpenCodeClientError("OpenCode returned an invalid reviewed-command result.");
+    }
+    const content = value.parts
+      .flatMap((raw) => {
+        const part = asRecord(raw);
+        return part?.type === "text" && typeof part.text === "string" ? [part.text] : [];
+      })
+      .join("\n\n")
+      .trim();
+    return {
+      sessionId: input.review.sessionId,
+      content,
+      raw: value,
+      reviewId: input.review.id,
+      command: input.review.command,
+      agent: input.review.agent,
+    };
   }
 
   async #sessionSummary(sessionId: string) {

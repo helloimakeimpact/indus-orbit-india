@@ -1,6 +1,6 @@
 # I/O Terminal and OpenCode system record
 
-Status: durable metadata, exact private live timeline and approval records are **Released**; the packaged loopback client, expiring in-memory credential lease, four enforced permission profiles, global SSE consumer, continued prompts, bounded task trees and full local diff review are **Verified in source and tests**; a real-daemon authenticated browser journey and web deployment remain required, audited 27 August 2026.
+Status: durable metadata, exact private live timeline and approval records are **Released**; the packaged loopback client, expiring in-memory credential lease, four enforced permission profiles, global SSE consumer, continued prompts, bounded task trees, full local diff review, reviewed command execution and private local handoff export are **Verified in source and tests**; daemon-issued pairing, signed installers and a pinned real-daemon authenticated browser journey remain required, audited 2 September 2026.
 
 ## Product boundary
 
@@ -26,6 +26,8 @@ The application does not embed a full fork of OpenCode. It uses a reviewed brows
 - bounds prompt/title/password/server metadata, streams responses through a 1 MiB limit and composes caller cancellation with its timeout;
 - emits `created`, `completed`, `failed` and `stopped` lifecycle callbacks plus safe `runtime.connected` and `prompt.accepted` metadata events;
 - enforces I/O modes at the local permission bridge: Observe is read-only; Plan permits read/web/task; Build adds reviewed edits; Run adds reviewed shell/network/MCP; critical and external-directory access remain blocked;
+- reads the live daemon command and visible-agent catalogues, pins configured command agents, requires an exact one-time confirmation that expires after five minutes, and consumes the review before calling `POST /session/:id/command`;
+- offers an explicit private JSON handoff download containing the locally visible task tree, timeline and full diffs; the member is warned that it contains private code/output and no handoff content is uploaded to Supabase;
 - does not insert prompts or terminal output into `direct_messages` or safe audit metadata.
 
 ### Durable session metadata
@@ -49,7 +51,7 @@ Migration `20260821120706_add_private_terminal_timeline_broadcast.sql` adds an e
 
 ### Evidence
 
-- OpenCode lifecycle, daemon-abort propagation, device-local binding/reconnect, expiring in-memory credential, mode policy, continued prompt, task-tree, complete-diff, exact permission and global-SSE contracts pass as part of the 80-test member suite.
+- OpenCode lifecycle, daemon-abort propagation, device-local binding/reconnect, expiring in-memory credential, mode policy, continued prompt, task-tree, complete-diff, exact permission, reviewed-command and global-SSE contracts pass as part of the 99-test member suite.
 - The terminal SQL contracts contribute 54 passing assertions to the 681-assertion fresh 76-migration database replay.
 - Database lint reports no `public` or `private` schema errors.
 - Member typecheck, production build and formatting pass.
@@ -62,10 +64,10 @@ The following capabilities are still **Planned** or **Partial**:
 
 1. verify SSE reconnect, event reconciliation, continuation, task trees, diffs and permission decisions against pinned real OpenCode versions in authenticated browser tests; unit fixtures are Verified, not a production compatibility guarantee;
 2. verify daemon-abort acknowledgement and process termination against a pinned real daemon; the client now requires positive acknowledgement and records an unconfirmed stop as failed;
-3. add reviewed command invocation, MCP configuration, LSP, formatter and repository-context views; fork creation and bounded tool/command output identity are already Verified;
+3. add reviewed MCP configuration, LSP, formatter and repository-context views; daemon-advertised reviewed commands, fork creation and bounded tool/command output identity are already Verified;
 4. add re-auth/step-up, approval revoke/expiry race journeys and a daemon capability handshake; all four mode profiles now fail closed and critical actions remain blocked;
-5. add reviewed artifact export and safe download; checkpoint revert/restore and complete local before/after diff review are Verified;
-6. add explicit session invitations, role changes, revocation and human handoff;
+5. add typed artifact classifications and private audience-bound cloud handoffs; explicit private local JSON handoff, checkpoint revert/restore and complete local before/after diff review are Verified;
+6. add explicit session invitations, role changes and revocation; local file handoff exists, but multi-member cloud handoff does not;
 7. add retention/deletion controls and support-safe diagnostics;
 8. replace the 15-minute in-memory password lease with a daemon-issued, short-lived, origin/audience-bound pairing token and explicit revocation; the browser-side lease limits exposure but is not that token;
 9. package the local daemon/installers for supported operating systems; the TypeScript client library is buildable and documented, but an OS installer is not;

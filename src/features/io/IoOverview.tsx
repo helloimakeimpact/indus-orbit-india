@@ -32,6 +32,8 @@ import {
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import {
   IOPortOpenCodeClient,
+  type OpenCodeAgent,
+  type OpenCodeCommand,
   type OpenCodeFileDiff,
   type OpenCodeCapabilities,
   type OpenCodeEvent,
@@ -128,6 +130,8 @@ type TerminalInspection = {
   permissions: OpenCodePermission[];
   capabilities: OpenCodeCapabilities | null;
   timeline: OpenCodeTimelineEntry[];
+  commands: OpenCodeCommand[];
+  agents: OpenCodeAgent[];
 };
 
 type TerminalLiveEvent = {
@@ -262,13 +266,17 @@ function approvalExpiryFromNow(durationMs: number) {
 }
 
 async function loadOpenCodeAdvisory(client: IOPortOpenCodeClient, sessionId: string) {
-  const [capabilities, timeline] = await Promise.allSettled([
+  const [capabilities, timeline, commands, agents] = await Promise.allSettled([
     client.negotiateCapabilities(),
     client.getSessionTimeline(sessionId),
+    client.listCommands(),
+    client.listAgents(),
   ]);
   return {
     capabilities: capabilities.status === "fulfilled" ? capabilities.value : null,
     timeline: timeline.status === "fulfilled" ? timeline.value : [],
+    commands: commands.status === "fulfilled" ? commands.value : [],
+    agents: agents.status === "fulfilled" ? agents.value : [],
   };
 }
 
@@ -329,6 +337,10 @@ export function IoOverview() {
   const [terminalPermissionBusy, setTerminalPermissionBusy] = useState<string | null>(null);
   const [terminalForkBusy, setTerminalForkBusy] = useState(false);
   const [terminalRevertBusy, setTerminalRevertBusy] = useState<string | null>(null);
+  const [terminalCommandBusy, setTerminalCommandBusy] = useState(false);
+  const [terminalCommandName, setTerminalCommandName] = useState("");
+  const [terminalCommandAgent, setTerminalCommandAgent] = useState("");
+  const [terminalCommandArguments, setTerminalCommandArguments] = useState("");
   const [routeCatalogError, setRouteCatalogError] = useState<string | null>(null);
   const [routePreflight, setRoutePreflight] = useState<IoRoutePreflight | null>(null);
   const [preflightLoading, setPreflightLoading] = useState(false);
@@ -1161,12 +1173,14 @@ export function IoOverview() {
           input.client.getFullDiffs(input.localSessionId),
           input.client.listPendingPermissions(input.localSessionId),
           input.client.getSessionTimeline(input.localSessionId),
+          input.client.listCommands(),
+          input.client.listAgents(),
         ])
-          .then(([taskTree, diffs, permissions, timeline]) => {
+          .then(([taskTree, diffs, permissions, timeline, commands, agents]) => {
             if (!controller.signal.aborted) {
               setTerminalInspection((current) =>
                 current?.durableSessionId === input.durableSessionId
-                  ? { ...current, taskTree, diffs, permissions, timeline }
+                  ? { ...current, taskTree, diffs, permissions, timeline, commands, agents }
                   : current,
               );
             }
@@ -1534,6 +1548,139 @@ export function IoOverview() {
     }
   }
 
+  async function runReviewedLocalCommand(session: IoTerminalSession) {
+    if (
+      typeof window === "undefined" ||
+      terminalCommandBusy ||
+      !terminalInspection ||
+      terminalInspection.durableSessionId !== session.id
+    ) {
+      return;
+    }
+    if (terminalInspection.capabilities?.commands !== true) {
+      toast.error("This OpenCode daemon has not advertised reviewed command support.");
+      return;
+    }
+    const command = terminalInspection.commands.find(
+      (candidate) => candidate.name === terminalCommandName,
+    );
+    if (!command) {
+      toast.error("Choose a command from the local daemon catalogue.");
+      return;
+    }
+    const policy = terminalPermissionPolicy({
+      mode: session.mode,
+      permission: "task",
+      risk: "moderate",
+    });
+    if (!policy.allowed) {
+      toast.error(policy.reason);
+      return;
+    }
+    const binding = loadOpenCodeLocalBinding(window.localStorage, session.id);
+    if (!binding) {
+      toast.error("This browser has no local binding for that OpenCode session.");
+      return;
+    }
+    setTerminalCommandBusy(true);
+    try {
+      const client = new IOPortOpenCodeClient({
+        origin: binding.connectorOrigin,
+        password: openCodePassword,
+      });
+      const review = await client.prepareReviewedCommand({
+        sessionId: binding.sessionId,
+        command: command.name,
+        arguments: terminalCommandArguments,
+        agent: terminalCommandAgent || undefined,
+      });
+      const accepted = window.confirm(
+        [
+          `Run /${review.command} on this device?`,
+          `Agent: ${review.agent}`,
+          `Model: ${review.model ?? "daemon default"}`,
+          `Arguments: ${review.arguments || "none"}`,
+          "OpenCode may request separate file, shell or network permissions. Those remain once-only and independently reviewed.",
+        ].join("\n\n"),
+      );
+      if (!accepted) return;
+      const result = await client.executeReviewedCommand({
+        review,
+        confirmationId: review.id,
+      });
+      const [taskTree, diffs, permissions, advisory] = await Promise.all([
+        client.getTaskTree(binding.sessionId),
+        client.getFullDiffs(binding.sessionId),
+        client.listPendingPermissions(binding.sessionId),
+        loadOpenCodeAdvisory(client, binding.sessionId),
+      ]);
+      setTerminalInspection({
+        durableSessionId: session.id,
+        pairing: terminalInspection.pairing,
+        taskTree,
+        diffs,
+        permissions,
+        ...advisory,
+      });
+      setTerminalResult({
+        connectorOrigin: binding.connectorOrigin,
+        sessionId: binding.sessionId,
+        title: `/${result.command} · ${session.title}`,
+        content: result.content || "OpenCode accepted the reviewed local command.",
+        serverVersion: terminalInspection.pairing.serverVersion,
+        changedFileCount: diffs.length,
+      });
+      setTerminalCommandArguments("");
+      toast.success(`/${result.command} completed through the reviewed local bridge.`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "The reviewed command could not run.");
+    } finally {
+      setTerminalCommandBusy(false);
+    }
+  }
+
+  function downloadLocalHandoff(session: IoTerminalSession) {
+    if (
+      typeof window === "undefined" ||
+      !terminalInspection ||
+      terminalInspection.durableSessionId !== session.id
+    ) {
+      return;
+    }
+    const accepted = window.confirm(
+      "Download a private local handoff containing this session's task tree, message/tool trail and full before/after diffs? The file can contain source code and model output. It stays on this device unless you share it.",
+    );
+    if (!accepted) return;
+    const handoff = {
+      schema: "indus-orbit.io-local-handoff.v1",
+      exportedAt: new Date().toISOString(),
+      classification: "private-local-content",
+      session: {
+        durableSessionId: session.id,
+        title: session.title,
+        mode: session.mode,
+        state: session.state,
+        runtimeVersion: terminalInspection.pairing.serverVersion,
+      },
+      taskTree: terminalInspection.taskTree,
+      timeline: terminalInspection.timeline,
+      diffs: terminalInspection.diffs,
+    };
+    const url = URL.createObjectURL(
+      new Blob([JSON.stringify(handoff, null, 2)], { type: "application/json" }),
+    );
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `io-local-handoff-${session.id}.json`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+    toast.success("Private local handoff downloaded. Nothing was uploaded to I/O.");
+  }
+
+  const selectedTerminalCommand = terminalInspection?.commands.find(
+    (candidate) => candidate.name === terminalCommandName,
+  );
+  const selectedTerminalCommandAgent = selectedTerminalCommand?.agent ?? terminalCommandAgent;
   const readySources = sources.filter((source) => source.status === "active");
   const hasRoutableModels = Boolean(routeCatalog?.models.length);
   const canRunPartner =
@@ -2513,7 +2660,114 @@ opencode auth login
                           >
                             Restore all
                           </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="h-7 text-[10px]"
+                            onClick={() => downloadLocalHandoff(session)}
+                          >
+                            <FileDown />
+                            Private handoff
+                          </Button>
                         </div>
+                      </div>
+
+                      <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
+                        <div className="flex flex-wrap items-start justify-between gap-2">
+                          <div>
+                            <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                              Reviewed OpenCode command
+                            </p>
+                            <p className="mt-1 text-[10px] text-muted-foreground">
+                              Only commands and visible agents advertised by this daemon are
+                              accepted. File, shell and network permissions remain separately
+                              reviewed once.
+                            </p>
+                          </div>
+                          <Badge variant="outline" className="text-[9px]">
+                            5-MINUTE REVIEW
+                          </Badge>
+                        </div>
+                        {terminalInspection.capabilities?.commands === true &&
+                        terminalInspection.commands.length ? (
+                          <div className="mt-3 grid gap-2 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,0.8fr)_minmax(0,1.4fr)_auto]">
+                            <label className="space-y-1 text-[9px] font-semibold text-muted-foreground">
+                              Command
+                              <select
+                                className="h-9 w-full rounded-md border border-input bg-background px-3 text-[11px] text-foreground"
+                                value={terminalCommandName}
+                                onChange={(event) => {
+                                  const nextName = event.target.value;
+                                  const next = terminalInspection.commands.find(
+                                    (candidate) => candidate.name === nextName,
+                                  );
+                                  setTerminalCommandName(nextName);
+                                  setTerminalCommandAgent(next?.agent ?? "");
+                                }}
+                              >
+                                <option value="">Choose command</option>
+                                {terminalInspection.commands.map((command) => (
+                                  <option key={command.name} value={command.name}>
+                                    /{command.name}
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+                            <label className="space-y-1 text-[9px] font-semibold text-muted-foreground">
+                              Agent
+                              <select
+                                className="h-9 w-full rounded-md border border-input bg-background px-3 text-[11px] text-foreground disabled:opacity-60"
+                                value={selectedTerminalCommandAgent}
+                                disabled={Boolean(selectedTerminalCommand?.agent)}
+                                onChange={(event) => setTerminalCommandAgent(event.target.value)}
+                              >
+                                <option value="">Choose agent</option>
+                                {terminalInspection.agents.map((agent) => (
+                                  <option key={agent.name} value={agent.name}>
+                                    {agent.name}
+                                    {agent.mode ? ` · ${agent.mode}` : ""}
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+                            <label className="space-y-1 text-[9px] font-semibold text-muted-foreground">
+                              Arguments
+                              <Input
+                                value={terminalCommandArguments}
+                                onChange={(event) =>
+                                  setTerminalCommandArguments(event.target.value)
+                                }
+                                maxLength={8_000}
+                                placeholder="Optional reviewed arguments"
+                              />
+                            </label>
+                            <Button
+                              type="button"
+                              size="sm"
+                              className="self-end"
+                              disabled={
+                                terminalCommandBusy ||
+                                !canRunTerminal ||
+                                !selectedTerminalCommand ||
+                                !selectedTerminalCommandAgent
+                              }
+                              onClick={() => void runReviewedLocalCommand(session)}
+                            >
+                              {terminalCommandBusy ? (
+                                <LoaderCircle className="animate-spin" />
+                              ) : (
+                                <ShieldCheck />
+                              )}
+                              Review and run
+                            </Button>
+                          </div>
+                        ) : (
+                          <p className="mt-2 text-[10px] text-muted-foreground">
+                            This daemon did not advertise a usable command catalogue. Command
+                            execution remains blocked.
+                          </p>
+                        )}
                       </div>
 
                       {terminalLiveEvent?.durableSessionId === session.id ? (
