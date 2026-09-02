@@ -5,7 +5,31 @@ import { SiteShell } from "@/components/site/SiteShell";
 import { canonical, siteUrl } from "@/lib/seo";
 import logo from "@/assets/indus-orbit-logo.png";
 import brandHero from "@/assets/brand-hero.jpg";
-import { Download, Globe2, Mail, MapPin, Phone, Palette, Type, Sparkles } from "lucide-react";
+import merchMug from "@/assets/merch-mug.jpg";
+import merchTshirt from "@/assets/merch-tshirt.jpg";
+import merchHoodie from "@/assets/merch-hoodie.jpg";
+import merchKit from "@/assets/merch-kit.jpg";
+import merchTeeSignature from "@/assets/merch-tee-signature.jpg";
+import merchTeePocket from "@/assets/merch-tee-pocket.jpg";
+import merchTeeBackprint from "@/assets/merch-tee-backprint.jpg";
+import merchTeePattern from "@/assets/merch-tee-pattern.jpg";
+import merchTeeLine from "@/assets/merch-tee-line.jpg";
+import merchTeeGeneralMinimal from "@/assets/merch-tee-general-minimal.jpg";
+import merchCap from "@/assets/merch-cap.jpg";
+import merchTote from "@/assets/merch-tote.jpg";
+import merchBottle from "@/assets/merch-bottle.jpg";
+import merchNotebook from "@/assets/merch-notebook.jpg";
+import {
+  Download,
+  Globe2,
+  Mail,
+  MapPin,
+  Phone,
+  Palette,
+  Type,
+  Sparkles,
+  Shirt,
+} from "lucide-react";
 
 export const Route = createFileRoute("/brand")({
   head: () => ({
@@ -437,6 +461,244 @@ function BrandPage() {
               <div key={i.k}>
                 <p className="font-display text-2xl text-[var(--saffron)]">{i.k}</p>
                 <p className="mt-3 text-sm text-[var(--parchment)]/75">{i.v}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Merchandise */}
+      <section className="px-6 pb-20">
+        <div className="mx-auto w-full max-w-6xl">
+          <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">
+            <Shirt className="h-4 w-4" /> Merchandise
+          </p>
+          <h2 className="mt-3 font-display text-3xl font-medium md:text-4xl">
+            Wearable orbit — 2026 drop
+          </h2>
+          <p className="mt-3 max-w-2xl text-foreground/70">
+            Two print families only. The <strong>mark drop</strong> carries just the io monogram and
+            the wordmark. The <strong>statement drop</strong> carries the full line — General
+            Intelligence Company of India. Never mix both on one garment.
+          </p>
+
+          <div className="mt-10 grid gap-6 md:grid-cols-3">
+            {[
+              {
+                src: merchTshirt,
+                w: 1024,
+                h: 1024,
+                alt: "Cream cotton t-shirt printed with the saffron io monogram and General Intelligence of India",
+                title: "Statement tee",
+                drop: "Statement drop",
+                spec: "Parchment 240gsm boxy cut · indigo chest print · saffron mark",
+              },
+              {
+                src: merchHoodie,
+                w: 1024,
+                h: 1024,
+                alt: "Indigo hoodie with a small embroidered saffron io monogram on the left chest",
+                title: "Orbit hoodie",
+                drop: "Mark drop",
+                spec: "Indigo night 400gsm · left-chest mark · saffron drawcord tips",
+              },
+              {
+                src: merchMug,
+                w: 1024,
+                h: 1024,
+                alt: "Matte indigo ceramic mug with the saffron io monogram and Indus Orbit wordmark",
+                title: "Ledger mug",
+                drop: "Mark drop",
+                spec: "350ml matte indigo glaze · saffron single-colour transfer",
+              },
+            ].map((m) => (
+              <figure
+                key={m.title}
+                className="overflow-hidden rounded-3xl border border-border bg-card"
+              >
+                <img
+                  src={m.src}
+                  alt={m.alt}
+                  width={m.w}
+                  height={m.h}
+                  loading="lazy"
+                  className="aspect-square w-full object-cover"
+                />
+                <figcaption className="p-6">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">
+                    {m.drop}
+                  </p>
+                  <p className="mt-2 font-display text-2xl">{m.title}</p>
+                  <p className="mt-2 text-xs text-foreground/65">{m.spec}</p>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+
+          {/* 2026 tee collection */}
+          <p className="mt-14 text-[10px] font-semibold uppercase tracking-[0.25em] text-foreground/50">
+            Tee collection — five cuts
+          </p>
+          <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              {
+                src: merchTeeSignature,
+                alt: "Cream tee with the pixel io logo, Indus Orbit wordmark and the tagline Bharat ka dimaag.",
+                title: "Signature tee",
+                drop: "Statement drop",
+                spec: "Cream 240gsm · pixel mark + wordmark + tagline, centre chest",
+              },
+              {
+                src: merchTeeGeneralMinimal,
+                alt: "Parchment cream Parisian minimal tee with the io mark and Indus Orbit on the chest, General Intelligence Company of India running vertically down the side",
+                title: "Parisian statement tee",
+                drop: "Statement drop",
+                spec: "Parchment 240gsm · left-chest mark + wordmark · side-seam statement",
+              },
+              {
+                src: merchTeePocket,
+                alt: "Indigo boxy tee with a small embroidered pixel io mark on the left chest",
+                title: "Quiet tee",
+                drop: "Mark drop",
+                spec: "Indigo boxy fit · left-chest embroidered mark only",
+              },
+              {
+                src: merchTeeBackprint,
+                alt: "Black oversized tee with a giant pixel io back print and Indus Orbit pixel text",
+                title: "Backprint tee",
+                drop: "Mark drop",
+                spec: "Black oversized · giant back mark · front blank",
+              },
+              {
+                src: merchTeePattern,
+                alt: "Saffron tee with an all-over tiled pixel io pattern and Bharat ka dimaag. under the collar",
+                title: "Monsoon tee",
+                drop: "Statement drop",
+                spec: "Saffron · all-over io repeat · collar tagline",
+              },
+              {
+                src: merchTeeLine,
+                alt: "Sand longline tee with a thin indigo line ending in a small pixel io mark",
+                title: "Baseline tee",
+                drop: "Mark drop",
+                spec: "Sand longline · hairline chest rule · io signature",
+              },
+            ].map((m) => (
+              <figure
+                key={m.title}
+                className="overflow-hidden rounded-3xl border border-border bg-card"
+              >
+                <img
+                  src={m.src}
+                  alt={m.alt}
+                  width={1024}
+                  height={1024}
+                  loading="lazy"
+                  className="aspect-square w-full object-cover"
+                />
+                <figcaption className="p-6">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">
+                    {m.drop}
+                  </p>
+                  <p className="mt-2 font-display text-2xl">{m.title}</p>
+                  <p className="mt-2 text-xs text-foreground/65">{m.spec}</p>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+
+          {/* Objects */}
+          <p className="mt-14 text-[10px] font-semibold uppercase tracking-[0.25em] text-foreground/50">
+            Objects
+          </p>
+          <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              {
+                src: merchCap,
+                alt: "Indigo dad cap with an embroidered pixel io mark",
+                title: "Orbit cap",
+                spec: "Indigo six-panel · embroidered mark",
+              },
+              {
+                src: merchTote,
+                alt: "Ecru canvas tote with the pixel io logo and Indus Orbit statement line",
+                title: "Ledger tote",
+                spec: "Ecru canvas · centre mark + statement",
+              },
+              {
+                src: merchBottle,
+                alt: "Matte indigo insulated bottle with the pixel io logo and Indus Orbit wordmark",
+                title: "Field bottle",
+                spec: "750ml matte indigo · vertical mark",
+              },
+              {
+                src: merchNotebook,
+                alt: "Parchment notebook with the pixel io logo, Indus Orbit 2026 and a saffron elastic band",
+                title: "Grid notebook",
+                spec: "Dotted A5 · parchment cover · saffron band",
+              },
+            ].map((m) => (
+              <figure
+                key={m.title}
+                className="overflow-hidden rounded-3xl border border-border bg-card"
+              >
+                <img
+                  src={m.src}
+                  alt={m.alt}
+                  width={1024}
+                  height={1024}
+                  loading="lazy"
+                  className="aspect-square w-full object-cover"
+                />
+                <figcaption className="p-5">
+                  <p className="font-display text-xl">{m.title}</p>
+                  <p className="mt-1 text-xs text-foreground/65">{m.spec}</p>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+
+          <figure className="mt-6 overflow-hidden rounded-3xl border border-border bg-card">
+            <img
+              src={merchKit}
+              alt="Flat lay of Indus Orbit small goods: io enamel pin, canvas tote, sticker sheet, notebook and cap"
+              width={1536}
+              height={1024}
+              loading="lazy"
+              className="w-full object-cover"
+            />
+            <figcaption className="flex flex-wrap items-center justify-between gap-3 p-6">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">
+                  Small goods
+                </p>
+                <p className="mt-2 font-display text-2xl">Welcome kit</p>
+              </div>
+              <p className="max-w-xl text-xs text-foreground/65">
+                Enamel orbit pin, indigo canvas tote, sticker sheet, grid notebook and six-panel
+                cap. One accent colour per object — saffron on indigo, or indigo on parchment. Never
+                both accents on the same piece.
+              </p>
+            </figcaption>
+          </figure>
+
+          <div className="mt-6 grid gap-4 sm:grid-cols-3">
+            {[
+              {
+                k: "Print rule",
+                v: "One colour per side. Mark left chest, statement centre chest.",
+              },
+              { k: "Fabric", v: "Undyed parchment cotton or indigo-night pigment dye. No white." },
+              {
+                k: "Clear space",
+                v: "The io monogram keeps one o-width of blank fabric on every side.",
+              },
+            ].map((r) => (
+              <div key={r.k} className="rounded-3xl border border-border bg-card p-5">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-foreground/50">
+                  {r.k}
+                </p>
+                <p className="mt-2 text-sm text-foreground/75">{r.v}</p>
               </div>
             ))}
           </div>
