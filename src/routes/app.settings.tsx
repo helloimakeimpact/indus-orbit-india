@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/contexts/AuthContext";
 import { LocationPrivacySettings } from "@/features/location/LocationPrivacySettings";
+import { AccountPrivacySettings } from "@/features/privacy/AccountPrivacySettings";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/app/settings")({
@@ -163,6 +164,14 @@ function SettingsPage() {
             description="Review explicit purposes, sharing, withdrawal, and limited product measurement."
           >
             <LocationPrivacySettings />
+          </SettingsSection>
+
+          <SettingsSection
+            emoji="🧾"
+            title="Your data and account"
+            description="Request a portable data copy or begin a reviewed account-deletion process."
+          >
+            <AccountPrivacySettings />
           </SettingsSection>
 
           <SettingsSection
