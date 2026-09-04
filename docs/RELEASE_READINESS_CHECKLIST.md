@@ -247,14 +247,14 @@ Decision: Not passed
 - [ ] Every critical screen has reviewed loading, empty, error, offline/retry, success, and permission-denied states. Evidence: Space Room/Thread composers now expose offline state and replay-safe in-tab message/attachment retry with 90/90 member tests; other critical routes and authenticated visual personas remain.
 - [ ] Keyboard-only and screen-reader journeys pass for critical workflows. Evidence: —
 - [ ] Focus, contrast, zoom, reduced motion, touch targets, labels, headings, landmarks, and announcements meet WCAG 2.2 AA. Evidence: —
-- [ ] Automated accessibility checks and manual audits have no critical failures. Evidence: —
+- [ ] Automated accessibility checks and manual audits have no critical failures. Evidence: public I/O Port, Brand and separate admin sign-in serious/critical WCAG A/AA automation passes on desktop and Pixel-sized mobile; authenticated routes and manual audit remain.
 - [ ] Critical route bundle and Core Web Vitals budgets pass on representative mobile conditions. Evidence: —
 - [ ] Query/API/realtime/I/O latency targets pass under representative beta load. Evidence: —
 - [ ] Public and in-app copy is approved, accurate, and free of unlabelled preview/demo data. Evidence: —
 - [ ] Canonicals, metadata, social cards, structured data, sitemap, and robots rules pass. Evidence: —
 - [ ] Legacy-domain, placeholder, broken, and unapproved links are removed. Evidence: —
 - [ ] Models/pricing/benchmark/FX/provider claims show source, method, date, and correction path. Evidence: —
-- [ ] Visual regression review passes for critical routes and target breakpoints. Evidence: —
+- [ ] Visual regression review passes for critical routes and target breakpoints. Evidence: Brand visiting-card and admin sign-in desktop/mobile baselines are generated and pass locally; authenticated critical-route approval remains.
 
 Gate approval:
 
@@ -272,7 +272,7 @@ Decision: Not passed
 - [ ] Logs, metrics, traces, correlation IDs, uptime checks, and dashboards cover critical journeys. Evidence: —
 - [ ] Telemetry redaction tests confirm secrets and protected content are not collected. Evidence: —
 - [ ] Alerts have severity, threshold, route, responder, escalation, and runbook. Evidence: —
-- [ ] Load tests cover public traffic, auth, directory, messaging, notifications, admin queues, learning, and I/O. Evidence: —
+- [ ] Load tests cover public traffic, auth, directory, messaging, notifications, admin queues, learning, and I/O. Evidence: bounded production-preview smoke proves 200 `/io-port` requests at concurrency 20, zero failures and 26 ms local p95; authenticated and service workloads remain.
 - [ ] Realtime reconnect/fan-out and provider timeout/rate-limit/failover tests pass. Evidence: —
 - [ ] Background jobs are idempotent, observable, retryable, and bounded. Evidence: —
 - [ ] Provider cost/usage reconciliation and anomaly alerts pass. Evidence: —

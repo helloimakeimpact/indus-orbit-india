@@ -45,6 +45,12 @@ jobs:
       - name: Unit tests
         run: npm run test:unit
 
+      - name: Install browser used by public journeys
+        run: npx --no-install playwright install --with-deps chromium
+
+      - name: Public desktop, mobile and accessibility journeys
+        run: npm run test:e2e
+
       - name: Build production bundle
         run: npm run build
 

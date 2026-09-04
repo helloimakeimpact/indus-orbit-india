@@ -181,7 +181,7 @@ function VisitingCardBack({ cardRef }: { cardRef?: Ref<HTMLDivElement> }) {
         <div className="flex min-w-0 flex-col justify-between">
           <div>
             <p className="font-display text-lg leading-none sm:text-2xl">{CARD.name}</p>
-            <p className="mt-1.5 text-[8px] font-semibold uppercase tracking-[0.25em] text-[var(--indigo-night)]/55 sm:text-[9px]">
+            <p className="mt-1.5 text-[8px] font-semibold uppercase tracking-[0.25em] text-[var(--indigo-night)]/80 sm:text-[9px]">
               {CARD.title}
             </p>
           </div>
@@ -213,7 +213,7 @@ function VisitingCardBack({ cardRef }: { cardRef?: Ref<HTMLDivElement> }) {
         </div>
         <div className="flex min-w-0 flex-col justify-between border-l border-[var(--indigo-night)]/12 pl-4 sm:pl-6">
           <div>
-            <p className="text-[8px] font-semibold uppercase tracking-[0.22em] text-[var(--indigo-night)]/50 sm:text-[9px]">
+            <p className="text-[8px] font-semibold uppercase tracking-[0.22em] text-[var(--indigo-night)]/80 sm:text-[9px]">
               Products
             </p>
             <ul className="mt-2 space-y-1.5 sm:mt-3 sm:space-y-2">
@@ -222,7 +222,7 @@ function VisitingCardBack({ cardRef }: { cardRef?: Ref<HTMLDivElement> }) {
                   <span className="truncate font-display text-[11px] leading-none sm:text-sm">
                     {product.name}
                   </span>
-                  <span className="text-[7px] font-semibold uppercase tracking-[0.12em] text-[var(--indigo-night)]/45 sm:text-[8px]">
+                  <span className="text-[7px] font-semibold uppercase tracking-[0.12em] text-[var(--indigo-night)]/80 sm:text-[8px]">
                     {product.meaning}
                   </span>
                 </li>
@@ -233,6 +233,7 @@ function VisitingCardBack({ cardRef }: { cardRef?: Ref<HTMLDivElement> }) {
             <div>
               <div
                 className="w-14 rounded-md bg-white p-1 sm:w-[72px]"
+                role="img"
                 aria-label="Scan to save Amar Pandey's contact"
               >
                 <QRCode
@@ -244,7 +245,7 @@ function VisitingCardBack({ cardRef }: { cardRef?: Ref<HTMLDivElement> }) {
                   style={{ height: "auto", maxWidth: "100%", width: "100%" }}
                 />
               </div>
-              <p className="mt-1 text-[7px] font-semibold uppercase tracking-[0.14em] text-[var(--indigo-night)]/50">
+              <p className="mt-1 text-[7px] font-semibold uppercase tracking-[0.14em] text-[var(--indigo-night)]/80">
                 Save contact
               </p>
             </div>
@@ -312,9 +313,7 @@ function BrandPage() {
       {/* Logo */}
       <section className="px-6 py-20">
         <div className="mx-auto w-full max-w-6xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">
-            Mark
-          </p>
+          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-amber-800">Mark</p>
           <h2 className="mt-3 font-display text-3xl font-medium md:text-4xl">Logo &amp; lockups</h2>
           <div className="mt-10 grid gap-6 md:grid-cols-3">
             <div className="flex flex-col items-center justify-center gap-4 rounded-3xl border border-border bg-card p-10">
@@ -356,7 +355,7 @@ function BrandPage() {
                 />
                 <span className="font-display text-2xl">Indus Orbit</span>
               </div>
-              <p className="text-xs uppercase tracking-wider text-[var(--indigo-night)]/50">
+              <p className="text-xs uppercase tracking-wider text-[var(--indigo-night)]/75">
                 Light lockup
               </p>
             </div>
@@ -388,7 +387,7 @@ function BrandPage() {
       {/* Palette */}
       <section className="px-6 pb-20">
         <div className="mx-auto w-full max-w-6xl">
-          <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">
+          <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.25em] text-amber-800">
             <Palette className="h-4 w-4" /> Palette
           </p>
           <h2 className="mt-3 font-display text-3xl font-medium md:text-4xl">
@@ -405,7 +404,7 @@ function BrandPage() {
       {/* Typography */}
       <section className="px-6 pb-20">
         <div className="mx-auto w-full max-w-6xl">
-          <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">
+          <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.25em] text-amber-800">
             <Type className="h-4 w-4" /> Typography
           </p>
           <h2 className="mt-3 font-display text-3xl font-medium md:text-4xl">Fraunces + Inter</h2>
@@ -470,7 +469,7 @@ function BrandPage() {
       {/* Merchandise */}
       <section className="px-6 pb-20">
         <div className="mx-auto w-full max-w-6xl">
-          <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">
+          <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.25em] text-amber-800">
             <Shirt className="h-4 w-4" /> Merchandise
           </p>
           <h2 className="mt-3 font-display text-3xl font-medium md:text-4xl">
@@ -525,7 +524,7 @@ function BrandPage() {
                   className="aspect-square w-full object-cover"
                 />
                 <figcaption className="p-6">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-amber-800">
                     {m.drop}
                   </p>
                   <p className="mt-2 font-display text-2xl">{m.title}</p>
@@ -597,7 +596,7 @@ function BrandPage() {
                   className="aspect-square w-full object-cover"
                 />
                 <figcaption className="p-6">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-amber-800">
                     {m.drop}
                   </p>
                   <p className="mt-2 font-display text-2xl">{m.title}</p>
@@ -669,7 +668,7 @@ function BrandPage() {
             />
             <figcaption className="flex flex-wrap items-center justify-between gap-3 p-6">
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-amber-800">
                   Small goods
                 </p>
                 <p className="mt-2 font-display text-2xl">Welcome kit</p>
@@ -708,7 +707,7 @@ function BrandPage() {
       {/* Visiting card */}
       <section className="px-6 pb-24">
         <div className="mx-auto w-full max-w-6xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">
+          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-amber-800">
             Stationery
           </p>
           <h2 className="mt-3 font-display text-3xl font-medium md:text-4xl">Visiting card</h2>

@@ -83,6 +83,7 @@ export function SiteFooter() {
               <div className="flex items-center gap-2 rounded-full bg-white/10 p-1.5 backdrop-blur">
                 <input
                   type="email"
+                  aria-label="Email address for newsletter subscription"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="your@email.com"
@@ -102,6 +103,7 @@ export function SiteFooter() {
                 </span>
                 <input
                   type="number"
+                  aria-label={`Human verification answer: ${num1} plus ${num2}`}
                   value={answer}
                   onChange={(e) => setAnswer(e.target.value)}
                   className="w-16 bg-white/10 px-2 py-1 rounded text-center outline-none"

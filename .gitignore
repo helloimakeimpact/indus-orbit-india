@@ -17,6 +17,9 @@ dist-ssr
 *.local
 .env
 !.env.example
+test-results/
+playwright-report/
+playwright/.auth/
 
 # Wrangler / Cloudflare
 .wrangler/

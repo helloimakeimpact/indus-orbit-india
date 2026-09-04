@@ -180,7 +180,7 @@ function TerminalPreview() {
           <span className="h-2.5 w-2.5 rounded-full bg-[var(--saffron)]" />
           <span className="h-2.5 w-2.5 rounded-full bg-[#75be91]" />
         </div>
-        <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/40">
+        <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/70">
           I/O Terminal · concept
         </span>
         <span className="rounded-full border border-[var(--saffron)]/30 bg-[var(--saffron)]/10 px-2 py-1 text-[9px] uppercase tracking-wider text-[var(--saffron)]">
@@ -202,7 +202,7 @@ function TerminalPreview() {
           ))}
         </div>
         <div className="p-5 font-mono text-xs leading-6 sm:p-7">
-          <p className="text-white/40">Delhi workspace / public-interest prototype</p>
+          <p className="text-white/70">Delhi workspace / public-interest prototype</p>
           <p className="mt-5 text-[var(--saffron)]">
             <span className="mr-2 text-white/30">❯</span>io route --intent research --budget ₹80
           </p>
@@ -218,13 +218,13 @@ function TerminalPreview() {
             </p>
           </div>
           <div className="mt-6 rounded-xl border border-white/10 bg-white/[0.035] p-4">
-            <p className="text-[10px] uppercase tracking-[0.18em] text-white/30">Route evidence</p>
+            <p className="text-[10px] uppercase tracking-[0.18em] text-white/70">Route evidence</p>
             <p className="mt-2 text-white/80">Best available fit for quality, consent and budget</p>
-            <p className="mt-2 text-white/40">Estimated cost and provider shown before execution</p>
+            <p className="mt-2 text-white/70">Estimated cost and provider shown before execution</p>
           </div>
         </div>
         <div className="border-t border-white/10 bg-white/[0.025] p-5 md:border-l md:border-t-0">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/30">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/70">
             Control room
           </p>
           <div className="mt-5 space-y-4">
@@ -235,7 +235,7 @@ function TerminalPreview() {
               ["Capacity", "Partner first"],
             ].map(([label, value]) => (
               <div key={label}>
-                <p className="text-[10px] uppercase tracking-wider text-white/30">{label}</p>
+                <p className="text-[10px] uppercase tracking-wider text-white/70">{label}</p>
                 <p className="mt-1 text-xs text-white/70">{value}</p>
               </div>
             ))}
@@ -331,7 +331,7 @@ function IOPortPage() {
       <section className="px-6 py-24">
         <div className="mx-auto max-w-7xl">
           <div className="max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">
+            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-amber-800">
               The system
             </p>
             <h2 className="mt-3 text-balance font-display text-4xl font-medium leading-tight md:text-6xl">
@@ -453,7 +453,7 @@ function IOPortPage() {
       <section className="px-6 py-24">
         <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[1fr_1.1fr] lg:items-start">
           <div className="lg:sticky lg:top-28">
-            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">
+            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-amber-800">
               People at the centre
             </p>
             <h2 className="mt-3 text-balance font-display text-4xl font-medium leading-tight md:text-6xl">
@@ -521,7 +521,7 @@ function IOPortPage() {
         <div className="mx-auto max-w-7xl overflow-hidden rounded-[2rem] bg-[var(--saffron)] px-7 py-14 text-[var(--indigo-night)] md:px-14 md:py-16">
           <div className="grid gap-10 lg:grid-cols-[1fr_auto] lg:items-end">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.25em] opacity-60">
+              <p className="text-xs font-semibold uppercase tracking-[0.25em]">
                 Help shape the first orbit
               </p>
               <h2 className="mt-3 max-w-3xl text-balance font-display text-4xl font-medium leading-tight md:text-6xl">

@@ -30,6 +30,8 @@ Execution update, 4 September 2026 (account privacy boundary): hosted migration 
 
 Execution update, 4 September 2026 (Space member safety): hosted migration 113 adds a manager-only privacy-minimised active/removed roster, canonical Chapter/Mission remove/restore, bounded five-minute through seven-day Space timeouts and elevated source-role protection. Room/Thread send now checks active timeouts and serializes per-user burst, minute, hourly and repeated-message limits after idempotent replay detection. Migration 114 serializes same actor/request timeout replays before the mutation boundary. The People inspector exposes reasoned controls; the hosted structural suite adds 15 passing assertions. Automated classification, shadow bans and content scoring are intentionally absent.
 
+Execution update, 4 September 2026 (browser quality foundation): Playwright now owns repeatable public desktop and Pixel-sized mobile journeys for I/O Port, Brand and the separate admin sign-in boundary, plus serious/critical WCAG A/AA automation and opt-in visual baselines. The first execution repaired real low-contrast text and an unlabelled newsletter verification field; all ten public checks and four visual baselines now pass locally. A bounded production-preview load smoke completed 200 requests at concurrency 20 with zero failures and 26 ms local p95. Authenticated member/admin projects are present but deliberately skip until a caller supplies short-lived storage-state files; no password, refresh token or TOTP secret is committed. CI now installs its pinned Chromium and runs the public journeys. This is **Verified** local evidence, not authenticated production or manual accessibility approval.
+
 ## Current release checkpoint
 
 Completed in the demo environment:
