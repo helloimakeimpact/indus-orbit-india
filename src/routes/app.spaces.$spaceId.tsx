@@ -62,6 +62,7 @@ import {
   explainManagedSpaceRoomPermission,
   getRoomFeed,
   getManagedSpaceRoomPermissions,
+  listManagedSpaceMembers,
   getSpaceBoardTopics,
   getSpaceRoomControls,
   getSpaceThreadControls,
@@ -74,9 +75,11 @@ import {
   reorderManagedSpaceRooms,
   searchSpaceMessages,
   sendSpaceMessage,
+  decideManagedSpaceMembership,
   setSpaceAttentionPolicy,
   setSpaceBoardTopicState,
   setManagedSpaceRoomPermission,
+  setManagedSpaceMemberTimeout,
   setSpaceThreadLock,
   setSpaceThreadFollowing,
   setSpaceNotificationPreference,
@@ -87,6 +90,7 @@ import {
   uploadSpaceAttachment,
   type SpaceBoardTopic,
   type SpaceFeed,
+  type ManagedSpaceMember,
   type SpaceMessage,
   type SpaceReaction,
   type SpaceThreadSummary,
@@ -180,6 +184,14 @@ const roomPermissionOptions: Array<{
   { value: "message.moderate", label: "Moderate messages" },
   { value: "room.manage", label: "Manage Room" },
 ];
+
+const memberTimeoutOptions = [
+  { seconds: 300, label: "5 minutes" },
+  { seconds: 1800, label: "30 minutes" },
+  { seconds: 3600, label: "1 hour" },
+  { seconds: 86400, label: "24 hours" },
+  { seconds: 604800, label: "7 days" },
+] as const;
 
 export const Route = createFileRoute("/app/spaces/$spaceId")({
   head: () => ({
@@ -1681,7 +1693,12 @@ function SpacePage() {
               onModerate={(message) => moderateMessage(message, true)}
             />
           ) : (
-            <PeoplePane workspace={workspace} />
+            <PeoplePane
+              workspace={workspace}
+              canManage={feed.canManage}
+              actorUserId={user?.id ?? null}
+              onMembershipChanged={loadWorkspace}
+            />
           )}
         </div>
       </div>
@@ -2910,39 +2927,239 @@ function ThreadPane({
   );
 }
 
-function PeoplePane({ workspace }: { workspace: SpaceWorkspace }) {
+type SpaceMemberAction = {
+  kind: "timeout" | "lift" | "remove" | "restore";
+  member: ManagedSpaceMember;
+};
+
+function PeoplePane({
+  workspace,
+  canManage,
+  actorUserId,
+  onMembershipChanged,
+}: {
+  workspace: SpaceWorkspace;
+  canManage: boolean;
+  actorUserId: string | null;
+  onMembershipChanged: () => Promise<void>;
+}) {
+  const [managedMembers, setManagedMembers] = useState<ManagedSpaceMember[]>([]);
+  const [managedLoaded, setManagedLoaded] = useState(false);
+  const [action, setAction] = useState<SpaceMemberAction | null>(null);
+  const [reason, setReason] = useState("");
+  const [timeoutSeconds, setTimeoutSeconds] =
+    useState<(typeof memberTimeoutOptions)[number]["seconds"]>(3600);
+  const [busy, setBusy] = useState(false);
+
+  const loadManagedMembers = useCallback(async () => {
+    if (!canManage) return;
+    try {
+      setManagedMembers(await listManagedSpaceMembers(workspace.space.id));
+      setManagedLoaded(true);
+    } catch (loadError) {
+      toast.error(
+        loadError instanceof Error ? loadError.message : "Could not load member controls",
+      );
+    }
+  }, [canManage, workspace.space.id]);
+
+  useEffect(() => {
+    if (canManage) void Promise.resolve().then(loadManagedMembers);
+  }, [canManage, loadManagedMembers]);
+
+  const activeMembers: ManagedSpaceMember[] = workspace.members.map((member) => ({
+    userId: member.user_id,
+    displayName: member.profiles?.display_name ?? "Member",
+    avatarUrl: member.profiles?.avatar_url ?? null,
+    headline: member.profiles?.headline ?? null,
+    domainRole: member.domain_role,
+    membershipState: "active",
+    sourceMembershipVersion: Number(member.source_membership_version),
+    timeoutExpiresAt: null,
+  }));
+  const visibleMembers = canManage && managedLoaded ? managedMembers : activeMembers;
+
+  function beginAction(kind: SpaceMemberAction["kind"], member: ManagedSpaceMember) {
+    setAction({ kind, member });
+    setReason("");
+    setTimeoutSeconds(3600);
+  }
+
+  async function submitAction() {
+    if (!action || reason.trim().length < 8 || busy) return;
+    setBusy(true);
+    try {
+      if (action.kind === "timeout" || action.kind === "lift") {
+        await setManagedSpaceMemberTimeout({
+          spaceId: workspace.space.id,
+          userId: action.member.userId,
+          durationSeconds: action.kind === "lift" ? 0 : timeoutSeconds,
+          reason,
+          expectedMembershipVersion: action.member.sourceMembershipVersion,
+        });
+      } else {
+        await decideManagedSpaceMembership({
+          spaceId: workspace.space.id,
+          userId: action.member.userId,
+          decision: action.kind,
+          role: action.member.domainRole,
+          reason,
+          expectedMembershipVersion: action.member.sourceMembershipVersion,
+        });
+        await onMembershipChanged();
+      }
+      await loadManagedMembers();
+      toast.success(
+        action.kind === "timeout"
+          ? "Member timeout applied."
+          : action.kind === "lift"
+            ? "Member timeout lifted."
+            : action.kind === "remove"
+              ? "Member removed from the source programme and Space."
+              : "Member restored to the source programme and Space.",
+      );
+      setAction(null);
+      setReason("");
+    } catch (actionError) {
+      toast.error(actionError instanceof Error ? actionError.message : "Member action failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
-    <aside className="hidden border-l border-border bg-card lg:block">
-      <div className="flex h-20 items-center justify-between border-b border-border px-4">
-        <div className="flex items-center gap-2">
-          <Users className="h-4 w-4 text-[var(--saffron)]" />
-          <span className="text-sm font-semibold">People</span>
-        </div>
-        <Badge variant="secondary">{workspace.members.length}</Badge>
-      </div>
-      <div className="max-h-[calc(100vh-12rem)] space-y-1 overflow-y-auto p-3">
-        {workspace.members.map((member) => (
-          <div
-            key={member.user_id}
-            className="flex items-center gap-3 rounded-xl p-2 hover:bg-muted/55"
-          >
-            <Avatar className="h-8 w-8">
-              <AvatarImage src={member.profiles?.avatar_url ?? undefined} />
-              <AvatarFallback>
-                {member.profiles?.display_name?.slice(0, 2).toUpperCase() ?? "IO"}
-              </AvatarFallback>
-            </Avatar>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-xs font-medium">
-                {member.profiles?.display_name ?? "Member"}
-              </p>
-              <p className="truncate text-[10px] capitalize text-muted-foreground">
-                {member.domain_role}
-              </p>
-            </div>
+    <>
+      <aside className="hidden border-l border-border bg-card lg:block">
+        <div className="flex h-20 items-center justify-between border-b border-border px-4">
+          <div className="flex items-center gap-2">
+            <Users className="h-4 w-4 text-[var(--saffron)]" />
+            <span className="text-sm font-semibold">People</span>
           </div>
-        ))}
-      </div>
-    </aside>
+          <Badge variant="secondary">{visibleMembers.length}</Badge>
+        </div>
+        <div className="max-h-[calc(100vh-12rem)] space-y-1 overflow-y-auto p-3">
+          {visibleMembers.map((member) => {
+            const protectedRole = ["lead", "steward", "coordinator"].includes(member.domainRole);
+            const self = member.userId === actorUserId;
+            const activeTimeout = member.timeoutExpiresAt !== null;
+            return (
+              <div key={member.userId} className="rounded-xl p-2 hover:bg-muted/55">
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={member.avatarUrl ?? undefined} />
+                    <AvatarFallback>
+                      {member.displayName.slice(0, 2).toUpperCase() || "IO"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs font-medium">{member.displayName}</p>
+                    <p className="truncate text-[10px] capitalize text-muted-foreground">
+                      {member.domainRole} · {member.membershipState}
+                    </p>
+                    {activeTimeout ? (
+                      <p className="text-[10px] text-destructive">
+                        Timed out until {formatMoment(member.timeoutExpiresAt!)}
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
+                {canManage && !self && !protectedRole ? (
+                  <div className="mt-2 flex flex-wrap gap-1 pl-11">
+                    {member.membershipState === "active" ? (
+                      <>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 px-2 text-[10px]"
+                          onClick={() => beginAction(activeTimeout ? "lift" : "timeout", member)}
+                        >
+                          {activeTimeout ? "Lift timeout" : "Timeout"}
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 px-2 text-[10px] text-destructive"
+                          onClick={() => beginAction("remove", member)}
+                        >
+                          Remove
+                        </Button>
+                      </>
+                    ) : member.membershipState === "removed" ? (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 px-2 text-[10px]"
+                        onClick={() => beginAction("restore", member)}
+                      >
+                        Restore
+                      </Button>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
+            );
+          })}
+        </div>
+      </aside>
+
+      <Dialog open={action !== null} onOpenChange={(open) => !open && setAction(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="capitalize">{action?.kind} member</DialogTitle>
+            <DialogDescription>
+              {action?.kind === "remove" || action?.kind === "restore"
+                ? "This changes the canonical Chapter or Mission membership and the linked Space together."
+                : "Timeouts block new Room and Thread messages at the database boundary. Existing messages are unchanged."}
+            </DialogDescription>
+          </DialogHeader>
+          {action?.kind === "timeout" ? (
+            <label className="space-y-1 text-xs font-medium">
+              Duration
+              <select
+                className="h-10 w-full rounded-lg border border-border bg-background px-3"
+                value={timeoutSeconds}
+                onChange={(event) => {
+                  const seconds = Number(event.target.value);
+                  const option = memberTimeoutOptions.find((item) => item.seconds === seconds);
+                  if (option) setTimeoutSeconds(option.seconds);
+                }}
+              >
+                {memberTimeoutOptions.map((option) => (
+                  <option key={option.seconds} value={option.seconds}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
+          <label className="space-y-1 text-xs font-medium">
+            Operational reason
+            <Textarea
+              value={reason}
+              onChange={(event) => setReason(event.target.value)}
+              maxLength={500}
+              placeholder="Policy and evidence basis (minimum 8 characters)"
+            />
+          </label>
+          <DialogFooter>
+            <Button type="button" variant="outline" disabled={busy} onClick={() => setAction(null)}>
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant={action?.kind === "remove" ? "destructive" : "default"}
+              disabled={busy || reason.trim().length < 8}
+              onClick={() => void submitAction()}
+            >
+              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+              Confirm
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

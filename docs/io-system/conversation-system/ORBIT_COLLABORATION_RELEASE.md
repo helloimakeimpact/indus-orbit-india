@@ -1,6 +1,6 @@
 # Orbit collaboration release
 
-Status: core hosted database boundary **Released**; the 2 September structured-Spaces increment is **Verified locally / Blocked from hosted apply pending explicit owner approval**. The member web experience awaits the next deployment.
+Status: core hosted database and 4 September member-safety/replay boundaries **Released**; the structured-Spaces increment is **Verified locally / Blocked from hosted apply pending explicit owner approval**. The member web experience awaits the next deployment.
 
 The existing branded Chapter/Mission Space shell is now backed by working collaboration commands rather than dormant tables or visual affordances.
 
@@ -12,6 +12,9 @@ The existing branded Chapter/Mission Space shell is now backed by working collab
 - idempotent member reports without copying message content into the report description automatically;
 - scoped Room name, description and posting-policy administration;
 - database-enforced Room slow mode with twelve bounded intervals from off through one hour, idempotent retry preservation, exact retry evidence and an explicit Space-manager bypass;
+- database-enforced Space timeouts from five minutes through seven days, reasoned lift, exact expiry feedback, optimistic membership state, serialized concurrent replay and private evidence;
+- conservative serialized spam controls: six sends per ten seconds, thirty per minute, 120 per hour and blocking the fourth identical four-character-or-longer message in one Room/Thread within ten minutes;
+- source-aware member removal/restoration through canonical Chapter/Mission records, with elevated source roles protected until their authority is removed separately;
 - role/member Room permission overrides, with explicit deny precedence;
 - moderator-only content restriction/restoration and Thread lock/reopen actions;
 - private moderation evidence with actor, reason, target and retry-safe client operation IDs;
@@ -48,6 +51,7 @@ The Chapter/Mission Space surface now provides:
 - explicit offline status and replay-safe manual recovery for Room messages, Thread replies and attachment uploads; request IDs and file objects remain only in the open tab;
 - manager Room access editing for role/member allow, deny and inherited policy across the five bounded Room capabilities, with direct self-lockout prevention;
 - the existing grouped Room rail, main workspace and people/thread inspector geometry.
+- manager People controls for active/removed members, timeout/lift and canonical remove/restore with mandatory reasons;
 - one root Orbit store shared by Community and I/O for network recovery and direct-message attention;
 - replay-safe direct-message optimistic sends, in-tab offline queueing, automatic queued replay after authoritative reconnect, explicit failed retry/discard and cross-tab unread reconciliation;
 - opt-out active-conversation typing with a seconds-long expiry and no durable last-seen record.
@@ -56,7 +60,7 @@ The Chapter/Mission Space surface now provides:
 - source-role inheritance plus an effective-permission explanation that managers can inspect as a selected role;
 - one private saved-work index/search/export surface across Space messages, Rooms, Threads, Chapters and Missions.
 
-The pure feed/attention/mention/search/permission/Thread-control decoders are regression-tested for ordering, cursors, tombstones, reaction allowlisting, malformed rows, quiet-hour and slow-mode policy, bounded unique person/role mention IDs, creator-inclusive private audiences, complete paged search-result shapes and valid exclusive override subjects. Replay-key generation, saved-work projection and conflict-safe attachment recovery are separately tested. Member format, TypeScript and ESLint pass; all 94 unit tests pass.
+The pure feed/attention/mention/search/permission/Thread-control/member-roster decoders are regression-tested for ordering, cursors, tombstones, reaction allowlisting, malformed rows, quiet-hour, slow-mode and timeout feedback, bounded unique person/role mention IDs, creator-inclusive private audiences, complete paged search-result shapes and valid exclusive override subjects. Replay-key generation, saved-work projection and conflict-safe attachment recovery are separately tested. Member TypeScript and all 102 unit tests pass; the hosted member-safety contract adds 15 assertions.
 
 ## Deliberately not claimed as complete
 

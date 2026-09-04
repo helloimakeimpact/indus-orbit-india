@@ -7,6 +7,7 @@ import {
   normalizeSpaceMentionIds,
   normalizeSpaceRoleMentionIds,
   normalizeSpaceSlowModeSeconds,
+  parseManagedSpaceMembers,
   parseSpaceFeedPayload,
   parseSpaceRoomControls,
   parseSpaceRoomPermissions,
@@ -16,6 +17,7 @@ import {
   type SpaceFeed,
   type SpaceFeedCursor,
   type SpaceMessage,
+  type ManagedSpaceMember,
   type SpaceNotificationPreference,
   type SpaceQuietHours,
   type SpaceReaction,
@@ -34,6 +36,7 @@ export type {
   SpaceFeed,
   SpaceFeedCursor,
   SpaceMessage,
+  ManagedSpaceMember,
   SpaceNotificationPreference,
   SpaceQuietHours,
   SpaceReaction,
@@ -737,4 +740,70 @@ export async function markSpaceRoomRead(roomId: string, messageId: string): Prom
     _message_id: messageId,
   });
   if (error) throw new Error(error.message);
+}
+
+export async function listManagedSpaceMembers(spaceId: string): Promise<ManagedSpaceMember[]> {
+  const { data, error } = await supabase.rpc(
+    "list_managed_conversation_space_members" as never,
+    { _space_id: spaceId } as never,
+  );
+  if (error) throw new Error(error.message);
+  return parseManagedSpaceMembers(data);
+}
+
+export async function setManagedSpaceMemberTimeout(input: {
+  spaceId: string;
+  userId: string;
+  durationSeconds: 0 | 300 | 1800 | 3600 | 86400 | 604800;
+  reason: string;
+  expectedMembershipVersion: number;
+}): Promise<void> {
+  const { data, error } = await supabase.rpc(
+    "set_managed_conversation_member_timeout" as never,
+    {
+      _space_id: input.spaceId,
+      _target_user_id: input.userId,
+      _duration_seconds: input.durationSeconds,
+      _reason: input.reason.trim(),
+      _expected_membership_version: input.expectedMembershipVersion,
+      _client_request_id: crypto.randomUUID(),
+    } as never,
+  );
+  if (error) throw new Error(error.message);
+  const result = objectValue(data);
+  if (
+    textValue(result.spaceId) !== input.spaceId ||
+    textValue(result.userId) !== input.userId ||
+    typeof result.replayed !== "boolean"
+  ) {
+    throw new Error("The Space timeout operation returned an invalid result");
+  }
+}
+
+export async function decideManagedSpaceMembership(input: {
+  spaceId: string;
+  userId: string;
+  decision: "remove" | "restore";
+  role: string;
+  reason: string;
+  expectedMembershipVersion: number;
+}): Promise<void> {
+  const { data, error } = await supabase.rpc("decide_space_membership", {
+    _space_id: input.spaceId,
+    _target_user_id: input.userId,
+    _decision: input.decision,
+    _role: input.role,
+    _reason: input.reason.trim(),
+    _expected_version: input.expectedMembershipVersion,
+  });
+  if (error) throw new Error(error.message);
+  const result = objectValue(data);
+  const expectedState = input.decision === "remove" ? "removed" : "active";
+  if (
+    textValue(result.space_id) !== input.spaceId ||
+    textValue(result.user_id) !== input.userId ||
+    textValue(result.membership_state) !== expectedState
+  ) {
+    throw new Error("The Space membership operation returned an invalid result");
+  }
 }

@@ -5,6 +5,7 @@ import {
   normalizeSpaceMentionIds,
   normalizeSpaceRoleMentionIds,
   normalizeSpaceSlowModeSeconds,
+  parseManagedSpaceMembers,
   parseSpaceFeedPayload,
   parseSpaceRoomControls,
   parseSpaceRoomPermissions,
@@ -27,6 +28,39 @@ test("Orbit Room slow mode accepts only bounded policy values and preserves retr
     formatSpaceMessageSendError({ message: "Posting is not allowed in this Room" }),
     "Posting is not allowed in this Room",
   );
+  assert.equal(
+    formatSpaceMessageSendError({
+      message: "Space timeout is active",
+      details: JSON.stringify({ retryAfterSeconds: 120 }),
+    }),
+    "Your Space timeout is active for 120 more seconds.",
+  );
+});
+
+test("managed Space roster fails closed and preserves timeout evidence", () => {
+  const members = parseManagedSpaceMembers([
+    {
+      user_id: "member-1",
+      display_name: "Member One",
+      avatar_url: null,
+      headline: "Builder",
+      domain_role: "member",
+      membership_state: "active",
+      source_membership_version: 4,
+      timeout_expires_at: "2026-09-04T13:00:00.000Z",
+    },
+    {
+      user_id: "member-2",
+      display_name: "Member Two",
+      domain_role: "member",
+      membership_state: "invented",
+      source_membership_version: 1,
+      timeout_expires_at: null,
+    },
+  ]);
+  assert.equal(members.length, 1);
+  assert.equal(members[0]?.sourceMembershipVersion, 4);
+  assert.equal(members[0]?.timeoutExpiresAt, "2026-09-04T13:00:00.000Z");
 });
 
 test("Orbit Space feed preserves chronological collaboration evidence", () => {

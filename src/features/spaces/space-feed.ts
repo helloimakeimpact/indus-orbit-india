@@ -121,6 +121,16 @@ export type SpaceRoomPermission = {
   effect: "allow" | "deny";
   createdAt: string;
 };
+export type ManagedSpaceMember = {
+  userId: string;
+  displayName: string;
+  avatarUrl: string | null;
+  headline: string | null;
+  domainRole: string;
+  membershipState: "invited" | "requested" | "active" | "suspended" | "left" | "removed";
+  sourceMembershipVersion: number;
+  timeoutExpiresAt: string | null;
+};
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 export const SPACE_SLOW_MODE_OPTIONS = [
@@ -140,7 +150,11 @@ export function formatSpaceMessageSendError(value: unknown): string {
   if (!value || typeof value !== "object") return "Could not send message";
   const error = value as { message?: unknown; details?: unknown };
   const message = typeof error.message === "string" ? error.message : "Could not send message";
-  if (message !== "Room slow mode is active" || typeof error.details !== "string") return message;
+  if (
+    !["Room slow mode is active", "Space timeout is active"].includes(message) ||
+    typeof error.details !== "string"
+  )
+    return message;
   try {
     const details = JSON.parse(error.details) as { retryAfterSeconds?: unknown };
     if (
@@ -149,12 +163,59 @@ export function formatSpaceMessageSendError(value: unknown): string {
       details.retryAfterSeconds > 0 &&
       details.retryAfterSeconds <= 3600
     ) {
-      return `Slow mode is active. Try again in ${details.retryAfterSeconds} seconds.`;
+      return message === "Space timeout is active"
+        ? `Your Space timeout is active for ${details.retryAfterSeconds} more seconds.`
+        : `Slow mode is active. Try again in ${details.retryAfterSeconds} seconds.`;
     }
   } catch {
     // A malformed server detail must not replace the safe public message.
   }
   return "Slow mode is active. Wait before sending another message in this Room.";
+}
+
+export function parseManagedSpaceMembers(value: unknown): ManagedSpaceMember[] {
+  if (!Array.isArray(value)) return [];
+  const states = new Set<ManagedSpaceMember["membershipState"]>([
+    "invited",
+    "requested",
+    "active",
+    "suspended",
+    "left",
+    "removed",
+  ]);
+  return value.flatMap((candidate): ManagedSpaceMember[] => {
+    const row = objectValue(candidate);
+    const userId = textValue(row.user_id);
+    const displayName = textValue(row.display_name);
+    const domainRole = textValue(row.domain_role);
+    const membershipState = textValue(row.membership_state);
+    const sourceMembershipVersion = row.source_membership_version;
+    const timeoutExpiresAt = row.timeout_expires_at;
+    if (
+      !userId ||
+      !displayName ||
+      !domainRole ||
+      !states.has(membershipState as ManagedSpaceMember["membershipState"]) ||
+      !Number.isSafeInteger(sourceMembershipVersion) ||
+      (sourceMembershipVersion as number) < 1 ||
+      (timeoutExpiresAt !== null &&
+        (typeof timeoutExpiresAt !== "string" || !Number.isFinite(Date.parse(timeoutExpiresAt))))
+    ) {
+      return [];
+    }
+    return [
+      {
+        userId,
+        displayName,
+        avatarUrl: typeof row.avatar_url === "string" ? row.avatar_url : null,
+        headline: typeof row.headline === "string" ? row.headline : null,
+        domainRole,
+        membershipState: membershipState as ManagedSpaceMember["membershipState"],
+        sourceMembershipVersion: sourceMembershipVersion as number,
+        timeoutExpiresAt,
+      },
+    ];
+  });
 }
 
 export function normalizeSpaceMentionIds(values: readonly string[], actorId: string | null) {
