@@ -36,6 +36,8 @@ Execution update, 4 September 2026 (direct I/O streaming): `io-openai` v12 is ac
 
 Execution update, 6 September 2026 (local UI and live-control-plane alignment): the member app renders `/brand` and `/io-port`, preserves the I/O-intent redirect after refresh, and exposes the corrected visiting card, contact QR and download actions without browser console errors. The separate admin app reaches its branded sign-in boundary against the active Indus Orbit project using an ignored local publishable-client configuration; provider secrets are not present in the browser app. Member public Playwright is 6/6 and visual is 2/2; admin public Playwright is 4/4 and visual is 2/2. The connector reconfirms project `jpwvgpnbkrktipwhvqss` as `ACTIVE_HEALTHY` in `ap-south-1`, 114 hosted migrations, `io-gateway` v28 and `io-openai` v12. Authenticated member/admin personas remain credential-gated evidence, not a failed code path.
 
+Execution update, 6 September 2026 (repeatable source and hosting boundary): the member `verify` command now executes formatting, zero-error lint, typecheck, 107 contracts, the independently buildable OpenCode package, the production bundle and enforced size budgets. CI explicitly compiles that packaged client before browser checks. Both member and separate-admin repositories declare deterministic Node 22 Netlify builds, history-safe SPA fallbacks and conservative frame/content-type/referrer/permission headers. This closes repository-side hosting ambiguity; connecting the admin site and assigning its hostname remain owner-controlled external deployment actions.
+
 ## Current release checkpoint
 
 Completed in the demo environment:

@@ -1,6 +1,6 @@
 # Indus Orbit admin system
 
-Status: separate application with Trust, Member Support, Content, Programmes, I/O, Finance, Team and Audit operations locally Verified; matching capability-checked database commands are Released to the connected demo through hosted version `20260826144354`, updated 27 August 2026. The current local commits are not yet published or hosted.
+Status: separate application with Trust, Member Support, Content, Programmes, I/O, Finance, Team and Audit operations locally Verified; matching capability-checked database commands are Released to the connected demo, updated 6 September 2026. The application source is published to `admin-indus-orbit`, includes a deterministic Netlify deployment contract and is not yet connected to its production hostname.
 
 ## Ownership boundary
 
@@ -52,9 +52,9 @@ The Released operational/conformance backend and published admin build additiona
 - a single-use, 30-minute, USD 0.01-capped provider-conformance approval with discovery-first execution and redacted evidence;
 - a fail-closed capability transition in which only a passing run seals the tested draft as Verified;
 - explicit China-hosted processing acknowledgement for the DeepSeek API test;
-- 27 passing browser contract/access/finance assertions and the last shared 550-assertion local database baseline.
+- 32 passing browser contract/access/finance assertions and the last shared 550-assertion local database baseline.
 
-The operational slice is Released through `20260810002754_create_io_operational_core.sql`; the commercial projection/gate is Released through `20260820001339_add_io_transparent_service_fee.sql`; conformance is Released through hosted versions `20260820191544` and `20260820191815` plus `io-provider-conformance` v1. The separate admin browser application is published but remains unhosted.
+The operational slice is Released through `20260810002754_create_io_operational_core.sql`; the commercial projection/gate is Released through `20260820001339_add_io_transparent_service_fee.sql`; conformance is Released through hosted versions `20260820191544` and `20260820191815` plus `io-provider-conformance` v3. `io-gateway` v28, `io-openai` v12 and `io-health-probe` v1 are active. The separate admin browser application is published and deployment-configured but remains unhosted.
 
 ## Code complete versus left
 
@@ -69,17 +69,18 @@ Implemented:
 - Content queues for Story, Event, Course and S.O.D.A. with bounded summaries and expected-state transitions;
 - Chapter/Mission Programme queues that call the canonical versioned lifecycle graph and synchronize projected Space state;
 - typed/build verification in both repositories;
+- deterministic Netlify production build, SPA fallback and conservative browser-security headers;
 - demo database migrations and post-apply checks;
 - covering indexes for every foreign-key path in the new assignment, audit and provider-control tables.
 
 Left before production:
 
-1. host the admin repository and set `VITE_ADMIN_APP_URL` in the member app;
-2. require MFA, recent re-authentication, session review/revocation and two-person approval for root changes;
+1. connect the admin repository to its reviewed production hostname and set `VITE_ADMIN_APP_URL` in the member deployment;
+2. enroll two or more super-admin TOTP factors and run recent-authentication, expiry, rejection, session and protected-revoke personas;
 3. run authenticated positive/negative browser personas for every scoped duty and all unauthorized cross-duty combinations;
 4. approve and connect the attachment scanner, tax/FX/Razorpay policies and credentials, then execute sandbox payment/refund/reconciliation journeys;
 5. add step-up-authorized audit export after retention/redaction policy approval;
-6. role-test and explicitly execute the Released conformance boundary, then add commercial evidence expiry and scheduled health before user traffic;
+6. role-test and explicitly execute the Released conformance boundary, then schedule health only after commercial authorization;
 7. create staging/production separation, SLOs, alerts, incident response and rollback proof.
 
 ## Security-advisor interpretation

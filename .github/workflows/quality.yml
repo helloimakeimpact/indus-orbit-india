@@ -45,6 +45,9 @@ jobs:
       - name: Unit tests
         run: npm run test:unit
 
+      - name: Build packaged OpenCode client
+        run: npm run build:opencode-client
+
       - name: Install browser used by public journeys
         run: npx --no-install playwright install --with-deps chromium
 
