@@ -1,6 +1,6 @@
 # OpenAI-compatible I/O API status
 
-Status: **Partial**, with the bounded v1 foundation, transparent fee/commercial gate, multi-window key limits, per-key spend cap, CN workspace policy and HMAC safety identifier **Released** to the hosted Indus Orbit control plane. On 24 August 2026, `io-openai` v8 released the stateless Responses endpoint, SSE response transport, and fail-closed request/response contracts for function tools, strict JSON output and HTTPS image input; v9 added provider-fetch cancellation. On 2 September 2026, v10 corrected the shared endpoint-outcome RPC contract so live route health evidence is recorded reliably. Provider routing remains disabled, so no paid model traffic was created and advanced provider behavior is not yet end-to-end Released.
+Status: **Partial**, with the bounded v1 foundation, transparent fee/commercial gate, multi-window key limits, per-key spend cap, CN workspace policy and HMAC safety identifier **Released** to the hosted Indus Orbit control plane. On 24 August 2026, `io-openai` v8 released the stateless Responses endpoint and fail-closed contracts for function tools, strict JSON output and HTTPS image input; v9 added provider-fetch cancellation. On 2 September, v10 corrected route-health evidence. On 4 September, v11 replaced synthetic post-settlement chunking with direct upstream Chat/Responses SSE, split-frame decoding and terminal-path settlement; v12 hardened cancellation cleanup and keeps post-stream accounting errors from falsely degrading provider health. Provider routing remains disabled, so no paid model traffic was created and provider-specific advanced behavior is not yet end-to-end Released.
 
 ## Released contract
 
@@ -54,7 +54,9 @@ Every inference request uses `executePartnerRoute`, shared with `io-gateway` v28
 7. atomic receipt, usage, provider-cost plus exact 5.5% service-fee settlement/release and balanced ledger finalization;
 8. redacted audit evidence that stores no prompt or model response.
 
-Responses include protocol-standard bodies/events plus `x-io-request-id`, `x-io-receipt-id`, `x-io-provider`, `x-io-capacity-source`, `x-io-service-fee-bps` and rate-limit headers. Unknown, expired, revoked, wrong-scope and membership-invalid keys fail closed. SSE is emitted only after the shared route has settled, so direct upstream token forwarding remains Partial. Request cancellation does propagate through the in-flight provider fetch, releases accounting, stops fallback and leaves provider health unchanged.
+Non-streaming responses include protocol-standard bodies plus `x-io-request-id`, `x-io-receipt-id`, `x-io-provider`, `x-io-capacity-source`, `x-io-service-fee-bps` and rate-limit headers. Direct streams expose the request/provider/capacity/fee headers immediately and `x-io-receipt-state: pending-stream-settlement`; the immutable receipt becomes visible in usage history only after the terminal event settles. Unknown, expired, revoked, wrong-scope and membership-invalid keys fail closed.
+
+Hosted v12 forwards provider text and function-argument deltas instead of rechunking a completed answer. The bounded decoder accepts arbitrarily split SSE frames, requires reviewed streaming capability, caps the full upstream stream at 2 MiB, captures terminal usage, validates strict structured output before completion, and releases the reservation on connection failure or client cancellation. Fallback is allowed only while opening a stream; it never switches providers after output has begun. Responses streams now emit the ordered created/in-progress/item/content/delta/done/completed lifecycle. A route is charged only after its provider stream completes and receipt finalization succeeds. Provider health records the provider-stream outcome, independently of later receipt-finalization availability.
 
 The Released beta-key policy defaults to 30-day expiry, 20 requests/minute, 200/day, 2,000/month, USD 1/day and USD 10/month. Minute/day/month request counters and daily/monthly customer-charge reservations are atomic. Standard minute headers remain, and I/O-specific daily/monthly limit, remaining and reset headers are added. Browser-origin requests remain rejected.
 
@@ -70,33 +72,32 @@ This boundary prevents a broad “OpenAI-compatible” claim from hiding semanti
 
 ## Verification evidence
 
-- hosted migration ledger contains 90 entries, including `20260820191501` (workspace/key policy), `20260820191544` (provider conformance), `20260820191815` (conformance FK indexes), the collaboration/Trust releases and `20260825122611` (Razorpay/GST/FX hardening);
+- hosted migration ledger contains 114 entries, including the workspace/key policy, provider conformance, Razorpay/GST/FX hardening, collaboration/Trust, account-privacy and member-safety releases;
 - function grants, private-table containment, security-definer and empty-search-path contracts passed on the hosted project;
 - a rolled-back hosted functional transaction passed raw-key shape, hash-only storage, allow/rate-limit behavior, counter bound, revocation and exactly-once audit checks;
 - `io-gateway` v28 is active with custom JWT verification, no-dispatch route preflight, provider-fetch cancellation and corrected endpoint-outcome recording;
-- `io-openai` v10 is active with custom-key verification, browser-origin key rejection, Chat SSE, the stateless Responses endpoint, provider-fetch cancellation and corrected endpoint-outcome recording;
+- `io-openai` v12 is active with custom-key verification, browser-origin key rejection, direct upstream Chat/Responses SSE, terminal settlement, provider-fetch cancellation and corrected endpoint-outcome recording;
 - `io-provider-conformance` v3 is active with its reviewed custom authentication boundary, while approvals/runs remain zero;
 - a live browser-origin invalid-key probe returned `403`; the equivalent server-shaped invalid-key probe returned `401`; neither loaded provider capacity or made inference traffic;
 - the hosted 550-basis-point policy, fee-rounding boundary, commercial trigger, admin projection, OpenAI Luna price v2 and DeepSeek CN disclosure were verified;
 - an invalid test key returned `401` with an OpenAI-shaped authentication error;
 - a temporary valid `models:read` key returned `200`, rate headers and an empty entitled catalogue, then was deleted;
 - provider receipts/attempts remain zero and no provider call was made;
-- 68/68 TypeScript unit tests pass in the release candidate, including Chat/Responses parsing, streaming options, bounded tools, structured output, HTTPS media, key/idempotency, preflight validation, browser-origin, precise-fee, provider discovery, safety-identifier, CN-policy and provider-cancellation tests;
+- 107/107 TypeScript unit tests pass in the release candidate, including Chat/Responses parsing and lifecycle ordering, split upstream SSE, live text/tool deltas, bounded tools, structured output, HTTPS media, key/idempotency, preflight validation, browser-origin, precise-fee, provider discovery, safety-identifier, CN-policy and provider-cancellation tests;
 - hosted migration `expose_io_route_capabilities` exposes the exact verified capability flags to the server-only resolver; a post-apply query returned zero routable endpoints, preserving the commercial/conformance gate;
 - no-secret hosted probes reached the active gateway and API after the cancellation deployment; both returned the expected `401` contract without entering provider routing;
-- the last clean 75-migration I/O-slice replay passed 676 pgTAP assertions and the last recorded full hosted suite passed 733/733; a retained empty-database replay of the current 89-migration chain remains required.
+- the last clean 75-migration I/O-slice replay passed 676 pgTAP assertions and the last recorded full hosted suite passed 733/733; a retained empty-database replay of the current 116-file migration checkout remains required.
 
 The post-migration Security Advisor reports expected notices on private deny-by-default tables and authenticated `SECURITY DEFINER` boundaries whose bodies enforce caller membership/capability and use empty search paths. Explicit grants were verified. Four new conformance foreign-key notices were closed by hosted migration `20260820191815`. Re-evaluate these intentional notices whenever the boundary changes; see the [Supabase database linter guidance](https://supabase.com/docs/guides/database/database-linter).
 
 ## Remaining implementation
 
-1. Run the current 89-migration chain and database contracts from an empty database in retained CI evidence.
-2. Replace post-settlement SSE chunking with direct upstream token streaming and settlement on every streaming terminal path. Client cancellation already propagates through the Released in-flight provider fetch.
-3. Expand the stateless Responses subset only after versioned request/response/error compatibility tests; do not enable stored continuation implicitly.
-4. Add anomaly suspension, rotation reminders, reviewed plan-tier limits and operator suspension evidence around the Released conservative key policy.
-5. Add production live-key policy only after terms, abuse, support, billing and incident ownership are approved; the database now blocks provider activation without written onward-access evidence.
-6. Have an authorized operator explicitly run one USD 0.01-capped test through the Released conformance workflow; until a run passes and commercial authorization is recorded, `/models` may correctly be empty.
-7. Run streaming/tools/structured-output/vision conformance one capability at a time; code support does not make an endpoint eligible without exact evidence.
+1. Run the current 116-file migration checkout and database contracts from an empty database in retained CI evidence.
+2. Expand the stateless Responses subset only after versioned request/response/error compatibility tests; do not enable stored continuation implicitly.
+3. Add anomaly suspension, rotation reminders, reviewed plan-tier limits and operator suspension evidence around the Released conservative key policy.
+4. Add production live-key policy only after terms, abuse, support, billing and incident ownership are approved; the database now blocks provider activation without written onward-access evidence.
+5. Have an authorized operator explicitly run one USD 0.01-capped test through the Released conformance workflow; until a run passes and commercial authorization is recorded, `/models` may correctly be empty.
+6. Run streaming/tools/structured-output/vision conformance one capability at a time; code support does not make an endpoint eligible without exact evidence. Add provider-specific cached/cache-write, tool, media and non-token billing dimensions only with versioned price evidence.
 
 The signed-in I/O workspace and `IO_API_QUICKSTART.md` now publish copyable curl, OpenAI JavaScript/Python SDK and OpenCode examples. All examples use environment/secret-manager placeholders and preserve the no-browser-key boundary.
 

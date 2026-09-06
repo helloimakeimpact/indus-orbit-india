@@ -5,6 +5,7 @@ import {
   discoverProviderModel,
   probeProviderConnection,
   sendProviderChat,
+  sendProviderChatStream,
 } from "./provider-adapter.ts";
 import type { GatewayMessage, ProviderConnection } from "./types.ts";
 
@@ -174,6 +175,68 @@ describe("sendProviderChat request contracts", { concurrency: false }, () => {
       assert.deepEqual(request.body.systemInstruction, { parts: [{ text: "Be concise." }] });
       assert.deepEqual(request.body.generationConfig, { maxOutputTokens: 1_024 });
     });
+  });
+
+  it("decodes split upstream SSE with tools and terminal usage", async () => {
+    const frames = [
+      'data: {"choices":[{"delta":{"role":"assistant","content":"Fixture "},"finish_reason":null}]}\n\n',
+      'data: {"choices":[{"delta":{"content":"stream","tool_calls":[{"index":0,"id":"call_test","type":"function","function":{"name":"lookup","arguments":"{\\"id\\":"}}]},"finish_reason":null}]}\n\n',
+      'data: {"choices":[{"delta":{"tool_calls":[{"index":0,"function":{"arguments":"\\"test\\"}"}}]},"finish_reason":"tool_calls"}]}\n\n',
+      'data: {"choices":[],"usage":{"prompt_tokens":10,"completion_tokens":4,"prompt_tokens_details":{"cached_tokens":2}}}\n\n',
+      "data: [DONE]\n\n",
+    ];
+    await captureProviderRequests(
+      async (requests) => {
+        const opened = await sendProviderChatStream(
+          connection({ supportsStreaming: true }),
+          messages,
+        );
+        const events = [];
+        for await (const event of opened.events) events.push(event);
+        assert.equal(requests[0].body.stream, true);
+        assert.deepEqual(requests[0].body.stream_options, { include_usage: true });
+        assert.equal(opened.providerRequestId, "req-stream");
+        assert.deepEqual(events.slice(0, 2), [
+          { type: "content_delta", delta: "Fixture " },
+          { type: "content_delta", delta: "stream" },
+        ]);
+        const completed = events.at(-1);
+        assert.equal(completed?.type, "completed");
+        if (completed?.type !== "completed") return;
+        assert.equal(completed.result.content, "Fixture stream");
+        assert.deepEqual(completed.result.message.toolCalls, [
+          {
+            id: "call_test",
+            type: "function",
+            function: { name: "lookup", arguments: '{"id":"test"}' },
+          },
+        ]);
+        assert.deepEqual(completed.result.usage, {
+          inputTokens: 10,
+          outputTokens: 4,
+          cachedInputTokens: 2,
+        });
+      },
+      () => {
+        const encoded = new TextEncoder().encode(frames.join(""));
+        return new Response(
+          new ReadableStream({
+            start(controller) {
+              for (let index = 0; index < encoded.length; index += 17) {
+                controller.enqueue(encoded.slice(index, index + 17));
+              }
+              controller.close();
+            },
+          }),
+          {
+            headers: {
+              "Content-Type": "text/event-stream",
+              "x-request-id": "req-stream",
+            },
+          },
+        );
+      },
+    );
   });
 
   it("discovers the exact configured model without exposing catalogue content", async () => {

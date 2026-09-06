@@ -18,11 +18,23 @@ const secretReferencePattern = /^IO_PROVIDER_[A-Z0-9_]+_API_KEY$/;
 const defaultOutputTokenAllowance = 1_024;
 const maximumOutputTokenAllowance = 4_096;
 const maximumProviderResponseBytes = 2 * 1_024 * 1_024;
+const functionNamePattern = /^[A-Za-z_][A-Za-z0-9_-]{0,63}$/;
 
 export type ProviderChatOptions = GatewayInferenceOptions & {
   safetySubject?: string;
   abortSignal?: AbortSignal;
 };
+
+export type ProviderChatStreamEvent =
+  | { type: "content_delta"; delta: string }
+  | {
+      type: "tool_call_delta";
+      index: number;
+      id?: string;
+      name?: string;
+      arguments?: string;
+    }
+  | { type: "completed"; result: PartnerResult };
 
 function createProviderAbortBoundary(callerSignal: AbortSignal | undefined, timeoutMs: number) {
   const controller = new AbortController();
@@ -38,6 +50,9 @@ function createProviderAbortBoundary(callerSignal: AbortSignal | undefined, time
   return {
     signal: controller.signal,
     timedOut: () => timedOut,
+    cancel(reason?: unknown) {
+      controller.abort(reason);
+    },
     cleanup() {
       clearTimeout(timeout);
       callerSignal?.removeEventListener("abort", abortFromCaller);
@@ -576,6 +591,7 @@ function toOpenAiCompatibleRequest(
   maxOutputTokens: number,
   safetyIdentifier?: string,
   options: ProviderChatOptions = {},
+  stream = false,
 ) {
   const usesModernCompletionLimit =
     connection.providerKey === "openai" || connection.providerKey === "groq";
@@ -628,8 +644,282 @@ function toOpenAiCompatibleRequest(
         }
       : {}),
     ...reasoningSettings,
-    stream: false,
+    stream,
+    ...(stream ? { stream_options: { include_usage: true } } : {}),
   };
+}
+
+function normalizeFinishReason(value: unknown): PartnerResult["finishReason"] {
+  return value === "stop" ||
+    value === "length" ||
+    value === "tool_calls" ||
+    value === "content_filter"
+    ? value
+    : "unknown";
+}
+
+function streamFailure(message: string, upstreamStatus?: number) {
+  return new GatewayError("upstream_failure", 502, message, upstreamStatus);
+}
+
+function sseData(frame: string) {
+  const lines = frame.split(/\r?\n/);
+  return lines
+    .filter((line) => line.startsWith("data:"))
+    .map((line) => line.slice(5).trimStart())
+    .join("\n");
+}
+
+export async function sendProviderChatStream(
+  connection: ProviderConnection,
+  messages: GatewayMessage[],
+  options: ProviderChatOptions = {},
+): Promise<{ providerRequestId?: string; events: ReadableStream<ProviderChatStreamEvent> }> {
+  if (!connection.supportsStreaming || connection.integrationStyle !== "openai_compatible") {
+    throw new GatewayError(
+      "not_configured",
+      503,
+      "The selected provider route has no reviewed streaming adapter.",
+    );
+  }
+  const apiKey = resolveSecret(connection.secretReference);
+  const maxOutputTokens = checkedOutputTokenLimit(options.maxOutputTokens);
+  const safetyIdentifier =
+    connection.providerKey === "openai"
+      ? await createSafetyIdentifier(options.safetySubject ?? "system")
+      : undefined;
+  const abortBoundary = createProviderAbortBoundary(options.abortSignal, 45_000);
+  let upstream: Response;
+  try {
+    upstream = await fetch(`${connection.baseUrl}/chat/completions`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify(
+        toOpenAiCompatibleRequest(
+          connection,
+          messages,
+          maxOutputTokens,
+          safetyIdentifier,
+          options,
+          true,
+        ),
+      ),
+      signal: abortBoundary.signal,
+    });
+  } catch (error) {
+    abortBoundary.cleanup();
+    if (options.abortSignal?.aborted) {
+      throw new GatewayError(
+        "request_cancelled",
+        499,
+        "The client cancelled the provider request.",
+      );
+    }
+    throw new GatewayError(
+      "upstream_failure",
+      502,
+      abortBoundary.timedOut()
+        ? "The provider request timed out."
+        : "The provider could not be reached.",
+    );
+  }
+  if (!upstream.ok) {
+    abortBoundary.cleanup();
+    throw new GatewayError(
+      upstream.status === 429 ? "rate_limited" : "upstream_failure",
+      upstream.status === 429 ? 429 : 502,
+      upstream.status === 429
+        ? "The selected provider is currently rate limited."
+        : "The provider did not accept this request.",
+      upstream.status,
+    );
+  }
+  if (!upstream.body) {
+    abortBoundary.cleanup();
+    throw streamFailure("The provider returned no streaming response body.", upstream.status);
+  }
+  const contentType = upstream.headers.get("content-type") ?? "";
+  if (!contentType.toLowerCase().includes("text/event-stream")) {
+    abortBoundary.cleanup();
+    await upstream.body.cancel().catch(() => undefined);
+    throw streamFailure(
+      "The provider returned an invalid streaming content type.",
+      upstream.status,
+    );
+  }
+
+  const reader = upstream.body.getReader();
+  const decoder = new TextDecoder();
+  const pending: ProviderChatStreamEvent[] = [];
+  const content: string[] = [];
+  const calls = new Map<number, { id: string; name: string; arguments: string }>();
+  let buffer = "";
+  let received = 0;
+  let terminalQueued = false;
+  let finishReason: PartnerResult["finishReason"] = "unknown";
+  let inputTokens: number | undefined;
+  let outputTokens: number | undefined;
+  let cachedInputTokens: number | undefined;
+
+  const queueCompleted = () => {
+    if (terminalQueued) return;
+    const text = content.join("");
+    const toolCalls = Array.from(calls.entries())
+      .sort(([left], [right]) => left - right)
+      .map(([, call]) => ({
+        id: call.id,
+        type: "function" as const,
+        function: { name: call.name, arguments: call.arguments },
+      }));
+    if (!text.trim() && toolCalls.length === 0) {
+      throw streamFailure("The provider returned no usable assistant response.");
+    }
+    if (
+      options.responseFormat?.type === "json_schema" &&
+      options.responseFormat.jsonSchema.strict &&
+      text
+    ) {
+      assertStructuredOutput(text, options.responseFormat.jsonSchema.schema);
+    }
+    pending.push({
+      type: "completed",
+      result: {
+        content: text,
+        message: {
+          role: "assistant",
+          content: text || null,
+          ...(toolCalls.length ? { toolCalls } : {}),
+        },
+        finishReason,
+        usage: { inputTokens, outputTokens, cachedInputTokens },
+        providerRequestId: providerRequestId(upstream),
+      },
+    });
+    terminalQueued = true;
+  };
+
+  const parseFrame = (frame: string) => {
+    const data = sseData(frame);
+    if (!data) return;
+    if (data === "[DONE]") {
+      queueCompleted();
+      return;
+    }
+    let root: RegistryRow | null;
+    try {
+      root = asRecord(JSON.parse(data));
+    } catch {
+      throw streamFailure("The provider returned an invalid streaming event.");
+    }
+    if (!root) throw streamFailure("The provider returned an invalid streaming event.");
+    const usage = asRecord(root.usage);
+    const promptDetails = usage ? asRecord(usage.prompt_tokens_details) : null;
+    inputTokens = readUsageValue(usage, "prompt_tokens") ?? inputTokens;
+    outputTokens = readUsageValue(usage, "completion_tokens") ?? outputTokens;
+    cachedInputTokens = readUsageValue(promptDetails, "cached_tokens") ?? cachedInputTokens;
+    const choices = root.choices;
+    const choice = Array.isArray(choices) ? asRecord(choices[0]) : null;
+    if (!choice) return;
+    if (choice.finish_reason !== null && choice.finish_reason !== undefined) {
+      finishReason = normalizeFinishReason(choice.finish_reason);
+    }
+    const delta = asRecord(choice.delta);
+    if (!delta) return;
+    if (typeof delta.content === "string" && delta.content) {
+      content.push(delta.content);
+      pending.push({ type: "content_delta", delta: delta.content });
+    }
+    if (Array.isArray(delta.tool_calls)) {
+      for (const raw of delta.tool_calls) {
+        const call = asRecord(raw);
+        const fn = call ? asRecord(call.function) : null;
+        const index = call ? readNumber(call, "index") : null;
+        if (index === null || index > 15) {
+          throw streamFailure("The provider returned an invalid streaming tool call.");
+        }
+        const current = calls.get(index) ?? { id: "", name: "", arguments: "" };
+        const id = typeof call?.id === "string" ? call.id : "";
+        const name = typeof fn?.name === "string" ? fn.name : "";
+        const argumentsDelta = typeof fn?.arguments === "string" ? fn.arguments : "";
+        const next = {
+          id: `${current.id}${id}`,
+          name: `${current.name}${name}`,
+          arguments: `${current.arguments}${argumentsDelta}`,
+        };
+        if (
+          next.id.length > 128 ||
+          next.name.length > 64 ||
+          next.arguments.length > 32_000 ||
+          (next.name && !functionNamePattern.test(next.name))
+        ) {
+          throw streamFailure("The provider returned an invalid streaming tool call.");
+        }
+        calls.set(index, next);
+        pending.push({
+          type: "tool_call_delta",
+          index,
+          ...(id ? { id } : {}),
+          ...(name ? { name } : {}),
+          ...(argumentsDelta ? { arguments: argumentsDelta } : {}),
+        });
+      }
+    }
+  };
+
+  const events = new ReadableStream<ProviderChatStreamEvent>({
+    async pull(controller) {
+      try {
+        while (pending.length === 0) {
+          const next = await reader.read();
+          if (next.done) {
+            buffer += decoder.decode();
+            if (buffer.trim()) parseFrame(buffer);
+            if (!terminalQueued) queueCompleted();
+            break;
+          }
+          received += next.value.byteLength;
+          if (received > maximumProviderResponseBytes) {
+            throw streamFailure("The provider response exceeded the gateway safety limit.");
+          }
+          buffer += decoder.decode(next.value, { stream: true });
+          const frames = buffer.split(/\r?\n\r?\n/);
+          buffer = frames.pop() ?? "";
+          for (const frame of frames) parseFrame(frame);
+        }
+        const event = pending.shift();
+        if (!event) throw streamFailure("The provider stream ended without a terminal event.");
+        controller.enqueue(event);
+        if (event.type === "completed") {
+          controller.close();
+          abortBoundary.cleanup();
+        }
+      } catch (error) {
+        abortBoundary.cancel(error);
+        abortBoundary.cleanup();
+        if (options.abortSignal?.aborted) {
+          controller.error(
+            new GatewayError(
+              "request_cancelled",
+              499,
+              "The client cancelled the provider request.",
+            ),
+          );
+        } else {
+          controller.error(
+            error instanceof GatewayError
+              ? error
+              : streamFailure("The provider streaming response could not be read."),
+          );
+        }
+      }
+    },
+    async cancel(reason) {
+      abortBoundary.cancel(reason);
+      abortBoundary.cleanup();
+      await reader.cancel(reason).catch(() => undefined);
+    },
+  });
+  return { providerRequestId: providerRequestId(upstream), events };
 }
 
 export async function sendProviderChat(

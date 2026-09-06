@@ -11,9 +11,9 @@ import {
 } from "../_shared/io/openai-api.ts";
 import {
   chatCompletionBody,
-  chatCompletionStream,
+  chatCompletionLiveStream,
   responsesBody,
-  responsesStream,
+  responsesLiveStream,
 } from "../_shared/io/openai-output.ts";
 import {
   getActiveCapacityEntitlements,
@@ -22,6 +22,10 @@ import {
 } from "../_shared/io/policy.ts";
 import { loadReadyProviderConnections } from "../_shared/io/provider-adapter.ts";
 import { executePartnerRoute } from "../_shared/io/route-execution.ts";
+import {
+  executePartnerRouteStream,
+  type RouteExecutionStream,
+} from "../_shared/io/route-stream.ts";
 import type {
   GatewayInferenceOptions,
   GatewayMessage,
@@ -201,6 +205,17 @@ function executionHeaders(
   };
 }
 
+function streamingExecutionHeaders(actor: ApiKeyActor, result: RouteExecutionStream) {
+  return {
+    ...rateHeaders(actor),
+    "x-io-request-id": result.requestId,
+    "x-io-provider": result.providerKey,
+    "x-io-capacity-source": result.capacitySource,
+    "x-io-service-fee-bps": String(result.serviceFeeBasisPoints),
+    "x-io-receipt-state": "pending-stream-settlement",
+  };
+}
+
 async function executeApiInference(input: {
   admin: SupabaseClient;
   actor: ApiKeyActor;
@@ -216,6 +231,46 @@ async function executeApiInference(input: {
     input.request.headers.get("Idempotency-Key"),
   );
   const result = await executePartnerRoute(input.admin, {
+    workspaceId: input.actor.workspaceId,
+    actorUserId: input.actor.actorUserId,
+    actorKind: "api_key",
+    apiKeyId: input.actor.apiKeyId,
+    idempotencyKey: `api_${await sha256Hex(
+      `${input.actor.apiKeyId}:${input.protocol}:${clientIdempotencyKey}`,
+    )}`,
+    messages: input.messages,
+    mode: "run",
+    inferenceOptions: input.inferenceOptions,
+    abortSignal: input.request.signal,
+    ...modelRoute,
+  });
+  if (result.replayed) {
+    throw new GatewayError(
+      "request_in_progress",
+      409,
+      result.state === "reserved"
+        ? "This idempotent request is already in progress."
+        : "This idempotent request was already finalized; use a new Idempotency-Key.",
+    );
+  }
+  return result;
+}
+
+async function executeApiInferenceStream(input: {
+  admin: SupabaseClient;
+  actor: ApiKeyActor;
+  request: Request;
+  model: string;
+  messages: GatewayMessage[];
+  inferenceOptions: GatewayInferenceOptions;
+  protocol: "chat" | "responses";
+}) {
+  const connections = await entitledConnections(input.admin, input.actor.workspaceId);
+  const modelRoute = resolveModel(connections, input.model);
+  const clientIdempotencyKey = requireClientIdempotencyKey(
+    input.request.headers.get("Idempotency-Key"),
+  );
+  const result = await executePartnerRouteStream(input.admin, {
     workspaceId: input.actor.workspaceId,
     actorUserId: input.actor.actorUserId,
     actorKind: "api_key",
@@ -280,6 +335,23 @@ Deno.serve(async (request) => {
     if (request.method === "POST" && pathname.endsWith("/v1/chat/completions")) {
       const actor = await authenticateApiKey(admin, request, "inference:invoke");
       const body = parseOpenAiChatRequest(await parseJson(request));
+      if (body.stream) {
+        const route = await executeApiInferenceStream({
+          admin,
+          actor,
+          request,
+          model: body.model,
+          messages: body.messages,
+          inferenceOptions: body.inferenceOptions,
+          protocol: "chat",
+        });
+        return chatCompletionLiveStream(
+          route,
+          body.model,
+          body.includeUsage,
+          streamingExecutionHeaders(actor, route),
+        );
+      }
       const result = await executeApiInference({
         admin,
         actor,
@@ -290,13 +362,24 @@ Deno.serve(async (request) => {
         protocol: "chat",
       });
       const headers = executionHeaders(actor, result);
-      if (body.stream) return chatCompletionStream(result, body.model, body.includeUsage, headers);
       return json(chatCompletionBody(result, body.model), 200, headers);
     }
 
     if (request.method === "POST" && pathname.endsWith("/v1/responses")) {
       const actor = await authenticateApiKey(admin, request, "inference:invoke");
       const body = parseOpenAiResponsesRequest(await parseJson(request));
+      if (body.stream) {
+        const route = await executeApiInferenceStream({
+          admin,
+          actor,
+          request,
+          model: body.model,
+          messages: body.messages,
+          inferenceOptions: body.inferenceOptions,
+          protocol: "responses",
+        });
+        return responsesLiveStream(route, body.model, streamingExecutionHeaders(actor, route));
+      }
       const result = await executeApiInference({
         admin,
         actor,
@@ -307,7 +390,6 @@ Deno.serve(async (request) => {
         protocol: "responses",
       });
       const headers = executionHeaders(actor, result);
-      if (body.stream) return responsesStream(result, body.model, headers);
       return json(responsesBody(result, body.model), 200, headers);
     }
 
