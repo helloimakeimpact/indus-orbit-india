@@ -1,6 +1,6 @@
 # I/O Terminal and OpenCode system record
 
-Status: durable metadata, exact private live timeline and approval records are **Released**; the packaged loopback client, expiring in-memory credential lease, four enforced permission profiles, global SSE consumer, continued prompts, bounded task trees, full local diff review, reviewed command execution and private local handoff export are **Verified in source and tests**; daemon-issued pairing, signed installers and a pinned real-daemon authenticated browser journey remain required, audited 2 September 2026.
+Status: durable metadata, exact private live timeline and approval records are **Released**; the packaged loopback client, expiring in-memory credential lease, four enforced permission profiles, global SSE consumer, continued prompts, bounded task trees, full local diff review, reviewed command execution and private local handoff export are **Verified in source and tests**; daemon-issued pairing, signed installers and a pinned real-daemon authenticated browser journey remain required, audited 6 September 2026.
 
 ## Product boundary
 
@@ -51,12 +51,12 @@ Migration `20260821120706_add_private_terminal_timeline_broadcast.sql` adds an e
 
 ### Evidence
 
-- OpenCode lifecycle, daemon-abort propagation, device-local binding/reconnect, expiring in-memory credential, mode policy, continued prompt, task-tree, complete-diff, exact permission, reviewed-command and global-SSE contracts pass as part of the 99-test member suite.
-- The terminal SQL contracts contribute 54 passing assertions to the 681-assertion fresh 76-migration database replay.
+- OpenCode lifecycle, daemon-abort propagation, device-local binding/reconnect, expiring in-memory credential, mode policy, continued prompt, task-tree, complete-diff, exact permission, reviewed-command and global-SSE contracts pass as part of the 107-test member suite.
+- The complete fresh local database replay applies 117 migrations and passes 25 pgTAP files/827 assertions.
 - Database lint reports no `public` or `private` schema errors.
 - Member typecheck, production build and formatting pass.
 
-These facts are **Released** to hosted project `jpwvgpnbkrktipwhvqss`: the three I/O migrations were applied through the exact-ledger alias-safe release helper, and the read-only release contract confirms the expected tables, RLS, grants and private-accounting containment. The browser app is still source-verified until its web build is deployed; no executable approval, provider traffic or terminal runtime content has been enabled.
+These durable facts are **Released** to hosted project `jpwvgpnbkrktipwhvqss`: the three I/O migrations were applied through the exact-ledger alias-safe release helper, and the read-only release contract confirms the expected tables, RLS, grants and private-accounting containment. The member web app is deployed and the URL-backed Terminal surface was manually verified to survive reload on 6 September. Real-daemon approval/abort behavior remains test-verified rather than production-verified; no provider traffic or terminal runtime content has been enabled.
 
 ## Remaining terminal code
 

@@ -1,6 +1,6 @@
 # Indus Orbit Production v1 release readiness checklist
 
-Status: active evidence tracker, updated 9 August 2026
+Status: historical 9 August phase checklist retained for provenance. Current release truth is `docs/io-system/CODE_COMPLETION_REGISTER.md` and `docs/io-system/FINAL_CODE_LEVEL_AUDIT_2026-09-06.md`; unchecked items below must not be read as a current implementation inventory.
 Release candidate: not assigned  
 Release owner: unassigned  
 Production target: not scheduled  

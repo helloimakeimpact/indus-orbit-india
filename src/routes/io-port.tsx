@@ -32,13 +32,13 @@ export const Route = createFileRoute("/io-port")({
       {
         name: "description",
         content:
-          "I/O Port is Indus Orbit's planned people-centred AI gateway and terminal: transparent model intelligence, India-aware routing and shared compute capacity.",
+          "I/O Port is Indus Orbit's private-beta people-centred AI gateway and local terminal: transparent model intelligence, India-aware routing and shared compute capacity.",
       },
       { property: "og:title", content: "I/O Port — Indus Orbit" },
       {
         property: "og:description",
         content:
-          "A people-centred AI gateway for India, being built around transparent routing, provider partnerships and shared capacity.",
+          "A people-centred AI gateway for India with transparent routing, a local OpenCode terminal and accountable shared capacity.",
       },
       { name: "twitter:card", content: "summary" },
     ],
@@ -126,8 +126,8 @@ const surfaces: Array<{
     description:
       "A branded terminal for planning, coding, running agents and reviewing their work.",
     detail:
-      "Local-first foundations are planned, with hosted execution considered only after safety validation.",
-    status: "next",
+      "The private beta connects to a user-run OpenCode daemon for reviewed sessions, tasks, diffs, approvals and local handoffs.",
+    status: "beta",
     icon: Terminal,
   },
   {
@@ -135,7 +135,8 @@ const surfaces: Array<{
     eyebrow: "Keep humans in the loop",
     description:
       "Teams, trusted peers and experts around the tools—not anonymous consumption alone.",
-    detail: "Planned to build on the existing Indus Orbit member and conversation systems.",
+    detail:
+      "The same signed-in identity links I/O to Orbit context while keeping human messages separate from private prompts and output.",
     status: "beta",
     icon: Users,
   },
@@ -172,7 +173,7 @@ function TerminalPreview() {
     <div
       className="relative mx-auto w-full max-w-3xl overflow-hidden rounded-[1.75rem] border border-white/20 bg-[#11142f] shadow-2xl shadow-black/30"
       role="img"
-      aria-label="Concept preview of the I/O Terminal routing a request through I/O Port"
+      aria-label="Product preview of the I/O Terminal routing a request through I/O Port"
     >
       <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
         <div className="flex items-center gap-2" aria-hidden="true">
@@ -181,7 +182,7 @@ function TerminalPreview() {
           <span className="h-2.5 w-2.5 rounded-full bg-[#75be91]" />
         </div>
         <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/70">
-          I/O Terminal · concept
+          I/O Terminal · private beta
         </span>
         <span className="rounded-full border border-[var(--saffron)]/30 bg-[var(--saffron)]/10 px-2 py-1 text-[9px] uppercase tracking-wider text-[var(--saffron)]">
           Preview
@@ -265,13 +266,13 @@ function IOPortPage() {
           <div className="mx-auto max-w-4xl text-center">
             <div className="inline-flex items-center gap-2 rounded-full border border-[var(--saffron)]/30 bg-[var(--saffron)]/10 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--saffron)]">
               <CircleDashed className="h-3.5 w-3.5" aria-hidden="true" />
-              Private beta being built
+              Private beta
             </div>
             <h1 className="mt-6 text-balance font-display text-5xl font-light leading-[0.98] sm:text-6xl md:text-8xl">
               Intelligence has a port of call.
             </h1>
             <p className="mx-auto mt-7 max-w-2xl text-balance text-base leading-7 text-[var(--parchment)]/70 md:text-lg">
-              I/O Port is Indus Orbit's planned AI gateway and terminal: one place to compare, route
+              I/O Port is Indus Orbit's AI gateway and local terminal: one place to compare, route
               and build with models—grounded in Indian economics and organised around people.
             </p>
             <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">

@@ -1,6 +1,8 @@
 # Supabase schema-reconciliation record
 
-Status: the linked Indus Orbit demo has 106 hosted migrations. The local directory has 107 files because `20260628124500_seed_builder_courses_and_soda_ideas.sql` remains an intentional local/demo-only seed. The newest workspace/key, conformance, finance, schema-advisor, Orbit-attention, person/role-mention, Room-permission/slow-mode, quiet-hours/paged-search, private-Thread and admin-domain migrations were applied through the connected Supabase project API and verified there. The last retained clean local baseline predates the current 107-file chain; historical aliases remain, updated 28 August 2026.
+Status: current release note updated 6 September 2026. The linked Indus Orbit project has 115 hosted migrations; the source directory has 117 files, including the intentional local/demo-only content seed and the intentionally unapplied structured-Spaces release. Migration `20260906100111_fix_operational_function_schema_drift` is active. A fresh local database applied every checked-in migration, passed 25 pgTAP files/827 assertions and returned zero error-level lint findings for `public,private`. Historical timestamp aliases remain and the detailed chronology below is retained; this paragraph supersedes older migration/test totals in that chronology.
+
+The 6 September repair was forward-only. It corrected `admin_trust_case_queue` to read `conversation_messages.content`, derives a failed payment timestamp from `state = 'failed'` plus `updated_at`, and repairs ambiguous Room-admin replay lookups only when the structured-Space functions exist. Production contained only the first two functions, so the same verified migration applied without prematurely releasing structured Spaces. Grants, RLS and capability checks were preserved.
 
 ## 28 August 2026 database-enforced Room slow mode
 
