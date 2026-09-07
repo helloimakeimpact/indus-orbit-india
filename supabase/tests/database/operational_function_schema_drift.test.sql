@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
 
-select plan(8);
+select plan(11);
 
 select ok(
   position('message.content' in pg_get_functiondef(
@@ -52,6 +52,27 @@ select ok(
 select ok(
   not has_function_privilege('anon', 'public.admin_io_payment_queue(integer)', 'EXECUTE'),
   'anonymous callers cannot execute the payment queue'
+);
+select ok(
+  exists (
+    select 1 from pg_indexes
+    where schemaname = 'private' and indexname = 'admin_root_change_requests_requested_by_idx'
+  ),
+  'root-change requester foreign key has a covering index'
+);
+select ok(
+  exists (
+    select 1 from pg_indexes
+    where schemaname = 'private' and indexname = 'admin_root_change_requests_decided_by_idx'
+  ),
+  'root-change decision-maker foreign key has a covering index'
+);
+select ok(
+  exists (
+    select 1 from pg_indexes
+    where schemaname = 'public' and indexname = 'account_privacy_requests_assigned_to_idx'
+  ),
+  'privacy-request assignee foreign key has a covering index'
 );
 
 select * from finish();

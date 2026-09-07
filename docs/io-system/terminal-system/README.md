@@ -1,6 +1,6 @@
 # I/O Terminal and OpenCode system record
 
-Status: durable metadata, exact private live timeline and approval records are **Released**; the packaged loopback client, expiring in-memory credential lease, four enforced permission profiles, global SSE consumer, continued prompts, bounded task trees, full local diff review, reviewed command execution and private local handoff export are **Verified in source and tests**; daemon-issued pairing, signed installers and a pinned real-daemon authenticated browser journey remain required, audited 6 September 2026.
+Status: durable metadata, exact private live timeline and approval records are **Released**; the packaged loopback client, expiring in-memory credential lease, four enforced permission profiles, global SSE consumer, continued prompts, bounded task trees, full local diff review, reviewed command execution and private local handoff export are **Verified in source and tests**; daemon-issued pairing, signed installers and a pinned real-daemon authenticated browser journey remain required, audited 7 September 2026.
 
 ## Product boundary
 
@@ -52,7 +52,7 @@ Migration `20260821120706_add_private_terminal_timeline_broadcast.sql` adds an e
 ### Evidence
 
 - OpenCode lifecycle, daemon-abort propagation, device-local binding/reconnect, expiring in-memory credential, mode policy, continued prompt, task-tree, complete-diff, exact permission, reviewed-command and global-SSE contracts pass as part of the 107-test member suite.
-- The complete fresh local database replay applies 117 migrations and passes 25 pgTAP files/827 assertions.
+- The complete fresh local database replay applies 118 migrations and passes 25 pgTAP files/830 assertions.
 - Database lint reports no `public` or `private` schema errors.
 - Member typecheck, production build and formatting pass.
 

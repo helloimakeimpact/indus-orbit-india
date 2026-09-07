@@ -1,8 +1,8 @@
 # I/O Port implementation status and multi-provider readiness
 
-Status: local code, UI, database, admin and hosted-release assessment, updated 6 September 2026 after direct streaming, operational schema repair and full clean replay.
+Status: local code, UI, database, admin and hosted-release assessment, updated 7 September 2026 after direct streaming, operational schema repair, final foreign-key coverage and full clean replay.
 
-Current verification: member 107/107, admin 32/32, database 827/827 across 25 files, all 117 checked-in migrations replayed and error-level `public,private` schema lint returned zero findings. Hosted migration `20260906100111_fix_operational_function_schema_drift` repairs the released Trust/payment projections while leaving structured Spaces intentionally unapplied.
+Current verification: member 107/107, admin 32/32, database 830/830 across 25 files, all 118 checked-in migrations replayed and error-level `public,private` schema lint returned zero findings. Hosted migration `20260906100111_fix_operational_function_schema_drift` repairs the released Trust/payment projections while leaving structured Spaces intentionally unapplied; `20260907090226_add_final_fk_covering_indexes` reduces hosted unindexed-foreign-key findings to zero.
 
 This is the operational source of truth for the current I/O Port implementation. It separates what exists from what is only represented in a plan or preview. Cross-product dependencies and release gates are governed by `../../MASTER_IMPLEMENTATION_AND_RELEASE_PLAN.md` and `../../RELEASE_READINESS_CHECKLIST.md`. Product direction remains in `IO_PORT_IMPLEMENTATION_PLAN.md`; the detailed delivery sequence remains in `IO_PORT_CODE_LEVEL_ROADMAP.md`; the OpenRouter comparison is in `OPENROUTER_CAPABILITY_AND_CAPACITY_PLAN.md`.
 

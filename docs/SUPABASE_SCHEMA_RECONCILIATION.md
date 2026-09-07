@@ -1,8 +1,10 @@
 # Supabase schema-reconciliation record
 
-Status: current release note updated 6 September 2026. The linked Indus Orbit project has 115 hosted migrations; the source directory has 117 files, including the intentional local/demo-only content seed and the intentionally unapplied structured-Spaces release. Migration `20260906100111_fix_operational_function_schema_drift` is active. A fresh local database applied every checked-in migration, passed 25 pgTAP files/827 assertions and returned zero error-level lint findings for `public,private`. Historical timestamp aliases remain and the detailed chronology below is retained; this paragraph supersedes older migration/test totals in that chronology.
+Status: current release note updated 7 September 2026. The linked Indus Orbit project has 116 hosted migrations; the source directory has 118 files, including the intentional local/demo-only content seed and the intentionally unapplied structured-Spaces release. Migrations `20260906100111_fix_operational_function_schema_drift` and `20260907090226_add_final_fk_covering_indexes` are active. A fresh local database applied every checked-in migration, passed 25 pgTAP files/830 assertions and returned zero error-level lint findings for `public,private`. Historical timestamp aliases remain and the detailed chronology below is retained; this paragraph supersedes older migration/test totals in that chronology.
 
 The 6 September repair was forward-only. It corrected `admin_trust_case_queue` to read `conversation_messages.content`, derives a failed payment timestamp from `state = 'failed'` plus `updated_at`, and repairs ambiguous Room-admin replay lookups only when the structured-Space functions exist. Production contained only the first two functions, so the same verified migration applied without prematurely releasing structured Spaces. Grants, RLS and capability checks were preserved.
+
+The 7 September additive index migration covers `private.admin_root_change_requests.requested_by`, `private.admin_root_change_requests.decided_by` and `public.account_privacy_requests.assigned_to`. The hosted advisor now reports zero unindexed foreign keys. Newly created indexes remain in the workload-dependent unused-index list until representative traffic exists; that is expected and is not a deletion signal.
 
 ## 28 August 2026 database-enforced Room slow mode
 

@@ -1,6 +1,6 @@
 # Conversation and branded spatial system record
 
-Status: core direct messages, Space collaboration and member-safety controls are Released to demo; structured Boards/Rooms/roles/saved work are locally Verified and Blocked from hosted apply pending explicit owner approval, updated 6 September 2026.
+Status: core direct messages, Space collaboration and member-safety controls are Released to demo; structured Boards/Rooms/roles/saved work are locally Verified and Blocked from hosted apply pending explicit owner approval, updated 7 September 2026.
 
 ## Current truth
 
@@ -59,4 +59,4 @@ Still left:
 - one reusable Indus Orbit rail/sidebar/workspace/inspector shell across product systems;
 - I/O session collaboration that never leaks prompts, terminal output, files or tools through human messaging.
 
-The core collaboration and migration-113/114 member-safety boundaries are Released to hosted Indus Orbit with RLS, explicit grants and synchronized client contracts. The structured-Spaces migration is only locally Verified because its persistent apply was refused pending explicit authorization. The member unit suite passes 107/107; the full clean local chain passes 25 database files/827 assertions and scoped schema lint. Migration `20260906120000_fix_operational_function_schema_drift.sql` also removes both ambiguous structured Room-admin replay references when this pending release is applied. Exact current behavior and limits are in `ORBIT_COLLABORATION_RELEASE.md`. The original delivery split is in `CHAPTER_MISSION_SPACE_SYSTEM_PLAN.md`; the wider engineering plan remains in `CONVERSATION_SYSTEM_IMPLEMENTATION_PLAN.md`.
+The core collaboration and migration-113/114 member-safety boundaries are Released to hosted Indus Orbit with RLS, explicit grants and synchronized client contracts. The structured-Spaces migration is only locally Verified because its persistent apply was refused pending explicit authorization. The member unit suite passes 107/107; the full clean local chain passes 25 database files/830 assertions and scoped schema lint. Migration `20260906120000_fix_operational_function_schema_drift.sql` also removes both ambiguous structured Room-admin replay references when this pending release is applied. Exact current behavior and limits are in `ORBIT_COLLABORATION_RELEASE.md`. The original delivery split is in `CHAPTER_MISSION_SPACE_SYSTEM_PLAN.md`; the wider engineering plan remains in `CONVERSATION_SYSTEM_IMPLEMENTATION_PLAN.md`.

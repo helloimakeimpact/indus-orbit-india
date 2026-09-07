@@ -1,4 +1,4 @@
-# Final code-level audit — 6 September 2026
+# Final code-level audit — 6–7 September 2026
 
 Status: **all safe owner-independent work discovered in this final pass is implemented, verified and filed**. This does not mean every production operation is activated: several boundaries correctly require contracts, credentials, policy approvals, two real operators or external infrastructure.
 
@@ -30,10 +30,11 @@ Status: **all safe owner-independent work discovered in this final pass is imple
 ### Database and verification
 
 - Production project: `jpwvgpnbkrktipwhvqss` (`Indus Orbit`, `ap-south-1`, `ACTIVE_HEALTHY`).
-- Production has 115 migration records. The newest repair is hosted version `20260906100111_fix_operational_function_schema_drift`.
-- The source has 117 SQL migrations. A from-empty local replay applied all 117.
-- All 25 pgTAP files pass: **827/827 assertions**.
+- Production has 116 migration records. The newest releases are hosted versions `20260906100111_fix_operational_function_schema_drift` and `20260907090226_add_final_fk_covering_indexes`.
+- The source has 118 SQL migrations. A from-empty local replay applied all 118.
+- All 25 pgTAP files pass: **830/830 assertions**.
 - Supabase error-level lint returns zero findings for the application-owned `public,private` schemas.
+- The hosted performance advisor now reports zero unindexed foreign keys.
 - Member verification passes **107/107** unit contracts plus formatting, zero-error lint, typecheck, packaged-client build, production build and bundle budgets.
 - Admin verification passes **32/32** contracts plus formatting, zero-warning lint, typecheck, production build and bundle budgets.
 - Manual deployed check: Sessions navigates to `/io?view=sessions`; Terminal navigates to `/io?view=terminal`; reload retains the Terminal view. The automated authenticated journey now tests all eight button destinations rather than silently looking for absent links.
