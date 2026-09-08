@@ -4,14 +4,19 @@ import {
   AnthropicToOpenAiChatStreamTranslator,
   createTransportRegistry,
   decodeJsonSseFrame,
+  enforceTranslationLossPolicy,
   normalizeFinishReason,
   normalizeTransportUsage,
+  OpenAiResponsesToChatStreamTranslator,
   SseFrameDecoder,
   TransportDecodeError,
   TransportTranslationError,
   translateAnthropicMessageToOpenAiChat,
   translateOpenAiChatToAnthropic,
+  translateOpenAiChatToResponses,
+  translateOpenAiResponseToChat,
   type TransportDescriptor,
+  Utf8SseDecoder,
 } from "./index.ts";
 
 test("SSE frames survive chunk and CRLF boundaries", () => {
@@ -60,6 +65,31 @@ test("JSON SSE decoding distinguishes terminal and malformed frames", () => {
     () => decodeJsonSseFrame({ event: null, id: null, retry: null, data: "{" }),
     TransportDecodeError,
   );
+});
+
+test("UTF-8 SSE decoding preserves multibyte content across every byte boundary", () => {
+  const encoded = new TextEncoder().encode('data: {"delta":"नमस्ते 🌏"}\r\n\r\n');
+  for (let split = 0; split <= encoded.length; split += 1) {
+    const decoder = new Utf8SseDecoder();
+    const frames = [
+      ...decoder.feed(encoded.slice(0, split)),
+      ...decoder.feed(encoded.slice(split)),
+    ];
+    assert.deepEqual(frames, [
+      {
+        event: null,
+        id: null,
+        data: '{"delta":"नमस्ते 🌏"}',
+        retry: null,
+      },
+    ]);
+    assert.deepEqual(decoder.flush(), []);
+  }
+
+  const incomplete = new Utf8SseDecoder();
+  incomplete.feed(new Uint8Array([0xe2, 0x82]));
+  assert.throws(() => incomplete.flush(), TransportDecodeError);
+  assert.throws(() => incomplete.feed(new Uint8Array()), TransportDecodeError);
 });
 
 test("finish reasons normalize without turning unknown failures into success", () => {
@@ -140,6 +170,23 @@ test("transport registry is an explicit duplicate-free allowlist", () => {
   assert.equal(Object.isFrozen(registry.get(entry.id)?.provenance), true);
   assert.equal(registry.get("unreviewed"), null);
   assert.throws(() => createTransportRegistry([entry, entry]), /Duplicate transport descriptor/);
+});
+
+test("translation loss policy fails closed unless every loss is explicitly allowed", () => {
+  const result = {
+    value: { safe: true },
+    losses: [
+      {
+        code: "named_participant_omitted" as const,
+        path: "messages[0].name",
+        detail: "No target field.",
+      },
+    ],
+  };
+  assert.throws(() => enforceTranslationLossPolicy(result), TransportTranslationError);
+  assert.deepEqual(enforceTranslationLossPolicy(result, ["named_participant_omitted"]), {
+    safe: true,
+  });
 });
 
 test("OpenAI Chat translates to Anthropic with explicit, inspectable losses", () => {
@@ -401,6 +448,340 @@ test("Anthropic stream rejects content before message_start and data after stop"
         event: "ping",
         id: null,
         value: { type: "ping" },
+      }),
+    TransportTranslationError,
+  );
+});
+
+test("OpenAI Chat translates to stateless Responses without dropping image input", () => {
+  const translated = translateOpenAiChatToResponses({
+    model: "io/latest-affordable",
+    max_completion_tokens: 512,
+    messages: [
+      { role: "developer", content: "Return verified facts." },
+      {
+        role: "user",
+        name: "member",
+        content: [
+          { type: "text", text: "Inspect this image." },
+          {
+            type: "image_url",
+            image_url: { url: "https://example.test/image.png", detail: "high" },
+          },
+        ],
+      },
+      {
+        role: "assistant",
+        content: null,
+        tool_calls: [
+          {
+            id: "call-1",
+            type: "function",
+            function: { name: "lookup", arguments: '{"id":"42"}' },
+          },
+        ],
+      },
+      { role: "tool", tool_call_id: "call-1", content: "Found" },
+    ],
+    tools: [
+      {
+        type: "function",
+        function: {
+          name: "lookup",
+          description: "Find one record",
+          parameters: { type: "object", properties: { id: { type: "string" } } },
+          strict: true,
+        },
+      },
+    ],
+    tool_choice: { type: "function", function: { name: "lookup" } },
+    parallel_tool_calls: false,
+    response_format: {
+      type: "json_schema",
+      json_schema: {
+        name: "answer",
+        schema: { type: "object", properties: { result: { type: "string" } } },
+        strict: true,
+      },
+    },
+    stop: "END",
+    stream: true,
+  });
+
+  assert.deepEqual(
+    translated.losses.map((loss) => loss.code),
+    ["named_participant_omitted", "stop_sequences_omitted"],
+  );
+  assert.deepEqual(translated.value, {
+    model: "io/latest-affordable",
+    input: [
+      {
+        type: "message",
+        role: "developer",
+        content: [{ type: "input_text", text: "Return verified facts." }],
+      },
+      {
+        type: "message",
+        role: "user",
+        content: [
+          { type: "input_text", text: "Inspect this image." },
+          { type: "input_image", image_url: "https://example.test/image.png", detail: "high" },
+        ],
+      },
+      {
+        type: "function_call",
+        call_id: "call-1",
+        name: "lookup",
+        arguments: '{"id":"42"}',
+      },
+      { type: "function_call_output", call_id: "call-1", output: "Found" },
+    ],
+    store: false,
+    max_output_tokens: 512,
+    tools: [
+      {
+        type: "function",
+        name: "lookup",
+        description: "Find one record",
+        parameters: { type: "object", properties: { id: { type: "string" } } },
+        strict: true,
+      },
+    ],
+    tool_choice: { type: "function", name: "lookup" },
+    parallel_tool_calls: false,
+    text: {
+      format: {
+        type: "json_schema",
+        name: "answer",
+        schema: { type: "object", properties: { result: { type: "string" } } },
+        strict: true,
+      },
+    },
+    stream: true,
+  });
+});
+
+test("completed Responses translate to Chat with tools, refusal and exact usage dimensions", () => {
+  const translated = translateOpenAiResponseToChat({
+    id: "resp-1",
+    object: "response",
+    created_at: 1_725_000_000,
+    status: "completed",
+    model: "provider-model",
+    output: [
+      {
+        type: "message",
+        id: "msg-1",
+        role: "assistant",
+        content: [
+          { type: "output_text", text: "Checking", annotations: [], logprobs: [] },
+          { type: "refusal", refusal: "Cannot disclose private reasoning." },
+        ],
+      },
+      {
+        type: "function_call",
+        id: "fc-1",
+        call_id: "call-1",
+        name: "lookup",
+        arguments: '{"id":"42"}',
+      },
+      { type: "reasoning", id: "rs-1", summary: [] },
+    ],
+    usage: {
+      input_tokens: 14,
+      input_tokens_details: { cached_tokens: 4, cache_write_tokens: 2 },
+      output_tokens: 7,
+      output_tokens_details: { reasoning_tokens: 3 },
+      total_tokens: 21,
+    },
+  });
+  assert.deepEqual(
+    translated.losses.map((loss) => loss.code),
+    [
+      "item_identity_omitted",
+      "item_identity_omitted",
+      "item_identity_omitted",
+      "reasoning_omitted",
+    ],
+  );
+  assert.deepEqual(translated.value, {
+    id: "resp-1",
+    object: "chat.completion",
+    created: 1_725_000_000,
+    model: "provider-model",
+    choices: [
+      {
+        index: 0,
+        message: {
+          role: "assistant",
+          content: "Checking",
+          refusal: "Cannot disclose private reasoning.",
+          tool_calls: [
+            {
+              id: "call-1",
+              type: "function",
+              function: { name: "lookup", arguments: '{"id":"42"}' },
+            },
+          ],
+        },
+        finish_reason: "tool_calls",
+      },
+    ],
+    usage: {
+      prompt_tokens: 14,
+      completion_tokens: 7,
+      total_tokens: 21,
+      prompt_tokens_details: { cached_tokens: 4, cache_creation_tokens: 2 },
+      completion_tokens_details: { reasoning_tokens: 3 },
+    },
+  });
+});
+
+test("Responses stream translates ordered text, tools, usage and terminal events", () => {
+  const translator = new OpenAiResponsesToChatStreamTranslator();
+  const response = {
+    id: "resp-1",
+    model: "provider-model",
+    created_at: 1_725_000_000,
+    status: "in_progress",
+  };
+  const outputs = [
+    translator.feed({
+      type: "event",
+      event: "response.created",
+      id: null,
+      value: { type: "response.created", response },
+    }),
+    translator.feed({
+      type: "event",
+      event: "response.output_text.delta",
+      id: null,
+      value: { type: "response.output_text.delta", delta: "Hi" },
+    }),
+    translator.feed({
+      type: "event",
+      event: "response.output_item.added",
+      id: null,
+      value: {
+        type: "response.output_item.added",
+        item: {
+          type: "function_call",
+          id: "fc-1",
+          call_id: "call-1",
+          name: "lookup",
+        },
+      },
+    }),
+    translator.feed({
+      type: "event",
+      event: "response.function_call_arguments.delta",
+      id: null,
+      value: {
+        type: "response.function_call_arguments.delta",
+        item_id: "fc-1",
+        delta: '{"id":"42"}',
+      },
+    }),
+    translator.feed({
+      type: "event",
+      event: "response.completed",
+      id: null,
+      value: {
+        type: "response.completed",
+        response: {
+          ...response,
+          status: "completed",
+          usage: {
+            input_tokens: 8,
+            input_tokens_details: { cached_tokens: 3 },
+            output_tokens: 5,
+            output_tokens_details: { reasoning_tokens: 2 },
+            total_tokens: 13,
+          },
+        },
+      },
+    }),
+  ].flatMap((result) => result.value);
+
+  assert.equal(outputs.length, 6);
+  assert.deepEqual(outputs.at(-1), { type: "done" });
+  const terminal = outputs.at(-2) as { type: "chunk"; value: Record<string, unknown> };
+  assert.deepEqual(terminal.value.usage, {
+    prompt_tokens: 8,
+    completion_tokens: 5,
+    total_tokens: 13,
+    prompt_tokens_details: { cached_tokens: 3 },
+    completion_tokens_details: { reasoning_tokens: 2 },
+  });
+});
+
+test("Responses stream rejects missing creation, unknown tool order and provider failure", () => {
+  assert.throws(
+    () =>
+      new OpenAiResponsesToChatStreamTranslator().feed({
+        type: "event",
+        event: "response.output_text.delta",
+        id: null,
+        value: { type: "response.output_text.delta", delta: "x" },
+      }),
+    TransportTranslationError,
+  );
+
+  const translator = new OpenAiResponsesToChatStreamTranslator();
+  translator.feed({
+    type: "event",
+    event: "response.created",
+    id: null,
+    value: {
+      type: "response.created",
+      response: { id: "resp-1", model: "provider-model", status: "in_progress" },
+    },
+  });
+  assert.throws(
+    () =>
+      translator.feed({
+        type: "event",
+        event: "response.function_call_arguments.delta",
+        id: null,
+        value: {
+          type: "response.function_call_arguments.delta",
+          item_id: "fc-missing",
+          delta: "{}",
+        },
+      }),
+    TransportTranslationError,
+  );
+  assert.throws(
+    () =>
+      translator.feed({
+        type: "event",
+        event: "response.failed",
+        id: null,
+        value: { type: "response.failed", response: { id: "resp-1" } },
+      }),
+    TransportTranslationError,
+  );
+
+  const inconsistent = new OpenAiResponsesToChatStreamTranslator();
+  inconsistent.feed({
+    type: "event",
+    event: "response.created",
+    id: null,
+    value: {
+      type: "response.created",
+      response: { id: "resp-2", model: "provider-model", status: "in_progress" },
+    },
+  });
+  assert.throws(
+    () =>
+      inconsistent.feed({
+        type: "event",
+        event: "response.completed",
+        id: null,
+        value: {
+          type: "response.completed",
+          response: { id: "resp-2", model: "provider-model", status: "incomplete" },
+        },
       }),
     TransportTranslationError,
   );

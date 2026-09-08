@@ -7,18 +7,22 @@ credential store, dashboard, commercial assumptions or fallback policy.
 It currently provides:
 
 - a bounded incremental SSE frame decoder;
+- fatal incremental UTF-8 byte decoding across arbitrary network boundaries;
 - strict JSON and terminal-frame decoding;
 - loss-aware finish-reason normalization;
+- fail-closed translation loss-policy enforcement;
 - provider-native usage normalization that keeps cached, cache-created and
   reasoning dimensions separate;
-- a first loss-aware OpenAI Chat to Anthropic Messages request translator plus
-  Anthropic Message to OpenAI Chat response translator; and
+- loss-aware OpenAI Chat to Anthropic Messages and stateless Responses request
+  translators, plus Anthropic/Responses JSON and SSE to OpenAI Chat translators;
+  and
 - typed, allow-listed translator descriptors for a future execution adapter.
 
-The Anthropic pair is intentionally not registered for routing yet. Its
-provider conformance and strict loss-policy review must pass before a descriptor
-can enter the allow-list. The response stream state machine now covers role,
-text, tool-call, usage, terminal and invalid-order events.
+The translator pairs are intentionally not registered for routing yet. Provider
+conformance and strict loss-policy review must pass before a descriptor can enter
+the allow-list. The response stream state machines cover role, text, refusal,
+tool-call, usage, terminal and invalid-order events. Chat-to-Responses preserves
+remote and base64 image inputs instead of silently dropping them.
 
 The package deliberately performs no network access, credential handling,
 routing, billing, persistence, logging or retries. Those remain owned by the I/O

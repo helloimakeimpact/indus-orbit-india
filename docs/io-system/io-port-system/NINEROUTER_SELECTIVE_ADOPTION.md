@@ -53,7 +53,7 @@ import product and security decisions that conflict with I/O.
 | `translator/concerns/usage.js`                               | Adapted in Phase 0                 | `normalizeTransportUsage`                          | Keep input, output, cache-read, cache-write and reasoning units separate; no price or total-cost assumption in the translator.                  |
 | `utils/streamHelpers.js` and narrow SSE framing ideas        | Adapted in Phase 0                 | `SseFrameDecoder` and `decodeJsonSseFrame`         | Incremental CRLF-safe framing, byte bounds, no console/body logging, strict malformed-frame failure.                                            |
 | OpenAI Chat ↔ Anthropic request/response translators         | Adapted in Phase 1; unregistered   | versioned translator descriptors                   | Loss-aware pure transforms now cover text/tools/images/system/developer roles and terminal events; conformance and loss-policy approval remain. |
-| OpenAI Chat ↔ Responses translators                          | Select for Phase 1                 | versioned translator descriptors                   | Preserve item IDs, tool-call lifecycle, image roles, usage and cancellation; cover upstream issue regressions.                                  |
+| OpenAI Chat ↔ Responses translators                          | Adapted in Phase 1; unregistered   | versioned translator descriptors                   | Remote/base64 input images, tool lifecycle, refusal, usage and ordered terminal events are covered; item-ID loss is explicit.                   |
 | OpenAI Chat ↔ Gemini translators                             | Select with conditions for Phase 2 | Gemini native adapter                              | Remove session/signature global stores; inject request-scoped state; require official Gemini conformance and exact usage evidence.              |
 | Ollama translation                                           | Select for local Phase 3           | packaged personal relay                            | Loopback-only, local credentials/configuration, explicit capability discovery and no cloud credential sync.                                     |
 | `utils/stream.js`                                            | Do not copy wholesale              | none                                               | It imports app usage/logging and combines transport with persistence. Port only independently tested pure state machines.                       |
@@ -77,38 +77,42 @@ State: **Verified locally.** Implemented now:
 - loss-aware finish-reason and separate-dimension usage normalization;
 - explicit typed transport descriptors and a duplicate-free allow-list;
 - a packaged MIT notice pinned to the reviewed upstream commit; and
-- a first loss-aware OpenAI Chat → Anthropic Messages request translator plus
-  Anthropic Message and stream → OpenAI Chat translators that remain
+- loss-aware OpenAI Chat → Anthropic/Responses request translators plus
+  Anthropic/Responses JSON and stream → OpenAI Chat translators that remain
   deliberately unregistered until loss-policy review/conformance is complete;
   and
-- twelve focused regression tests plus inclusion in the root verification gate.
+- eighteen focused regression tests plus inclusion in the root verification gate.
 
-Exit evidence: package build and 12/12 focused contracts pass. This is not yet a
+Exit evidence: package build and 18/18 focused contracts pass. This is not yet a
 production provider adapter and therefore does not change hosted traffic.
 
 ## Phase 1 — pure Chat, Responses and Anthropic translators
 
-State: **Partial.** The Anthropic request, JSON response and response-stream
-state machine, tool mapping, separate cache usage dimensions, deterministic
-output and explicit loss report are implemented. Responses mappings,
-golden/fuzz fixtures, loss-policy review and descriptor registration remain.
+State: **Partial.** The Anthropic and Chat/Responses request, JSON response and
+response-stream state machines, tool mapping, image-input preservation, refusal,
+separate cache/reasoning usage dimensions, deterministic output and explicit
+loss reports are implemented. Fatal incremental UTF-8 decoding is exercised at
+every byte split, and the explicit loss policy fails closed. Adversarial nested
+JSON fixtures, descriptor review and provider conformance remain.
 
 Code work and state:
 
-1. **Done for the Anthropic pair:** bounded request, content-part, tool-call and
+1. **Done for both selected pairs:** bounded request, content-part, tool-call and
    stream-event validation.
-2. **Done for the Anthropic pair:** pure OpenAI Chat → Anthropic request and
-   Anthropic JSON/SSE → OpenAI Chat transforms. Descriptor registration remains
-   deliberately off.
+2. **Done:** pure OpenAI Chat → Anthropic/Responses requests and
+   Anthropic/Responses JSON/SSE → OpenAI Chat transforms. Descriptor registration
+   remains deliberately off.
 3. **Done at the transform boundary:** machine-readable loss reports for source
-   features with no safe target representation. The gateway-level strict-loss
-   policy still remains.
-4. **Remaining:** add Responses mappings and golden/fuzz fixtures for text,
-   developer/system roles, multi-turn tool calls,
-   JSON schema, images, refusals, usage-only terminal chunks, partial UTF-8,
-   cancellation and malformed/oversized streams.
-5. **Remaining:** add upstream-regression fixtures for image loss in Responses conversion and
-   wrong fallback classification on provider/client 400 responses.
+   features with no safe target representation plus an explicit allow-list
+   enforcement function that rejects every unapproved loss.
+4. **Partially done:** deterministic fixtures cover text, developer/system roles,
+   tool calls/results, JSON schema, remote image preservation, refusals, usage,
+   terminal order, every UTF-8 byte split and malformed/oversized streams.
+   Adversarial nested-JSON coverage remains; cancellation belongs to the
+   execution adapter rather than a side-effect-free transform.
+5. **Partially done:** the Responses image-loss regression has a direct fixture.
+   Provider/client 400 fallback classification belongs to the outer execution
+   adapter and remains a Phase 3 integration fixture.
 
 Exit criteria: round-trip invariants pass where lossless; intentional losses are
 declared; zero network/persistence side effects; mutation and fuzz tests cover
