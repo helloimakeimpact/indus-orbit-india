@@ -1,5 +1,16 @@
 import type { DirectMessage } from "./types";
 
+export type ConversationOutboxItem = {
+  requestId: string;
+  recipientId: string;
+  content: string;
+  createdAt: string;
+  state: "queued" | "sending" | "failed";
+};
+
+const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const maximumOutboxItems = 100;
+
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value !== null && typeof value === "object" && !Array.isArray(value)
     ? (value as Record<string, unknown>)
@@ -76,4 +87,72 @@ export function updateDirectMessageDelivery(
   return messages.map((message) =>
     message.client_request_id === clientRequestId ? { ...message, delivery_state: state } : message,
   );
+}
+
+/**
+ * Restores only a bounded, account-scoped direct-message outbox. A request
+ * interrupted while sending is safe to retry because send_my_direct_message is
+ * idempotent on client_request_id.
+ */
+export function parseConversationOutbox(value: unknown, expectedUserId: string) {
+  const root = asRecord(value);
+  if (root?.version !== 1 || root.userId !== expectedUserId || !Array.isArray(root.items)) {
+    return [];
+  }
+
+  const seen = new Set<string>();
+  return root.items.slice(0, maximumOutboxItems).flatMap((candidate): ConversationOutboxItem[] => {
+    const item = asRecord(candidate);
+    if (!item) return [];
+    const requestId = item.requestId;
+    const recipientId = item.recipientId;
+    const content = typeof item.content === "string" ? item.content.trim() : "";
+    const createdAt = item.createdAt;
+    const state = item.state;
+    if (
+      typeof requestId !== "string" ||
+      !uuidPattern.test(requestId) ||
+      seen.has(requestId) ||
+      typeof recipientId !== "string" ||
+      !uuidPattern.test(recipientId) ||
+      !content ||
+      content.length > 4_000 ||
+      typeof createdAt !== "string" ||
+      !Number.isFinite(Date.parse(createdAt)) ||
+      (state !== "queued" && state !== "sending" && state !== "failed")
+    ) {
+      return [];
+    }
+    seen.add(requestId);
+    return [
+      {
+        requestId,
+        recipientId,
+        content,
+        createdAt,
+        // A browser can disappear after the request was sent but before its
+        // durable row arrived. Replay the same key instead of stranding it.
+        state: state === "sending" ? "queued" : state,
+      },
+    ];
+  });
+}
+
+export function projectConversationOutbox(
+  userId: string,
+  recipientId: string,
+  items: Iterable<ConversationOutboxItem>,
+): DirectMessage[] {
+  return [...items]
+    .filter((item) => item.recipientId === recipientId)
+    .map((item) => ({
+      id: `pending:${item.requestId}`,
+      sender_id: userId,
+      recipient_id: recipientId,
+      content: item.content,
+      client_request_id: item.requestId,
+      created_at: item.createdAt,
+      read_at: null,
+      delivery_state: item.state,
+    }));
 }

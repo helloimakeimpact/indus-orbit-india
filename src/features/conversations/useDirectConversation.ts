@@ -10,14 +10,19 @@ import type { DirectMessage } from "@/features/conversations/types";
 import {
   isConversationMessage,
   mergeConversationMessages,
+  parseConversationOutbox,
   parseDirectMessageBroadcast,
+  projectConversationOutbox,
   updateDirectMessageDelivery,
+  type ConversationOutboxItem,
 } from "@/features/conversations/conversation-state";
 import { useOrbitStore } from "@/features/orbit/OrbitStore";
 
 function mergeMessage(messages: DirectMessage[], incoming: DirectMessage) {
   return mergeConversationMessages(messages, [incoming]);
 }
+
+const outboxStoragePrefix = "indus-orbit:dm-outbox:v1:";
 
 export function useDirectConversation(userId: string | undefined, otherUserId: string | undefined) {
   const { connectionState, notifyAttentionChanged } = useOrbitStore();
@@ -32,17 +37,55 @@ export function useDirectConversation(userId: string | undefined, otherUserId: s
   const conversationRequestSequence = useRef(0);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const typingExpiry = useRef<number | null>(null);
-  const outbox = useRef(
-    new Map<
-      string,
-      {
-        requestId: string;
-        recipientId: string;
-        content: string;
-        state: "queued" | "sending" | "failed";
+  const outbox = useRef(new Map<string, ConversationOutboxItem>());
+  const outboxOwner = useRef<string | null>(null);
+
+  const persistOutbox = useCallback(() => {
+    if (!outboxOwner.current) return;
+    const key = `${outboxStoragePrefix}${outboxOwner.current}`;
+    try {
+      if (!outbox.current.size) {
+        window.sessionStorage.removeItem(key);
+        return;
       }
-    >(),
-  );
+      window.sessionStorage.setItem(
+        key,
+        JSON.stringify({
+          version: 1,
+          userId: outboxOwner.current,
+          items: [...outbox.current.values()],
+        }),
+      );
+    } catch {
+      // Delivery stays available in-memory when private storage is unavailable.
+    }
+  }, []);
+
+  const restoreOutbox = useCallback(() => {
+    if (!userId) {
+      outbox.current.clear();
+      outboxOwner.current = null;
+      return;
+    }
+    if (outboxOwner.current === userId) return;
+    outbox.current.clear();
+    outboxOwner.current = userId;
+    try {
+      const value = JSON.parse(
+        window.sessionStorage.getItem(`${outboxStoragePrefix}${userId}`) ?? "null",
+      ) as unknown;
+      for (const item of parseConversationOutbox(value, userId)) {
+        outbox.current.set(item.requestId, item);
+      }
+      persistOutbox();
+    } catch {
+      try {
+        window.sessionStorage.removeItem(`${outboxStoragePrefix}${userId}`);
+      } catch {
+        // An unavailable browser store must not break in-memory delivery.
+      }
+    }
+  }, [persistOutbox, userId]);
 
   const topic = useMemo(() => {
     if (!userId || !otherUserId) return null;
@@ -76,6 +119,7 @@ export function useDirectConversation(userId: string | undefined, otherUserId: s
       const pending = outbox.current.get(requestId);
       if (!pending || !topic || pending.recipientId !== otherUserId) return null;
       pending.state = "sending";
+      persistOutbox();
       setMessages((current) => updateDirectMessageDelivery(current, requestId, "sending"));
       try {
         const message = (await sendMessage(
@@ -84,6 +128,7 @@ export function useDirectConversation(userId: string | undefined, otherUserId: s
           requestId,
         )) as DirectMessage;
         outbox.current.delete(requestId);
+        persistOutbox();
         if (activeTopic.current === topic) {
           setMessages((current) => mergeMessage(current, message));
         }
@@ -91,11 +136,12 @@ export function useDirectConversation(userId: string | undefined, otherUserId: s
         return message;
       } catch (cause) {
         pending.state = "failed";
+        persistOutbox();
         setMessages((current) => updateDirectMessageDelivery(current, requestId, "failed"));
         throw cause;
       }
     },
-    [notifyAttentionChanged, otherUserId, topic],
+    [notifyAttentionChanged, otherUserId, persistOutbox, topic],
   );
 
   const flushQueued = useCallback(async () => {
@@ -133,7 +179,8 @@ export function useDirectConversation(userId: string | undefined, otherUserId: s
         return;
       }
 
-      setMessages([]);
+      restoreOutbox();
+      setMessages(projectConversationOutbox(userId, otherUserId, outbox.current.values()));
       setNextCursor(null);
       setLoading(true);
       setError(null);
@@ -196,7 +243,6 @@ export function useDirectConversation(userId: string | undefined, otherUserId: s
         })
         .catch((cause) => {
           if (!active) return;
-          setMessages([]);
           setError(cause instanceof Error ? cause.message : "Could not load this conversation.");
         })
         .finally(() => {
@@ -211,7 +257,7 @@ export function useDirectConversation(userId: string | undefined, otherUserId: s
       if (channelRef.current === channel) channelRef.current = null;
       if (channel) void supabase.removeChannel(channel);
     };
-  }, [notifyAttentionChanged, otherUserId, refresh, topic, userId]);
+  }, [notifyAttentionChanged, otherUserId, refresh, restoreOutbox, topic, userId]);
 
   useEffect(() => {
     void flushQueued();
@@ -220,9 +266,11 @@ export function useDirectConversation(userId: string | undefined, otherUserId: s
   const send = useCallback(
     async (content: string) => {
       if (!otherUserId || !topic || !userId) throw new Error("Select a conversation first.");
+      restoreOutbox();
       const requestedTopic = topic;
       const normalized = content.trim();
       if (!normalized) throw new Error("Message cannot be empty.");
+      if (normalized.length > 4_000) throw new Error("Messages cannot exceed 4,000 characters.");
       const requestId = crypto.randomUUID();
       const optimistic: DirectMessage = {
         id: `pending:${requestId}`,
@@ -238,8 +286,10 @@ export function useDirectConversation(userId: string | undefined, otherUserId: s
         requestId,
         recipientId: otherUserId,
         content: normalized,
+        createdAt: optimistic.created_at,
         state: connectionState === "online" ? "sending" : "queued",
       });
+      persistOutbox();
       setMessages((current) => mergeMessage(current, optimistic));
       setSending(true);
       try {
@@ -249,7 +299,7 @@ export function useDirectConversation(userId: string | undefined, otherUserId: s
         if (activeTopic.current === requestedTopic) setSending(false);
       }
     },
-    [connectionState, deliver, otherUserId, topic, userId],
+    [connectionState, deliver, otherUserId, persistOutbox, restoreOutbox, topic, userId],
   );
 
   const retrySend = useCallback(
@@ -258,18 +308,25 @@ export function useDirectConversation(userId: string | undefined, otherUserId: s
       if (!pending) return;
       if (connectionState !== "online") {
         pending.state = "queued";
+        persistOutbox();
         setMessages((current) => updateDirectMessageDelivery(current, requestId, "queued"));
         return;
       }
       await deliver(requestId);
     },
-    [connectionState, deliver],
+    [connectionState, deliver, persistOutbox],
   );
 
-  const discardSend = useCallback((requestId: string) => {
-    outbox.current.delete(requestId);
-    setMessages((current) => current.filter((message) => message.client_request_id !== requestId));
-  }, []);
+  const discardSend = useCallback(
+    (requestId: string) => {
+      outbox.current.delete(requestId);
+      persistOutbox();
+      setMessages((current) =>
+        current.filter((message) => message.client_request_id !== requestId),
+      );
+    },
+    [persistOutbox],
+  );
 
   const broadcastTyping = useCallback(
     async (typing: boolean) => {

@@ -43,7 +43,7 @@ Implemented:
 - manager-configured, database-enforced Room slow mode with exact retry evidence, idempotent retry preservation and a visible active-policy badge;
 - a private 10 MB quarantine-first attachment bucket, author-owned reservation/upload/finalization, MIME/size reconciliation and short signed downloads only for authorized objects;
 - rolling schema compatibility so the frontend can release before the hosted migration without hiding genuine authorization or validation errors.
-- one root Orbit connectivity/attention store across Messages, Chapters, Missions, Spaces and I/O, with replay-safe in-tab DM outbox, reconnect/focus/visibility reconciliation, cross-tab unread refresh and privacy-aware expiring typing;
+- one root Orbit connectivity/attention store across Messages, Chapters, Missions, Spaces and I/O, with a bounded account-scoped DM outbox that survives same-tab reload while preserving its replay key, reconnect/focus/visibility reconciliation, cross-tab unread refresh and privacy-aware expiring typing;
 - locally Verified forum-style Board topics, manager Room create/reorder/archive, source-role inheritance/effective-permission explanation and private saved-work search/export;
 - hosted scanner lease/retry/dead-letter and redacted notification queue operator controls, plus a deployed outbound scanner worker that remains fail-closed until provider configuration.
 - manager-only active/removed roster, canonical source-membership remove/restore, bounded Space timeouts, elevated-role protection and database-enforced burst/hourly/repeated-message limits through hosted migration 113; migration 114 serializes concurrent timeout replays.
@@ -51,7 +51,7 @@ Implemented:
 Still left:
 
 - configure an approved sender domain and schedule the fixed-template email worker; redacted retry/dead-letter controls are Released;
-- run two-device authenticated reconnect/offline/multi-device unread evidence for the Released/Verified shared store;
+- run two-device authenticated reconnect/offline/multi-device unread evidence for the Released/Verified shared store; same-tab reload recovery is covered locally, while server state remains authoritative across devices;
 - run hosted authenticated browser personas across proposal/approval, Chapter/Mission lifecycle, membership, Room send/read and outsider privacy;
 - explicitly approve and apply the broad structured-Spaces authorization migration before treating Boards, source-role hierarchy/explanation, manager Room lifecycle and saved work as Released;
 - privacy-aware exact-pair typing is Released/Verified; trusted scanner provider configuration and worker scheduling remain;
@@ -59,4 +59,4 @@ Still left:
 - one reusable Indus Orbit rail/sidebar/workspace/inspector shell across product systems;
 - I/O session collaboration that never leaks prompts, terminal output, files or tools through human messaging.
 
-The core collaboration and migration-113/114 member-safety boundaries are Released to hosted Indus Orbit with RLS, explicit grants and synchronized client contracts. The structured-Spaces migration is only locally Verified because its persistent apply was refused pending explicit authorization. The member unit suite passes 107/107; the full clean local chain passes 25 database files/830 assertions and scoped schema lint. Migration `20260906120000_fix_operational_function_schema_drift.sql` also removes both ambiguous structured Room-admin replay references when this pending release is applied. Exact current behavior and limits are in `ORBIT_COLLABORATION_RELEASE.md`. The original delivery split is in `CHAPTER_MISSION_SPACE_SYSTEM_PLAN.md`; the wider engineering plan remains in `CONVERSATION_SYSTEM_IMPLEMENTATION_PLAN.md`.
+The core collaboration and migration-113/114 member-safety boundaries are Released to hosted Indus Orbit with RLS, explicit grants and synchronized client contracts. The structured-Spaces migration is only locally Verified because its persistent apply was refused pending explicit authorization. The integrated member unit suite passes 148/148; the full clean local chain passes 25 database files/830 assertions and scoped schema lint. Migration `20260906120000_fix_operational_function_schema_drift.sql` also removes both ambiguous structured Room-admin replay references when this pending release is applied. Exact current behavior and limits are in `ORBIT_COLLABORATION_RELEASE.md`. The original delivery split is in `CHAPTER_MISSION_SPACE_SYSTEM_PLAN.md`; the wider engineering plan remains in `CONVERSATION_SYSTEM_IMPLEMENTATION_PLAN.md`.
