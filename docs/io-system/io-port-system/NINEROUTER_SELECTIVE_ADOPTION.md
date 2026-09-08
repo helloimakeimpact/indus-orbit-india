@@ -1,10 +1,12 @@
 # Selective 9router adoption for I/O Port
 
-Status: **Phase 0 Verified and Phase 1 Partial locally on 8 September 2026.** The upstream source was
+Status: **Phases 0–1 Verified and Phase 2 Partial locally on 8 September 2026.** The upstream source was
 reviewed at pinned commit `eb712ca821f0ba6bc41043fbd14494c5af5daba5`
-(`v0.5.69`). A dependency-free I/O transport package now contains the first
-adapted, attributed primitives. No 9router provider credential, OAuth flow,
-dashboard, database, route, price or paid request is active in I/O.
+(`v0.5.69`). A dependency-free I/O transport package contains the selected,
+adapted and attributed primitives. A separate private execution-adapter package
+contains a fail-closed, non-streaming network kernel. Neither package is wired
+to a live route. No 9router provider credential, OAuth flow, dashboard,
+database, route, price or paid request is active in I/O.
 
 ## Decision
 
@@ -81,19 +83,23 @@ State: **Verified locally.** Implemented now:
   Anthropic/Responses JSON and stream → OpenAI Chat translators that remain
   deliberately unregistered until loss-policy review/conformance is complete;
   and
-- eighteen focused regression tests plus inclusion in the root verification gate.
+- 28 focused regression tests plus inclusion in the root verification gate.
 
-Exit evidence: package build and 18/18 focused contracts pass. This is not yet a
+Exit evidence: package build and 28/28 focused contracts pass. This is not yet a
 production provider adapter and therefore does not change hosted traffic.
 
 ## Phase 1 — pure Chat, Responses and Anthropic translators
 
-State: **Partial.** The Anthropic and Chat/Responses request, JSON response and
+State: **Verified locally at the pure-translation boundary.** The Anthropic and Chat/Responses request, JSON response and
 response-stream state machines, tool mapping, image-input preservation, refusal,
 separate cache/reasoning usage dimensions, deterministic output and explicit
 loss reports are implemented. Fatal incremental UTF-8 decoding is exercised at
-every byte split, and the explicit loss policy fails closed. Adversarial nested
-JSON fixtures, descriptor review and provider conformance remain.
+every byte split, and the explicit loss policy fails closed. Bounded iterative
+JSON validation rejects oversized/deep structures, cycles/aliases, sparse
+arrays, accessors, symbols, class instances and non-finite values. Versioned,
+immutable descriptors remain deliberately unregistered. Provider conformance
+and approval of each declared loss remain activation gates, not missing pure
+translator code.
 
 Code work and state:
 
@@ -105,14 +111,15 @@ Code work and state:
 3. **Done at the transform boundary:** machine-readable loss reports for source
    features with no safe target representation plus an explicit allow-list
    enforcement function that rejects every unapproved loss.
-4. **Partially done:** deterministic fixtures cover text, developer/system roles,
+4. **Done:** deterministic fixtures cover text, developer/system roles,
    tool calls/results, JSON schema, remote image preservation, refusals, usage,
-   terminal order, every UTF-8 byte split and malformed/oversized streams.
-   Adversarial nested-JSON coverage remains; cancellation belongs to the
-   execution adapter rather than a side-effect-free transform.
-5. **Partially done:** the Responses image-loss regression has a direct fixture.
-   Provider/client 400 fallback classification belongs to the outer execution
-   adapter and remains a Phase 3 integration fixture.
+   terminal order, every UTF-8 byte split, malformed/oversized streams and
+   adversarial nested JSON. Cancellation belongs to the execution adapter rather
+   than a side-effect-free transform.
+5. **Done at this boundary:** the Responses image-loss regression has a direct
+   fixture. Provider failure classification belongs to the outer execution
+   boundary; the new adapter distinguishes rate limits, provider/client and
+   provider/server outcomes without choosing fallback.
 
 Exit criteria: round-trip invariants pass where lossless; intentional losses are
 declared; zero network/persistence side effects; mutation and fuzz tests cover
@@ -120,19 +127,30 @@ frame boundaries and adversarial JSON.
 
 ## Phase 2 — private I/O execution adapter
 
+State: **Partial locally.** `packages/io-execution-adapter` implements a small
+injected-fetch kernel with 11 focused contracts. It issues and verifies
+short-lived HMAC route grants that bind workspace/request/policy/provider/
+endpoint/model/capabilities/content type/body hash and maximum cost; resolves
+credentials only through an injected server-side resolver; enforces exact-host
+HTTPS, no redirects, byte/time/cancel/concurrency limits and authority/header
+separation; and returns fixed redacted error classes. It makes no route, retry,
+fallback, billing, receipt, persistence or logging decision.
+
 Code work:
 
-1. Create a Node 22 service/package separate from Supabase Edge Functions for
-   long-lived upstream streams and future local reuse.
-2. Accept only short-lived I/O service identity plus a signed route grant that
-   binds provider endpoint, model, capabilities, workspace policy version,
-   maximum cost, expiry and request ID.
-3. Resolve provider secrets server-side; enforce HTTPS/host allow-lists, request
-   size, timeout, cancellation, response limits and concurrency budgets.
-4. Emit normalized events, authoritative usage dimensions, upstream request ID
-   and a redacted error class. Persist nothing.
-5. Keep all entitlement, route choice, retry, budget, billing and receipts in
-   the existing I/O outer gateway.
+1. **Partial:** the independently buildable Node 22 package exists. Add the
+   long-lived streaming HTTP service wrapper and future local-runtime wrapper.
+2. **Partial:** signed grants exist. Add outer service identity and a durable,
+   atomic one-use grant/replay boundary.
+3. **Verified in package:** provider secrets resolve server-side; exact-host
+   HTTPS, no redirects, byte/time/cancel/concurrency limits and header-authority
+   separation are enforced. Production additionally needs DNS/IP egress
+   enforcement outside application code.
+4. **Partial:** fixed error classes and response metadata exist; direct event
+   streaming, authoritative provider-usage adapters and upstream request-ID
+   normalization remain.
+5. **Maintained:** entitlement, route choice, retry, budget, billing and receipts
+   stay in the existing I/O outer gateway.
 
 Exit criteria: mTLS or rotating HMAC service-auth tests, SSRF-negative tests,
 disconnect/cancel tests, no-body log inspection and failure-injection evidence.

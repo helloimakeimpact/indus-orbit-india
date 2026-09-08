@@ -6,6 +6,12 @@
  */
 
 const DEFAULT_MAX_SSE_FRAME_BYTES = 256 * 1_024;
+const DEFAULT_MAX_JSON_DEPTH = 64;
+const DEFAULT_MAX_JSON_NODES = 20_000;
+const DEFAULT_MAX_JSON_CONTAINER_ENTRIES = 4_096;
+const DEFAULT_MAX_JSON_STRING_BYTES = 4 * 1_024 * 1_024;
+const DEFAULT_MAX_STRING_BYTES = 1_024 * 1_024;
+const UTF8_ENCODER = new TextEncoder();
 
 export type TransportFormat = "openai_chat" | "openai_responses" | "anthropic" | "gemini";
 
@@ -34,14 +40,26 @@ export type TransportProvenance = {
   reviewedAt: string;
 };
 
-export type TransportDescriptor<Request = unknown, Chunk = unknown> = {
+export const TRANSPORT_DESCRIPTOR_CONTRACT_VERSION = 1 as const;
+
+export type TransportDescriptorRegistration = "approved" | "unregistered";
+
+export type TransportStreamTranslator = {
+  feed(frame: JsonSseFrame): TranslationResult<TransportStreamOutput[]>;
+};
+
+export type TransportDescriptor<Request = unknown, Response = unknown> = {
+  contractVersion: typeof TRANSPORT_DESCRIPTOR_CONTRACT_VERSION;
   id: string;
+  implementationVersion: string;
+  registration: TransportDescriptorRegistration;
   sourceFormat: TransportFormat;
   targetFormat: TransportFormat;
   capabilities: TransportCapabilities;
   provenance: TransportProvenance;
-  translateRequest(input: Request): unknown;
-  translateChunk(input: Chunk): unknown;
+  translateRequest(input: Request): TranslationResult<unknown>;
+  translateResponse(input: Response): TranslationResult<unknown>;
+  createStreamTranslator(): TransportStreamTranslator;
   normalizeUsage(input: unknown): TransportUsage | null;
 };
 
@@ -89,6 +107,122 @@ export class TransportTranslationError extends Error {
   constructor(message: string) {
     super(message);
     this.name = "TransportTranslationError";
+  }
+}
+
+export type TransportJsonLimits = {
+  maximumDepth?: number;
+  maximumNodes?: number;
+  maximumContainerEntries?: number;
+  maximumStringBytes?: number;
+};
+
+function validPositiveLimit(value: number | undefined, fallback: number, name: string) {
+  const limit = value ?? fallback;
+  if (!Number.isSafeInteger(limit) || limit < 1) {
+    throw new TransportTranslationError(`The ${name} limit is invalid.`);
+  }
+  return limit;
+}
+
+/**
+ * Validates untrusted request/response structures without recursion. This runs
+ * before any translator walks nested schemas or tool arguments, so cyclic,
+ * accessor-backed, non-JSON and resource-exhausting values fail closed.
+ */
+export function assertBoundedTransportJson(
+  value: unknown,
+  name = "transport JSON",
+  limits: TransportJsonLimits = {},
+) {
+  const maximumDepth = validPositiveLimit(
+    limits.maximumDepth,
+    DEFAULT_MAX_JSON_DEPTH,
+    "maximum JSON depth",
+  );
+  const maximumNodes = validPositiveLimit(
+    limits.maximumNodes,
+    DEFAULT_MAX_JSON_NODES,
+    "maximum JSON node count",
+  );
+  const maximumContainerEntries = validPositiveLimit(
+    limits.maximumContainerEntries,
+    DEFAULT_MAX_JSON_CONTAINER_ENTRIES,
+    "maximum JSON container size",
+  );
+  const maximumStringBytes = validPositiveLimit(
+    limits.maximumStringBytes,
+    DEFAULT_MAX_JSON_STRING_BYTES,
+    "maximum JSON string bytes",
+  );
+  const seen = new Set<object>();
+  const pending: Array<{ value: unknown; depth: number }> = [{ value, depth: 0 }];
+  let nodeCount = 0;
+  let stringBytes = 0;
+
+  while (pending.length) {
+    const current = pending.pop()!;
+    nodeCount += 1;
+    if (nodeCount > maximumNodes) {
+      throw new TransportTranslationError(`The ${name} exceeds the JSON node limit.`);
+    }
+
+    if (current.value === null || typeof current.value === "boolean") continue;
+    if (typeof current.value === "number") {
+      if (!Number.isFinite(current.value)) {
+        throw new TransportTranslationError(`The ${name} contains a non-finite number.`);
+      }
+      continue;
+    }
+    if (typeof current.value === "string") {
+      stringBytes += UTF8_ENCODER.encode(current.value).byteLength;
+      if (stringBytes > maximumStringBytes) {
+        throw new TransportTranslationError(`The ${name} exceeds the JSON string-byte limit.`);
+      }
+      continue;
+    }
+    if (typeof current.value !== "object") {
+      throw new TransportTranslationError(`The ${name} contains a non-JSON value.`);
+    }
+    if (seen.has(current.value)) {
+      throw new TransportTranslationError(`The ${name} contains a cyclic or repeated object.`);
+    }
+    seen.add(current.value);
+    if (current.depth >= maximumDepth) {
+      throw new TransportTranslationError(`The ${name} exceeds the JSON depth limit.`);
+    }
+
+    const array = Array.isArray(current.value) ? current.value : null;
+    const isArray = array !== null;
+    const prototype = Object.getPrototypeOf(current.value);
+    if (!isArray && prototype !== Object.prototype && prototype !== null) {
+      throw new TransportTranslationError(`The ${name} contains a non-plain object.`);
+    }
+    const descriptors = Object.getOwnPropertyDescriptors(current.value);
+    const keys = Reflect.ownKeys(descriptors).filter((key) => key !== "length");
+    if (isArray && (array!.length > maximumContainerEntries || keys.length !== array!.length)) {
+      throw new TransportTranslationError(`The ${name} contains a sparse or oversized array.`);
+    }
+    if (keys.length > maximumContainerEntries) {
+      throw new TransportTranslationError(`The ${name} exceeds the JSON container-size limit.`);
+    }
+    for (const key of keys) {
+      if (typeof key !== "string") {
+        throw new TransportTranslationError(`The ${name} contains a symbol property.`);
+      }
+      stringBytes += UTF8_ENCODER.encode(key).byteLength;
+      if (stringBytes > maximumStringBytes) {
+        throw new TransportTranslationError(`The ${name} exceeds the JSON string-byte limit.`);
+      }
+      if (isArray && !/^(0|[1-9]\d*)$/.test(key)) {
+        throw new TransportTranslationError(`The ${name} contains an invalid array property.`);
+      }
+      const descriptor = descriptors[key]!;
+      if (!("value" in descriptor)) {
+        throw new TransportTranslationError(`The ${name} contains an accessor property.`);
+      }
+      pending.push({ value: descriptor.value, depth: current.depth + 1 });
+    }
   }
 }
 
@@ -317,10 +451,23 @@ export function decodeJsonSseFrame(frame: SseFrame): JsonSseFrame {
     return { type: "done", event: frame.event, id: frame.id };
   }
   try {
-    return { type: "event", event: frame.event, id: frame.id, value: JSON.parse(frame.data) };
-  } catch {
+    const value: unknown = JSON.parse(frame.data);
+    assertBoundedTransportJson(value, "provider SSE JSON");
+    return { type: "event", event: frame.event, id: frame.id, value };
+  } catch (error) {
+    if (error instanceof TransportTranslationError) {
+      throw new TransportDecodeError(error.message);
+    }
     throw new TransportDecodeError("The provider returned an invalid JSON SSE frame.");
   }
+}
+
+function freezeTransportDescriptor(descriptor: TransportDescriptor) {
+  return Object.freeze({
+    ...descriptor,
+    capabilities: Object.freeze({ ...descriptor.capabilities }),
+    provenance: Object.freeze({ ...descriptor.provenance }),
+  });
 }
 
 export function createTransportRegistry(descriptors: TransportDescriptor[]) {
@@ -332,14 +479,19 @@ export function createTransportRegistry(descriptors: TransportDescriptor[]) {
     if (registry.has(descriptor.id)) {
       throw new Error(`Duplicate transport descriptor: ${descriptor.id}`);
     }
-    registry.set(
-      descriptor.id,
-      Object.freeze({
-        ...descriptor,
-        capabilities: Object.freeze({ ...descriptor.capabilities }),
-        provenance: Object.freeze({ ...descriptor.provenance }),
-      }),
-    );
+    if (descriptor.contractVersion !== TRANSPORT_DESCRIPTOR_CONTRACT_VERSION) {
+      throw new Error(`Unsupported transport descriptor contract: ${descriptor.id}`);
+    }
+    if (!/^\d+\.\d+\.\d+$/.test(descriptor.implementationVersion)) {
+      throw new Error(`Invalid transport implementation version: ${descriptor.id}`);
+    }
+    if (descriptor.registration !== "approved") {
+      throw new Error(`Transport descriptor is not approved for registration: ${descriptor.id}`);
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(descriptor.provenance.reviewedAt)) {
+      throw new Error(`Transport descriptor review date is invalid: ${descriptor.id}`);
+    }
+    registry.set(descriptor.id, freezeTransportDescriptor(descriptor));
   }
   return Object.freeze({
     get(id: string) {
@@ -351,8 +503,8 @@ export function createTransportRegistry(descriptors: TransportDescriptor[]) {
   });
 }
 
-function boundedString(value: unknown, name: string, maximum = 1_048_576) {
-  if (typeof value !== "string" || value.length > maximum) {
+function boundedString(value: unknown, name: string, maximum = DEFAULT_MAX_STRING_BYTES) {
+  if (typeof value !== "string" || UTF8_ENCODER.encode(value).byteLength > maximum) {
     throw new TransportTranslationError(`The ${name} is invalid.`);
   }
   return value;
@@ -388,8 +540,10 @@ function openAiTextBlocks(
   path: string,
   losses: TranslationLoss[],
 ): Array<Record<string, unknown>> {
-  if (typeof content === "string") return content ? [{ type: "text", text: content }] : [];
-  if (!Array.isArray(content)) {
+  if (typeof content === "string") {
+    return content ? [{ type: "text", text: boundedString(content, `${path} text`) }] : [];
+  }
+  if (!Array.isArray(content) || content.length > 128) {
     if (content === null || content === undefined) return [];
     throw new TransportTranslationError(`The ${path} content is invalid.`);
   }
@@ -481,6 +635,7 @@ function anthropicToolChoice(value: unknown, parallel: unknown) {
 }
 
 export function translateOpenAiChatToAnthropic(input: unknown): TranslationResult<unknown> {
+  assertBoundedTransportJson(input, "OpenAI Chat request");
   const source = record(input);
   if (!source) throw new TransportTranslationError("The OpenAI Chat request is invalid.");
   const model = requiredString(source.model, "model");
@@ -614,6 +769,7 @@ export function translateOpenAiChatToAnthropic(input: unknown): TranslationResul
 }
 
 export function translateAnthropicMessageToOpenAiChat(input: unknown): TranslationResult<unknown> {
+  assertBoundedTransportJson(input, "Anthropic response");
   const source = record(input);
   if (!source || !Array.isArray(source.content)) {
     throw new TransportTranslationError("The Anthropic response is invalid.");
@@ -778,6 +934,7 @@ export class AnthropicToOpenAiChatStreamTranslator {
   }
 
   feed(frame: JsonSseFrame): TranslationResult<TransportStreamOutput[]> {
+    assertBoundedTransportJson(frame, "Anthropic stream event");
     if (this.#stopped) {
       throw new TransportTranslationError(
         "Anthropic stream data arrived after its terminal event.",
@@ -925,7 +1082,7 @@ function responsesContentParts(
 ) {
   const textType = role === "assistant" ? "output_text" : "input_text";
   if (typeof content === "string") {
-    return content ? [{ type: textType, text: content }] : [];
+    return content ? [{ type: textType, text: boundedString(content, `${path} text`) }] : [];
   }
   if (content === null && role === "assistant") return [];
   if (!Array.isArray(content) || content.length > 128) {
@@ -942,9 +1099,10 @@ function responsesContentParts(
       const image = record(part.image_url);
       const imageUrl = image?.url ?? part.image_url;
       const detail = image?.detail ?? part.detail;
-      if (typeof imageUrl !== "string" || imageUrl.length > 2_000_000) {
+      if (typeof imageUrl !== "string") {
         throw new TransportTranslationError(`The ${path} image is invalid.`);
       }
+      boundedString(imageUrl, `${path} image`, 2_000_000);
       if (detail !== undefined && detail !== "auto" && detail !== "low" && detail !== "high") {
         throw new TransportTranslationError(`The ${path} image detail is invalid.`);
       }
@@ -1036,6 +1194,7 @@ function responsesTextConfiguration(value: unknown) {
 }
 
 export function translateOpenAiChatToResponses(input: unknown): TranslationResult<unknown> {
+  assertBoundedTransportJson(input, "OpenAI Chat request");
   const source = record(input);
   if (!source) throw new TransportTranslationError("The OpenAI Chat request is invalid.");
   const model = requiredString(source.model, "model");
@@ -1172,6 +1331,7 @@ function openAiResponsesUsage(usage: TransportUsage) {
 }
 
 export function translateOpenAiResponseToChat(input: unknown): TranslationResult<unknown> {
+  assertBoundedTransportJson(input, "OpenAI Response");
   const source = record(input);
   if (!source || !Array.isArray(source.output)) {
     throw new TransportTranslationError("The OpenAI Response is invalid.");
@@ -1336,6 +1496,7 @@ export class OpenAiResponsesToChatStreamTranslator {
   }
 
   feed(frame: JsonSseFrame): TranslationResult<TransportStreamOutput[]> {
+    assertBoundedTransportJson(frame, "Responses stream event");
     if (this.#stopped) {
       throw new TransportTranslationError(
         "Responses stream data arrived after its terminal event.",
@@ -1478,4 +1639,67 @@ export class OpenAiResponsesToChatStreamTranslator {
     });
     return { value: [], losses };
   }
+}
+
+export type ReviewedUnregisteredTransportDescriptorId =
+  | "openai-chat.anthropic.v1"
+  | "openai-chat.openai-responses.v1";
+
+/**
+ * Creates the versioned translator descriptors that have passed local code
+ * review. They are deliberately marked unregistered, and the registry refuses
+ * them until an external activation review produces an approved descriptor.
+ * No live/default registry is exported by this package.
+ */
+export function createReviewedUnregisteredTransportDescriptors(): ReadonlyArray<TransportDescriptor> {
+  const descriptors: TransportDescriptor[] = [
+    {
+      contractVersion: TRANSPORT_DESCRIPTOR_CONTRACT_VERSION,
+      id: "openai-chat.anthropic.v1",
+      implementationVersion: "1.0.0",
+      registration: "unregistered",
+      sourceFormat: "openai_chat",
+      targetFormat: "anthropic",
+      capabilities: {
+        streaming: true,
+        tools: true,
+        structuredOutput: false,
+        vision: true,
+        audio: false,
+      },
+      provenance: {
+        source: "9router_adapted",
+        sourceRevision: "eb712ca821f0ba6bc41043fbd14494c5af5daba5",
+        reviewedAt: "2026-09-08",
+      },
+      translateRequest: translateOpenAiChatToAnthropic,
+      translateResponse: translateAnthropicMessageToOpenAiChat,
+      createStreamTranslator: () => new AnthropicToOpenAiChatStreamTranslator(),
+      normalizeUsage: (input) => normalizeTransportUsage(input, "anthropic"),
+    },
+    {
+      contractVersion: TRANSPORT_DESCRIPTOR_CONTRACT_VERSION,
+      id: "openai-chat.openai-responses.v1",
+      implementationVersion: "1.0.0",
+      registration: "unregistered",
+      sourceFormat: "openai_chat",
+      targetFormat: "openai_responses",
+      capabilities: {
+        streaming: true,
+        tools: true,
+        structuredOutput: true,
+        vision: true,
+        audio: false,
+      },
+      provenance: {
+        source: "indus_orbit",
+        reviewedAt: "2026-09-08",
+      },
+      translateRequest: translateOpenAiChatToResponses,
+      translateResponse: translateOpenAiResponseToChat,
+      createStreamTranslator: () => new OpenAiResponsesToChatStreamTranslator(),
+      normalizeUsage: (input) => normalizeTransportUsage(input, "openai_responses"),
+    },
+  ];
+  return Object.freeze(descriptors.map((descriptor) => freezeTransportDescriptor(descriptor)));
 }

@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   AnthropicToOpenAiChatStreamTranslator,
+  assertBoundedTransportJson,
+  createReviewedUnregisteredTransportDescriptors,
   createTransportRegistry,
   decodeJsonSseFrame,
   enforceTranslationLossPolicy,
@@ -15,6 +17,7 @@ import {
   translateOpenAiChatToAnthropic,
   translateOpenAiChatToResponses,
   translateOpenAiResponseToChat,
+  TRANSPORT_DESCRIPTOR_CONTRACT_VERSION,
   type TransportDescriptor,
   Utf8SseDecoder,
 } from "./index.ts";
@@ -141,7 +144,10 @@ test("usage dimensions remain separate for exact downstream billing", () => {
 
 function descriptor(id: string): TransportDescriptor {
   return {
+    contractVersion: TRANSPORT_DESCRIPTOR_CONTRACT_VERSION,
     id,
+    implementationVersion: "1.0.0",
+    registration: "approved",
     sourceFormat: "openai_chat",
     targetFormat: "anthropic",
     capabilities: {
@@ -156,8 +162,11 @@ function descriptor(id: string): TransportDescriptor {
       sourceRevision: "eb712ca821f0ba6bc41043fbd14494c5af5daba5",
       reviewedAt: "2026-09-08",
     },
-    translateRequest: (input) => input,
-    translateChunk: (input) => input,
+    translateRequest: (input) => ({ value: input, losses: [] }),
+    translateResponse: (input) => ({ value: input, losses: [] }),
+    createStreamTranslator: () => ({
+      feed: () => ({ value: [], losses: [] }),
+    }),
     normalizeUsage: (input) => normalizeTransportUsage(input, "anthropic"),
   };
 }
@@ -170,6 +179,149 @@ test("transport registry is an explicit duplicate-free allowlist", () => {
   assert.equal(Object.isFrozen(registry.get(entry.id)?.provenance), true);
   assert.equal(registry.get("unreviewed"), null);
   assert.throws(() => createTransportRegistry([entry, entry]), /Duplicate transport descriptor/);
+});
+
+test("reviewed versioned descriptors remain immutable and unregistered", () => {
+  const first = createReviewedUnregisteredTransportDescriptors();
+  const second = createReviewedUnregisteredTransportDescriptors();
+  assert.notEqual(first, second);
+  assert.deepEqual(
+    first.map(({ id, contractVersion, implementationVersion, registration }) => ({
+      id,
+      contractVersion,
+      implementationVersion,
+      registration,
+    })),
+    [
+      {
+        id: "openai-chat.anthropic.v1",
+        contractVersion: 1,
+        implementationVersion: "1.0.0",
+        registration: "unregistered",
+      },
+      {
+        id: "openai-chat.openai-responses.v1",
+        contractVersion: 1,
+        implementationVersion: "1.0.0",
+        registration: "unregistered",
+      },
+    ],
+  );
+  assert.equal(Object.isFrozen(first), true);
+  assert.equal(
+    first.every((entry) => Object.isFrozen(entry)),
+    true,
+  );
+  assert.equal(
+    first.every((entry) => Object.isFrozen(entry.capabilities)),
+    true,
+  );
+  assert.equal(
+    first.every((entry) => Object.isFrozen(entry.provenance)),
+    true,
+  );
+  assert.throws(() => createTransportRegistry([...first]), /not approved for registration/);
+});
+
+test("transport registry rejects invalid descriptor versions and review metadata", () => {
+  const invalidContract = {
+    ...descriptor("openai-chat.anthropic.v2"),
+    contractVersion: 2,
+  } as unknown as TransportDescriptor;
+  assert.throws(
+    () => createTransportRegistry([invalidContract]),
+    /Unsupported transport descriptor contract/,
+  );
+
+  const invalidImplementation = {
+    ...descriptor("openai-chat.anthropic.v3"),
+    implementationVersion: "latest",
+  };
+  assert.throws(
+    () => createTransportRegistry([invalidImplementation]),
+    /Invalid transport implementation version/,
+  );
+
+  const invalidReview = {
+    ...descriptor("openai-chat.anthropic.v4"),
+    provenance: { source: "indus_orbit" as const, reviewedAt: "tomorrow" },
+  };
+  assert.throws(() => createTransportRegistry([invalidReview]), /review date is invalid/);
+});
+
+test("bounded JSON validation rejects adversarial structure without recursion", async (t) => {
+  await t.test("depth boundary", () => {
+    const within = { one: { two: { three: "ok" } } };
+    assert.doesNotThrow(() =>
+      assertBoundedTransportJson(within, "test payload", { maximumDepth: 4 }),
+    );
+    assert.throws(
+      () => assertBoundedTransportJson(within, "test payload", { maximumDepth: 2 }),
+      /depth limit/,
+    );
+  });
+
+  await t.test("node and container boundaries", () => {
+    assert.doesNotThrow(() =>
+      assertBoundedTransportJson([1, 2, 3], "test payload", {
+        maximumNodes: 4,
+        maximumContainerEntries: 3,
+      }),
+    );
+    assert.throws(
+      () =>
+        assertBoundedTransportJson([1, 2, 3], "test payload", {
+          maximumNodes: 3,
+          maximumContainerEntries: 3,
+        }),
+      /node limit/,
+    );
+    assert.throws(
+      () => assertBoundedTransportJson([1, 2], "test payload", { maximumContainerEntries: 1 }),
+      /sparse or oversized array/,
+    );
+  });
+
+  await t.test("UTF-8 byte boundary", () => {
+    assert.doesNotThrow(() =>
+      assertBoundedTransportJson("🌏", "test payload", { maximumStringBytes: 4 }),
+    );
+    assert.throws(
+      () => assertBoundedTransportJson("🌏", "test payload", { maximumStringBytes: 3 }),
+      /string-byte limit/,
+    );
+  });
+
+  await t.test("cycles, aliases and sparse arrays", () => {
+    const cycle: { self?: unknown } = {};
+    cycle.self = cycle;
+    assert.throws(() => assertBoundedTransportJson(cycle), /cyclic or repeated object/);
+    const shared = { safe: true };
+    assert.throws(
+      () => assertBoundedTransportJson({ first: shared, second: shared }),
+      /cyclic or repeated object/,
+    );
+    assert.throws(() => assertBoundedTransportJson(new Array(2)), /sparse or oversized array/);
+  });
+
+  await t.test("accessors, symbols, classes and non-finite numbers", () => {
+    let getterRead = false;
+    const accessor = Object.defineProperty({}, "secret", {
+      enumerable: true,
+      get() {
+        getterRead = true;
+        return "unsafe";
+      },
+    });
+    assert.throws(() => assertBoundedTransportJson(accessor), /accessor property/);
+    assert.equal(getterRead, false);
+    assert.throws(
+      () => assertBoundedTransportJson({ [Symbol("unsafe")]: true }),
+      /symbol property/,
+    );
+    assert.throws(() => assertBoundedTransportJson(new Date()), /non-plain object/);
+    assert.throws(() => assertBoundedTransportJson(Number.NaN), /non-finite number/);
+  });
 });
 
 test("translation loss policy fails closed unless every loss is explicitly allowed", () => {
@@ -287,6 +439,55 @@ test("OpenAI Chat translator fails closed on invalid tool JSON", () => {
         ],
       }),
     TransportTranslationError,
+  );
+});
+
+test("request translators enforce nested JSON, container and UTF-8 input bounds", () => {
+  let schema: Record<string, unknown> = { type: "string" };
+  for (let depth = 0; depth < 70; depth += 1) schema = { nested: schema };
+  assert.throws(
+    () =>
+      translateOpenAiChatToResponses({
+        model: "provider-model",
+        messages: [{ role: "user", content: "Inspect" }],
+        response_format: {
+          type: "json_schema",
+          json_schema: { name: "too_deep", schema },
+        },
+      }),
+    /JSON depth limit/,
+  );
+
+  assert.throws(
+    () =>
+      translateOpenAiChatToAnthropic({
+        model: "provider-model",
+        max_tokens: 32,
+        messages: [
+          {
+            role: "user",
+            content: Array.from({ length: 4_097 }, () => ({ type: "text", text: "x" })),
+          },
+        ],
+      }),
+    /sparse or oversized array/,
+  );
+
+  assert.throws(
+    () =>
+      translateOpenAiChatToResponses({
+        model: "provider-model",
+        messages: [{ role: "user", content: "🌏".repeat(262_145) }],
+      }),
+    /messages\[0\] text is invalid/,
+  );
+});
+
+test("JSON SSE decoding rejects a deeply nested adversarial event", () => {
+  const data = `${'{"nested":'.repeat(70)}null${"}".repeat(70)}`;
+  assert.throws(
+    () => decodeJsonSseFrame({ event: "message", id: null, retry: null, data }),
+    TransportDecodeError,
   );
 });
 

@@ -15,14 +15,25 @@ It currently provides:
   reasoning dimensions separate;
 - loss-aware OpenAI Chat to Anthropic Messages and stateless Responses request
   translators, plus Anthropic/Responses JSON and SSE to OpenAI Chat translators;
-  and
-- typed, allow-listed translator descriptors for a future execution adapter.
+- iterative, recursion-safe JSON validation with depth, node, container and
+  UTF-8 string-byte limits; and
+- typed, immutable, versioned translator descriptor factories for a future
+  execution adapter.
 
-The translator pairs are intentionally not registered for routing yet. Provider
-conformance and strict loss-policy review must pass before a descriptor can enter
-the allow-list. The response stream state machines cover role, text, refusal,
-tool-call, usage, terminal and invalid-order events. Chat-to-Responses preserves
-remote and base64 image inputs instead of silently dropping them.
+The reviewed descriptor factory returns only `unregistered` descriptors. The
+registry rejects those descriptors, and this package exports no live or default
+registry. Provider conformance and strict loss-policy review must produce an
+explicitly `approved` descriptor before it can enter an execution allow-list.
+Translation results retain their loss records; callers must pass them through
+the fail-closed loss-policy enforcement boundary. The response stream state
+machines cover role, text, refusal, tool-call, usage, terminal and invalid-order
+events. Chat-to-Responses preserves remote and base64 image inputs instead of
+silently dropping them.
+
+Untrusted translator payloads reject cyclic or aliased objects, accessors,
+symbols, sparse arrays, class instances, non-finite numbers and inputs beyond
+the configured structural limits. Individual translated strings are bounded by
+UTF-8 bytes rather than JavaScript code units.
 
 The package deliberately performs no network access, credential handling,
 routing, billing, persistence, logging or retries. Those remain owned by the I/O
