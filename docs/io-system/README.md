@@ -1,6 +1,6 @@
 # Indus Orbit living system record
 
-Status: canonical documentation hub, updated 4 September 2026 after the hosted account-privacy request release and locally Verified member/admin surfaces.
+Status: canonical documentation hub, updated 8 September 2026 after the selective 9router transport boundary and authenticated production smoke audit.
 
 This folder files the Indus Orbit product as a system: what it means, which code exists, what is operational, what remains, and how every subsystem fits the people-centred mission. Runtime source stays in its correct `src/` and `supabase/` locations; this record points to that source and distinguishes implementation from deployment.
 
@@ -18,6 +18,8 @@ This folder files the Indus Orbit product as a system: what it means, which code
 10. `platform-system/README.md` — the rest of the Indus Orbit platform and cross-system work.
 11. `platform-system/PRODUCT_BOUNDARIES_LOCATION_AND_CONVERSION_PLAN.md` — the I/O/community identity split, optional global location and separate scientific conversion funnels.
 12. `FINALIZATION_EXECUTION_PLAN.md` — the whole-product execution order, exit criteria and decisions still needed from the owner.
+13. `PHASED_COMPLETION_PLAN_2026-09-08.md` — the current phase-by-phase code, verification, owner-input and external-work handoff.
+14. `io-port-system/NINEROUTER_SELECTIVE_ADOPTION.md` — exact 9router source selection, rejection matrix, architecture and rollout gates.
 
 Product-wide delivery sequencing remains in `../MASTER_IMPLEMENTATION_AND_RELEASE_PLAN.md`; release decisions remain in `../RELEASE_READINESS_CHECKLIST.md`; database recovery and historical drift remain in `../SUPABASE_SCHEMA_RECONCILIATION.md`.
 

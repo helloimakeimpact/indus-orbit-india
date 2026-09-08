@@ -1,6 +1,6 @@
 # I/O Port system record
 
-Status: deployed provider foundation, operational core, terminal safety boundary, bounded OpenAI-compatible API and transparent commercial gate, updated 26 August 2026.
+Status: deployed provider foundation, operational core, terminal safety boundary, bounded OpenAI-compatible API and transparent commercial gate, updated 8 September 2026 with the locally Verified selective 9router transport boundary.
 
 ## Current operational truth
 
@@ -39,6 +39,7 @@ I/O and the Community share one identity but not one onboarding gate. The Commun
 - `IO_API_QUICKSTART.md` — curl, OpenAI SDK and OpenCode examples with the browser-key boundary.
 - `PRODUCTION_API_COMMERCIAL_AND_PROVIDER_POLICY.md` — production domains, browser-key boundary, 5.5% settlement and OpenAI/DeepSeek/OpenRouter commercial research.
 - `OPENROUTER_CAPABILITY_AND_CAPACITY_PLAN.md` — feature-by-feature OpenRouter comparison and capacity adoption plan.
+- `NINEROUTER_SELECTIVE_ADOPTION.md` — pinned-source selection/rejection matrix, transport architecture, packaged-client boundary and phased rollout gates.
 - `IO_PORT_IMPLEMENTATION_PLAN.md` — product and platform target.
 - `IO_PORT_CODE_LEVEL_ROADMAP.md` — engineering sequence.
 - `IO_PORT_OPERATIONS_GUIDE.md` — secret, deployment and activation operations.
