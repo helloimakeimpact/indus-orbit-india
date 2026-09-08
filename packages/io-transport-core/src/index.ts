@@ -56,10 +56,36 @@ export type JsonSseFrame =
   | { type: "event"; event: string | null; id: string | null; value: unknown }
   | { type: "done"; event: string | null; id: string | null };
 
+export type TransportStreamOutput = { type: "chunk"; value: unknown } | { type: "done" };
+
+export type TranslationLoss = {
+  code:
+    | "developer_role_folded"
+    | "named_participant_omitted"
+    | "remote_image_omitted"
+    | "reasoning_omitted"
+    | "structured_output_not_native"
+    | "unknown_content_omitted";
+  path: string;
+  detail: string;
+};
+
+export type TranslationResult<T> = {
+  value: T;
+  losses: TranslationLoss[];
+};
+
 export class TransportDecodeError extends Error {
   constructor(message: string) {
     super(message);
     this.name = "TransportDecodeError";
+  }
+}
+
+export class TransportTranslationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "TransportTranslationError";
   }
 }
 
@@ -285,4 +311,558 @@ export function createTransportRegistry(descriptors: TransportDescriptor[]) {
       return Array.from(registry.values());
     },
   });
+}
+
+function boundedString(value: unknown, name: string, maximum = 1_048_576) {
+  if (typeof value !== "string" || value.length > maximum) {
+    throw new TransportTranslationError(`The ${name} is invalid.`);
+  }
+  return value;
+}
+
+function requiredString(value: unknown, name: string, maximum = 256) {
+  const result = boundedString(value, name, maximum).trim();
+  if (!result) throw new TransportTranslationError(`The ${name} is required.`);
+  return result;
+}
+
+function positiveTokenLimit(value: unknown) {
+  if (!Number.isSafeInteger(value) || (value as number) < 1 || (value as number) > 1_000_000) {
+    throw new TransportTranslationError("A bounded max_tokens value is required.");
+  }
+  return value as number;
+}
+
+function openAiTextBlocks(
+  content: unknown,
+  path: string,
+  losses: TranslationLoss[],
+): Array<Record<string, unknown>> {
+  if (typeof content === "string") return content ? [{ type: "text", text: content }] : [];
+  if (!Array.isArray(content)) {
+    if (content === null || content === undefined) return [];
+    throw new TransportTranslationError(`The ${path} content is invalid.`);
+  }
+
+  return content.flatMap((value, index): Array<Record<string, unknown>> => {
+    const part = record(value);
+    if (!part) throw new TransportTranslationError(`The ${path} content part is invalid.`);
+    if (part.type === "text" || part.type === "input_text") {
+      return [{ type: "text", text: boundedString(part.text, `${path} text`) }];
+    }
+    if (part.type === "image_url" || part.type === "input_image") {
+      const image = record(part.image_url);
+      const urlValue = image?.url ?? part.image_url;
+      const url = typeof urlValue === "string" ? urlValue : null;
+      const match = url?.match(/^data:(image\/(?:jpeg|png|gif|webp));base64,([A-Za-z0-9+/=]+)$/);
+      if (match) {
+        return [
+          {
+            type: "image",
+            source: { type: "base64", media_type: match[1], data: match[2] },
+          },
+        ];
+      }
+      losses.push({
+        code: "remote_image_omitted",
+        path: `${path}.content[${index}]`,
+        detail: "Only explicit base64 image data is translated at this boundary.",
+      });
+      return [];
+    }
+    losses.push({
+      code: "unknown_content_omitted",
+      path: `${path}.content[${index}]`,
+      detail: "The source content type has no reviewed Anthropic mapping.",
+    });
+    return [];
+  });
+}
+
+function pushAnthropicMessage(
+  messages: Array<Record<string, unknown>>,
+  role: "user" | "assistant",
+  blocks: Array<Record<string, unknown>>,
+) {
+  if (!blocks.length) return;
+  const previous = messages.at(-1);
+  if (previous?.role === role && Array.isArray(previous.content)) {
+    previous.content = [...previous.content, ...blocks];
+    return;
+  }
+  messages.push({ role, content: blocks });
+}
+
+function anthropicTools(value: unknown) {
+  if (value === undefined) return undefined;
+  if (!Array.isArray(value) || value.length > 128) {
+    throw new TransportTranslationError("The tools array is invalid.");
+  }
+  return value.map((item, index) => {
+    const tool = record(item);
+    const fn = tool ? record(tool.function) : null;
+    if (!tool || tool.type !== "function" || !fn) {
+      throw new TransportTranslationError(`The tools[${index}] definition is invalid.`);
+    }
+    const inputSchema = record(fn.parameters) ?? { type: "object", properties: {} };
+    return {
+      name: requiredString(fn.name, `tools[${index}] name`, 128),
+      ...(typeof fn.description === "string"
+        ? { description: boundedString(fn.description, `tools[${index}] description`, 8_192) }
+        : {}),
+      input_schema: inputSchema,
+    };
+  });
+}
+
+function anthropicToolChoice(value: unknown, parallel: unknown) {
+  if (value === undefined && parallel === undefined) return undefined;
+  let choice: Record<string, unknown>;
+  if (value === "required") choice = { type: "any" };
+  else if (value === "auto" || value === undefined) choice = { type: "auto" };
+  else if (value === "none") return undefined;
+  else {
+    const object = record(value);
+    const fn = object ? record(object.function) : null;
+    choice = { type: "tool", name: requiredString(fn?.name, "tool choice name", 128) };
+  }
+  if (parallel === false) choice.disable_parallel_tool_use = true;
+  return choice;
+}
+
+export function translateOpenAiChatToAnthropic(input: unknown): TranslationResult<unknown> {
+  const source = record(input);
+  if (!source) throw new TransportTranslationError("The OpenAI Chat request is invalid.");
+  const model = requiredString(source.model, "model");
+  if (!Array.isArray(source.messages) || !source.messages.length || source.messages.length > 512) {
+    throw new TransportTranslationError("The messages array is invalid.");
+  }
+
+  const losses: TranslationLoss[] = [];
+  const system: Array<Record<string, unknown>> = [];
+  const messages: Array<Record<string, unknown>> = [];
+
+  source.messages.forEach((value, index) => {
+    const message = record(value);
+    if (!message) throw new TransportTranslationError(`The messages[${index}] value is invalid.`);
+    const role = requiredString(message.role, `messages[${index}] role`, 32);
+    const path = `messages[${index}]`;
+    if (typeof message.name === "string" && message.name.trim()) {
+      losses.push({
+        code: "named_participant_omitted",
+        path: `${path}.name`,
+        detail: "Anthropic Messages has no equivalent participant-name field.",
+      });
+    }
+    if (role === "system" || role === "developer") {
+      if (role === "developer") {
+        losses.push({
+          code: "developer_role_folded",
+          path: `${path}.role`,
+          detail: "The developer instruction is folded into the top-level system sequence.",
+        });
+      }
+      system.push(...openAiTextBlocks(message.content, path, losses));
+      return;
+    }
+    if (role === "tool") {
+      const toolCallId = requiredString(message.tool_call_id, `${path} tool_call_id`, 256);
+      const blocks = [
+        {
+          type: "tool_result",
+          tool_use_id: toolCallId,
+          content: boundedString(message.content ?? "", `${path} content`),
+        },
+      ];
+      pushAnthropicMessage(messages, "user", blocks);
+      return;
+    }
+    if (role !== "user" && role !== "assistant") {
+      throw new TransportTranslationError(`The ${path} role is unsupported.`);
+    }
+    const blocks = openAiTextBlocks(message.content, path, losses);
+    if (role === "assistant" && message.tool_calls !== undefined) {
+      if (!Array.isArray(message.tool_calls) || message.tool_calls.length > 128) {
+        throw new TransportTranslationError(`The ${path} tool calls are invalid.`);
+      }
+      message.tool_calls.forEach((callValue, callIndex) => {
+        const call = record(callValue);
+        const fn = call ? record(call.function) : null;
+        if (!call || call.type !== "function" || !fn) {
+          throw new TransportTranslationError(
+            `The ${path}.tool_calls[${callIndex}] value is invalid.`,
+          );
+        }
+        const argumentsText = boundedString(
+          fn.arguments,
+          `${path}.tool_calls[${callIndex}] arguments`,
+        );
+        let argumentsValue: unknown;
+        try {
+          argumentsValue = JSON.parse(argumentsText);
+        } catch {
+          throw new TransportTranslationError(
+            `The ${path}.tool_calls[${callIndex}] arguments are not valid JSON.`,
+          );
+        }
+        if (!record(argumentsValue)) {
+          throw new TransportTranslationError(
+            `The ${path}.tool_calls[${callIndex}] arguments must decode to an object.`,
+          );
+        }
+        blocks.push({
+          type: "tool_use",
+          id: requiredString(call.id, `${path}.tool_calls[${callIndex}] id`, 256),
+          name: requiredString(fn.name, `${path}.tool_calls[${callIndex}] name`, 128),
+          input: argumentsValue,
+        });
+      });
+    }
+    pushAnthropicMessage(messages, role, blocks);
+  });
+
+  if (!messages.length) {
+    throw new TransportTranslationError("The translated request has no user or assistant message.");
+  }
+
+  const tools = anthropicTools(source.tools);
+  const toolChoice = anthropicToolChoice(source.tool_choice, source.parallel_tool_calls);
+  const responseFormat = record(source.response_format);
+  if (responseFormat && responseFormat.type !== "text") {
+    losses.push({
+      code: "structured_output_not_native",
+      path: "response_format",
+      detail: "The caller must enforce the schema or use a reviewed tool-based mapping.",
+    });
+  }
+  const stop = source.stop;
+  const stopSequences =
+    typeof stop === "string"
+      ? [stop]
+      : Array.isArray(stop) && stop.every((entry) => typeof entry === "string")
+        ? stop
+        : undefined;
+  if (stop !== undefined && stopSequences === undefined) {
+    throw new TransportTranslationError("The stop sequence is invalid.");
+  }
+
+  return {
+    value: {
+      model,
+      max_tokens: positiveTokenLimit(source.max_completion_tokens ?? source.max_tokens),
+      messages,
+      ...(system.length ? { system } : {}),
+      ...(tools?.length && source.tool_choice !== "none" ? { tools } : {}),
+      ...(toolChoice ? { tool_choice: toolChoice } : {}),
+      ...(stopSequences?.length ? { stop_sequences: stopSequences } : {}),
+      ...(typeof source.temperature === "number" ? { temperature: source.temperature } : {}),
+      ...(typeof source.top_p === "number" ? { top_p: source.top_p } : {}),
+      ...(source.stream === true ? { stream: true } : {}),
+    },
+    losses,
+  };
+}
+
+export function translateAnthropicMessageToOpenAiChat(input: unknown): TranslationResult<unknown> {
+  const source = record(input);
+  if (!source || !Array.isArray(source.content)) {
+    throw new TransportTranslationError("The Anthropic response is invalid.");
+  }
+  const losses: TranslationLoss[] = [];
+  const text: string[] = [];
+  const toolCalls: Array<Record<string, unknown>> = [];
+  source.content.forEach((value, index) => {
+    const block = record(value);
+    if (!block) throw new TransportTranslationError(`The content[${index}] block is invalid.`);
+    if (block.type === "text") {
+      text.push(boundedString(block.text, `content[${index}] text`));
+      return;
+    }
+    if (block.type === "tool_use") {
+      const inputObject = record(block.input);
+      if (!inputObject) {
+        throw new TransportTranslationError(`The content[${index}] tool input is invalid.`);
+      }
+      toolCalls.push({
+        id: requiredString(block.id, `content[${index}] tool id`, 256),
+        type: "function",
+        function: {
+          name: requiredString(block.name, `content[${index}] tool name`, 128),
+          arguments: JSON.stringify(inputObject),
+        },
+      });
+      return;
+    }
+    if (block.type === "thinking" || block.type === "redacted_thinking") {
+      losses.push({
+        code: "reasoning_omitted",
+        path: `content[${index}]`,
+        detail: "Reasoning content is not exposed through the OpenAI Chat message.",
+      });
+      return;
+    }
+    losses.push({
+      code: "unknown_content_omitted",
+      path: `content[${index}]`,
+      detail: "The Anthropic content block has no reviewed OpenAI Chat mapping.",
+    });
+  });
+
+  const finishReason = normalizeFinishReason(source.stop_reason, "anthropic");
+  const usage = normalizeTransportUsage(source.usage, "anthropic");
+  const promptTokens = usage
+    ? (usage.inputTokens ?? 0) +
+      (usage.cachedInputTokens ?? 0) +
+      (usage.cacheCreationInputTokens ?? 0)
+    : undefined;
+  return {
+    value: {
+      id: requiredString(source.id, "response id", 256),
+      object: "chat.completion",
+      model: requiredString(source.model, "response model", 256),
+      choices: [
+        {
+          index: 0,
+          message: {
+            role: "assistant",
+            content: text.join(""),
+            ...(toolCalls.length ? { tool_calls: toolCalls } : {}),
+          },
+          finish_reason: finishReason,
+        },
+      ],
+      ...(usage
+        ? {
+            usage: {
+              ...(promptTokens !== undefined ? { prompt_tokens: promptTokens } : {}),
+              ...(usage.outputTokens !== undefined
+                ? { completion_tokens: usage.outputTokens }
+                : {}),
+              ...(promptTokens !== undefined && usage.outputTokens !== undefined
+                ? { total_tokens: promptTokens + usage.outputTokens }
+                : {}),
+              ...(usage.cachedInputTokens !== undefined ||
+              usage.cacheCreationInputTokens !== undefined
+                ? {
+                    prompt_tokens_details: {
+                      ...(usage.cachedInputTokens !== undefined
+                        ? { cached_tokens: usage.cachedInputTokens }
+                        : {}),
+                      ...(usage.cacheCreationInputTokens !== undefined
+                        ? { cache_creation_tokens: usage.cacheCreationInputTokens }
+                        : {}),
+                    },
+                  }
+                : {}),
+            },
+          }
+        : {}),
+    },
+    losses,
+  };
+}
+
+function openAiStreamUsage(usage: TransportUsage) {
+  const promptTokens =
+    (usage.inputTokens ?? 0) +
+    (usage.cachedInputTokens ?? 0) +
+    (usage.cacheCreationInputTokens ?? 0);
+  const completionTokens = usage.outputTokens ?? 0;
+  return {
+    prompt_tokens: promptTokens,
+    completion_tokens: completionTokens,
+    total_tokens: promptTokens + completionTokens,
+    ...(usage.cachedInputTokens !== undefined || usage.cacheCreationInputTokens !== undefined
+      ? {
+          prompt_tokens_details: {
+            ...(usage.cachedInputTokens !== undefined
+              ? { cached_tokens: usage.cachedInputTokens }
+              : {}),
+            ...(usage.cacheCreationInputTokens !== undefined
+              ? { cache_creation_tokens: usage.cacheCreationInputTokens }
+              : {}),
+          },
+        }
+      : {}),
+  };
+}
+
+function mergeTransportUsage(current: TransportUsage, update: TransportUsage) {
+  return {
+    ...current,
+    ...(update.inputTokens !== undefined ? { inputTokens: update.inputTokens } : {}),
+    ...(update.outputTokens !== undefined ? { outputTokens: update.outputTokens } : {}),
+    ...(update.totalTokens !== undefined ? { totalTokens: update.totalTokens } : {}),
+    ...(update.cachedInputTokens !== undefined
+      ? { cachedInputTokens: update.cachedInputTokens }
+      : {}),
+    ...(update.cacheCreationInputTokens !== undefined
+      ? { cacheCreationInputTokens: update.cacheCreationInputTokens }
+      : {}),
+    ...(update.reasoningTokens !== undefined ? { reasoningTokens: update.reasoningTokens } : {}),
+  };
+}
+
+export class AnthropicToOpenAiChatStreamTranslator {
+  #id: string | null = null;
+  #model: string | null = null;
+  #usage: TransportUsage = {};
+  #stopped = false;
+
+  #chunk(
+    delta: Record<string, unknown>,
+    finishReason: TransportFinishReason | null = null,
+  ): { type: "chunk"; value: Record<string, unknown> } {
+    if (!this.#id || !this.#model) {
+      throw new TransportTranslationError("Anthropic stream content arrived before message_start.");
+    }
+    return {
+      type: "chunk" as const,
+      value: {
+        id: this.#id,
+        object: "chat.completion.chunk",
+        model: this.#model,
+        choices: [{ index: 0, delta, finish_reason: finishReason }],
+      },
+    };
+  }
+
+  feed(frame: JsonSseFrame): TranslationResult<TransportStreamOutput[]> {
+    if (this.#stopped) {
+      throw new TransportTranslationError(
+        "Anthropic stream data arrived after its terminal event.",
+      );
+    }
+    if (frame.type === "done") {
+      this.#stopped = true;
+      return { value: [{ type: "done" }], losses: [] };
+    }
+    const event = record(frame.value);
+    if (!event) throw new TransportTranslationError("The Anthropic stream event is invalid.");
+    const type = typeof event.type === "string" ? event.type : frame.event;
+    const losses: TranslationLoss[] = [];
+
+    if (type === "ping") return { value: [], losses };
+    if (type === "error") {
+      throw new TransportTranslationError("The Anthropic stream returned a provider error.");
+    }
+    if (type === "message_start") {
+      const message = record(event.message);
+      if (!message) throw new TransportTranslationError("The message_start event is invalid.");
+      this.#id = requiredString(message.id, "stream response id", 256);
+      this.#model = requiredString(message.model, "stream response model", 256);
+      this.#usage = normalizeTransportUsage(message.usage, "anthropic") ?? {};
+      return { value: [this.#chunk({ role: "assistant", content: "" })], losses };
+    }
+    if (type === "content_block_start") {
+      const index = tokenCount(event.index);
+      const block = record(event.content_block);
+      if (index === undefined || !block) {
+        throw new TransportTranslationError("The content_block_start event is invalid.");
+      }
+      if (block.type === "text") {
+        const text = typeof block.text === "string" ? block.text : "";
+        return { value: text ? [this.#chunk({ content: text })] : [], losses };
+      }
+      if (block.type === "tool_use") {
+        return {
+          value: [
+            this.#chunk({
+              tool_calls: [
+                {
+                  index,
+                  id: requiredString(block.id, "stream tool id", 256),
+                  type: "function",
+                  function: {
+                    name: requiredString(block.name, "stream tool name", 128),
+                    arguments: "",
+                  },
+                },
+              ],
+            }),
+          ],
+          losses,
+        };
+      }
+      if (block.type === "thinking" || block.type === "redacted_thinking") {
+        losses.push({
+          code: "reasoning_omitted",
+          path: `content_block_start[${index}]`,
+          detail: "Reasoning content is not exposed through the OpenAI Chat stream.",
+        });
+        return { value: [], losses };
+      }
+      losses.push({
+        code: "unknown_content_omitted",
+        path: `content_block_start[${index}]`,
+        detail: "The Anthropic stream block has no reviewed OpenAI Chat mapping.",
+      });
+      return { value: [], losses };
+    }
+    if (type === "content_block_delta") {
+      const index = tokenCount(event.index);
+      const delta = record(event.delta);
+      if (index === undefined || !delta) {
+        throw new TransportTranslationError("The content_block_delta event is invalid.");
+      }
+      if (delta.type === "text_delta") {
+        return {
+          value: [this.#chunk({ content: boundedString(delta.text, "stream text delta") })],
+          losses,
+        };
+      }
+      if (delta.type === "input_json_delta") {
+        return {
+          value: [
+            this.#chunk({
+              tool_calls: [
+                {
+                  index,
+                  function: {
+                    arguments: boundedString(delta.partial_json, "stream tool argument delta"),
+                  },
+                },
+              ],
+            }),
+          ],
+          losses,
+        };
+      }
+      if (delta.type === "thinking_delta" || delta.type === "signature_delta") {
+        losses.push({
+          code: "reasoning_omitted",
+          path: `content_block_delta[${index}]`,
+          detail: "Reasoning content is not exposed through the OpenAI Chat stream.",
+        });
+        return { value: [], losses };
+      }
+      losses.push({
+        code: "unknown_content_omitted",
+        path: `content_block_delta[${index}]`,
+        detail: "The Anthropic stream delta has no reviewed OpenAI Chat mapping.",
+      });
+      return { value: [], losses };
+    }
+    if (type === "content_block_stop") return { value: [], losses };
+    if (type === "message_delta") {
+      const delta = record(event.delta);
+      const usage = normalizeTransportUsage(event.usage, "anthropic");
+      if (usage) this.#usage = mergeTransportUsage(this.#usage, usage);
+      const reason = normalizeFinishReason(delta?.stop_reason, "anthropic");
+      const chunk = this.#chunk({}, reason);
+      chunk.value = { ...chunk.value, usage: openAiStreamUsage(this.#usage) };
+      return { value: [chunk], losses };
+    }
+    if (type === "message_stop") {
+      this.#stopped = true;
+      return { value: [{ type: "done" }], losses };
+    }
+
+    losses.push({
+      code: "unknown_content_omitted",
+      path: "stream_event",
+      detail: "The Anthropic stream event type has no reviewed OpenAI Chat mapping.",
+    });
+    return { value: [], losses };
+  }
 }

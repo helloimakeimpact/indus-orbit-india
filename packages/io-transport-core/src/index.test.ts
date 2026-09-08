@@ -1,12 +1,16 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  AnthropicToOpenAiChatStreamTranslator,
   createTransportRegistry,
   decodeJsonSseFrame,
   normalizeFinishReason,
   normalizeTransportUsage,
   SseFrameDecoder,
   TransportDecodeError,
+  TransportTranslationError,
+  translateAnthropicMessageToOpenAiChat,
+  translateOpenAiChatToAnthropic,
   type TransportDescriptor,
 } from "./index.ts";
 
@@ -136,4 +140,268 @@ test("transport registry is an explicit duplicate-free allowlist", () => {
   assert.equal(Object.isFrozen(registry.get(entry.id)?.provenance), true);
   assert.equal(registry.get("unreviewed"), null);
   assert.throws(() => createTransportRegistry([entry, entry]), /Duplicate transport descriptor/);
+});
+
+test("OpenAI Chat translates to Anthropic with explicit, inspectable losses", () => {
+  const translated = translateOpenAiChatToAnthropic({
+    model: "claude-example",
+    max_completion_tokens: 256,
+    messages: [
+      { role: "developer", content: "Be precise." },
+      {
+        role: "user",
+        name: "member",
+        content: [
+          { type: "text", text: "Inspect this." },
+          { type: "image_url", image_url: { url: "https://example.test/private.png" } },
+        ],
+      },
+      {
+        role: "assistant",
+        content: null,
+        tool_calls: [
+          {
+            id: "call-1",
+            type: "function",
+            function: { name: "lookup", arguments: '{"id":"42"}' },
+          },
+        ],
+      },
+      { role: "tool", tool_call_id: "call-1", content: "Found" },
+    ],
+    tools: [
+      {
+        type: "function",
+        function: {
+          name: "lookup",
+          description: "Find one record",
+          parameters: { type: "object", properties: { id: { type: "string" } } },
+        },
+      },
+    ],
+    tool_choice: "required",
+    parallel_tool_calls: false,
+    response_format: { type: "json_schema", json_schema: { name: "answer" } },
+  });
+
+  assert.deepEqual(
+    translated.losses.map((loss) => loss.code),
+    [
+      "developer_role_folded",
+      "named_participant_omitted",
+      "remote_image_omitted",
+      "structured_output_not_native",
+    ],
+  );
+  assert.deepEqual(translated.value, {
+    model: "claude-example",
+    max_tokens: 256,
+    messages: [
+      { role: "user", content: [{ type: "text", text: "Inspect this." }] },
+      {
+        role: "assistant",
+        content: [{ type: "tool_use", id: "call-1", name: "lookup", input: { id: "42" } }],
+      },
+      {
+        role: "user",
+        content: [{ type: "tool_result", tool_use_id: "call-1", content: "Found" }],
+      },
+    ],
+    system: [{ type: "text", text: "Be precise." }],
+    tools: [
+      {
+        name: "lookup",
+        description: "Find one record",
+        input_schema: { type: "object", properties: { id: { type: "string" } } },
+      },
+    ],
+    tool_choice: { type: "any", disable_parallel_tool_use: true },
+  });
+});
+
+test("OpenAI Chat translator fails closed on invalid tool JSON", () => {
+  assert.throws(
+    () =>
+      translateOpenAiChatToAnthropic({
+        model: "claude-example",
+        max_tokens: 32,
+        messages: [
+          { role: "user", content: "Run" },
+          {
+            role: "assistant",
+            tool_calls: [
+              {
+                id: "call-1",
+                type: "function",
+                function: { name: "lookup", arguments: "{" },
+              },
+            ],
+          },
+        ],
+      }),
+    TransportTranslationError,
+  );
+});
+
+test("Anthropic message translates to OpenAI Chat with usage dimensions", () => {
+  const translated = translateAnthropicMessageToOpenAiChat({
+    id: "msg-1",
+    model: "claude-example",
+    stop_reason: "tool_use",
+    content: [
+      { type: "thinking", thinking: "private" },
+      { type: "text", text: "Checking" },
+      { type: "tool_use", id: "call-1", name: "lookup", input: { id: "42" } },
+    ],
+    usage: {
+      input_tokens: 10,
+      output_tokens: 4,
+      cache_read_input_tokens: 6,
+      cache_creation_input_tokens: 2,
+    },
+  });
+  assert.deepEqual(
+    translated.losses.map((loss) => loss.code),
+    ["reasoning_omitted"],
+  );
+  const output = translated.value as {
+    choices: Array<{ message: Record<string, unknown>; finish_reason: string }>;
+    usage: Record<string, unknown>;
+  };
+  assert.equal(output.choices[0]?.finish_reason, "tool_calls");
+  assert.deepEqual(output.choices[0]?.message, {
+    role: "assistant",
+    content: "Checking",
+    tool_calls: [
+      {
+        id: "call-1",
+        type: "function",
+        function: { name: "lookup", arguments: '{"id":"42"}' },
+      },
+    ],
+  });
+  assert.deepEqual(output.usage, {
+    prompt_tokens: 18,
+    completion_tokens: 4,
+    total_tokens: 22,
+    prompt_tokens_details: { cached_tokens: 6, cache_creation_tokens: 2 },
+  });
+});
+
+test("Anthropic stream translates role, text, tools, usage and terminal events", () => {
+  const translator = new AnthropicToOpenAiChatStreamTranslator();
+  const outputs = [
+    translator.feed({
+      type: "event",
+      event: "message_start",
+      id: null,
+      value: {
+        type: "message_start",
+        message: {
+          id: "msg-1",
+          model: "claude-example",
+          usage: { input_tokens: 10, cache_read_input_tokens: 3 },
+        },
+      },
+    }),
+    translator.feed({
+      type: "event",
+      event: "content_block_delta",
+      id: null,
+      value: {
+        type: "content_block_delta",
+        index: 0,
+        delta: { type: "text_delta", text: "Hi" },
+      },
+    }),
+    translator.feed({
+      type: "event",
+      event: "content_block_start",
+      id: null,
+      value: {
+        type: "content_block_start",
+        index: 1,
+        content_block: { type: "tool_use", id: "call-1", name: "lookup" },
+      },
+    }),
+    translator.feed({
+      type: "event",
+      event: "content_block_delta",
+      id: null,
+      value: {
+        type: "content_block_delta",
+        index: 1,
+        delta: { type: "input_json_delta", partial_json: '{"id":"42"}' },
+      },
+    }),
+    translator.feed({
+      type: "event",
+      event: "message_delta",
+      id: null,
+      value: {
+        type: "message_delta",
+        delta: { stop_reason: "tool_use" },
+        usage: { output_tokens: 4 },
+      },
+    }),
+    translator.feed({
+      type: "event",
+      event: "message_stop",
+      id: null,
+      value: { type: "message_stop" },
+    }),
+  ].flatMap((result) => result.value);
+
+  assert.equal(outputs.length, 6);
+  assert.deepEqual(outputs.at(-1), { type: "done" });
+  const terminal = outputs.at(-2) as { type: "chunk"; value: Record<string, unknown> };
+  assert.deepEqual(terminal.value.usage, {
+    prompt_tokens: 13,
+    completion_tokens: 4,
+    total_tokens: 17,
+    prompt_tokens_details: { cached_tokens: 3 },
+  });
+});
+
+test("Anthropic stream rejects content before message_start and data after stop", () => {
+  assert.throws(
+    () =>
+      new AnthropicToOpenAiChatStreamTranslator().feed({
+        type: "event",
+        event: "content_block_delta",
+        id: null,
+        value: {
+          type: "content_block_delta",
+          index: 0,
+          delta: { type: "text_delta", text: "x" },
+        },
+      }),
+    TransportTranslationError,
+  );
+  const translator = new AnthropicToOpenAiChatStreamTranslator();
+  translator.feed({
+    type: "event",
+    event: "message_start",
+    id: null,
+    value: {
+      type: "message_start",
+      message: { id: "msg-1", model: "claude-example", usage: { input_tokens: 1 } },
+    },
+  });
+  translator.feed({
+    type: "event",
+    event: "message_stop",
+    id: null,
+    value: { type: "message_stop" },
+  });
+  assert.throws(
+    () =>
+      translator.feed({
+        type: "event",
+        event: "ping",
+        id: null,
+        value: { type: "ping" },
+      }),
+    TransportTranslationError,
+  );
 });

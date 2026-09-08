@@ -1,6 +1,6 @@
 # Selective 9router adoption for I/O Port
 
-Status: **Phase 0 Verified locally on 8 September 2026.** The upstream source was
+Status: **Phase 0 Verified and Phase 1 Partial locally on 8 September 2026.** The upstream source was
 reviewed at pinned commit `eb712ca821f0ba6bc41043fbd14494c5af5daba5`
 (`v0.5.69`). A dependency-free I/O transport package now contains the first
 adapted, attributed primitives. No 9router provider credential, OAuth flow,
@@ -46,26 +46,26 @@ import product and security decisions that conflict with I/O.
 
 ## Exact selection matrix
 
-| Upstream area                                                | Decision                           | I/O destination                                    | Required change before use                                                                                                             |
-| ------------------------------------------------------------ | ---------------------------------- | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `open-sse/translator/schema/*` and `formats.js`              | Adopt concepts                     | `packages/io-transport-core`                       | Convert to strict TypeScript, remove globals, treat unknown values as unknown rather than success.                                     |
-| `translator/concerns/finishReason.js`                        | Adapted in Phase 0                 | `normalizeFinishReason`                            | Preserve refusal/filter and unknown outcomes; never convert an unfamiliar provider failure to `stop`.                                  |
-| `translator/concerns/usage.js`                               | Adapted in Phase 0                 | `normalizeTransportUsage`                          | Keep input, output, cache-read, cache-write and reasoning units separate; no price or total-cost assumption in the translator.         |
-| `utils/streamHelpers.js` and narrow SSE framing ideas        | Adapted in Phase 0                 | `SseFrameDecoder` and `decodeJsonSseFrame`         | Incremental CRLF-safe framing, byte bounds, no console/body logging, strict malformed-frame failure.                                   |
-| OpenAI Chat ↔ Anthropic request/response translators         | Select for Phase 1                 | versioned translator descriptors                   | Extract pure transforms, add loss reports, fixtures for text/tools/images/system/developer roles and every terminal event.             |
-| OpenAI Chat ↔ Responses translators                          | Select for Phase 1                 | versioned translator descriptors                   | Preserve item IDs, tool-call lifecycle, image roles, usage and cancellation; cover upstream issue regressions.                         |
-| OpenAI Chat ↔ Gemini translators                             | Select with conditions for Phase 2 | Gemini native adapter                              | Remove session/signature global stores; inject request-scoped state; require official Gemini conformance and exact usage evidence.     |
-| Ollama translation                                           | Select for local Phase 3           | packaged personal relay                            | Loopback-only, local credentials/configuration, explicit capability discovery and no cloud credential sync.                            |
-| `utils/stream.js`                                            | Do not copy wholesale              | none                                               | It imports app usage/logging and combines transport with persistence. Port only independently tested pure state machines.              |
-| `translator/index.js`                                        | Do not copy wholesale              | none                                               | It imports provider/session/cloaking behavior. I/O uses an explicit duplicate-free allow-list registry instead.                        |
-| `executors/default.js`                                       | Design reference only              | private Node execution adapter                     | Rebuild with I/O timeouts, abort, URL allow-list, service identity, bounded bodies and redacted errors.                                |
-| provider-specific executors                                  | Deferred per provider              | separate adapter modules                           | One contract/terms/security review and conformance suite per provider; no blanket activation.                                          |
-| provider registry/model/pricing files                        | Discovery seed only                | review queue, never runtime truth                  | Official source, observed/effective date, reviewer and contract state are mandatory before activation.                                 |
-| combo/account fallback                                       | Reject as policy source            | existing I/O route selector/circuit                | I/O retries only classified transient failures and reserves worst-case cost before dispatch. Client/4xx errors cannot poison accounts. |
-| OAuth, browser-cookie and subscription pooling               | Reject for managed I/O             | none                                               | MIT covers code, not provider terms, token resale or onward access.                                                                    |
-| SQLite/JSON API-key, token, usage and request-log stores     | Reject                             | Supabase server boundaries/local OS keychain later | No plaintext cloud token store and no prompt/body log. Money remains integer nanos.                                                    |
-| dashboard, Next routes, sync/tunnel and host-process helpers | Reject                             | none                                               | I/O retains its branded member/admin surfaces and separate deployment architecture.                                                    |
-| RTK/headroom content reduction                               | Deferred, local opt-in only        | packaged client experiment                         | It changes content semantics. Any use must be visible, reversible and recorded as transformed content; never the managed default.      |
+| Upstream area                                                | Decision                           | I/O destination                                    | Required change before use                                                                                                                      |
+| ------------------------------------------------------------ | ---------------------------------- | -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `open-sse/translator/schema/*` and `formats.js`              | Adopt concepts                     | `packages/io-transport-core`                       | Convert to strict TypeScript, remove globals, treat unknown values as unknown rather than success.                                              |
+| `translator/concerns/finishReason.js`                        | Adapted in Phase 0                 | `normalizeFinishReason`                            | Preserve refusal/filter and unknown outcomes; never convert an unfamiliar provider failure to `stop`.                                           |
+| `translator/concerns/usage.js`                               | Adapted in Phase 0                 | `normalizeTransportUsage`                          | Keep input, output, cache-read, cache-write and reasoning units separate; no price or total-cost assumption in the translator.                  |
+| `utils/streamHelpers.js` and narrow SSE framing ideas        | Adapted in Phase 0                 | `SseFrameDecoder` and `decodeJsonSseFrame`         | Incremental CRLF-safe framing, byte bounds, no console/body logging, strict malformed-frame failure.                                            |
+| OpenAI Chat ↔ Anthropic request/response translators         | Adapted in Phase 1; unregistered   | versioned translator descriptors                   | Loss-aware pure transforms now cover text/tools/images/system/developer roles and terminal events; conformance and loss-policy approval remain. |
+| OpenAI Chat ↔ Responses translators                          | Select for Phase 1                 | versioned translator descriptors                   | Preserve item IDs, tool-call lifecycle, image roles, usage and cancellation; cover upstream issue regressions.                                  |
+| OpenAI Chat ↔ Gemini translators                             | Select with conditions for Phase 2 | Gemini native adapter                              | Remove session/signature global stores; inject request-scoped state; require official Gemini conformance and exact usage evidence.              |
+| Ollama translation                                           | Select for local Phase 3           | packaged personal relay                            | Loopback-only, local credentials/configuration, explicit capability discovery and no cloud credential sync.                                     |
+| `utils/stream.js`                                            | Do not copy wholesale              | none                                               | It imports app usage/logging and combines transport with persistence. Port only independently tested pure state machines.                       |
+| `translator/index.js`                                        | Do not copy wholesale              | none                                               | It imports provider/session/cloaking behavior. I/O uses an explicit duplicate-free allow-list registry instead.                                 |
+| `executors/default.js`                                       | Design reference only              | private Node execution adapter                     | Rebuild with I/O timeouts, abort, URL allow-list, service identity, bounded bodies and redacted errors.                                         |
+| provider-specific executors                                  | Deferred per provider              | separate adapter modules                           | One contract/terms/security review and conformance suite per provider; no blanket activation.                                                   |
+| provider registry/model/pricing files                        | Discovery seed only                | review queue, never runtime truth                  | Official source, observed/effective date, reviewer and contract state are mandatory before activation.                                          |
+| combo/account fallback                                       | Reject as policy source            | existing I/O route selector/circuit                | I/O retries only classified transient failures and reserves worst-case cost before dispatch. Client/4xx errors cannot poison accounts.          |
+| OAuth, browser-cookie and subscription pooling               | Reject for managed I/O             | none                                               | MIT covers code, not provider terms, token resale or onward access.                                                                             |
+| SQLite/JSON API-key, token, usage and request-log stores     | Reject                             | Supabase server boundaries/local OS keychain later | No plaintext cloud token store and no prompt/body log. Money remains integer nanos.                                                             |
+| dashboard, Next routes, sync/tunnel and host-process helpers | Reject                             | none                                               | I/O retains its branded member/admin surfaces and separate deployment architecture.                                                             |
+| RTK/headroom content reduction                               | Deferred, local opt-in only        | packaged client experiment                         | It changes content semantics. Any use must be visible, reversible and recorded as transformed content; never the managed default.               |
 
 ## Phase 0 — provenance and transport boundary
 
@@ -77,23 +77,37 @@ State: **Verified locally.** Implemented now:
 - loss-aware finish-reason and separate-dimension usage normalization;
 - explicit typed transport descriptors and a duplicate-free allow-list;
 - a packaged MIT notice pinned to the reviewed upstream commit; and
-- seven focused regression tests plus inclusion in the root verification gate.
+- a first loss-aware OpenAI Chat → Anthropic Messages request translator plus
+  Anthropic Message and stream → OpenAI Chat translators that remain
+  deliberately unregistered until loss-policy review/conformance is complete;
+  and
+- twelve focused regression tests plus inclusion in the root verification gate.
 
-Exit evidence: package build and 7/7 focused contracts pass. This is not yet a
+Exit evidence: package build and 12/12 focused contracts pass. This is not yet a
 production provider adapter and therefore does not change hosted traffic.
 
 ## Phase 1 — pure Chat, Responses and Anthropic translators
 
-Code work:
+State: **Partial.** The Anthropic request, JSON response and response-stream
+state machine, tool mapping, separate cache usage dimensions, deterministic
+output and explicit loss report are implemented. Responses mappings,
+golden/fuzz fixtures, loss-policy review and descriptor registration remain.
 
-1. Add normalized request, content-part, tool-call and stream-event schemas.
-2. Port only the three reviewed translator pairs behind versioned descriptors.
-3. Return a machine-readable loss report whenever a source feature has no safe
-   target representation; fail closed when the requested capability is strict.
-4. Add golden fixtures for text, developer/system roles, multi-turn tool calls,
+Code work and state:
+
+1. **Done for the Anthropic pair:** bounded request, content-part, tool-call and
+   stream-event validation.
+2. **Done for the Anthropic pair:** pure OpenAI Chat → Anthropic request and
+   Anthropic JSON/SSE → OpenAI Chat transforms. Descriptor registration remains
+   deliberately off.
+3. **Done at the transform boundary:** machine-readable loss reports for source
+   features with no safe target representation. The gateway-level strict-loss
+   policy still remains.
+4. **Remaining:** add Responses mappings and golden/fuzz fixtures for text,
+   developer/system roles, multi-turn tool calls,
    JSON schema, images, refusals, usage-only terminal chunks, partial UTF-8,
    cancellation and malformed/oversized streams.
-5. Add upstream-regression fixtures for image loss in Responses conversion and
+5. **Remaining:** add upstream-regression fixtures for image loss in Responses conversion and
    wrong fallback classification on provider/client 400 responses.
 
 Exit criteria: round-trip invariants pass where lossless; intentional losses are

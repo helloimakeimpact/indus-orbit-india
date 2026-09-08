@@ -10,8 +10,15 @@ It currently provides:
 - strict JSON and terminal-frame decoding;
 - loss-aware finish-reason normalization;
 - provider-native usage normalization that keeps cached, cache-created and
-  reasoning dimensions separate; and
+  reasoning dimensions separate;
+- a first loss-aware OpenAI Chat to Anthropic Messages request translator plus
+  Anthropic Message to OpenAI Chat response translator; and
 - typed, allow-listed translator descriptors for a future execution adapter.
+
+The Anthropic pair is intentionally not registered for routing yet. Its
+provider conformance and strict loss-policy review must pass before a descriptor
+can enter the allow-list. The response stream state machine now covers role,
+text, tool-call, usage, terminal and invalid-order events.
 
 The package deliberately performs no network access, credential handling,
 routing, billing, persistence, logging or retries. Those remain owned by the I/O
