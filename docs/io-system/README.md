@@ -1,8 +1,22 @@
 # Indus Orbit living system record
 
-Status: canonical documentation hub, updated 8 September 2026 after the selective 9router transport boundary and authenticated production smoke audit.
+Status: canonical documentation hub, updated 10 September 2026 after the streaming execution-boundary, fail-closed transport-rollout and direct-message recovery verification.
 
 This folder files the Indus Orbit product as a system: what it means, which code exists, what is operational, what remains, and how every subsystem fits the people-centred mission. Runtime source stays in its correct `src/` and `supabase/` locations; this record points to that source and distinguishes implementation from deployment.
+
+## How work is tracked
+
+This directory is the single source of truth for delivery status. Do not create a second progress folder or treat an issue list, UI preview, migration file or local source tree as proof that a capability is live.
+
+| Question                                                | Canonical file                                     |
+| ------------------------------------------------------- | -------------------------------------------------- |
+| What is done, partial, left or blocked?                 | `CODE_COMPLETION_REGISTER.md`                      |
+| What phase comes next, and who owns it?                 | `PHASED_COMPLETION_PLAN_2026-09-08.md`             |
+| What is the complete whole-product route to production? | `FINALIZATION_EXECUTION_PLAN.md`                   |
+| What did the last full code audit find?                 | `FINAL_CODE_LEVEL_AUDIT_2026-09-06.md`             |
+| What is true for one subsystem?                         | The matching `*-system/README.md` and linked plans |
+
+Every completion entry must name its state, environment and evidence. Git history records the exact delivered commit; this folder records what that commit means. Work is not marked `Released` until the intended environment is deployed and verified.
 
 ## Read this first
 
@@ -54,7 +68,7 @@ The product is not an AI router with a community attached. It is a people networ
 | I/O Port                              | Partial | Registry/dynamic selection/`io-gateway` v28/receipts, budgets/ledger, health/circuits/cancellation, exact 5.5% fee evidence, commercial activation gate, scoped-key `io-openai` v12, multi-window request/spend limits, direct upstream Chat/Responses SSE with terminal settlement, HMAC safety IDs, explicit China-route policy and conformance v3 are Released. Migration 111 and `io-health-probe` v1 add service-only non-billable probes, automatic circuit opening/recovery and a redacted incident trail. OpenAI/DeepSeek remain resale-pending; traffic is zero.                                                                                    |
 | I/O Terminal                          | Partial | Safe durable lifecycle/approval metadata pair with a typed loopback client that consumes OpenCode global SSE, reconciles sessions, continues prompts, renders bounded task trees and full local diffs, and enforces audited approval decisions. Pinned real-daemon/browser evidence, short-lived pairing, advanced outputs/artifacts/handoffs and signed OS installers remain.                                                                                                                                                                                                                                                                               |
 | Data and Supabase                     | Partial | Project `jpwvgpnbkrktipwhvqss` is healthy in `ap-south-1` with 114 hosted migrations. Member privacy requests and Space timeout/remove/restore/spam controls are active. Actual export generation/deletion remain unavailable until data-inventory and retention approval. `io-gateway` v28, `io-openai` v12, conformance v3, scanner worker v1 and health probe v1 are active. The structured-Spaces migration remains unapplied pending explicit approval.                                                                                                                                                                                                 |
-| Quality and release operations        | Partial | The current focused suites pass 107/107 member and 32/32 admin tests. Public desktop/mobile Playwright, serious/critical automated accessibility, four visual baselines and a bounded 200-request production-preview load smoke pass; CI runs the public browser journeys and compiles the packaged OpenCode client. Both web repositories declare deterministic Netlify build/SPA/header boundaries. Authenticated personas, real-daemon/soak evidence, field Core Web Vitals, manual accessibility, telemetry and incident-response drills remain.                                                                                                         |
+| Quality and release operations        | Partial | The current member gate passes formatting, repository-wide lint, typecheck, all three package builds, 159/159 unit contracts, production build/bundle budgets and 6/6 public desktop/mobile Playwright journeys. The last independently verified admin baseline passes 32/32 contracts and 4/4 public Playwright journeys. Serious/critical automated accessibility, four visual baselines and a bounded 200-request production-preview load smoke exist. Authenticated multi-persona, real-daemon/soak, field Core Web Vitals, manual accessibility, telemetry and incident-response drills remain.                                                         |
 
 ## Evidence rules
 
@@ -78,3 +92,12 @@ The root `AGENTS.md` requires code and this record to change together. Every mat
 4. preserve the boundary between human conversation, model work, terminal events, and billing/audit records;
 5. update provider/model/price sources before changing route eligibility;
 6. never mark paid traffic or production readiness complete from a local test alone.
+
+## Current checkpoint
+
+- The selective 9router transport primitives remain isolated below the existing I/O policy, budget, billing and receipt control plane.
+- The streaming execution adapter is locally Verified at its package boundary; no provider credential is accepted from browser code and no live provider route was changed.
+- Adapter/translator versions are now filed into route and receipt evidence. Candidate comparison is exact-scoped, non-billable, content-free and disabled by default.
+- Direct-message pending sends survive same-tab reload safely and are cleared across real sign-out or account changes.
+- This checkpoint changes no hosted migration, Supabase row, Edge Function deployment, provider activation, payment or customer charge.
+- Remaining production and owner work is filed in `CODE_COMPLETION_REGISTER.md` and sequenced in `PHASED_COMPLETION_PLAN_2026-09-08.md`.

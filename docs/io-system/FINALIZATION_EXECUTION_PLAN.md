@@ -1,25 +1,28 @@
 # Indus Orbit full finalization execution plan
 
-Status: active, evidence-gated plan updated 8 September 2026. The hosted project has 116 migration records. The router, OpenAI-compatible API, OpenCode client, collaboration/member-safety controls, independent Trust operations, account-privacy requests and financial control-plane schema have substantial Released/Verified slices; external provider and payment activation remain policy-gated. Production readiness is not claimed.
+Status: active, evidence-gated plan updated 9 September 2026. The hosted project has 116 migration records. The router, OpenAI-compatible API, OpenCode client, collaboration/member-safety controls, independent Trust operations, account-privacy requests and financial control-plane schema have substantial Released/Verified slices; external provider and payment activation remain policy-gated. Production readiness is not claimed.
 
 This plan covers the whole product: public brand site, identity, Community, conversation, I/O Port, terminal/OpenCode, admin, data, operations and commercial readiness. “Done” means code, authorization, data migration, browser behavior, deployment and operating evidence all agree. A source file or attractive UI alone is not completion.
 
 Execution update, 8 September 2026 (selective 9router adoption and authenticated identity): 9router `v0.5.69` was pinned and reviewed at commit `eb712ca821f0ba6bc41043fbd14494c5af5daba5`. The accepted boundary is a small translation/SSE transport kernel under the existing I/O control plane, not a wholesale gateway/dashboard replacement. The existing primary Google-auth account loaded both the deployed baseline and the local member shell; all eight I/O views and refresh continuity passed, and Home, Board, Saved work, Messages, Safety/appeals, Missions, Chapters, Network and Settings rendered without console errors. The backup account was not used. The admin baseline passes 32/32 plus 4/4 public Playwright checks. Current hosted truth is 116 migration records, active gateway v28/OpenAI-compatible API v12 and zero routable provider connections. Current transport/package evidence is recorded in the next update and in `io-port-system/NINEROUTER_SELECTIVE_ADOPTION.md`.
 
-Execution update, 8 September 2026 (transport hardening and reload recovery):
-`io-transport-core` Phases 0–1 are now **Verified locally** with 28/28 focused
-contracts, including iterative adversarial JSON bounds and versioned immutable
-descriptors that remain deliberately unregistered. The new
-`io-execution-adapter` is **Partial locally** with 11/11 contracts for body-bound
-route grants, exact-host HTTPS/no redirects, injected server secrets,
-cancellation/limits/concurrency and redacted error classes; it buffers responses
-and still needs its streaming service-auth/replay/egress wrapper plus
-feature-flag/shadow integration. The DM outbox now survives same-tab reload with
-the same idempotency key and fails closed across accounts. The complete member
-gate passes format, repository-wide lint, typecheck, 148/148 unit contracts, all
-three package builds, production build/budgets and 6/6 public Playwright checks.
-No hosted route, provider call, database row or charge changed in this
-increment.
+Execution update, 9 September 2026 (streaming boundary and rollout evidence):
+`io-transport-core` Phases 0–1 remain **Verified locally** with 28/28 focused
+contracts and deliberately unregistered descriptors. The isolated
+`io-execution-adapter` package is now **Verified locally** in 15/15 contracts for
+body-bound route grants, separately signed workload assertions, atomic one-use
+replay, exact-host/no-redirect policy, injected server secrets, bounded direct
+streaming, cancellation and redacted errors. Route audit/receipt policy evidence
+now carries current execution/translation versions; a strict provider/
+capability fixture-shadow comparator is content-free, accepts only explicitly
+non-billable fixtures and defaults off. The DM outbox additionally fails safely
+under corrupt/disabled storage and is cleared for the prior account by the root
+auth transition. The complete member gate passes format, repository-wide lint,
+typecheck, all three package builds, 159/159 unit contracts, production
+build/budgets and 6/6 public Playwright checks. The deployable adapter process,
+shared replay store, independent signer, DNS/egress policy and candidate
+conformance remain. No hosted route, provider call, database row or charge
+changed in this increment.
 
 Execution update, 19 August 2026: the Released I/O controls remain unchanged. Direct-history keyset pagination, terminal cancellation/time/size bounds, gateway response caps and strict admin route matching are **Verified locally**. A clean replay now passes 68 migrations and 550 assertions; member/admin checks and dependency audits pass. The alias-safe migration-68 dry run made no hosted change because direct database transport failed on the current IPv6 network. Provider routing remains disabled.
 
