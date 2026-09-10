@@ -22,6 +22,7 @@ import {
 } from "./provider-adapter.ts";
 import { writeRouteReceipt, type ProviderAttempt } from "./receipt.ts";
 import { selectRouteAttempts } from "./routing.ts";
+import { currentTransportEvidence } from "./transport-rollout.ts";
 import type { PartnerResult, RouteSelection } from "./types.ts";
 import type {
   RouteExecutionInput,
@@ -60,6 +61,9 @@ async function finalizeFailure(
   context: StreamContext,
   failure: GatewayError,
 ) {
+  const transportEvidence = currentTransportEvidence(
+    context.attempts.at(-1)?.connection ?? context.selectedRoute.connection,
+  );
   const finalization = await writeRouteReceipt(admin, {
     requestId: context.requestId,
     apiKeyId: input.apiKeyId,
@@ -72,6 +76,7 @@ async function finalizeFailure(
     serviceFeePolicyVersion: context.serviceFeePolicy.version,
     serviceFeeBasisPoints: context.serviceFeePolicy.feeBasisPoints,
     costBasis: "released_failure",
+    transportEvidence,
     attempts: context.attempts,
   });
   await writeIoAuditEvent(admin, {
@@ -87,6 +92,8 @@ async function finalizeFailure(
       code: failure.code,
       status: failure.status,
       streaming: true,
+      execution_adapter_version: transportEvidence.executionAdapterVersion,
+      translation_version: transportEvidence.translationVersion,
     },
   });
 }
@@ -117,6 +124,7 @@ async function finalizeSuccess(
     serviceFeePolicyVersion: context.serviceFeePolicy.version,
     serviceFeeBasisPoints: context.serviceFeePolicy.feeBasisPoints,
     costBasis: settlement.costBasis,
+    transportEvidence: result.transportEvidence,
     attempts: context.attempts,
   });
   await writeIoAuditEvent(admin, {
@@ -142,6 +150,8 @@ async function finalizeSuccess(
       currency: finalization.currencyCode,
       cost_basis: settlement.costBasis,
       streaming: true,
+      execution_adapter_version: result.transportEvidence.executionAdapterVersion,
+      translation_version: result.transportEvidence.translationVersion,
     },
   });
   const connection = context.selectedRoute.connection;
@@ -178,6 +188,8 @@ async function finalizeSuccess(
       serviceFeeBasisPoints: context.serviceFeePolicy.feeBasisPoints,
       costBasis: settlement.costBasis,
       fallbackCount: Math.max(0, context.attempts.length - 1),
+      executionAdapterVersion: result.transportEvidence.executionAdapterVersion,
+      translationVersion: result.transportEvidence.translationVersion,
     },
   };
 }
@@ -212,6 +224,7 @@ export async function executePartnerRouteStream(
       ) ||
         connection.supportsVision),
   });
+  const selectedTransportEvidence = currentTransportEvidence(selection.connection);
   const routeAttempts = selectRouteAttempts(
     selection.routeCandidates,
     Deno.env.get("IO_PROVIDER_MAX_ATTEMPTS"),
@@ -281,6 +294,8 @@ export async function executePartnerRouteStream(
         0,
       ),
       streaming: true,
+      execution_adapter_version: selectedTransportEvidence.executionAdapterVersion,
+      translation_version: selectedTransportEvidence.translationVersion,
     },
   });
 

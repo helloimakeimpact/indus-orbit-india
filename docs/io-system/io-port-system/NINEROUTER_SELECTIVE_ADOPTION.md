@@ -1,10 +1,10 @@
 # Selective 9router adoption for I/O Port
 
-Status: **Phases 0–1 Verified and Phase 2 Partial locally on 8 September 2026.** The upstream source was
+Status: **Phases 0–2 Verified at their local package boundaries and Phase 3 Partial locally on 9 September 2026.** The upstream source was
 reviewed at pinned commit `eb712ca821f0ba6bc41043fbd14494c5af5daba5`
 (`v0.5.69`). A dependency-free I/O transport package contains the selected,
 adapted and attributed primitives. A separate private execution-adapter package
-contains a fail-closed, non-streaming network kernel. Neither package is wired
+contains a fail-closed streaming network kernel. Neither package is wired
 to a live route. No 9router provider credential, OAuth flow, dashboard,
 database, route, price or paid request is active in I/O.
 
@@ -127,28 +127,32 @@ frame boundaries and adversarial JSON.
 
 ## Phase 2 — private I/O execution adapter
 
-State: **Partial locally.** `packages/io-execution-adapter` implements a small
-injected-fetch kernel with 11 focused contracts. It issues and verifies
+State: **Verified locally at the isolated package boundary.**
+`packages/io-execution-adapter` implements a small injected-fetch kernel with 15
+focused contracts. It issues and verifies
 short-lived HMAC route grants that bind workspace/request/policy/provider/
 endpoint/model/capabilities/content type/body hash and maximum cost; resolves
 credentials only through an injected server-side resolver; enforces exact-host
 HTTPS, no redirects, byte/time/cancel/concurrency limits and authority/header
-separation; and returns fixed redacted error classes. It makes no route, retry,
-fallback, billing, receipt, persistence or logging decision.
+separation; consumes each grant through an atomic replay-store interface;
+streams bounded response bytes with timeout/caller/consumer cancellation; and
+returns fixed redacted error classes. It makes no route, retry, fallback,
+billing, receipt, persistence or logging decision.
 
 Code work:
 
-1. **Partial:** the independently buildable Node 22 package exists. Add the
-   long-lived streaming HTTP service wrapper and future local-runtime wrapper.
-2. **Partial:** signed grants exist. Add outer service identity and a durable,
-   atomic one-use grant/replay boundary.
+1. **Done at package boundary:** the independently buildable Node 22 streaming
+   kernel exists. A deployable HTTP/process wrapper remains environment work.
+2. **Done at package boundary:** body-bound route grants, workload assertions
+   and an atomic one-use replay-store interface exist. Production must supply a
+   shared durable replay-store implementation and independent signing service.
 3. **Verified in package:** provider secrets resolve server-side; exact-host
    HTTPS, no redirects, byte/time/cancel/concurrency limits and header-authority
    separation are enforced. Production additionally needs DNS/IP egress
    enforcement outside application code.
-4. **Partial:** fixed error classes and response metadata exist; direct event
-   streaming, authoritative provider-usage adapters and upstream request-ID
-   normalization remain.
+4. **Partial:** bounded direct byte streaming and fixed error classes exist;
+   translator event wiring, authoritative provider-usage adapters and upstream
+   request-ID normalization remain at integration/provider layers.
 5. **Maintained:** entitlement, route choice, retry, budget, billing and receipts
    stay in the existing I/O outer gateway.
 
@@ -156,6 +160,12 @@ Exit criteria: mTLS or rotating HMAC service-auth tests, SSRF-negative tests,
 disconnect/cancel tests, no-body log inspection and failure-injection evidence.
 
 ## Phase 3 — gateway integration without changing commercial truth
+
+State: **Partial locally and off by default.** The current Edge-direct and
+translation versions are added to route audit/receipt policy evidence. A strict
+provider/capability fixture-shadow flag and content-free comparator exist for
+already materialized, explicitly non-billable fixtures. No function invokes a
+candidate translator or network shadow path, and no live route changed.
 
 Code work:
 

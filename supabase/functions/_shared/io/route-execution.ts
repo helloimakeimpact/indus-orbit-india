@@ -18,6 +18,7 @@ import {
 import { resolveProviderRoute, sendProviderChat } from "./provider-adapter.ts";
 import { writeRouteReceipt, type ProviderAttempt } from "./receipt.ts";
 import { selectRouteAttempts } from "./routing.ts";
+import { currentTransportEvidence } from "./transport-rollout.ts";
 import type {
   GatewayInferenceOptions,
   GatewayMessage,
@@ -78,6 +79,8 @@ export type RouteExecutionSuccess = {
     serviceFeeBasisPoints: number;
     costBasis: "provider_usage" | "route_estimate_missing_usage";
     fallbackCount: number;
+    executionAdapterVersion: string;
+    translationVersion: string;
   };
 };
 
@@ -109,6 +112,7 @@ export async function executePartnerRoute(
       ) ||
         connection.supportsVision),
   });
+  const selectedTransportEvidence = currentTransportEvidence(selection.connection);
   const routeAttempts = selectRouteAttempts(
     selection.routeCandidates,
     Deno.env.get("IO_PROVIDER_MAX_ATTEMPTS"),
@@ -179,6 +183,8 @@ export async function executePartnerRoute(
         (sum, message) => sum + JSON.stringify(message.content).length,
         0,
       ),
+      execution_adapter_version: selectedTransportEvidence.executionAdapterVersion,
+      translation_version: selectedTransportEvidence.translationVersion,
     },
   });
 
@@ -261,6 +267,9 @@ export async function executePartnerRoute(
       serviceFeePolicyVersion: serviceFeePolicy.version,
       serviceFeeBasisPoints: serviceFeePolicy.feeBasisPoints,
       costBasis: "released_failure",
+      transportEvidence: currentTransportEvidence(
+        attempts.at(-1)?.connection ?? selection.connection,
+      ),
       attempts,
     });
     await writeIoAuditEvent(admin, {
@@ -275,6 +284,12 @@ export async function executePartnerRoute(
         currency: finalization.currencyCode,
         code: failure.code,
         status: failure.status,
+        execution_adapter_version: currentTransportEvidence(
+          attempts.at(-1)?.connection ?? selection.connection,
+        ).executionAdapterVersion,
+        translation_version: currentTransportEvidence(
+          attempts.at(-1)?.connection ?? selection.connection,
+        ).translationVersion,
       },
     });
     throw failure;
@@ -300,6 +315,7 @@ export async function executePartnerRoute(
     serviceFeePolicyVersion: serviceFeePolicy.version,
     serviceFeeBasisPoints: serviceFeePolicy.feeBasisPoints,
     costBasis: settlement.costBasis,
+    transportEvidence: result.transportEvidence,
     attempts,
   });
   await writeIoAuditEvent(admin, {
@@ -324,6 +340,8 @@ export async function executePartnerRoute(
       released_minor: finalization.releasedMinor,
       currency: finalization.currencyCode,
       cost_basis: settlement.costBasis,
+      execution_adapter_version: result.transportEvidence.executionAdapterVersion,
+      translation_version: result.transportEvidence.translationVersion,
     },
   });
 
@@ -360,6 +378,8 @@ export async function executePartnerRoute(
       serviceFeeBasisPoints: serviceFeePolicy.feeBasisPoints,
       costBasis: settlement.costBasis,
       fallbackCount: Math.max(0, attempts.length - 1),
+      executionAdapterVersion: result.transportEvidence.executionAdapterVersion,
+      translationVersion: result.transportEvidence.translationVersion,
     },
   };
 }

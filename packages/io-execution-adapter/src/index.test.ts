@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   ExecutionAdapterError,
+  InMemoryOneUseReplayStore,
   IoExecutionAdapter,
   RouteGrantCodec,
   sha256Hex,
@@ -11,6 +12,8 @@ import {
 } from "./index.ts";
 
 const SECRET = "route-grant-secret-that-is-longer-than-thirty-two-bytes";
+const SERVICE_SECRET = "workload-auth-secret-that-is-longer-than-thirty-two-bytes";
+const SERVICE_ID = "io-gateway";
 const BODY = '{"model":"gpt-test","messages":[{"role":"user","content":"hello"}]}';
 
 function binding(overrides: Partial<RouteBinding> = {}): RouteBinding {
@@ -36,6 +39,10 @@ function adapter(
   return new IoExecutionAdapter({
     grantKeyId: "key-1",
     grantSecret: SECRET,
+    serviceAuthKeyId: "service-key-1",
+    serviceAuthSecret: SERVICE_SECRET,
+    allowedServiceIds: [SERVICE_ID],
+    replayStore: new InMemoryOneUseReplayStore(),
     allowedHostnames: ["api.openai.com"],
     resolveSecret: async () => ({ authorization: "Bearer provider-secret-value" }),
     fetch,
@@ -46,8 +53,9 @@ function adapter(
 
 function executionRequest(instance: IoExecutionAdapter, overrides: Partial<ExecuteRequest> = {}) {
   const route = binding();
-  return {
-    grant: instance.issueGrant(route),
+  const grant = overrides.grant ?? instance.issueGrant(route);
+  const request = {
+    grant,
     requestId: route.requestId,
     workspaceId: route.workspaceId,
     policyVersion: route.policyVersion,
@@ -59,6 +67,17 @@ function executionRequest(instance: IoExecutionAdapter, overrides: Partial<Execu
     maxCostNanos: route.maxCostNanos,
     body: BODY,
     ...overrides,
+  };
+  return {
+    ...request,
+    serviceAssertion:
+      overrides.serviceAssertion ??
+      instance.issueServiceAssertion({
+        serviceId: SERVICE_ID,
+        requestId: request.requestId,
+        workspaceId: request.workspaceId,
+        routeGrant: request.grant,
+      }),
   } satisfies ExecuteRequest;
 }
 
@@ -127,7 +146,7 @@ test("tampering with a grant or any bound route field is rejected", async () => 
   const tampered = `${request.grant.slice(0, -1)}${request.grant.endsWith("A") ? "B" : "A"}`;
   assert.equal(
     (await errorFrom(instance.execute({ ...request, grant: tampered }))).code,
-    "invalid_grant",
+    "service_binding_mismatch",
   );
   assert.equal(
     (await errorFrom(instance.execute({ ...request, model: "another-model" }))).code,
@@ -342,4 +361,119 @@ test("credential headers cannot overwrite transport authority or framing", async
       "invalid_credential",
     );
   }
+});
+
+test("service identity binds the exact request and only an allowed workload", async () => {
+  let called = 0;
+  const instance = adapter(async () => {
+    called += 1;
+    return new Response("ok");
+  });
+  const request = executionRequest(instance);
+  const wrongWorkspaceAssertion = instance.issueServiceAssertion({
+    serviceId: SERVICE_ID,
+    requestId: request.requestId,
+    workspaceId: "workspace-other",
+    routeGrant: request.grant,
+  });
+  assert.equal(
+    (await errorFrom(instance.execute({ ...request, serviceAssertion: wrongWorkspaceAssertion })))
+      .code,
+    "service_binding_mismatch",
+  );
+
+  const unauthorizedAssertion = instance.issueServiceAssertion({
+    serviceId: "untrusted-worker",
+    requestId: request.requestId,
+    workspaceId: request.workspaceId,
+    routeGrant: request.grant,
+  });
+  assert.equal(
+    (await errorFrom(instance.execute({ ...request, serviceAssertion: unauthorizedAssertion })))
+      .code,
+    "unauthorized_service",
+  );
+  assert.equal(called, 0);
+});
+
+test("a consumed route grant cannot execute twice", async () => {
+  let called = 0;
+  const instance = adapter(async () => {
+    called += 1;
+    return new Response("ok");
+  });
+  const request = executionRequest(instance);
+  await instance.execute(request);
+  const replay = await errorFrom(instance.execute(request));
+  assert.equal(replay.code, "replayed_grant");
+  assert.equal(called, 1);
+});
+
+test("streaming forwards chunks before completion and releases concurrency", async () => {
+  let upstream: ReadableStreamDefaultController<Uint8Array> | null = null;
+  const instance = adapter(
+    async () =>
+      new Response(
+        new ReadableStream<Uint8Array>({
+          start(controller) {
+            upstream = controller;
+          },
+        }),
+        { headers: { "content-type": "text/event-stream" } },
+      ),
+    { maxConcurrency: 1 },
+  );
+  const streamed = await instance.executeStream(executionRequest(instance));
+  const reader = streamed.body.getReader();
+  const firstRead = reader.read();
+  upstream!.enqueue(new TextEncoder().encode("data: first\n\n"));
+  assert.equal(new TextDecoder().decode((await firstRead).value), "data: first\n\n");
+
+  const saturated = await errorFrom(instance.execute(executionRequest(instance)));
+  assert.equal(saturated.code, "concurrency_exhausted");
+  const completed = reader.read();
+  upstream!.close();
+  assert.equal((await completed).done, true);
+  const next = await instance.executeStream(executionRequest(instance));
+  await next.body.cancel();
+});
+
+test("stream byte overflow and consumer cancellation terminate upstream safely", async () => {
+  let overflowCancelled = false;
+  const overflow = adapter(
+    async () =>
+      new Response(
+        new ReadableStream<Uint8Array>({
+          pull(controller) {
+            controller.enqueue(new Uint8Array(6));
+          },
+          cancel() {
+            overflowCancelled = true;
+          },
+        }),
+      ),
+    { maxResponseBytes: 10 },
+  );
+  const overflowReader = (
+    await overflow.executeStream(executionRequest(overflow))
+  ).body.getReader();
+  assert.equal((await overflowReader.read()).value?.byteLength, 6);
+  await assert.rejects(overflowReader.read(), (error: unknown) => {
+    return error instanceof ExecutionAdapterError && error.code === "response_too_large";
+  });
+  assert.equal(overflowCancelled, true);
+
+  let consumerCancelled = false;
+  const cancellable = adapter(async () => {
+    return new Response(
+      new ReadableStream<Uint8Array>({
+        cancel() {
+          consumerCancelled = true;
+        },
+      }),
+    );
+  });
+  const response = await cancellable.executeStream(executionRequest(cancellable));
+  await response.body.cancel();
+  assert.equal(consumerCancelled, true);
 });

@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
-import type { ProviderConnection, RouteSelection } from "./types.ts";
+import { assertTransportExecutionEvidence } from "./transport-rollout.ts";
+import type { ProviderConnection, RouteSelection, TransportExecutionEvidence } from "./types.ts";
 
 export type ProviderAttempt = {
   connection: ProviderConnection;
@@ -27,11 +28,13 @@ type RouteReceiptInput = {
   serviceFeePolicyVersion: number;
   serviceFeeBasisPoints: number;
   costBasis: "provider_usage" | "route_estimate_missing_usage" | "released_failure";
+  transportEvidence: TransportExecutionEvidence;
   attempts: ProviderAttempt[];
 };
 
 export async function writeRouteReceipt(admin: SupabaseClient, input: RouteReceiptInput) {
   const selected = input.selection?.connection;
+  const transportEvidence = assertTransportExecutionEvidence(input.transportEvidence);
   const rpcName = input.apiKeyId
     ? "io_finalize_api_key_priced_route_request"
     : "io_finalize_priced_route_request";
@@ -87,8 +90,14 @@ export async function writeRouteReceipt(admin: SupabaseClient, input: RouteRecei
           tier: input.selection.tier,
           price_currency: selected?.currencyCode,
           cost_basis: input.costBasis,
+          execution_adapter_version: transportEvidence.executionAdapterVersion,
+          translation_version: transportEvidence.translationVersion,
         }
-      : { cost_basis: input.costBasis },
+      : {
+          cost_basis: input.costBasis,
+          execution_adapter_version: transportEvidence.executionAdapterVersion,
+          translation_version: transportEvidence.translationVersion,
+        },
     _candidate_summary: input.selection?.candidateSummary ?? [],
   });
   if (error) throw error;

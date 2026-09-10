@@ -135,6 +135,11 @@ export type RouteSelection = {
   }>;
 };
 
+export type TransportExecutionEvidence = {
+  executionAdapterVersion: string;
+  translationVersion: string;
+};
+
 export type PartnerResult = {
   content: string;
   message: {
@@ -149,6 +154,7 @@ export type PartnerResult = {
     cachedInputTokens?: number;
   };
   providerRequestId?: string;
+  transportEvidence: TransportExecutionEvidence;
 };
 
 export type ActiveCapacityEntitlement = {

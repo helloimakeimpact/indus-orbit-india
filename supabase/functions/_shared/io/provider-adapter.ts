@@ -3,6 +3,7 @@ import { GatewayError } from "./errors.ts";
 import { gatewayContentText, toOpenAiCompatibleMessage } from "./message-content.ts";
 import { selectProviderRoute, type RouteInput } from "./routing.ts";
 import { assertStructuredOutput } from "./structured-output.ts";
+import { currentTransportEvidence } from "./transport-rollout.ts";
 import type {
   GatewayInferenceOptions,
   GatewayMessage,
@@ -61,6 +62,7 @@ function createProviderAbortBoundary(callerSignal: AbortSignal | undefined, time
 }
 
 type RegistryRow = Record<string, unknown>;
+type ParsedPartnerResult = Omit<PartnerResult, "transportEvidence">;
 
 function readPositiveInteger(name: string, fallback: number, maximum: number) {
   const value = Deno.env.get(name);
@@ -299,7 +301,7 @@ function readUsageValue(row: RegistryRow | null, key: string) {
   return value === null ? undefined : value;
 }
 
-function readOpenAiResult(body: unknown): PartnerResult {
+function readOpenAiResult(body: unknown): ParsedPartnerResult {
   const root = asRecord(body);
   const choices = root?.choices;
   const firstChoice = Array.isArray(choices) ? asRecord(choices[0]) : null;
@@ -351,7 +353,7 @@ function readOpenAiResult(body: unknown): PartnerResult {
   };
 }
 
-function readGeminiResult(body: unknown): PartnerResult {
+function readGeminiResult(body: unknown): ParsedPartnerResult {
   const root = asRecord(body);
   const candidates = root?.candidates;
   const firstCandidate = Array.isArray(candidates) ? asRecord(candidates[0]) : null;
@@ -793,6 +795,7 @@ export async function sendProviderChatStream(
         finishReason,
         usage: { inputTokens, outputTokens, cachedInputTokens },
         providerRequestId: providerRequestId(upstream),
+        transportEvidence: currentTransportEvidence(connection),
       },
     });
     terminalQueued = true;
@@ -985,7 +988,11 @@ export async function sendProviderChat(
     ) {
       assertStructuredOutput(result.message.content, options.responseFormat.jsonSchema.schema);
     }
-    return { ...result, providerRequestId: providerRequestId(upstream) };
+    return {
+      ...result,
+      providerRequestId: providerRequestId(upstream),
+      transportEvidence: currentTransportEvidence(connection),
+    };
   } catch (error) {
     if (error instanceof GatewayError) throw error;
     if (options.abortSignal?.aborted) {
