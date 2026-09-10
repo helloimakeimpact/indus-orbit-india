@@ -1,11 +1,15 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  clearConversationOutbox,
   isConversationMessage,
+  loadConversationOutbox,
   mergeConversationMessages,
   parseConversationOutbox,
   parseDirectMessageBroadcast,
   projectConversationOutbox,
+  saveConversationOutbox,
+  transitionConversationOutboxOwner,
 } from "./conversation-state";
 import type { DirectMessage } from "./types";
 
@@ -18,6 +22,16 @@ function message(id: string, sender: string, recipient: string, createdAt: strin
     client_request_id: null,
     created_at: createdAt,
     read_at: null,
+  };
+}
+
+function memoryStorage() {
+  const values = new Map<string, string>();
+  return {
+    values,
+    getItem: (key: string) => values.get(key) ?? null,
+    setItem: (key: string, value: string) => void values.set(key, value),
+    removeItem: (key: string) => void values.delete(key),
   };
 }
 
@@ -148,5 +162,96 @@ describe("conversation state", () => {
       projectConversationOutbox("member-1", "30000000-0000-4000-8000-000000000001", items),
       [],
     );
+  });
+
+  it("treats unavailable private storage as an in-memory-only recovery path", () => {
+    const unavailable = {
+      getItem: () => {
+        throw new Error("disabled");
+      },
+      setItem: () => {
+        throw new Error("disabled");
+      },
+      removeItem: () => {
+        throw new Error("disabled");
+      },
+    };
+    const item = {
+      requestId: "10000000-0000-4000-8000-000000000001",
+      recipientId: "20000000-0000-4000-8000-000000000001",
+      content: "Private fallback",
+      createdAt: "2026-09-08T10:00:00.000Z",
+      state: "queued" as const,
+    };
+
+    assert.deepEqual(loadConversationOutbox(unavailable, "member-1"), []);
+    assert.equal(saveConversationOutbox(unavailable, "member-1", [item]), false);
+    assert.equal(clearConversationOutbox(unavailable, "member-1"), false);
+  });
+
+  it("removes corrupt state and keeps accounts isolated", () => {
+    const storage = memoryStorage();
+    storage.setItem("indus-orbit:dm-outbox:v1:member-1", "{broken");
+    assert.deepEqual(loadConversationOutbox(storage, "member-1"), []);
+    assert.equal(storage.values.has("indus-orbit:dm-outbox:v1:member-1"), false);
+
+    const item = {
+      requestId: "10000000-0000-4000-8000-000000000001",
+      recipientId: "20000000-0000-4000-8000-000000000001",
+      content: "Only for member one",
+      createdAt: "2026-09-08T10:00:00.000Z",
+      state: "queued" as const,
+    };
+    assert.equal(saveConversationOutbox(storage, "member-1", [item]), true);
+    assert.deepEqual(loadConversationOutbox(storage, "member-2"), []);
+    assert.deepEqual(loadConversationOutbox(storage, "member-1"), [item]);
+  });
+
+  it("removes storage after delivery or discard leaves the outbox empty", () => {
+    const storage = memoryStorage();
+    const item = {
+      requestId: "10000000-0000-4000-8000-000000000001",
+      recipientId: "20000000-0000-4000-8000-000000000001",
+      content: "Cleanup",
+      createdAt: "2026-09-08T10:00:00.000Z",
+      state: "queued" as const,
+    };
+    assert.equal(saveConversationOutbox(storage, "member-1", [item]), true);
+    assert.equal(storage.values.has("indus-orbit:dm-outbox:v1:member-1"), true);
+    assert.equal(saveConversationOutbox(storage, "member-1", []), true);
+    assert.equal(storage.values.has("indus-orbit:dm-outbox:v1:member-1"), false);
+
+    assert.equal(saveConversationOutbox(storage, "member-1", [item]), true);
+    assert.equal(saveConversationOutbox(storage, "member-2", [item]), true);
+    assert.equal(clearConversationOutbox(storage, "member-1"), true);
+    assert.equal(storage.values.has("indus-orbit:dm-outbox:v1:member-1"), false);
+    assert.equal(storage.values.has("indus-orbit:dm-outbox:v1:member-2"), true);
+  });
+
+  it("clears only the prior owner on a real auth transition", () => {
+    const storage = memoryStorage();
+    const item = {
+      requestId: "10000000-0000-4000-8000-000000000001",
+      recipientId: "20000000-0000-4000-8000-000000000001",
+      content: "Account-scoped",
+      createdAt: "2026-09-08T10:00:00.000Z",
+      state: "queued" as const,
+    };
+    saveConversationOutbox(storage, "member-1", [item]);
+    saveConversationOutbox(storage, "member-2", [item]);
+
+    let owner = transitionConversationOutboxOwner(storage, null, "member-1");
+    assert.equal(storage.values.has("indus-orbit:dm-outbox:v1:member-1"), true);
+    owner = transitionConversationOutboxOwner(storage, owner, "member-1");
+    assert.equal(storage.values.has("indus-orbit:dm-outbox:v1:member-1"), true);
+    owner = transitionConversationOutboxOwner(storage, owner, "member-2");
+    assert.equal(owner, "member-2");
+    assert.equal(storage.values.has("indus-orbit:dm-outbox:v1:member-1"), false);
+    assert.equal(storage.values.has("indus-orbit:dm-outbox:v1:member-2"), true);
+    owner = transitionConversationOutboxOwner(storage, owner, null);
+    assert.equal(owner, null);
+    assert.equal(storage.values.has("indus-orbit:dm-outbox:v1:member-2"), false);
+
+    assert.equal(transitionConversationOutboxOwner(null, "member-1", null), null);
   });
 });

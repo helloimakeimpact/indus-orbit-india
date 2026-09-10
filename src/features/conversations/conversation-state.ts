@@ -10,6 +10,9 @@ export type ConversationOutboxItem = {
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const maximumOutboxItems = 100;
+const outboxStoragePrefix = "indus-orbit:dm-outbox:v1:";
+
+type ConversationOutboxStorage = Pick<Storage, "getItem" | "setItem" | "removeItem">;
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value !== null && typeof value === "object" && !Array.isArray(value)
@@ -155,4 +158,72 @@ export function projectConversationOutbox(
       read_at: null,
       delivery_state: item.state,
     }));
+}
+
+export function loadConversationOutbox(
+  storage: ConversationOutboxStorage,
+  userId: string,
+): ConversationOutboxItem[] {
+  const key = `${outboxStoragePrefix}${userId}`;
+  try {
+    const raw = storage.getItem(key);
+    if (raw === null) return [];
+    const items = parseConversationOutbox(JSON.parse(raw) as unknown, userId);
+    if (!items.length) storage.removeItem(key);
+    return items;
+  } catch {
+    try {
+      storage.removeItem(key);
+    } catch {
+      // Private storage can be entirely unavailable. Recovery remains in-memory.
+    }
+    return [];
+  }
+}
+
+export function saveConversationOutbox(
+  storage: ConversationOutboxStorage,
+  userId: string,
+  items: Iterable<ConversationOutboxItem>,
+): boolean {
+  const key = `${outboxStoragePrefix}${userId}`;
+  try {
+    const boundedItems = [...items].slice(0, maximumOutboxItems);
+    if (!boundedItems.length) {
+      storage.removeItem(key);
+      return true;
+    }
+    storage.setItem(key, JSON.stringify({ version: 1, userId, items: boundedItems }));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function clearConversationOutbox(
+  storage: ConversationOutboxStorage,
+  userId: string,
+): boolean {
+  try {
+    storage.removeItem(`${outboxStoragePrefix}${userId}`);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Advances the authenticated owner without treating the initial session load
+ * as a sign-out. A previous account's unsent content is removed only when the
+ * authenticated identity actually changes or becomes anonymous.
+ */
+export function transitionConversationOutboxOwner(
+  storage: ConversationOutboxStorage | null,
+  previousUserId: string | null,
+  nextUserId: string | null,
+): string | null {
+  if (storage && previousUserId && previousUserId !== nextUserId) {
+    clearConversationOutbox(storage, previousUserId);
+  }
+  return nextUserId;
 }

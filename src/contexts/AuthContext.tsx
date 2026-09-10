@@ -1,6 +1,7 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { transitionConversationOutboxOwner } from "@/features/conversations/conversation-state";
 
 type AuthContextValue = {
   session: Session | null;
@@ -43,6 +44,15 @@ const emptyAccessState: AccessState = {
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+
+function getPrivateSessionStorage(): Storage | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return window.sessionStorage;
+  } catch {
+    return null;
+  }
+}
 
 async function loadAccessState(userId: string): Promise<AccessState> {
   const [adminAccessRes, profileRes, leadRes] = await Promise.all([
@@ -94,6 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isMissionLead, setIsMissionLead] = useState(false);
   const [userSegment, setUserSegment] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const authenticatedOutboxOwner = useRef<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -110,6 +121,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     const applySession = (newSession: Session | null, deferAccessCheck: boolean) => {
+      authenticatedOutboxOwner.current = transitionConversationOutboxOwner(
+        getPrivateSessionStorage(),
+        authenticatedOutboxOwner.current,
+        newSession?.user.id ?? null,
+      );
       setSession(newSession);
       setUser(newSession?.user ?? null);
 

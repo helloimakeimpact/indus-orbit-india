@@ -8,11 +8,13 @@ import {
 } from "@/server/messages.functions";
 import type { DirectMessage } from "@/features/conversations/types";
 import {
+  clearConversationOutbox,
   isConversationMessage,
+  loadConversationOutbox,
   mergeConversationMessages,
-  parseConversationOutbox,
   parseDirectMessageBroadcast,
   projectConversationOutbox,
+  saveConversationOutbox,
   updateDirectMessageDelivery,
   type ConversationOutboxItem,
 } from "@/features/conversations/conversation-state";
@@ -21,8 +23,6 @@ import { useOrbitStore } from "@/features/orbit/OrbitStore";
 function mergeMessage(messages: DirectMessage[], incoming: DirectMessage) {
   return mergeConversationMessages(messages, [incoming]);
 }
-
-const outboxStoragePrefix = "indus-orbit:dm-outbox:v1:";
 
 export function useDirectConversation(userId: string | undefined, otherUserId: string | undefined) {
   const { connectionState, notifyAttentionChanged } = useOrbitStore();
@@ -42,23 +42,7 @@ export function useDirectConversation(userId: string | undefined, otherUserId: s
 
   const persistOutbox = useCallback(() => {
     if (!outboxOwner.current) return;
-    const key = `${outboxStoragePrefix}${outboxOwner.current}`;
-    try {
-      if (!outbox.current.size) {
-        window.sessionStorage.removeItem(key);
-        return;
-      }
-      window.sessionStorage.setItem(
-        key,
-        JSON.stringify({
-          version: 1,
-          userId: outboxOwner.current,
-          items: [...outbox.current.values()],
-        }),
-      );
-    } catch {
-      // Delivery stays available in-memory when private storage is unavailable.
-    }
+    saveConversationOutbox(window.sessionStorage, outboxOwner.current, outbox.current.values());
   }, []);
 
   const restoreOutbox = useCallback(() => {
@@ -68,24 +52,23 @@ export function useDirectConversation(userId: string | undefined, otherUserId: s
       return;
     }
     if (outboxOwner.current === userId) return;
+    if (outboxOwner.current) {
+      clearConversationOutbox(window.sessionStorage, outboxOwner.current);
+    }
     outbox.current.clear();
     outboxOwner.current = userId;
-    try {
-      const value = JSON.parse(
-        window.sessionStorage.getItem(`${outboxStoragePrefix}${userId}`) ?? "null",
-      ) as unknown;
-      for (const item of parseConversationOutbox(value, userId)) {
-        outbox.current.set(item.requestId, item);
-      }
-      persistOutbox();
-    } catch {
-      try {
-        window.sessionStorage.removeItem(`${outboxStoragePrefix}${userId}`);
-      } catch {
-        // An unavailable browser store must not break in-memory delivery.
-      }
+    for (const item of loadConversationOutbox(window.sessionStorage, userId)) {
+      outbox.current.set(item.requestId, item);
     }
+    persistOutbox();
   }, [persistOutbox, userId]);
+
+  useEffect(() => {
+    if (userId || !outboxOwner.current) return;
+    clearConversationOutbox(window.sessionStorage, outboxOwner.current);
+    outbox.current.clear();
+    outboxOwner.current = null;
+  }, [userId]);
 
   const topic = useMemo(() => {
     if (!userId || !otherUserId) return null;

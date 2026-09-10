@@ -53,14 +53,14 @@ The Chapter/Mission Space surface now provides:
 - the existing grouped Room rail, main workspace and people/thread inspector geometry.
 - manager People controls for active/removed members, timeout/lift and canonical remove/restore with mandatory reasons;
 - one root Orbit store shared by Community and I/O for network recovery and direct-message attention;
-- replay-safe direct-message optimistic sends, a bounded account-scoped tab outbox that survives same-tab reload with the original idempotency key, automatic queued replay after authoritative reconnect, explicit failed retry/discard and cross-tab unread reconciliation;
+- replay-safe direct-message optimistic sends, a bounded account-scoped tab outbox that survives same-tab reload with the original idempotency key, fails safely under corrupt/disabled storage and clears for the prior identity on sign-out/account change, automatic queued replay after authoritative reconnect, explicit failed retry/discard and cross-tab unread reconciliation;
 - opt-out active-conversation typing with a seconds-long expiry and no durable last-seen record.
 - forum-style Board topics with bounded titles/tags and manager-controlled open/locked/archived state;
 - manager Room creation, deterministic reordering and reasoned archive controls;
 - source-role inheritance plus an effective-permission explanation that managers can inspect as a selected role;
 - one private saved-work index/search/export surface across Space messages, Rooms, Threads, Chapters and Missions.
 
-The pure feed/attention/mention/search/permission/Thread-control/member-roster decoders are regression-tested for ordering, cursors, tombstones, reaction allowlisting, malformed rows, quiet-hour, slow-mode and timeout feedback, bounded unique person/role mention IDs, creator-inclusive private audiences, complete paged search-result shapes and valid exclusive override subjects. Replay-key generation, saved-work projection, reload-safe DM restoration and conflict-safe attachment recovery are separately tested. Member TypeScript and all 148 integrated unit contracts pass; the hosted member-safety contract adds 15 assertions.
+The pure feed/attention/mention/search/permission/Thread-control/member-roster decoders are regression-tested for ordering, cursors, tombstones, reaction allowlisting, malformed rows, quiet-hour, slow-mode and timeout feedback, bounded unique person/role mention IDs, creator-inclusive private audiences, complete paged search-result shapes and valid exclusive override subjects. Replay-key generation, saved-work projection, reload-safe account transition/restoration and conflict-safe attachment recovery are separately tested. Member TypeScript and all 159 integrated unit contracts pass; the hosted member-safety contract adds 15 assertions.
 
 ## Deliberately not claimed as complete
 
