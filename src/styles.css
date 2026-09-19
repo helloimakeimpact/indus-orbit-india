@@ -116,6 +116,12 @@
   --gold: oklch(0.84 0.13 85);
   --monsoon: oklch(0.55 0.13 155);
   --parchment: oklch(0.97 0.018 85);
+
+  /* Neon-tech accents (cinematic Indian poster palette) */
+  --neon-cyan: oklch(0.82 0.13 195);
+  --neon-amber: oklch(0.79 0.17 60);
+  --deep-teal: oklch(0.29 0.05 215);
+  --ink-black: oklch(0.15 0.02 250);
 }
 
 .dark {
