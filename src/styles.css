@@ -118,8 +118,9 @@
   --parchment: oklch(0.97 0.018 85);
 
   /* Neon-tech accents (cinematic Indian poster palette) */
-  --neon-cyan: oklch(0.82 0.13 195);
-  --neon-amber: oklch(0.79 0.17 60);
+  --neon-cyan: oklch(0.85 0.15 195);
+  --neon-magenta: oklch(0.7 0.27 340);
+  --neon-amber: oklch(0.82 0.18 70);
   --deep-teal: oklch(0.29 0.05 215);
   --ink-black: oklch(0.15 0.02 250);
 }
@@ -177,6 +178,77 @@
 @layer utilities {
   .font-display {
     font-family: var(--font-display);
+  }
+  /* ---- 80s/90s neon interface kit ---- */
+  .neon-text {
+    color: oklch(0.96 0.02 85);
+    text-shadow:
+      0 0 4px color-mix(in oklab, var(--neon-cyan) 90%, transparent),
+      0 0 12px color-mix(in oklab, var(--neon-cyan) 70%, transparent),
+      0 0 28px color-mix(in oklab, var(--neon-magenta) 55%, transparent),
+      0 0 56px color-mix(in oklab, var(--neon-magenta) 35%, transparent);
+  }
+  .neon-text-magenta {
+    color: oklch(0.97 0.02 340);
+    text-shadow:
+      0 0 4px color-mix(in oklab, var(--neon-magenta) 90%, transparent),
+      0 0 14px color-mix(in oklab, var(--neon-magenta) 70%, transparent),
+      0 0 40px color-mix(in oklab, var(--neon-magenta) 40%, transparent);
+  }
+  .neon-text-amber {
+    color: oklch(0.97 0.03 80);
+    text-shadow:
+      0 0 4px color-mix(in oklab, var(--saffron) 95%, transparent),
+      0 0 14px color-mix(in oklab, var(--saffron) 70%, transparent),
+      0 0 40px color-mix(in oklab, var(--saffron) 40%, transparent);
+  }
+  .neon-rule {
+    height: 2px;
+    border: 0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--neon-magenta),
+      var(--neon-cyan),
+      transparent
+    );
+    box-shadow: 0 0 12px color-mix(in oklab, var(--neon-cyan) 60%, transparent);
+  }
+  .neon-frame {
+    border: 1px solid color-mix(in oklab, var(--neon-cyan) 55%, transparent);
+    box-shadow:
+      0 0 0 1px color-mix(in oklab, var(--neon-magenta) 22%, transparent),
+      0 0 22px -4px color-mix(in oklab, var(--neon-cyan) 55%, transparent),
+      inset 0 0 26px -12px color-mix(in oklab, var(--neon-magenta) 60%, transparent);
+  }
+  .neon-chip {
+    border: 1px solid color-mix(in oklab, var(--neon-magenta) 60%, transparent);
+    color: oklch(0.96 0.02 340);
+    text-shadow: 0 0 10px color-mix(in oklab, var(--neon-magenta) 70%, transparent);
+    box-shadow: 0 0 16px -6px color-mix(in oklab, var(--neon-magenta) 70%, transparent);
+  }
+  .neon-grid {
+    background-image:
+      linear-gradient(
+        to right,
+        color-mix(in oklab, var(--neon-cyan) 14%, transparent) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        to bottom,
+        color-mix(in oklab, var(--neon-magenta) 12%, transparent) 1px,
+        transparent 1px
+      );
+    background-size: 56px 56px;
+  }
+  .neon-scanlines {
+    background-image: repeating-linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.05) 0px,
+      rgba(255, 255, 255, 0.05) 1px,
+      transparent 1px,
+      transparent 4px
+    );
   }
   .pixelated {
     image-rendering: pixelated;
