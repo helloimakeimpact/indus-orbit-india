@@ -6,6 +6,12 @@ This is the canonical answer to “what is done, what needs improvement, and wha
 
 ## Completion register
 
+### 1 October 2026 landing and dependency checkpoint
+
+- **Verified locally:** the GitHub neon/flat-poster homepage was selectively restored to the 10 September indigo/parchment/saffron pixel-art landing. Its eight newly added, unused-after-rollback JPEGs were removed. The `/brand` page kept the same identity system, while the rejected “Made of Many Minds.” line was removed from the visiting card and the canonical short-line slot remains unapproved. No provider, database or admin release state changes with this visual rollback.
+- **Verified locally:** the regenerated hosted Supabase types are Prettier-formatted without changing their schema meaning. Compatible dependency security updates reduce the current local `npm audit --audit-level=high` result to zero findings. `npm run verify` passes formatting, lint, typecheck, 159/159 unit contracts, three package builds, production build and bundle budgets. The restored production bundle passes 6/6 public desktop/mobile browser checks and 2/2 visiting-card visual checks; direct desktop/mobile homepage inspection confirms the original dawn image, zero neon-class nodes and no horizontal overflow.
+- **Delivery state:** this checkpoint is not Released on GitHub/Netlify until its containing commit is present on `origin/main`, the GitHub quality workflow passes and the deployed site is checked. Authenticated personas, provider activation and the other production gates below remain open.
+
 ### 8–10 September 2026 selective-router, recovery and rollout update
 
 - 9router was reviewed at pinned commit `eb712ca821f0ba6bc41043fbd14494c5af5daba5`. I/O will reuse only reviewed translation/SSE primitives beneath its existing gateway; it will not replace I/O's identity, policy, budgets, accounting, receipts, admin UI or provider-contract boundary.
