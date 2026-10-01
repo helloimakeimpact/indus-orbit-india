@@ -36,7 +36,7 @@ test("@public brand contact card exposes both safe downloads", async ({ page }) 
   await expect(
     page.getByText("The General Intelligence Company of India", { exact: true }),
   ).toBeVisible();
-  await expect(page.getByText("Made of Many Minds.", { exact: true })).toBeVisible();
+  await expect(page.getByText("Made of Many Minds.", { exact: true })).toHaveCount(0);
 });
 
 test("@visual visiting card layout", async ({ page }) => {

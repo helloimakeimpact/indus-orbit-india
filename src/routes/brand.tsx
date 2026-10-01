@@ -60,7 +60,6 @@ const CARD = {
   title: "CEO",
   org: "Indus Orbit",
   domain: "indusorbit.com",
-  tagline: "Made of Many Minds.",
   city: "Paris",
   phone: "+33766550190",
   email: "office@indusorbit.com",
@@ -147,7 +146,7 @@ function VisitingCardFront({ cardRef }: { cardRef?: Ref<HTMLDivElement> }) {
       ref={cardRef}
       className="aspect-[1.75/1] w-full overflow-hidden rounded-3xl bg-[var(--indigo-night)] p-5 text-[var(--parchment)] shadow-xl sm:p-7"
     >
-      <div className="flex h-full flex-col items-center justify-between text-center">
+      <div className="flex h-full flex-col items-center justify-center gap-8 text-center">
         <div className="flex items-center gap-2.5">
           <img
             src={logo}
@@ -163,9 +162,6 @@ function VisitingCardFront({ cardRef }: { cardRef?: Ref<HTMLDivElement> }) {
             The General Intelligence Company of India
           </p>
         </div>
-        <p className="text-xs font-medium tracking-[0.08em] text-[var(--saffron)] sm:text-sm">
-          {CARD.tagline}
-        </p>
       </div>
     </div>
   );
