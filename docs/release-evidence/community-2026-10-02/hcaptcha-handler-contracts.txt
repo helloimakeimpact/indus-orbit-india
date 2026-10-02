@@ -1,0 +1,20 @@
+✔ only a server-verified token saves normalized fields, without token or arbitrary source (268.933791ms)
+✔ newsletter uses the same verification boundary (5.167167ms)
+✔ rejected or malformed verification never writes: {"success":false,"error-codes":["expired-input-response"]} (11.797ms)
+✔ rejected or malformed verification never writes: {"success":false,"error-codes":["already-seen-response"]} (8.827625ms)
+✔ rejected or malformed verification never writes: {"success":"true"} (2.28925ms)
+✔ rejected or malformed verification never writes: {} (10.387041ms)
+✔ missing token, invalid role/email and oversized fields fail before contacting hCaptcha (36.024125ms)
+✔ oversized bodies are bounded even without a content-length header (1.172042ms)
+✔ unlisted and null origins cannot reach verification or storage (2.631417ms)
+✔ preflight and disallowed methods do not verify or write (1.239042ms)
+✔ missing production configuration and official bypass test keys are refused (9.784708ms)
+✔ verification outage and failed persistence return no success or private details (10.778167ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1743.052041

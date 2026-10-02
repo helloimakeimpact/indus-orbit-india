@@ -1,10 +1,10 @@
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { HumanVerification } from "@/components/site/HumanVerification";
+import { submitPublicForm } from "@/lib/public-form-submit";
 import footerBand from "@/assets/footer-band.jpg";
 import logo from "@/assets/indus-orbit-logo.png";
-import { getHumanCheck, nextHumanCheckIndex } from "@/lib/human-check";
 
 const platformLinks = [
   { to: "/skills", label: "Skills" },
@@ -22,9 +22,9 @@ const companyLinks = [
 
 export function SiteFooter() {
   const [email, setEmail] = useState("");
-  const [humanCheckIndex, setHumanCheckIndex] = useState(0);
-  const [answer, setAnswer] = useState("");
-  const { left: num1, right: num2 } = getHumanCheck(humanCheckIndex);
+  const [captchaToken, setCaptchaToken] = useState("");
+  const [captchaReset, setCaptchaReset] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
 
   return (
     <footer className="relative mt-24">
@@ -61,21 +61,22 @@ export function SiteFooter() {
             <form
               onSubmit={async (e) => {
                 e.preventDefault();
-                if (parseInt(answer) !== num1 + num2) {
-                  toast.error("Incorrect math answer");
+                if (submitting) return;
+                if (!captchaToken) {
+                  toast.error("Please complete human verification.");
                   return;
                 }
-                const { error } = await supabase
-                  .from("newsletter_subscriptions")
-                  .insert([{ email }]);
-                if (error) {
-                  if (error.code === "23505") toast.error("You are already subscribed!");
-                  else toast.error("Failed to subscribe.");
-                } else {
-                  toast.success("Subscribed successfully!");
+                setSubmitting(true);
+                try {
+                  await submitPublicForm({ kind: "newsletter", email, captchaToken });
+                  toast.success("Your subscription request has been received.");
                   setEmail("");
-                  setAnswer("");
-                  setHumanCheckIndex(nextHumanCheckIndex);
+                } catch (error) {
+                  toast.error(error instanceof Error ? error.message : "Please try again later.");
+                } finally {
+                  setSubmitting(false);
+                  setCaptchaToken("");
+                  setCaptchaReset((value) => value + 1);
                 }
               }}
               className="mt-6 flex flex-col gap-2 max-w-md"
@@ -88,28 +89,18 @@ export function SiteFooter() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="your@email.com"
                   required
+                  maxLength={254}
                   className="min-w-0 flex-1 bg-transparent px-3 py-2 text-sm text-[var(--parchment)] placeholder:text-[var(--parchment)]/50 focus:outline-none"
                 />
                 <button
                   type="submit"
-                  className="rounded-full bg-[var(--saffron)] px-4 py-2 text-xs font-semibold uppercase tracking-wider text-[var(--indigo-night)]"
+                  disabled={submitting || !captchaToken}
+                  className="min-h-11 rounded-full bg-[var(--saffron)] px-4 py-2 text-xs font-semibold uppercase tracking-wider text-[var(--indigo-night)] disabled:opacity-60"
                 >
-                  Subscribe
+                  {submitting ? "Sending…" : "Subscribe"}
                 </button>
               </div>
-              <div className="flex items-center gap-2 px-2 text-sm text-[var(--parchment)]/80">
-                <span>
-                  Verify you're human: {num1} + {num2} ={" "}
-                </span>
-                <input
-                  type="number"
-                  aria-label={`Human verification answer: ${num1} plus ${num2}`}
-                  value={answer}
-                  onChange={(e) => setAnswer(e.target.value)}
-                  className="w-16 bg-white/10 px-2 py-1 rounded text-center outline-none"
-                  required
-                />
-              </div>
+              <HumanVerification onToken={setCaptchaToken} resetKey={captchaReset} />
             </form>
           </div>
 

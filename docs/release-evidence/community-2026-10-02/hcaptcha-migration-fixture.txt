@@ -1,0 +1,45 @@
+CREATE ROLE
+CREATE ROLE
+CREATE ROLE
+CREATE TABLE
+CREATE TABLE
+ALTER TABLE
+ALTER TABLE
+CREATE POLICY
+CREATE POLICY
+CREATE POLICY
+CREATE POLICY
+ALTER TABLE
+GRANT
+GRANT
+BEGIN
+DROP POLICY
+DROP POLICY
+REVOKE
+GRANT
+COMMIT
+DO
+SET
+INSERT 0 1
+INSERT 0 1
+RESET
+SET
+DO
+RESET
+SET
+DO
+ preserved_authenticated_contact_reads
+---------------------------------------
+                                     1
+(1 row)
+
+RESET
+ verified_contacts
+-------------------
+                 1
+(1 row)
+
+ verified_newsletters
+----------------------
+                    1
+(1 row)

@@ -4,6 +4,10 @@ Status: canonical documentation hub, updated 2 October 2026 for member continuit
 
 This folder files the Indus Orbit product as a system: what it means, which code exists, what is operational, what remains, and how every subsystem fits the people-centred mission. Runtime source stays in its correct `src/` and `supabase/` locations; this record points to that source and distinguishes implementation from deployment.
 
+## Current Community direction
+
+Read `COMMUNITY_EVENTS_DIRECTION_AND_LUMA_ANALYSIS.md` for the 2 October events/community priority, Luma research, approved host/access decisions, source audit and E0–E6 execution gates. Core branding remains unchanged. hCaptcha is selected for public forms; operational setup and hosted enforcement remain pending.
+
 ## 2 October source delivery
 
 The member and separate admin increments are committed and published. All three GitHub quality workflows passed; the live approved brand line and original artwork were checked on the public homepage and Brand page. Full public production remains Partial: hosted forward migrations, genuine personas, trusted workers/privacy, provider/payments, admin operations and recovery/design acceptance still need completion. See `../release-evidence/local-2026-10-02/publication.md` for exact commits and the current remaining-work record; older local-only notes retain their pre-publication date.

@@ -1,11 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { HumanVerification } from "@/components/site/HumanVerification";
+import { submitPublicForm } from "@/lib/public-form-submit";
 import { SiteShell } from "@/components/site/SiteShell";
 import contactImg from "@/assets/contact-rooftop.jpg";
 import { cn } from "@/lib/utils";
-import { getHumanCheck, nextHumanCheckIndex } from "@/lib/human-check";
 import { SEGMENT_LIST, SEGMENT_META, type Segment } from "@/components/auth/segments";
 import { canonical, siteUrl } from "@/lib/seo";
 
@@ -38,48 +38,45 @@ type Role = Segment;
 function ContactPage() {
   const [role, setRole] = useState<Role>("youth");
   const [submitting, setSubmitting] = useState(false);
-  const [humanCheckIndex, setHumanCheckIndex] = useState(0);
-  const [answer, setAnswer] = useState("");
-  const { left: num1, right: num2 } = getHumanCheck(humanCheckIndex);
+  const [captchaToken, setCaptchaToken] = useState("");
+  const [captchaReset, setCaptchaReset] = useState(0);
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (parseInt(answer) !== num1 + num2) {
-      toast.error("Incorrect math answer. Are you human?");
+    if (submitting) return;
+    if (!captchaToken) {
+      toast.error("Please complete human verification.");
       return;
     }
 
     setSubmitting(true);
 
-    const formData = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const formData = new FormData(form);
     const name = formData.get("name") as string;
     const email = formData.get("email") as string;
     const message = formData.get("message") as string;
 
-    const { error } = await supabase.from("contact_submissions").insert([
-      {
+    try {
+      await submitPublicForm({
+        kind: "contact",
         name,
         email,
         role: SEGMENT_META[role].label,
         message,
-        source: "contact_page",
-      },
-    ]);
-
-    setSubmitting(false);
-
-    if (error) {
-      toast.error("Failed to send message. Please try again later.", {
-        description: error.message,
+        captchaToken,
       });
-    } else {
-      (e.target as HTMLFormElement).reset();
-      setAnswer("");
-      setHumanCheckIndex(nextHumanCheckIndex);
+      form.reset();
       toast.success("Thanks — we'll be in touch soon.", {
         description: "Your message has reached the orbit.",
       });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Please try again later.");
+    } finally {
+      setSubmitting(false);
+      setCaptchaToken("");
+      setCaptchaReset((value) => value + 1);
     }
   };
 
@@ -135,12 +132,19 @@ function ContactPage() {
             className="rounded-3xl border border-border bg-card p-6 shadow-sm md:p-8"
           >
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Your name" name="name" placeholder="Aarav Sharma" required />
+              <Field
+                label="Your name"
+                name="name"
+                placeholder="Aarav Sharma"
+                maxLength={120}
+                required
+              />
               <Field
                 label="Email"
                 name="email"
                 type="email"
                 placeholder="you@domain.com"
+                maxLength={254}
                 required
               />
             </div>
@@ -155,8 +159,9 @@ function ContactPage() {
                     key={r}
                     type="button"
                     onClick={() => setRole(r)}
+                    aria-pressed={role === r}
                     className={cn(
-                      "rounded-full border px-4 py-1.5 text-xs font-semibold uppercase tracking-wider transition",
+                      "min-h-11 rounded-full border px-4 py-1.5 text-xs font-semibold uppercase tracking-wider transition",
                       role === r
                         ? "border-[var(--indigo-night)] bg-[var(--indigo-night)] text-[var(--parchment)]"
                         : "border-border bg-background text-foreground/70 hover:bg-foreground/5",
@@ -170,12 +175,17 @@ function ContactPage() {
             </div>
 
             <div className="mt-5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-foreground/60">
+              <label
+                htmlFor="contact-message"
+                className="text-xs font-semibold uppercase tracking-wider text-foreground/60"
+              >
                 Message
               </label>
               <textarea
+                id="contact-message"
                 name="message"
                 required
+                maxLength={5000}
                 rows={5}
                 placeholder="Tell us what you're building or what you'd like to bring."
                 className="mt-2 w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm focus:border-[var(--saffron)] focus:outline-none focus:ring-2 focus:ring-[var(--saffron)]/30"
@@ -183,22 +193,12 @@ function ContactPage() {
             </div>
 
             <div className="mt-5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-foreground/60">
-                Verify you're human: {num1} + {num2} = ?
-              </label>
-              <input
-                type="number"
-                value={answer}
-                onChange={(e) => setAnswer(e.target.value)}
-                required
-                placeholder="Answer"
-                className="mt-2 w-full max-w-[120px] block rounded-2xl border border-border bg-background px-4 py-3 text-sm focus:border-[var(--saffron)] focus:outline-none focus:ring-2 focus:ring-[var(--saffron)]/30"
-              />
+              <HumanVerification onToken={setCaptchaToken} resetKey={captchaReset} />
             </div>
 
             <button
               type="submit"
-              disabled={submitting}
+              disabled={submitting || !captchaToken}
               className="mt-6 inline-flex items-center justify-center rounded-full bg-[var(--indigo-night)] px-6 py-3 text-sm font-semibold text-[var(--parchment)] hover:bg-[var(--saffron)] hover:text-[var(--indigo-night)] transition disabled:opacity-60"
             >
               {submitting ? "Sending…" : "Send to the orbit"}
@@ -216,23 +216,30 @@ function Field({
   type = "text",
   placeholder,
   required,
+  maxLength,
 }: {
   label: string;
   name: string;
   type?: string;
   placeholder?: string;
   required?: boolean;
+  maxLength?: number;
 }) {
   return (
     <div>
-      <label className="text-xs font-semibold uppercase tracking-wider text-foreground/60">
+      <label
+        htmlFor={`contact-${name}`}
+        className="text-xs font-semibold uppercase tracking-wider text-foreground/60"
+      >
         {label}
       </label>
       <input
+        id={`contact-${name}`}
         name={name}
         type={type}
         placeholder={placeholder}
         required={required}
+        maxLength={maxLength}
         className="mt-2 w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm focus:border-[var(--saffron)] focus:outline-none focus:ring-2 focus:ring-[var(--saffron)]/30"
       />
     </div>

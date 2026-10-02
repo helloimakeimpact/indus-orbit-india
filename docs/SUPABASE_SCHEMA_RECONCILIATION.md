@@ -6,6 +6,10 @@ The 6 September repair was forward-only. It corrected `admin_trust_case_queue` t
 
 The 7 September additive index migration covers `private.admin_root_change_requests.requested_by`, `private.admin_root_change_requests.decided_by` and `public.account_privacy_requests.assigned_to`. The hosted advisor now reports zero unindexed foreign keys. Newly created indexes remain in the workload-dependent unused-index list until representative traffic exists; that is expected and is not a deletion signal.
 
+## Current follow-up scope — 2 October
+
+The current source adds a fourth forward migration, `20261002180809_require_verified_public_form_submissions.sql`, bringing source to 122 migration files. The preceding 121-migration/883-assertion record remains the earlier verified checkpoint. The new hCaptcha INSERT boundary has separate verification; the full current replay gate must pass before release. Hosted has not received any of these four forward changes. See `PUBLIC_FORMS_HCAPTCHA_RUNBOOK.md` in the canonical system record. The owner also approved an events-focused Community direction, approved member hosts/new-host review, public discovery/member registration and free native events first, with Razorpay later; see `COMMUNITY_EVENTS_DIRECTION_AND_LUMA_ANALYSIS.md`. Event delivery remains a Planned workstream with Partial current foundations.
+
 ## 2 October 2026 public-type contract verification
 
 Hosted project `jpwvgpnbkrktipwhvqss` is `ACTIVE_HEALTHY` in `ap-south-1`, Postgres `17.6.1.104`. The current read-only inventory is 116 migration records through `20260907090226`, five providers/models/connections, zero routing-enabled controls, zero conformance runs, zero receipts and zero provider attempts.

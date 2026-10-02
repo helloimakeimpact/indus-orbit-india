@@ -1,0 +1,12 @@
+
+> check:bundle
+> node scripts/check-bundle-size.mjs
+
+assets/jspdf.es.min-I5tePf55.js: 377.12 KiB / 500 KiB
+assets/supabase-vendor-C-jn6JqG.js: 210.91 KiB / 500 KiB
+assets/styles-HdwkzYuF.css: 210.43 KiB / 250 KiB
+assets/html2canvas.esm-DXEQVQnt.js: 196.33 KiB / 500 KiB
+assets/react-vendor-DpVJyn6f.js: 188.55 KiB / 500 KiB
+assets/index.es-B3gPPzfH.js: 155.25 KiB / 500 KiB
+assets/index-CYYVv5k3.js: 148.29 KiB / 500 KiB
+assets/radix-vendor-BUxLwhSo.js: 136.62 KiB / 500 KiB

@@ -2,6 +2,18 @@
 
 Status: **Partial**, 2 October 2026. This is the owner handoff within the canonical living record. Engineering implementation and exit criteria remain in `FINALIZATION_EXECUTION_PLAN.md`; this document explains the decisions, accounts and operating evidence the owner needs to supply. Full public launch is not approved.
 
+## Current follow-up scope — 2 October
+
+The current source adds a fourth forward migration, `20261002180809_require_verified_public_form_submissions.sql`, bringing source to 122 migration files. The preceding 121-migration/883-assertion record remains the earlier verified checkpoint. The new hCaptcha INSERT boundary has separate verification; the full current replay gate must pass before release. Hosted has not received any of these four forward changes. See `PUBLIC_FORMS_HCAPTCHA_RUNBOOK.md` in the canonical system record. The owner also approved an events-focused Community direction, approved member hosts/new-host review, public discovery/member registration and free native events first, with Razorpay later; see `COMMUNITY_EVENTS_DIRECTION_AND_LUMA_ANALYSIS.md`. Event delivery remains a Planned workstream with Partial current foundations.
+
+## Latest decisions — Community and public forms, 2 October
+
+- **Confirmed:** Community becomes events-focused, using Luma as a product-quality reference while retaining the Indus Orbit company identity, approved line and original assets.
+- **Confirmed:** approved member hosts, with review for new hosts. Public discovery; Community membership is required to register. Free events are the first release; Razorpay ticketing follows later. The full research and delivery plan is in `COMMUNITY_EVENTS_DIRECTION_AND_LUMA_ANALYSIS.md`.
+- **Confirmed:** hCaptcha is the public contact/newsletter supplier. The local handler, build and browser configuration boundary are Verified; real challenge/function and hosted enforcement remain Partial. Create production/staging site keys for the approved domains. Put only the public site key in Netlify `VITE_HCAPTCHA_SITE_KEY`; put the matching `HCAPTCHA_SITE_KEY`, `HCAPTCHA_SECRET_KEY` and comma-separated `PUBLIC_FORM_ALLOWED_ORIGINS` in Supabase Edge Function secrets. Never put the secret in a VITE variable or chat.
+- Engineering must stage `public-form-submit` and its INSERT-revocation migration, verify valid/expired/replayed/invalid tokens and direct REST denial, then coordinate frontend delivery. Missing configuration deliberately leaves forms unavailable with a clear message and the contact email available. No insecure arithmetic/direct-insert fallback remains in the new source. Hosted enforcement remains pending until delivery.
+- Supply initial communities/cities, real upcoming events and named pilot hosts; assign the host reviewer/moderation/support owners. No fabricated event schedule is approved by this direction.
+
 ## 2 October source delivery authorization
 
 After the local finalization review, the owner explicitly requested **commit and push of all completed work to GitHub**. This supersedes the earlier local-only instruction for source delivery. The earlier local checkpoints below retain their pre-publication meaning. Hosted migrations, provider/payment activation and full-production approval remain separate gates. GitHub-triggered web delivery must be checked independently; no new trusted vouch/quiz RPC exists hosted until the three reviewed forward migrations are delivered. The client presents a temporary-unavailable state when a required RPC is absent and never restores browser-trusted issuance/grading as a fallback. Source commits and final verification are recorded in `../release-evidence/local-2026-10-02/verification.md` and Git history.

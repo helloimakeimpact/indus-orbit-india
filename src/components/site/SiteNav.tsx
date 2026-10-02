@@ -2,7 +2,6 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
   Menu,
-  X,
   LogOut,
   User as UserIcon,
   LayoutDashboard,
@@ -20,6 +19,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 const links = [
   { to: "/about", label: "About" },
@@ -73,7 +81,7 @@ function UserMenu() {
       <DropdownMenuTrigger asChild>
         <button
           aria-label="Account menu"
-          className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[var(--indigo-night)] text-sm font-semibold text-[var(--parchment)] hover:bg-[var(--saffron)] hover:text-[var(--indigo-night)] transition"
+          className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-[var(--indigo-night)] text-sm font-semibold text-[var(--parchment)] hover:bg-[var(--saffron)] hover:text-[var(--indigo-night)] transition"
         >
           {initial}
         </button>
@@ -115,91 +123,113 @@ export function SiteNav({ tone = "light" }: { tone?: "light" | "dark" }) {
   const [open, setOpen] = useState(false);
   const { user } = useAuth();
   const dark = tone === "dark";
+  useEffect(() => {
+    const desktop = window.matchMedia("(min-width: 1024px)");
+    const closeOnDesktop = () => {
+      if (desktop.matches) setOpen(false);
+    };
+    desktop.addEventListener("change", closeOnDesktop);
+    return () => desktop.removeEventListener("change", closeOnDesktop);
+  }, []);
   return (
-    <header className="fixed inset-x-0 top-4 z-50 px-4">
-      <div
-        className={cn(
-          "mx-auto flex max-w-6xl items-center justify-between rounded-full px-4 py-2.5 shadow-lg",
-          dark ? "glass-dark" : "glass-card",
-        )}
-      >
-        <Link to="/" className="flex items-center gap-2.5">
-          <img
-            src={logo}
-            alt="Indus Orbit"
-            width={48}
-            height={48}
-            className="pixelated h-12 w-12"
-          />
-          <span className="font-display text-lg font-medium tracking-tight">Indus Orbit</span>
-        </Link>
-
-        <nav className="hidden lg:flex items-center gap-1">
-          {links.map((l) => (
-            <Link
-              key={l.to}
-              to={l.to}
-              className="rounded-full px-3 py-1.5 text-sm font-medium opacity-80 transition hover:bg-foreground/5 hover:opacity-100"
-              activeProps={{
-                className:
-                  "rounded-full px-3 py-1.5 text-sm font-semibold opacity-100 bg-foreground/5",
-              }}
-            >
-              {l.label}
-            </Link>
-          ))}
-        </nav>
-
-        <div className="flex items-center gap-3">
-          <ClockChip dark={dark} />
-          {user ? (
-            <UserMenu />
-          ) : (
-            <Link
-              to="/auth"
-              search={{ tab: "signup", intent: "community", next: "/app" }}
-              className="hidden sm:inline-flex items-center rounded-full bg-[var(--indigo-night)] px-4 py-2 text-xs font-semibold uppercase tracking-wider text-[var(--parchment)] transition hover:bg-[var(--saffron)] hover:text-[var(--indigo-night)]"
-            >
-              Join the Orbit
-            </Link>
+    <Sheet open={open} onOpenChange={setOpen}>
+      <header className="fixed inset-x-0 top-4 z-50 px-4">
+        <div
+          className={cn(
+            "mx-auto flex max-w-6xl items-center justify-between rounded-full px-3 py-2.5 shadow-lg sm:px-4",
+            dark ? "glass-dark" : "glass-card",
           )}
-          <button
-            type="button"
-            aria-label="Toggle menu"
-            className="lg:hidden rounded-full p-2 hover:bg-foreground/10"
-            onClick={() => setOpen((v) => !v)}
-          >
-            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
-        </div>
-      </div>
+        >
+          <Link to="/" className="flex items-center gap-2.5">
+            <img
+              src={logo}
+              alt="Indus Orbit"
+              width={48}
+              height={48}
+              className="pixelated h-9 w-9 sm:h-12 sm:w-12"
+            />
+            <span className="font-display text-base font-medium tracking-tight sm:text-lg">
+              Indus Orbit
+            </span>
+          </Link>
 
-      {open && (
-        <div className="lg:hidden mx-auto mt-2 max-w-6xl rounded-3xl glass-card p-3 shadow-xl">
-          <nav className="flex flex-col">
+          <nav aria-label="Primary" className="hidden lg:flex items-center gap-1">
             {links.map((l) => (
               <Link
                 key={l.to}
                 to={l.to}
-                onClick={() => setOpen(false)}
-                className="rounded-2xl px-4 py-3 text-sm font-medium hover:bg-foreground/5"
+                className="rounded-full px-3 py-1.5 text-sm font-medium opacity-80 transition hover:bg-foreground/5 hover:opacity-100"
+                activeProps={{
+                  "aria-current": "page",
+                  className:
+                    "rounded-full px-3 py-1.5 text-sm font-semibold opacity-100 bg-foreground/5",
+                }}
               >
                 {l.label}
               </Link>
             ))}
-            {!user && (
+          </nav>
+
+          <div className="flex items-center gap-2 sm:gap-3">
+            <ClockChip dark={dark} />
+            {user ? (
+              <UserMenu />
+            ) : (
               <Link
                 to="/auth"
                 search={{ tab: "signup", intent: "community", next: "/app" }}
-                onClick={() => setOpen(false)}
-                className="mt-1 rounded-2xl bg-[var(--indigo-night)] px-4 py-3 text-center text-sm font-semibold text-[var(--parchment)]"
+                className="hidden sm:inline-flex items-center rounded-full bg-[var(--indigo-night)] px-4 py-2 text-xs font-semibold uppercase tracking-wider text-[var(--parchment)] transition hover:bg-[var(--saffron)] hover:text-[var(--indigo-night)]"
               >
                 Join the Orbit
               </Link>
             )}
-          </nav>
+            <SheetTrigger asChild>
+              <button
+                type="button"
+                aria-label="Open navigation"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full hover:bg-foreground/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:hidden"
+              >
+                <Menu className="h-5 w-5" />
+              </button>
+            </SheetTrigger>
+          </div>
         </div>
-      )}
-    </header>
+      </header>
+      <SheetContent
+        side="right"
+        className="flex w-[calc(100vw-1rem)] max-w-sm flex-col gap-0 bg-card p-5"
+      >
+        <SheetHeader className="shrink-0 pr-10 text-left">
+          <SheetTitle className="font-display text-xl">Explore Indus Orbit</SheetTitle>
+          <SheetDescription>People, ideas and intelligence, built together.</SheetDescription>
+        </SheetHeader>
+        <nav
+          aria-label="Mobile primary"
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain py-4"
+        >
+          {links.map((link) => (
+            <Link
+              key={link.to}
+              to={link.to}
+              onClick={() => setOpen(false)}
+              className="flex min-h-11 items-center rounded-xl px-3 py-3 text-sm font-medium transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+              activeProps={{ "aria-current": "page", className: "bg-muted font-semibold" }}
+            >
+              {link.label}
+            </Link>
+          ))}
+        </nav>
+        {!user && (
+          <Link
+            to="/auth"
+            search={{ tab: "signup", intent: "community", next: "/app" }}
+            onClick={() => setOpen(false)}
+            className="flex min-h-11 shrink-0 items-center justify-center rounded-full bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            Join the Orbit
+          </Link>
+        )}
+      </SheetContent>
+    </Sheet>
   );
 }

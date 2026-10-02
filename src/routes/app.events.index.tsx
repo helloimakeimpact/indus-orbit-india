@@ -215,12 +215,9 @@ function EventsPage() {
                     </div>
 
                     <div className="mt-4 md:mt-0 flex-shrink-0">
-                      <Button
-                        variant="outline"
-                        className="opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
+                      <span className="inline-flex min-h-11 items-center rounded-xl border border-border px-4 text-sm font-medium">
                         View details
-                      </Button>
+                      </span>
                     </div>
                   </article>
                 </Link>

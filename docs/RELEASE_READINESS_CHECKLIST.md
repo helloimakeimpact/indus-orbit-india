@@ -6,6 +6,10 @@ Release owner: unassigned
 Production target: not scheduled  
 Source plan: `MASTER_IMPLEMENTATION_AND_RELEASE_PLAN.md`
 
+## Current follow-up scope — 2 October
+
+The current source adds a fourth forward migration, `20261002180809_require_verified_public_form_submissions.sql`, bringing source to 122 migration files. The preceding 121-migration/883-assertion record remains the earlier verified checkpoint. The new hCaptcha INSERT boundary has separate verification; the full current replay gate must pass before release. Hosted has not received any of these four forward changes. See `PUBLIC_FORMS_HCAPTCHA_RUNBOOK.md` in the canonical system record. The owner also approved an events-focused Community direction, approved member hosts/new-host review, public discovery/member registration and free native events first, with Razorpay later; see `COMMUNITY_EVENTS_DIRECTION_AND_LUMA_ANALYSIS.md`. Event delivery remains a Planned workstream with Partial current foundations.
+
 ## Source publication outcome
 
 The owner-authorized source delivery is complete for member `ca1c22b` and admin `20b5940`; Quality, Database quality and Admin quality passed. The live public homepage/Brand now show the approved line and retained original art. `release-evidence/local-2026-10-02/publication.md` records exact commits, CI and live observations. The local checkpoint below predates this publication. No full-production gate is promoted solely by source publication or the public-brand check.

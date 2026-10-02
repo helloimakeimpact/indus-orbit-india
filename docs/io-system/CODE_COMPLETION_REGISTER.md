@@ -4,6 +4,10 @@ Status: whole-product code and release filing updated 2 October 2026. See `PHASE
 
 This is the canonical answer to “what is done, what needs improvement, and what is left?” It separates checked-in/local evidence from the hosted demo and from production. A migration, secret, provider row or UI preview is not a release by itself.
 
+## Current follow-up scope — 2 October
+
+The current source adds a fourth forward migration, `20261002180809_require_verified_public_form_submissions.sql`, bringing source to 122 migration files. The preceding 121-migration/883-assertion record remains the earlier verified checkpoint. The new hCaptcha INSERT boundary has separate verification; the full current replay gate must pass before release. Hosted has not received any of these four forward changes. See `PUBLIC_FORMS_HCAPTCHA_RUNBOOK.md` in the canonical system record. The owner also approved an events-focused Community direction, approved member hosts/new-host review, public discovery/member registration and free native events first, with Razorpay later; see `COMMUNITY_EVENTS_DIRECTION_AND_LUMA_ANALYSIS.md`. Event delivery remains a Planned workstream with Partial current foundations.
+
 ## 2 October source delivery authorization
 
 After the local finalization review, the owner explicitly requested **commit and push of all completed work to GitHub**. This supersedes the earlier local-only instruction for source delivery. The earlier local checkpoints below retain their pre-publication meaning. Hosted migrations, provider/payment activation and full-production approval remain separate gates. GitHub-triggered web delivery must be checked independently; no new trusted vouch/quiz RPC exists hosted until the three reviewed forward migrations are delivered. The client presents a temporary-unavailable state when a required RPC is absent and never restores browser-trusted issuance/grading as a fallback. Source commits and final verification are recorded in `../release-evidence/local-2026-10-02/verification.md` and Git history.
@@ -11,6 +15,16 @@ After the local finalization review, the owner explicitly requested **commit and
 ## 2 October completed source publication
 
 Member code is published at `ca1c22b3e9b34beaa6fdd5eb64d9515d91067db2`; its Quality and Database quality workflows passed. Admin is published at `20b594081394ecbfec41e9a053aaf7ea3f243ce1` with successful Admin quality; its tree exactly matches local `b46a815` while preserving the existing remote history. The live homepage and Brand page show the approved short line and original art with no retired line/neon nodes. This public-brand slice is Released. Genuine signed-in/operator evidence, the three hosted forward migrations, workers, provider/payments and full launch remain Partial. Exact links and remaining work: `../release-evidence/local-2026-10-02/publication.md`. Earlier local-only entries below describe the checkpoint before the subsequent source-delivery authorization.
+
+## Continued public UI hardening — 2 October
+
+**Verified locally:** public skip/main landmarks and active navigation; a named scrollable mobile drawer with focus trapping, Escape/restoration and desktop-breakpoint closure; 44px drawer controls; and an in-flow browser-storage acknowledgement that works when persistence is blocked. The former Accept/Decline pill did not control optional processing and is removed. Legacy values remain acknowledgements. Supplier/retention/consent approval and the broader UI acceptance remain Partial; no privacy policy is inferred from this layout change. Four new desktop/mobile browser scenarios passed for 320px short-screen keyboard and storage failure/reload behavior. The first failures were test readiness/accessibility-query issues, repaired without weakening the focus behavior. This continues the owner-authorized source-publication work.
+
+## Community/events and hCaptcha follow-up — 2 October
+
+The owner confirmed an events-focused Community direction, approved member hosts with review for new hosts, and public discovery/member registration. Free events are the first release; Razorpay ticketing follows later. `COMMUNITY_EVENTS_DIRECTION_AND_LUMA_ANALYSIS.md` records current-code gaps and the Planned E0–E6 workstream. The company definition, “Intelligence, built together.” and original visual assets remain. Event cards/share receive narrow correctness/accessibility repairs; async event reconciliation remains open.
+
+hCaptcha was selected by the owner. Local implementation now replaces browser-only arithmetic and direct table inserts with a lazy widget, single-use-token reset and server-verifying public Edge Function. Its paired migration removes direct browser INSERT authority while preserving service insertion/admin reads. Payload bounds, fixed sitekey, exact origin allowlist, test-key refusal, outages and storage failures fail closed. Production keys, function/migration rollout, hosted denial/real challenge evidence, rate controls and privacy/supplier review remain separate gates. This local slice passes 178 unit contracts (12 public-form security cases), production build/budgets and 25 browser checks (16 public, 2 visuals, 7 synthetic member/I/O). The handler type boundary and changed-file lint pass. Evidence is in `../release-evidence/community-2026-10-02/verification.md`; real hCaptcha/function and hosted enforcement remain Partial.
 
 ## Completion register
 

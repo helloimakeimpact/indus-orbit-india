@@ -1,0 +1,42 @@
+
+Running 25 tests using 2 workers
+
+(node:55554) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55555) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 [desktop-chromium] › tests/e2e/public-and-visual.spec.ts:11:3 › @public /io-port renders without serious accessibility failures (9.6s)
+  ✓   2 [desktop-chromium] › tests/e2e/public-and-visual.spec.ts:11:3 › @public / renders without serious accessibility failures (9.7s)
+  ✓   3 [desktop-chromium] › tests/e2e/public-and-visual.spec.ts:33:1 › @public brand contact card exposes both safe downloads (4.2s)
+  ✓   4 [desktop-chromium] › tests/e2e/public-and-visual.spec.ts:11:3 › @public /brand renders without serious accessibility failures (7.5s)
+  ✓   5 [desktop-chromium] › tests/e2e/public-and-visual.spec.ts:44:1 › @public homepage keeps its title and actions clear on a small phone (4.1s)
+  ✓   6 [desktop-chromium] › tests/e2e/public-and-visual.spec.ts:68:1 › @visual visiting card layout (5.5s)
+  ✓   7 [desktop-chromium] › tests/e2e/public-forms.spec.ts:3:1 › @public unconfigured verification keeps forms closed and contact details available (6.8s)
+  ✓   9 [desktop-chromium] › tests/e2e/public-navigation.spec.ts:51:1 › @public storage notice is in flow and works with blocked persistence (4.3s)
+(node:55625) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   8 [desktop-chromium] › tests/e2e/public-navigation.spec.ts:4:1 › @public short-screen navigation traps focus, closes and follows the viewport (15.0s)
+(node:55647) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  10 [mobile-chromium] › tests/e2e/public-and-visual.spec.ts:11:3 › @public / renders without serious accessibility failures (9.5s)
+  ✓  11 [mobile-chromium] › tests/e2e/public-and-visual.spec.ts:11:3 › @public /io-port renders without serious accessibility failures (8.4s)
+  ✓  12 [mobile-chromium] › tests/e2e/public-and-visual.spec.ts:11:3 › @public /brand renders without serious accessibility failures (7.7s)
+  ✓  13 [mobile-chromium] › tests/e2e/public-and-visual.spec.ts:33:1 › @public brand contact card exposes both safe downloads (4.3s)
+  ✓  14 [mobile-chromium] › tests/e2e/public-and-visual.spec.ts:44:1 › @public homepage keeps its title and actions clear on a small phone (3.6s)
+  ✓  16 [mobile-chromium] › tests/e2e/public-forms.spec.ts:3:1 › @public unconfigured verification keeps forms closed and contact details available (4.7s)
+  ✓  15 [mobile-chromium] › tests/e2e/public-and-visual.spec.ts:68:1 › @visual visiting card layout (7.1s)
+  ✓  18 [mobile-chromium] › tests/e2e/public-navigation.spec.ts:51:1 › @public storage notice is in flow and works with blocked persistence (7.5s)
+(node:55755) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  17 [mobile-chromium] › tests/e2e/public-navigation.spec.ts:4:1 › @public short-screen navigation traps focus, closes and follows the viewport (25.3s)
+  ✓  19 [member-ui-regression] › tests/e2e/member-continuity.spec.ts:5:1 › @member-ui member navigation preserves the shared workspace shell (8.1s)
+(node:55775) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  20 [member-ui-regression] › tests/e2e/member-continuity.spec.ts:54:1 › @member-ui tab return and same-account auth events preserve an unsent draft (10.8s)
+  ✓  22 [member-ui-regression] › tests/e2e/member-continuity.spec.ts:91:1 › @member-ui membership revocation and sign-out still close the member boundary (6.2s)
+  ✓  21 [member-ui-regression] › tests/e2e/member-continuity.spec.ts:29:1 › @member-ui narrow-screen navigation is named and closes after choosing a destination (6.4s)
+  ✓  24 [member-ui-regression] › tests/e2e/member-continuity.spec.ts:142:1 › @member-ui initial membership verification failure fails closed and can recover (3.8s)
+  ✓  23 [member-ui-regression] › tests/e2e/member-continuity.spec.ts:108:1 › @member-ui account changes clear drafts and obsolete access cannot revive a prior account (9.9s)
+  ✓  25 [member-ui-regression] › tests/e2e/member-continuity.spec.ts:158:1 › @member-ui I/O-only access has named keyboard-safe drawers and canonical navigation (18.8s)
+
+  25 passed (2.3m)

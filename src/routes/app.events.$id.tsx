@@ -277,9 +277,15 @@ function EventDetailPage() {
               <Button
                 variant="outline"
                 className="w-full"
-                onClick={() => {
-                  navigator.clipboard.writeText(window.location.href);
-                  toast.success("Event link copied to clipboard");
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(window.location.href);
+                    toast.success("Event link copied to clipboard");
+                  } catch {
+                    toast.error(
+                      "The link could not be copied. You can copy the address from your browser.",
+                    );
+                  }
                 }}
               >
                 <Share2 className="mr-2 h-4 w-4" /> Share Event

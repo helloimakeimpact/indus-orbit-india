@@ -49,7 +49,7 @@ test("@public homepage keeps its title and actions clear on a small phone", asyn
   const title = await page.getByRole("heading", { level: 1 }).boundingBox();
   const card = await page.locator(".glass-card-soft").first().boundingBox();
   const action = await page.getByRole("link", { name: "Get to know us" }).boundingBox();
-  const notice = await page.getByRole("button", { name: "Accept" }).locator("..").boundingBox();
+  const notice = await page.getByRole("region", { name: "On this device" }).boundingBox();
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
   );
