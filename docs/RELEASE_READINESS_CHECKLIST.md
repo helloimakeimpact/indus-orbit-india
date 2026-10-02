@@ -6,6 +6,10 @@ Release owner: unassigned
 Production target: not scheduled  
 Source plan: `MASTER_IMPLEMENTATION_AND_RELEASE_PLAN.md`
 
+## Source publication outcome
+
+The owner-authorized source delivery is complete for member `ca1c22b` and admin `20b5940`; Quality, Database quality and Admin quality passed. The live public homepage/Brand now show the approved line and retained original art. `release-evidence/local-2026-10-02/publication.md` records exact commits, CI and live observations. The local checkpoint below predates this publication. No full-production gate is promoted solely by source publication or the public-brand check.
+
 ## Current 2 October 2026 release checkpoint
 
 | Boundary                                    | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                | Decision                                                                                        |

@@ -8,6 +8,10 @@ This is the canonical answer to “what is done, what needs improvement, and wha
 
 After the local finalization review, the owner explicitly requested **commit and push of all completed work to GitHub**. This supersedes the earlier local-only instruction for source delivery. The earlier local checkpoints below retain their pre-publication meaning. Hosted migrations, provider/payment activation and full-production approval remain separate gates. GitHub-triggered web delivery must be checked independently; no new trusted vouch/quiz RPC exists hosted until the three reviewed forward migrations are delivered. The client presents a temporary-unavailable state when a required RPC is absent and never restores browser-trusted issuance/grading as a fallback. Source commits and final verification are recorded in `../release-evidence/local-2026-10-02/verification.md` and Git history.
 
+## 2 October completed source publication
+
+Member code is published at `ca1c22b3e9b34beaa6fdd5eb64d9515d91067db2`; its Quality and Database quality workflows passed. Admin is published at `20b594081394ecbfec41e9a053aaf7ea3f243ce1` with successful Admin quality; its tree exactly matches local `b46a815` while preserving the existing remote history. The live homepage and Brand page show the approved short line and original art with no retired line/neon nodes. This public-brand slice is Released. Genuine signed-in/operator evidence, the three hosted forward migrations, workers, provider/payments and full launch remain Partial. Exact links and remaining work: `../release-evidence/local-2026-10-02/publication.md`. Earlier local-only entries below describe the checkpoint before the subsequent source-delivery authorization.
+
 ## Completion register
 
 ### 2 October 2026 code finalization — local working trees

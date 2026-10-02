@@ -6,6 +6,10 @@ Status: **Partial**, 2 October 2026. This is the owner handoff within the canoni
 
 After the local finalization review, the owner explicitly requested **commit and push of all completed work to GitHub**. This supersedes the earlier local-only instruction for source delivery. The earlier local checkpoints below retain their pre-publication meaning. Hosted migrations, provider/payment activation and full-production approval remain separate gates. GitHub-triggered web delivery must be checked independently; no new trusted vouch/quiz RPC exists hosted until the three reviewed forward migrations are delivered. The client presents a temporary-unavailable state when a required RPC is absent and never restores browser-trusted issuance/grading as a fallback. Source commits and final verification are recorded in `../release-evidence/local-2026-10-02/verification.md` and Git history.
 
+## Source publication completed
+
+The approved code/docs are now committed and published to both GitHub repositories. Member Quality, Database quality and Admin quality passed; the live public homepage/Brand short line and retained artwork were verified. Hosted database changes and whole-product launch remain pending. The delivery report and exact commit/CI links are in `../release-evidence/local-2026-10-02/publication.md`. The worksheet below covers the inputs still needed from the owner; source publication does not need a second approval.
+
 ## Current boundary
 
 - The launch target is full public production. The member GitHub baseline is `6607d4039d766dc077153dd933802da02d28dba7`. The owner has now authorized source commit/push. This evidence was gathered before publication; hosted migrations and release acceptance remain pending.
