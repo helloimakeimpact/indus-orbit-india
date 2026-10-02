@@ -47,5 +47,15 @@ export default defineConfig({
         storageState: process.env.PLAYWRIGHT_MEMBER_STORAGE_STATE,
       },
     },
+    {
+      name: "member-ui-regression",
+      grep: /@member-ui/,
+      timeout: 90_000,
+      use: {
+        ...devices["Desktop Chrome"],
+        serviceWorkers: "block",
+        navigationTimeout: 60_000,
+      },
+    },
   ],
 });

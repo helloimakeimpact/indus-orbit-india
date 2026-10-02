@@ -1,0 +1,242 @@
+[
+  {
+    "repository": "member",
+    "path": ".github/workflows/database.yml",
+    "sha256": "b7a3967a99f9ee1f9834cb8abec14b6106630b7ac2df7892093a89d0e19d0d26"
+  },
+  {
+    "repository": "member",
+    "path": ".github/workflows/hosted-schema.yml",
+    "sha256": "9e7ed9d978de606927cd843d1fd13f076c3852629de690be48b6465e04f8a08b"
+  },
+  {
+    "repository": "member",
+    "path": ".github/workflows/quality.yml",
+    "sha256": "f50cc1ed927660573b259fb94f43df3fe234f8def945f1f0e8e6a1dbe0b033db"
+  },
+  {
+    "repository": "member",
+    "path": "package.json",
+    "sha256": "e04fa4e01f91bbe4f5695dade763fb12abf489b35cb7742e7e220ab3dbbdc48d"
+  },
+  {
+    "repository": "member",
+    "path": "playwright.config.ts",
+    "sha256": "8df982a21587af037ea3adf57afd331654f5cc5e2402c7bf55558dfe784f17e1"
+  },
+  {
+    "repository": "member",
+    "path": "scripts/supabase/check-generated-types.mjs",
+    "sha256": "ff1d513a66d91eb27d7e519eb243b591971930c1d02e4a292a1de4f183341e32"
+  },
+  {
+    "repository": "member",
+    "path": "scripts/supabase/generated-type-contract.mjs",
+    "sha256": "c59847dd097a97d121b12159c640ba3ebc32b5040913d62ca4b28c8000162574"
+  },
+  {
+    "repository": "member",
+    "path": "scripts/supabase/generated-type-contract.test.mjs",
+    "sha256": "62ee64ec50763ac8af1fe2359069ddec3db824b5e4399baf3a3d5cd3228ecb0f"
+  },
+  {
+    "repository": "member",
+    "path": "scripts/supabase/prepare-alias-safe-io-release.sh",
+    "sha256": "1dcbb1be41d2cde49cbe78ea68b34692f40e23d3b2f81785ab15fe3eefc255be"
+  },
+  {
+    "repository": "member",
+    "path": "scripts/supabase/replay-type-boundary.json",
+    "sha256": "2047405127295f7a542bcecff0379636199b1fa7eed71d4f3193ac59c2a28f44"
+  },
+  {
+    "repository": "member",
+    "path": "src/components/app/AppShell.tsx",
+    "sha256": "21118d328042457bcc23315a0072320555e7c568e60539922fa30c1318b9a382"
+  },
+  {
+    "repository": "member",
+    "path": "src/components/app/AppSidebar.tsx",
+    "sha256": "66657365d0f51b6f73223f3215e7098c6bfe45caf2c314736dabe4b865a089b1"
+  },
+  {
+    "repository": "member",
+    "path": "src/components/site/SiteFooter.tsx",
+    "sha256": "7a6ca46ab54494fed07e5c23af61b0126eea94e409f8aed23fe3d1e27dd904d9"
+  },
+  {
+    "repository": "member",
+    "path": "src/contexts/AuthContext.tsx",
+    "sha256": "2500d42875aa0e62312a0e454d6bece197d7afb3c977c1942302ba38792f1018"
+  },
+  {
+    "repository": "member",
+    "path": "src/features/io/IoProductShell.tsx",
+    "sha256": "d42814addd66a6e8bbcea735093f9be937ba09deb57ba244067dc2f769087fa4"
+  },
+  {
+    "repository": "member",
+    "path": "src/features/io/IoWorkspaceShell.tsx",
+    "sha256": "9382a480f28e9577ab59cd2df295dd29a81f7e820974a9cf0265740f59e9dad1"
+  },
+  {
+    "repository": "member",
+    "path": "src/features/orbit/OrbitStore.tsx",
+    "sha256": "c0ccbbe7ca1a882d368ce7ca2ee190fbef8c9497fd73123354e502a4ae99cc65"
+  },
+  {
+    "repository": "member",
+    "path": "src/integrations/supabase/types.ts",
+    "sha256": "3a16086d74c9aedd516fb6448506069deb87d15991094b324f131692059b9a40"
+  },
+  {
+    "repository": "member",
+    "path": "src/routes/app.tsx",
+    "sha256": "9de4fde2d59348a29429f4b93032b7aa76bd4fd16f9dd6c845719b0544d2e477"
+  },
+  {
+    "repository": "member",
+    "path": "src/routes/app.vouch.tsx",
+    "sha256": "dcdf40346d1bb10ce5bc35ac2c5759ff1ced85ecd871ae025972930c591ce786"
+  },
+  {
+    "repository": "member",
+    "path": "src/routes/brand.tsx",
+    "sha256": "9d4962980c2dcf98c494d2f2f3ba9aab0ca3a50b6cd22e95ef21986bb9b17331"
+  },
+  {
+    "repository": "member",
+    "path": "src/routes/contact.tsx",
+    "sha256": "aad64a64ddbaa848e44b5a5dfbcc430f6d617e534c03a91d6b9222716935e8b0"
+  },
+  {
+    "repository": "member",
+    "path": "src/routes/index.tsx",
+    "sha256": "e752e56779bec9275926a17c1fabcb1178c98ac814f228c922c5c5ab3ab66f32"
+  },
+  {
+    "repository": "member",
+    "path": "src/server/education.functions.ts",
+    "sha256": "a68fbc48cddf775d258a46c615d85f4e431acb908dda469bcaf725832e8517d6"
+  },
+  {
+    "repository": "member",
+    "path": "src/server/vouch.functions.ts",
+    "sha256": "ae55a71109bc53cde144624dc5e469884bbea77b0352cc0691068e7f03459e87"
+  },
+  {
+    "repository": "member",
+    "path": "src/styles.css",
+    "sha256": "477942b507ab6229bd215d10eae8204ebd7d5083a249612420228481b381a32b"
+  },
+  {
+    "repository": "member",
+    "path": "supabase/migrations/20261002110000_reconcile_proposal_identity_and_retire_legacy_member_removal.sql",
+    "sha256": "8931255b42a6b1f2acfff8153efe2ca2e507ed84860a05e5273942c21aeb67b5"
+  },
+  {
+    "repository": "member",
+    "path": "supabase/migrations/20261002120000_trust_vouch_issuance_and_education_grading.sql",
+    "sha256": "738d2cb6c4cb89609e04aeecf9d36c37839c4cfdfbfedd15926578983b90c94b"
+  },
+  {
+    "repository": "member",
+    "path": "supabase/migrations/20261002130000_scope_private_education_files.sql",
+    "sha256": "64362a395313b7870fa0c6c19a98691ef1f10817b52f0334daf21e48b5983741"
+  },
+  {
+    "repository": "member",
+    "path": "supabase/tests/database/anonymous_definer_acl.test.sql",
+    "sha256": "0490d40c26e90a37990c6d6db11f61d58ee3885a0187298018b233a188773e64"
+  },
+  {
+    "repository": "member",
+    "path": "supabase/tests/database/education_storage_visibility.test.sql",
+    "sha256": "0f2e9cb78430de1c91b0d2a04dfd6055cbe467aab0d8cf74e1b3c725a87c35a3"
+  },
+  {
+    "repository": "member",
+    "path": "supabase/tests/database/proposal_identity_and_legacy_membership.test.sql",
+    "sha256": "5b98494a2482afc11db513b74dd3725f177f16cb6bc1c693ec1776ce79dbd728"
+  },
+  {
+    "repository": "member",
+    "path": "supabase/tests/database/trusted_vouch_and_quiz.test.sql",
+    "sha256": "27aa74d72493ebbf2773805784120e7c869be8ba538d526238d15da62e6a5168"
+  },
+  {
+    "repository": "member",
+    "path": "tests/e2e/README.md",
+    "sha256": "6ca902f09a190feef143a10ec1e95d1d02423334c8ac321bb952fa4c739879e4"
+  },
+  {
+    "repository": "member",
+    "path": "tests/e2e/__screenshots__/public-and-visual.spec.ts/desktop-chromium/visiting-card.png",
+    "sha256": "5db2d511fe060410e1fbd8607463e51aaf9ab29ceb2a2acc572734c31da51d94"
+  },
+  {
+    "repository": "member",
+    "path": "tests/e2e/__screenshots__/public-and-visual.spec.ts/mobile-chromium/visiting-card.png",
+    "sha256": "476c91b93c33be16c13326eea7fe521beabfb8d77458693a6bb19a26676522ed"
+  },
+  {
+    "repository": "member",
+    "path": "tests/e2e/authenticated-member.spec.ts",
+    "sha256": "49e42d26ef42f6b032111124e7d3750c73aedc66450e09996d37febe774664ba"
+  },
+  {
+    "repository": "member",
+    "path": "tests/e2e/fixtures/member-browser.ts",
+    "sha256": "a740a6eb457845623902955bea9a8da1a60d94cee12a2f3cfca7deaf36102a68"
+  },
+  {
+    "repository": "member",
+    "path": "tests/e2e/member-continuity.spec.ts",
+    "sha256": "8f4981c4045d52b3327aed5f5bb122ea43b713a53586151ed56d71e794ca340b"
+  },
+  {
+    "repository": "member",
+    "path": "tests/e2e/public-and-visual.spec.ts",
+    "sha256": "1c8a5af2522e92229afc25686b91ec2d3fd928ff82375e8d0648e695c17840f1"
+  },
+  {
+    "repository": "admin",
+    "path": ".github/workflows/quality.yml",
+    "sha256": "658c37621c4c43c242893aaa33a3db8305a8bf7fd57fe03061e7c4d4a4060712"
+  },
+  {
+    "repository": "admin",
+    "path": "package-lock.json",
+    "sha256": "393bf3fe36f180f0caec18bb765aa5d2fa8f9de8582e4537018f9f0c3bc60106"
+  },
+  {
+    "repository": "admin",
+    "path": "package.json",
+    "sha256": "3fe56b389a772c98805c91cfe38a3134a3764b160d04ba35dec13aa559021656"
+  },
+  {
+    "repository": "admin",
+    "path": "playwright.config.ts",
+    "sha256": "98c47c7576aebd296251861a488062b8979706e3c573db8064bfad3223f6ac7d"
+  },
+  {
+    "repository": "admin",
+    "path": "src/App.tsx",
+    "sha256": "5806ed58321c38edba5b25cfafbee1bda012dd89c686b5915774336f45b4b48b"
+  },
+  {
+    "repository": "admin",
+    "path": "src/auth.tsx",
+    "sha256": "f3e1df4786c0d38609725347c152d916501066118ddd77583488317601b78d84"
+  },
+  {
+    "repository": "admin",
+    "path": "tests/e2e/README.md",
+    "sha256": "53facfb93c06590142bd54aed6d74963237e05fa5791c664d57ace124ab2027c"
+  },
+  {
+    "repository": "admin",
+    "path": "tests/e2e/admin-session.spec.ts",
+    "sha256": "59c2206d831713c86def874f1727809a87a38929e245a8f66e5f9c823b584ebb"
+  }
+]

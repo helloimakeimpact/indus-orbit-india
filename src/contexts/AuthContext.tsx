@@ -61,7 +61,9 @@ async function loadAccessState(userId: string): Promise<AccessState> {
     supabase.rpc("my_lead_summary"),
   ]);
 
-  if (adminAccessRes.error || profileRes.error || leadRes.error) return emptyAccessState;
+  if (adminAccessRes.error || profileRes.error || leadRes.error) {
+    throw new Error("Unable to refresh account access");
+  }
   const adminAccess =
     adminAccessRes.data &&
     typeof adminAccessRes.data === "object" &&
@@ -105,9 +107,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [userSegment, setUserSegment] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const authenticatedOutboxOwner = useRef<string | null>(null);
+  const activeUserId = useRef<string | null>(null);
 
   useEffect(() => {
     let active = true;
+    let authEventVersion = 0;
+    let accessRefreshVersion = 0;
 
     const applyAccessState = (access: AccessState) => {
       setIsAdmin(access.isAdmin);
@@ -120,13 +125,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUserSegment(access.userSegment);
     };
 
-    const applySession = (newSession: Session | null, deferAccessCheck: boolean) => {
+    const applySession = (
+      newSession: Session | null,
+      deferAccessCheck: boolean,
+      userProfileChanged = false,
+    ) => {
+      if (!active) return;
+      const refreshVersion = ++accessRefreshVersion;
+      const nextUserId = newSession?.user.id ?? null;
+      const sameUser = nextUserId !== null && activeUserId.current === nextUserId;
+      activeUserId.current = nextUserId;
+      const isCurrentRefresh = () =>
+        active && activeUserId.current === nextUserId && accessRefreshVersion === refreshVersion;
       authenticatedOutboxOwner.current = transitionConversationOutboxOwner(
         getPrivateSessionStorage(),
         authenticatedOutboxOwner.current,
-        newSession?.user.id ?? null,
+        nextUserId,
       );
       setSession(newSession);
+
+      if (sameUser) {
+        // Token refresh and tab return must not replace an open workspace with its loading gate.
+        if (userProfileChanged && newSession) setUser(newSession.user);
+        const refreshAccess = () => {
+          if (!isCurrentRefresh()) return;
+          void loadAccessState(nextUserId)
+            .then((access) => {
+              if (isCurrentRefresh()) applyAccessState(access);
+            })
+            .catch(() => {
+              // Keep the last known access projection until a later successful refresh.
+            })
+            .finally(() => {
+              if (isCurrentRefresh()) setLoading(false);
+            });
+        };
+        if (deferAccessCheck) setTimeout(refreshAccess, 0);
+        else refreshAccess();
+        return;
+      }
+
       setUser(newSession?.user ?? null);
 
       if (!newSession?.user) {
@@ -138,15 +176,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(true);
       applyAccessState(emptyAccessState);
       const run = () => {
+        if (!isCurrentRefresh()) return;
         loadAccessState(newSession.user.id)
           .then((access) => {
-            if (active) applyAccessState(access);
+            if (isCurrentRefresh()) applyAccessState(access);
           })
           .catch(() => {
-            if (active) applyAccessState(emptyAccessState);
+            if (isCurrentRefresh()) applyAccessState(emptyAccessState);
           })
           .finally(() => {
-            if (active) setLoading(false);
+            if (isCurrentRefresh()) setLoading(false);
           });
       };
 
@@ -160,14 +199,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Set up listener FIRST
     const { data: sub } = supabase.auth.onAuthStateChange((event, newSession) => {
       if (event === "INITIAL_SESSION") return;
-      applySession(newSession, true);
+      authEventVersion += 1;
+      applySession(newSession, true, event === "USER_UPDATED");
     });
 
     // THEN check existing session
     supabase.auth
       .getSession()
       .then(({ data: { session: existing }, error }) => {
-        if (!active) return;
+        if (!active || authEventVersion !== 0) return;
         if (error) {
           applySession(null, false);
           return;
@@ -175,7 +215,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         applySession(existing, false);
       })
       .catch(() => {
-        if (active) applySession(null, false);
+        if (active && authEventVersion === 0) applySession(null, false);
       });
 
     return () => {

@@ -54,6 +54,12 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
         prefs.quietNotifications && "app-quiet-notifications",
       )}
     >
+      <a
+        href="#member-workspace"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded-xl focus:bg-primary focus:px-4 focus:py-3 focus:text-primary-foreground focus:shadow-lg"
+      >
+        Skip to workspace
+      </a>
       <AppSidebar />
       <div className="flex min-h-screen min-w-0 flex-1 flex-col">
         <header className="app-topbar sticky top-0 z-30 flex h-14 items-center justify-between px-3 pl-14 md:h-12 md:pl-3">
@@ -73,7 +79,12 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
             <NotificationSheet />
           </div>
         </header>
-        <main className="min-w-0 flex-1 px-2.5 py-2.5 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:px-3 md:px-3 md:py-3">
+        <main
+          id="member-workspace"
+          aria-label="Member workspace"
+          tabIndex={-1}
+          className="min-w-0 flex-1 px-2.5 py-2.5 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:px-3 md:px-3 md:py-3"
+        >
           {children}
         </main>
       </div>

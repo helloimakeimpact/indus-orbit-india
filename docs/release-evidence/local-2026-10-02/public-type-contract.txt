@@ -1,0 +1,16 @@
+Final fresh replay comparison: exit 0
+Fresh replay matches the browser release contract plus 97 exact, hash-bound held Spaces differences.
+
+Strict read-only hosted comparison: expected exit 1, pending reviewed delivery
+Public schema type drift: 10 unreviewed contract differences.
+  public.Functions.get_managed_education_quiz.Args._lesson_id: public type drift
+  public.Functions.get_managed_education_quiz.Returns: public type drift
+  public.Functions.issue_my_vouch_code.Args: public type drift
+  public.Functions.issue_my_vouch_code.Returns: public type drift
+  public.Functions.submit_my_education_quiz.Args._answers: public type drift
+  public.Functions.submit_my_education_quiz.Args._quiz_id: public type drift
+  public.Functions.submit_my_education_quiz.Returns: public type drift
+  public.Tables.vouch_codes.Insert.code_hash: public type drift
+  public.Tables.vouch_codes.Row.code_hash: public type drift
+  public.Tables.vouch_codes.Update.code_hash?: public type drift
+Review the schema/migration boundary before replacing browser declarations.

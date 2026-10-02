@@ -7,6 +7,8 @@ on:
       - "package.json"
       - "package-lock.json"
       - "supabase/**"
+      - "scripts/supabase/**"
+      - "src/integrations/supabase/types.ts"
   push:
     branches:
       - main
@@ -15,6 +17,8 @@ on:
       - "package.json"
       - "package-lock.json"
       - "supabase/**"
+      - "scripts/supabase/**"
+      - "src/integrations/supabase/types.ts"
 
 permissions:
   contents: read
@@ -48,6 +52,11 @@ jobs:
 
       - name: Replay every migration from an empty database
         run: npx --no-install supabase db reset --local --no-seed
+
+      - name: Generate and verify the exact public replay type boundary
+        run: |
+          npx --no-install supabase gen types --local --schema public > "$RUNNER_TEMP/supabase-replay.types.ts"
+          npm run check:supabase-types -- --generated "$RUNNER_TEMP/supabase-replay.types.ts" --replay-boundary
 
       - name: Run database contract tests
         run: npx --no-install supabase test db --local supabase/tests/database

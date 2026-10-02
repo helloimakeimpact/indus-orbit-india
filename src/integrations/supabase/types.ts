@@ -6122,6 +6122,8 @@ export type Database = {
       };
       vouch_codes: {
         Row: {
+          code_hash: string;
+
           code: string;
           created_at: string;
           expires_at: string;
@@ -6132,6 +6134,8 @@ export type Database = {
           status: string;
         };
         Insert: {
+          code_hash: string;
+
           code: string;
           created_at?: string;
           expires_at: string;
@@ -6142,6 +6146,8 @@ export type Database = {
           status?: string;
         };
         Update: {
+          code_hash?: string;
+
           code?: string;
           created_at?: string;
           expires_at?: string;
@@ -6406,6 +6412,16 @@ export type Database = {
       };
     };
     Functions: {
+      issue_my_vouch_code: { Args: never; Returns: Json };
+      submit_my_education_quiz: {
+        Args: { _answers: Json; _quiz_id: string };
+        Returns: Json;
+      };
+      get_managed_education_quiz: {
+        Args: { _lesson_id: string };
+        Returns: Json;
+      };
+
       admin_account_privacy_request_queue: {
         Args: { _limit?: number; _state?: string };
         Returns: {

@@ -94,6 +94,15 @@ trap cleanup EXIT
 mkdir -p "$release_tmp_dir/supabase/.temp"
 cp "$repo_root/supabase/config.toml" "$release_tmp_dir/supabase/config.toml"
 cp "$repo_root/supabase/.temp/project-ref" "$release_tmp_dir/supabase/.temp/project-ref"
+# Preserve the reviewed linked project's IPv4 pooler discovery when available.
+# Do not print connection metadata or copy credentials/environment files.
+if [[ -f "$repo_root/supabase/.temp/pooler-url" ]]; then
+  cp "$repo_root/supabase/.temp/pooler-url" "$release_tmp_dir/supabase/.temp/pooler-url"
+fi
+
+# Resolve CLI project context inside the release view as well as passing --workdir.
+# This prevents a surrounding checkout/local stack from influencing CLI discovery.
+cd "$release_tmp_dir"
 
 printf 'Fetching the exact hosted migration ledger into: %s\n' "$release_tmp_dir"
 SUPABASE_TELEMETRY_DISABLED=1 "$supabase_bin" migration fetch --linked \

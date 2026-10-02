@@ -1,10 +1,18 @@
 # Wider Indus Orbit platform system record
 
-Status: filing for all systems outside the specialist I/O Port, Terminal and Conversation records, updated 4 September 2026.
+Status: filing for all systems outside the specialist I/O Port, Terminal and Conversation records, updated 2 October 2026.
 
 The Indus Orbit product is broader than I/O. The checked-in application includes public publishing, auth/onboarding, profiles and directory, connections, vouch, mentorship, missions, Chapters, events, education, skills, S.O.D.A., stories, notifications, investor and administration surfaces. The former Loops content product is retired from active source; its rows are retained only as a service-role-readable archive pending an explicit retention decision.
 
 The exact done/partial/left boundary is maintained in `../CODE_COMPLETION_REGISTER.md`. Product-wide implementation order is in `../../MASTER_IMPLEMENTATION_AND_RELEASE_PLAN.md`. `PRODUCT_BOUNDARIES_LOCATION_AND_CONVERSION_PLAN.md` defines the shared-identity split between public Indus Orbit, I/O Port, the opt-in community app and the separate admin application, together with the consent-aware global location and measurement contract.
+
+## 2 October member continuity and design update
+
+The owner identified signed-in member tab return as the affected surface. Local Auth preserves same-account identity and ignores stale session/access results; the Community layout retains its shell across navigation and background membership checks, shows a recoverable refresh warning on outage, and closes access on explicit denial/sign-out. Keyboard skip navigation, active-page semantics and a named 320px mobile drawer are included. Seven synthetic member/I/O browser scenarios cover navigation, account-switch races, fail-closed initial checks and keyboard-safe drawers against the production bundle; real-session expiry/sleep/mobile and hosted permission/Realtime evidence remain. Full local verification passes 166/166 contracts, with 10/10 public and 2/2 card visual checks.
+
+The approved line is **Intelligence, built together.** The finalized visual/interaction specification is `../DESIGN_PHILOSOPHY_AND_UI_PLAN.md`; owner setup and decisions are in `../PRODUCTION_OWNER_ACTIONS.md`. Evidence is in `../../release-evidence/local-2026-10-02/verification.md`. This increment remains local and uncommitted; no source push or deployment occurred.
+
+Three local database forward migrations make vouch issuance/hash storage and quiz grading caller-bound and atomic, deny browser answer-key/score and vouch-ledger writes, align proposal identity/retire physical membership removal, and scope private education files to published references and author-owned upload paths. The isolated source chain passes 883 assertions. They are not applied hosted; upload/scanner, privacy export/purge and real-persona operations remain Partial. See `../../SUPABASE_SCHEMA_RECONCILIATION.md` and `../PRODUCTION_OWNER_ACTIONS.md`.
 
 ## Domain groups
 

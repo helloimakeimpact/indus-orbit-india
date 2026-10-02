@@ -5,9 +5,8 @@ set local search_path = public, extensions;
 
 select plan(24);
 
--- Every hosted function in this list must deny anonymous execution. Two
--- lead-removal RPCs are hosted-history additions that may be absent from a
--- clean recovered replay; the forward migration contains them when present.
+-- Every hosted function in this list must deny anonymous execution. The retired
+-- lead-removal signatures remain present but deny every API role.
 select ok(
   not coalesce(
     has_function_privilege(
@@ -39,7 +38,7 @@ from (
     ,('public.transition_my_mentor_session(uuid,text,text,timestamptz)')
 ) as privileged_functions(signature);
 
--- The seven browser-facing RPCs retain their authenticated contract when the
+-- The five supported browser-facing RPCs retain their authenticated contract when the
 -- function exists in the replayed history.
 select ok(
   pg_catalog.to_regprocedure(signature) is null
@@ -56,10 +55,16 @@ from (
     ('public.lead_approve_event(uuid)'),
     ('public.lead_approve_story(uuid)'),
     ('public.lead_reject_event(uuid,text)'),
-    ('public.lead_reject_story(uuid,text)'),
-    ('public.lead_remove_chapter_member(uuid,uuid)'),
-    ('public.lead_remove_mission_member(uuid,uuid)')
+    ('public.lead_reject_story(uuid,text)')
 ) as authenticated_functions(signature);
+
+select ok(
+  not has_function_privilege('authenticated', pg_catalog.to_regprocedure(signature), 'EXECUTE'),
+  signature || ' is retired for authenticated callers'
+) from (values
+  ('public.lead_remove_chapter_member(uuid,uuid)'),
+  ('public.lead_remove_mission_member(uuid,uuid)')
+) as retired_functions(signature);
 
 select ok(
   not has_function_privilege(

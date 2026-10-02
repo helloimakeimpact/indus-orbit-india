@@ -117,22 +117,15 @@ function ContactPage() {
             <dl className="mt-8 space-y-5 text-sm">
               <div>
                 <dt className="text-xs uppercase tracking-wider text-foreground/50">Email</dt>
-                <dd className="mt-1 font-medium">hello@indusorbit.com</dd>
+                <dd className="mt-1 font-medium">
+                  <a href="mailto:hello@indusorbit.com" className="underline underline-offset-4">
+                    hello@indusorbit.com
+                  </a>
+                </dd>
               </div>
               <div>
                 <dt className="text-xs uppercase tracking-wider text-foreground/50">Cities</dt>
                 <dd className="mt-1 font-medium">Delhi · Bengaluru</dd>
-              </div>
-              <div>
-                <dt className="text-xs uppercase tracking-wider text-foreground/50">Social</dt>
-                <dd className="mt-1 flex gap-3 font-medium">
-                  <a className="hover:text-[var(--saffron)]" href="#">
-                    Twitter
-                  </a>
-                  <a className="hover:text-[var(--saffron)]" href="#">
-                    LinkedIn
-                  </a>
-                </dd>
               </div>
             </dl>
           </div>

@@ -1,6 +1,5 @@
 import { createFileRoute, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { AppShell } from "@/components/app/AppShell";
 import { getMyProductAccess } from "@/features/product/product-access";
@@ -11,28 +10,28 @@ export const Route = createFileRoute("/app")({
 
 function AppLayout() {
   const { user, loading } = useAuth();
+  const userId = user?.id ?? null;
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
-  const [checked, setChecked] = useState(false);
+  const [verifiedUserId, setVerifiedUserId] = useState<string | null>(null);
   const [accessError, setAccessError] = useState<string | null>(null);
   const [accessCheckVersion, setAccessCheckVersion] = useState(0);
+
+  useEffect(() => {
+    const normalizedPath = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
+    if (normalizedPath === "/app/io") {
+      navigate({ to: "/io", replace: true });
+    }
+  }, [navigate, pathname]);
 
   useEffect(() => {
     if (loading) return;
     let active = true;
 
-    const normalizedPath = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
-    if (normalizedPath === "/app/io") {
-      navigate({ to: "/io", replace: true });
-      return () => {
-        active = false;
-      };
-    }
-
     const checkAccess = async () => {
-      setChecked(false);
+      if (!active) return;
       setAccessError(null);
-      if (!user) {
+      if (!userId) {
         navigate({
           to: "/auth",
           search: { tab: "signin", intent: "community", next: "/app" },
@@ -45,14 +44,14 @@ function AppLayout() {
         const access = await getMyProductAccess();
         if (!active) return;
         if (!access.communityAccess) {
+          setVerifiedUserId(null);
           navigate({ to: "/onboarding" });
           return;
         }
-        setChecked(true);
+        setVerifiedUserId(userId);
       } catch {
         if (!active) return;
         const message = "We could not verify access to your member workspace.";
-        toast.error(message);
         setAccessError(message);
       }
     };
@@ -62,9 +61,32 @@ function AppLayout() {
     return () => {
       active = false;
     };
-  }, [user, loading, navigate, pathname, accessCheckVersion]);
+  }, [userId, loading, navigate, accessCheckVersion]);
 
-  if (!loading && user && accessError) {
+  useEffect(() => {
+    if (!userId) return;
+    let refreshTimer: ReturnType<typeof setTimeout> | undefined;
+    const revalidate = () => {
+      if (document.visibilityState !== "visible" || refreshTimer !== undefined) return;
+      refreshTimer = setTimeout(() => {
+        refreshTimer = undefined;
+        setAccessCheckVersion((version) => version + 1);
+      }, 0);
+    };
+    window.addEventListener("focus", revalidate);
+    window.addEventListener("online", revalidate);
+    document.addEventListener("visibilitychange", revalidate);
+    return () => {
+      clearTimeout(refreshTimer);
+      window.removeEventListener("focus", revalidate);
+      window.removeEventListener("online", revalidate);
+      document.removeEventListener("visibilitychange", revalidate);
+    };
+  }, [userId]);
+
+  const hasVerifiedAccess = userId !== null && verifiedUserId === userId;
+
+  if (!loading && userId && !hasVerifiedAccess && accessError) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background p-6">
         <div className="max-w-md rounded-2xl border border-border bg-card p-6 text-center shadow-sm">
@@ -82,7 +104,7 @@ function AppLayout() {
     );
   }
 
-  if (loading || !user || !checked) {
+  if (loading || !userId || !hasVerifiedAccess) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <p className="text-sm text-muted-foreground">Loading your workspace…</p>
@@ -92,6 +114,21 @@ function AppLayout() {
 
   return (
     <AppShell>
+      {accessError && (
+        <div
+          className="mb-3 flex flex-wrap items-center gap-3 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-950"
+          role="status"
+        >
+          <p>We could not refresh workspace access. Your open work is still here.</p>
+          <button
+            type="button"
+            className="font-semibold underline underline-offset-2"
+            onClick={() => setAccessCheckVersion((version) => version + 1)}
+          >
+            Retry access check
+          </button>
+        </div>
+      )}
       <Outlet />
     </AppShell>
   );

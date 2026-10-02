@@ -1,5 +1,28 @@
 import { expect, test } from "@playwright/test";
 
+test("@member-auth Community tab return preserves an unsent story and its shell", async ({
+  context,
+  page,
+}) => {
+  test.skip(!process.env.PLAYWRIGHT_MEMBER_STORAGE_STATE, "Authenticated state is required.");
+  await page.goto("/app/stories");
+  await page.getByRole("button", { name: "Submit Story", exact: true }).click();
+  const shell = await page.locator(".app-ui").elementHandle();
+  const title = page.getByPlaceholder("Story Title...");
+  const draft = page.getByPlaceholder("Write your story here (Markdown is supported)...");
+  await title.fill("Local continuity check — do not submit");
+  await draft.fill("An unsent, in-memory draft for the tab-return check.");
+  const otherTab = await context.newPage();
+  await otherTab.goto("/");
+  await page.bringToFront();
+  await page.evaluate(() => window.dispatchEvent(new Event("focus")));
+  await expect(title).toHaveValue("Local continuity check — do not submit");
+  await expect(draft).toHaveValue("An unsent, in-memory draft for the tab-return check.");
+  expect(await shell!.evaluate((element) => element.isConnected)).toBe(true);
+  await page.getByRole("button", { name: "Cancel", exact: true }).click();
+  await otherTab.close();
+});
+
 test("@member-auth I/O view survives direct navigation and reload", async ({ page }) => {
   test.skip(
     !process.env.PLAYWRIGHT_MEMBER_STORAGE_STATE,
@@ -27,7 +50,7 @@ test("@member-auth I/O navigation changes the canonical view instead of scrollin
     { label: "Evidence", view: "evidence", heading: "Route evidence" },
     { label: "Usage ledger", view: "ledger", heading: "Usage ledger" },
     { label: "Safety", view: "safety", heading: "Safety boundaries" },
-    { label: "Overview", view: "overview", heading: "I/O workspace overview" },
+    { label: "Overview", view: "overview", heading: "Intelligence, routed with purpose." },
   ] as const;
 
   for (const destination of destinations) {

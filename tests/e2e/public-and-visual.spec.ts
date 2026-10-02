@@ -2,12 +2,14 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
 const publicRoutes = [
+  { path: "/", heading: /The General Intelligence.*Company Of India/ },
   { path: "/io-port", heading: "Intelligence has a port of call." },
   { path: "/brand", heading: "The Indus Orbit identity kit" },
 ] as const;
 
 for (const route of publicRoutes) {
   test(`@public ${route.path} renders without serious accessibility failures`, async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto(route.path);
     await expect(page.getByRole("heading", { level: 1, name: route.heading })).toBeVisible();
 
@@ -36,7 +38,31 @@ test("@public brand contact card exposes both safe downloads", async ({ page }) 
   await expect(
     page.getByText("The General Intelligence Company of India", { exact: true }),
   ).toBeVisible();
-  await expect(page.getByText("Made of Many Minds.", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("Intelligence, built together.", { exact: true })).toBeVisible();
+});
+
+test("@public homepage keeps its title and actions clear on a small phone", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 600 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+
+  const title = await page.getByRole("heading", { level: 1 }).boundingBox();
+  const card = await page.locator(".glass-card-soft").first().boundingBox();
+  const action = await page.getByRole("link", { name: "Get to know us" }).boundingBox();
+  const notice = await page.getByRole("button", { name: "Accept" }).locator("..").boundingBox();
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  );
+
+  expect(title).not.toBeNull();
+  expect(card).not.toBeNull();
+  expect(action).not.toBeNull();
+  expect(notice).not.toBeNull();
+  expect(title!.y + title!.height).toBeLessThan(card!.y);
+  expect(action!.y + action!.height <= notice!.y || action!.y >= notice!.y + notice!.height).toBe(
+    true,
+  );
+  expect(overflow).toBeLessThanOrEqual(1);
 });
 
 test("@visual visiting card layout", async ({ page }) => {

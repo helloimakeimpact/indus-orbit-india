@@ -1,0 +1,493 @@
+{
+  "version": 1,
+  "reason": "Exact public type delta for structured Spaces intentionally held out of the hosted release. This is a fresh-replay boundary, never a hosted-drift allowance. Remove or revise with release evidence when that migration is approved.",
+  "migration": "20260830203000_release_orbit_structured_spaces.sql",
+  "sha256": "7c0e7354fcf4403120ed89b05f1ab3bd2a4c10171cd7f285c2e66c4aa3866c00",
+  "differences": [
+    {
+      "path": "public.Functions.create_managed_conversation_room.Args._client_request_id",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Functions.create_managed_conversation_room.Args._context_group_id",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Functions.create_managed_conversation_room.Args._description",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Functions.create_managed_conversation_room.Args._display_name",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Functions.create_managed_conversation_room.Args._posting_policy",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Functions.create_managed_conversation_room.Args._room_type",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Functions.create_managed_conversation_room.Args._space_id",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Functions.create_managed_conversation_room.Args._visibility",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Functions.create_managed_conversation_room.Returns.archived_at",
+      "current": null,
+      "generated": "string | null"
+    },
+    {
+      "path": "public.Functions.create_managed_conversation_room.Returns.client_request_id",
+      "current": null,
+      "generated": "string | null"
+    },
+    {
+      "path": "public.Functions.create_managed_conversation_room.Returns.context_group_id",
+      "current": null,
+      "generated": "string | null"
+    },
+    {
+      "path": "public.Functions.create_managed_conversation_room.Returns.created_at",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Functions.create_managed_conversation_room.Returns.created_by",
+      "current": null,
+      "generated": "string | null"
+    },
+    {
+      "path": "public.Functions.create_managed_conversation_room.Returns.description",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Functions.create_managed_conversation_room.Returns.display_name",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Functions.create_managed_conversation_room.Returns.id",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Functions.create_managed_conversation_room.Returns.position",
+      "current": null,
+      "generated": "number"
+    },
+    {
+      "path": "public.Functions.create_managed_conversation_room.Returns.posting_policy",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Functions.create_managed_conversation_room.Returns.room_type",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Functions.create_managed_conversation_room.Returns.slow_mode_seconds",
+      "current": null,
+      "generated": "number"
+    },
+    {
+      "path": "public.Functions.create_managed_conversation_room.Returns.space_id",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Functions.create_managed_conversation_room.Returns.system_key",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Functions.create_managed_conversation_room.Returns.updated_at",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Functions.create_managed_conversation_room.Returns.visibility",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Functions.create_managed_conversation_room.SetofOptions.from",
+      "current": null,
+      "generated": "\"*\""
+    },
+    {
+      "path": "public.Functions.create_managed_conversation_room.SetofOptions.isOneToOne",
+      "current": null,
+      "generated": "true"
+    },
+    {
+      "path": "public.Functions.create_managed_conversation_room.SetofOptions.isSetofReturn",
+      "current": null,
+      "generated": "false"
+    },
+    {
+      "path": "public.Functions.create_managed_conversation_room.SetofOptions.to",
+      "current": null,
+      "generated": "\"conversation_rooms\""
+    },
+    {
+      "path": "public.Functions.create_my_conversation_board_topic.Args._client_request_id",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Functions.create_my_conversation_board_topic.Args._content",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Functions.create_my_conversation_board_topic.Args._room_id",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Functions.create_my_conversation_board_topic.Args._tags",
+      "current": null,
+      "generated": "string [ ]"
+    },
+    {
+      "path": "public.Functions.create_my_conversation_board_topic.Args._title",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Functions.create_my_conversation_board_topic.Returns",
+      "current": null,
+      "generated": "Json"
+    },
+    {
+      "path": "public.Functions.create_my_conversation_thread.Returns.board_state",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Functions.create_my_conversation_thread.Returns.board_tags",
+      "current": null,
+      "generated": "string [ ]"
+    },
+    {
+      "path": "public.Functions.explain_managed_conversation_room_permission.Args._capability",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Functions.explain_managed_conversation_room_permission.Args._role_id",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Functions.explain_managed_conversation_room_permission.Args._room_id",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Functions.explain_managed_conversation_room_permission.Returns",
+      "current": null,
+      "generated": "Json"
+    },
+    {
+      "path": "public.Functions.list_my_conversation_board_topics.Args._room_id",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Functions.list_my_conversation_board_topics.Returns",
+      "current": null,
+      "generated": "Json"
+    },
+    {
+      "path": "public.Functions.list_my_orbit_saved_items.Args._limit?",
+      "current": null,
+      "generated": "number"
+    },
+    {
+      "path": "public.Functions.list_my_orbit_saved_items.Args._query?",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Functions.list_my_orbit_saved_items.Returns",
+      "current": null,
+      "generated": "Json"
+    },
+    {
+      "path": "public.Functions.reorder_managed_conversation_rooms.Args._client_request_id",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Functions.reorder_managed_conversation_rooms.Args._ordered_room_ids",
+      "current": null,
+      "generated": "string [ ]"
+    },
+    {
+      "path": "public.Functions.reorder_managed_conversation_rooms.Args._space_id",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Functions.reorder_managed_conversation_rooms.Returns",
+      "current": null,
+      "generated": "Json"
+    },
+    {
+      "path": "public.Functions.set_managed_conversation_room_archive.Args._archived",
+      "current": null,
+      "generated": "boolean"
+    },
+    {
+      "path": "public.Functions.set_managed_conversation_room_archive.Args._client_request_id",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Functions.set_managed_conversation_room_archive.Args._reason",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Functions.set_managed_conversation_room_archive.Args._room_id",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Functions.set_managed_conversation_room_archive.Returns",
+      "current": null,
+      "generated": "Json"
+    },
+    {
+      "path": "public.Functions.set_my_conversation_board_topic_state.Args._client_request_id",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Functions.set_my_conversation_board_topic_state.Args._state",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Functions.set_my_conversation_board_topic_state.Args._thread_id",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Functions.set_my_conversation_board_topic_state.Returns",
+      "current": null,
+      "generated": "Json"
+    },
+    {
+      "path": "public.Functions.set_my_orbit_saved_item.Args._note?",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Functions.set_my_orbit_saved_item.Args._object_id",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Functions.set_my_orbit_saved_item.Args._object_type",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Functions.set_my_orbit_saved_item.Args._saved",
+      "current": null,
+      "generated": "boolean"
+    },
+    {
+      "path": "public.Functions.set_my_orbit_saved_item.Returns",
+      "current": null,
+      "generated": "Json"
+    },
+    {
+      "path": "public.Functions.update_managed_conversation_room.Returns.client_request_id",
+      "current": null,
+      "generated": "string | null"
+    },
+    {
+      "path": "public.Functions.update_managed_conversation_room_v2.Returns.client_request_id",
+      "current": null,
+      "generated": "string | null"
+    },
+    {
+      "path": "public.Tables.conversation_rooms.Insert.client_request_id?",
+      "current": null,
+      "generated": "string | null"
+    },
+    {
+      "path": "public.Tables.conversation_rooms.Row.client_request_id",
+      "current": null,
+      "generated": "string | null"
+    },
+    {
+      "path": "public.Tables.conversation_rooms.Update.client_request_id?",
+      "current": null,
+      "generated": "string | null"
+    },
+    {
+      "path": "public.Tables.conversation_space_roles.Insert.parent_role_id?",
+      "current": null,
+      "generated": "string | null"
+    },
+    {
+      "path": "public.Tables.conversation_space_roles.Insert.role_rank?",
+      "current": null,
+      "generated": "number"
+    },
+    {
+      "path": "public.Tables.conversation_space_roles.Relationships",
+      "current": "[ { foreignKeyName : \"conversation_space_roles_space_id_fkey\" columns : [ \"space_id\" ] isOneToOne : false referencedRelation : \"conversation_spaces\" referencedColumns : [ \"id\" ] } ]",
+      "generated": "[ { foreignKeyName : \"conversation_space_roles_parent_fkey\" columns : [ \"space_id\" \"parent_role_id\" ] isOneToOne : false referencedRelation : \"conversation_space_roles\" referencedColumns : [ \"space_id\" \"id\" ] } { foreignKeyName : \"conversation_space_roles_space_id_fkey\" columns : [ \"space_id\" ] isOneToOne : false referencedRelation : \"conversation_spaces\" referencedColumns : [ \"id\" ] } ]"
+    },
+    {
+      "path": "public.Tables.conversation_space_roles.Row.parent_role_id",
+      "current": null,
+      "generated": "string | null"
+    },
+    {
+      "path": "public.Tables.conversation_space_roles.Row.role_rank",
+      "current": null,
+      "generated": "number"
+    },
+    {
+      "path": "public.Tables.conversation_space_roles.Update.parent_role_id?",
+      "current": null,
+      "generated": "string | null"
+    },
+    {
+      "path": "public.Tables.conversation_space_roles.Update.role_rank?",
+      "current": null,
+      "generated": "number"
+    },
+    {
+      "path": "public.Tables.conversation_threads.Insert.board_state?",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Tables.conversation_threads.Insert.board_tags?",
+      "current": null,
+      "generated": "string [ ]"
+    },
+    {
+      "path": "public.Tables.conversation_threads.Row.board_state",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Tables.conversation_threads.Row.board_tags",
+      "current": null,
+      "generated": "string [ ]"
+    },
+    {
+      "path": "public.Tables.conversation_threads.Update.board_state?",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Tables.conversation_threads.Update.board_tags?",
+      "current": null,
+      "generated": "string [ ]"
+    },
+    {
+      "path": "public.Tables.orbit_saved_items.Insert.created_at?",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Tables.orbit_saved_items.Insert.note?",
+      "current": null,
+      "generated": "string | null"
+    },
+    {
+      "path": "public.Tables.orbit_saved_items.Insert.object_id",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Tables.orbit_saved_items.Insert.object_type",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Tables.orbit_saved_items.Insert.user_id",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Tables.orbit_saved_items.Relationships",
+      "current": null,
+      "generated": "[ { foreignKeyName : \"orbit_saved_items_user_id_fkey\" columns : [ \"user_id\" ] isOneToOne : false referencedRelation : \"profiles\" referencedColumns : [ \"user_id\" ] } ]"
+    },
+    {
+      "path": "public.Tables.orbit_saved_items.Row.created_at",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Tables.orbit_saved_items.Row.note",
+      "current": null,
+      "generated": "string | null"
+    },
+    {
+      "path": "public.Tables.orbit_saved_items.Row.object_id",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Tables.orbit_saved_items.Row.object_type",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Tables.orbit_saved_items.Row.user_id",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Tables.orbit_saved_items.Update.created_at?",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Tables.orbit_saved_items.Update.note?",
+      "current": null,
+      "generated": "string | null"
+    },
+    {
+      "path": "public.Tables.orbit_saved_items.Update.object_id?",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Tables.orbit_saved_items.Update.object_type?",
+      "current": null,
+      "generated": "string"
+    },
+    {
+      "path": "public.Tables.orbit_saved_items.Update.user_id?",
+      "current": null,
+      "generated": "string"
+    }
+  ]
+}

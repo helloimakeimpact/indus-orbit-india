@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { isMissingSchemaContract } from "@/integrations/supabase/schema-compat";
 import type { Database } from "@/integrations/supabase/types";
 
 type CourseRow = Database["public"]["Tables"]["courses"]["Row"];
@@ -217,37 +218,27 @@ export async function unmarkLessonComplete(lessonId: string) {
 
 // answers: { [questionId]: optionId }
 export async function submitQuiz(quizId: string, answers: Record<string, string>) {
-  const { data: userData } = await supabase.auth.getUser();
-  if (!userData.user) throw new Error("Sign in required");
-
-  const { data: quiz } = await sb.from("quizzes").select("*").eq("id", quizId).maybeSingle();
-  if (!quiz) throw new Error("Quiz not found");
-
-  const { data: questions } = await sb.from("quiz_questions").select("id").eq("quiz_id", quizId);
-  const qIds = (questions ?? []).map((question) => question.id);
-  const { data: options } = await sb
-    .from("quiz_options")
-    .select("id, question_id, is_correct")
-    .in("question_id", qIds);
-
-  const correctByQ = new Map<string, string>();
-  for (const o of options ?? []) if (o.is_correct) correctByQ.set(o.question_id, o.id);
-
-  const total = qIds.length || 1;
-  let right = 0;
-  for (const qid of qIds) if (answers[qid] && answers[qid] === correctByQ.get(qid)) right++;
-  const score = Math.round((right / total) * 100);
-  const passed = score >= (quiz.passing_score ?? 70);
-
-  const { error } = await sb.from("quiz_attempts").insert({
-    user_id: userData.user.id,
-    quiz_id: quizId,
-    score,
-    passed,
-    answers,
+  const { data, error } = await sb.rpc("submit_my_education_quiz", {
+    _quiz_id: quizId,
+    _answers: answers,
   });
-  if (error) throw new Error(error.message);
-  return { score, passed, total, right };
+  if (error)
+    throw new Error(
+      isMissingSchemaContract(error)
+        ? "Quiz submission is temporarily unavailable. Your answers have not been submitted."
+        : error.message,
+    );
+  if (
+    !data ||
+    typeof data !== "object" ||
+    Array.isArray(data) ||
+    typeof data.score !== "number" ||
+    typeof data.passed !== "boolean" ||
+    typeof data.total !== "number" ||
+    typeof data.right !== "number"
+  )
+    throw new Error("Quiz grading returned an invalid result.");
+  return { score: data.score, passed: data.passed, total: data.total, right: data.right };
 }
 
 // ---------- Resources ----------
@@ -277,6 +268,13 @@ export async function listAllResourcesForAdmin() {
 // ---------- Storage helpers ----------
 
 export async function uploadEducationFile(file: File, prefix: string) {
+  if (
+    prefix !== "resources" &&
+    !/^lessons\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(prefix)
+  )
+    throw new Error("Invalid education upload destination.");
+  if (file.size === 0 || file.size > 50 * 1024 * 1024)
+    throw new Error("Choose a non-empty file of 50 MiB or less.");
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) throw new Error("Sign in required");
   const path = `${prefix}/${userData.user.id}/${Date.now()}-${file.name.replace(/[^\w.-]+/g, "_")}`;
@@ -290,7 +288,9 @@ export async function uploadEducationFile(file: File, prefix: string) {
 }
 
 export async function getSignedEducationUrl(path: string) {
-  const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(path, 60 * 60);
+  const { data, error } = await supabase.storage
+    .from(BUCKET)
+    .createSignedUrl(path, 60 * 60, { download: true });
   if (error) throw new Error(error.message);
   return data.signedUrl;
 }
@@ -425,33 +425,18 @@ export async function deleteResource(id: string) {
 // ---------- Quiz admin ----------
 
 export async function getQuizForEditing(lessonId: string) {
-  const { data: quiz } = await sb
-    .from("quizzes")
-    .select("*")
-    .eq("lesson_id", lessonId)
-    .maybeSingle();
-  if (!quiz) return { quiz: null, questions: [] };
-  const { data: qs } = await sb
-    .from("quiz_questions")
-    .select("*")
-    .eq("quiz_id", quiz.id)
-    .order("sort_order", { ascending: true });
-  const qIds = (qs ?? []).map((question) => question.id);
-  let opts: QuizOptionRow[] = [];
-  if (qIds.length) {
-    const { data: os } = await sb
-      .from("quiz_options")
-      .select("*")
-      .in("question_id", qIds)
-      .order("sort_order", { ascending: true });
-    opts = os ?? [];
-  }
-  return {
-    quiz,
-    questions: (qs ?? []).map((question) => ({
-      ...question,
-      options: opts.filter((option) => option.question_id === question.id),
-    })),
+  const { data, error } = await sb.rpc("get_managed_education_quiz", { _lesson_id: lessonId });
+  if (error)
+    throw new Error(
+      isMissingSchemaContract(error)
+        ? "Quiz editing is temporarily unavailable. Please try again later."
+        : error.message,
+    );
+  if (!data || typeof data !== "object" || Array.isArray(data) || !Array.isArray(data.questions))
+    throw new Error("Quiz authoring returned an invalid result.");
+  return data as unknown as {
+    quiz: Database["public"]["Tables"]["quizzes"]["Row"] | null;
+    questions: (QuizQuestionRow & { options: QuizOptionRow[] })[];
   };
 }
 

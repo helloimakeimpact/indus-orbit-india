@@ -1,0 +1,62 @@
+name: Hosted schema contract
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Approved read-only schema environment
+        type: choice
+        options:
+          - staging
+          - production
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hosted-schema-${{ inputs.target }}
+  cancel-in-progress: false
+
+jobs:
+  schema:
+    name: Public hosted type contract
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: ${{ inputs.target }}
+    env:
+      SUPABASE_TELEMETRY_DISABLED: "1"
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Require environment-specific read access
+        shell: bash
+        run: |
+          test -n "$SUPABASE_ACCESS_TOKEN" || { echo "Environment access token is not configured." >&2; exit 1; }
+          [[ "$SUPABASE_PROJECT_REF" =~ ^[a-z]{20}$ ]] || { echo "Environment project reference is invalid." >&2; exit 1; }
+
+      - name: Generate hosted public types without schema or row changes
+        shell: bash
+        run: |
+          npx --no-install supabase gen types --project-id "$SUPABASE_PROJECT_REF" --schema public --lang typescript --agent no > "$RUNNER_TEMP/hosted.types.ts"
+          npm run check:supabase-types -- --generated "$RUNNER_TEMP/hosted.types.ts"
+
+      - name: Retain the generated schema contract
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-type-contract-${{ inputs.target }}
+          path: ${{ runner.temp }}/hosted.types.ts
+          retention-days: 7

@@ -31,7 +31,7 @@ import {
 import logo from "@/assets/indus-orbit-logo.png";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 
 const SETTINGS_KEY = "indus-orbit:settings";
 const SIDEBAR_KEY = "indus-orbit:sidebar-expanded";
@@ -286,6 +286,7 @@ function NavRow({
       to={item.to}
       onClick={onClick}
       aria-label={item.label}
+      aria-current={active ? "page" : undefined}
       title={expanded ? undefined : item.label}
       className={cn(
         "group relative font-medium transition",
@@ -556,6 +557,9 @@ export function AppSidebar() {
       <button
         type="button"
         aria-label="Open menu"
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        aria-controls={open ? "member-navigation" : undefined}
         onClick={() => setOpen(true)}
         className="app-mobile-menu fixed left-2.5 top-2.5 z-40 inline-flex h-9 w-9 items-center justify-center rounded-full text-[var(--indigo-night)] md:hidden"
       >
@@ -565,9 +569,14 @@ export function AppSidebar() {
       {/* Mobile drawer */}
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent
+          id="member-navigation"
           side="left"
           className="w-[min(88vw,320px)] border-0 bg-transparent p-2 text-foreground shadow-none sm:p-2"
         >
+          <SheetTitle className="sr-only">Workspace navigation</SheetTitle>
+          <SheetDescription className="sr-only">
+            Move between people, learning, action and your workspace settings.
+          </SheetDescription>
           <SidebarBody
             pathname={pathname}
             onNavigate={() => setOpen(false)}

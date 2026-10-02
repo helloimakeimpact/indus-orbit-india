@@ -1,0 +1,93 @@
+
+> admin-indus-orbit@0.1.0 verify
+> npm run format:check && npm run typecheck && npm run lint && npm run test:unit && npm run build && npm run check:bundle
+
+
+> admin-indus-orbit@0.1.0 format:check
+> prettier --check .
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> admin-indus-orbit@0.1.0 typecheck
+> tsc --noEmit
+
+
+> admin-indus-orbit@0.1.0 lint
+> eslint . --max-warnings=0
+
+
+> admin-indus-orbit@0.1.0 test:unit
+> node --experimental-strip-types --test src/contracts.test.ts src/access-control.test.ts src/finance-controls.test.ts
+
+▶ admin route access
+  ✔ normalizes deep-link paths (4.469ms)
+  ✔ permits only routes backed by the current database projection (2.803125ms)
+  ✔ allows the Trust route only with its exact scoped capability (51.120875ms)
+  ✔ keeps financial operations behind the billing projection (8.512417ms)
+  ✔ keeps member support and audit duties independently scoped (11.696875ms)
+  ✔ denies the entire control plane to non-admin members (8.617042ms)
+✔ admin route access (146.332792ms)
+▶ admin access contracts
+  ✔ fails closed on malformed or authority-free projections (140.252167ms)
+  ✔ honours scoped and super-admin capabilities (230.935834ms)
+✔ admin access contracts (382.546458ms)
+▶ admin RPC decoders
+  ✔ drops rows without stable authority identifiers (34.074584ms)
+  ✔ merges commercial evidence and fails closed when it is missing (5.293792ms)
+  ✔ parses exact, currency-scoped I/O evidence totals (6.699458ms)
+  ✔ drops unidentified receipts and preserves redacted route facts (4.363583ms)
+  ✔ preserves a no-op team mutation instead of inventing success (8.119709ms)
+  ✔ parses only redacted notification delivery jobs (1.373666ms)
+  ✔ accepts only pending two-person root requests (7.793083ms)
+  ✔ decodes only identified Content and Programme lifecycle rows (15.985583ms)
+  ✔ fails closed on malformed lifecycle mutation acknowledgements (10.700541ms)
+  ✔ preserves exact workspace budget minor units and unconfigured rows (8.953167ms)
+  ✔ fails closed on unknown endpoint health or circuit states (2.683292ms)
+  ✔ parses redacted automatic and operator circuit incidents (26.987708ms)
+  ✔ parses redacted conformance evidence and rejects unknown states (3.637166ms)
+  ✔ parses the privacy-minimised Trust queue and fails closed on bad rows (1.109291ms)
+  ✔ requires exact evidence from the report-resolution command (6.109333ms)
+  ✔ parses privacy-minimised member support records (1.045458ms)
+  ✔ requires exact member-support mutation evidence (1.253083ms)
+  ✔ parses only complete account privacy queue projections (1.458625ms)
+  ✔ requires an assigned, bounded privacy review acknowledgement (0.688417ms)
+  ✔ parses redacted operation events and drops unknown domains (5.411666ms)
+  ✔ parses finance payment evidence without provider credentials or raw payloads (7.763333ms)
+✔ admin RPC decoders (186.585375ms)
+✔ builds the common intra-state GST draft without treating it as approval (112.609208ms)
+✔ builds inter-state IGST and keeps export distinct from exemption (68.033125ms)
+✔ rejects invalid GST evidence before the RPC boundary (44.868583ms)
+ℹ tests 32
+ℹ suites 3
+ℹ pass 32
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2790.736291
+
+> admin-indus-orbit@0.1.0 build
+> tsc --noEmit && vite build
+
+vite v7.3.6 building client environment for production...
+transforming...
+✓ 1778 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                            0.78 kB │ gzip:  0.39 kB
+dist/assets/index-GLHOy811.css            22.62 kB │ gzip:  5.12 kB
+dist/assets/icons-vendor-yMdESZD0.js       7.62 kB │ gzip:  3.09 kB
+dist/assets/index-tRvUiFFr.js            122.16 kB │ gzip: 30.16 kB
+dist/assets/react-vendor-dzjnOsT9.js     192.35 kB │ gzip: 60.29 kB
+dist/assets/supabase-vendor-ul_cWzCd.js  215.54 kB │ gzip: 56.66 kB
+✓ built in 1m 53s
+
+> admin-indus-orbit@0.1.0 check:bundle
+> node scripts/check-bundle-size.mjs
+
+assets/supabase-vendor-ul_cWzCd.js: 210.48 KiB / 500 KiB
+assets/react-vendor-dzjnOsT9.js: 187.84 KiB / 500 KiB
+assets/index-tRvUiFFr.js: 119.29 KiB / 500 KiB
+assets/index-GLHOy811.css: 22.09 KiB / 100 KiB
+assets/icons-vendor-yMdESZD0.js: 7.45 KiB / 500 KiB

@@ -23,6 +23,12 @@ export function IoProductShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-[var(--indigo-night)] text-[var(--parchment)]">
+      <a
+        href="#io-workspace"
+        className="sr-only z-[60] rounded-lg bg-[var(--parchment)] px-4 py-2 text-[var(--indigo-night)] focus:not-sr-only focus:fixed focus:left-3 focus:top-3"
+      >
+        Skip to I/O workspace
+      </a>
       <header className="flex min-h-16 items-center justify-between gap-3 border-b border-white/10 px-3 sm:px-5">
         <div className="flex min-w-0 items-center gap-3">
           <Link to="/io" className="flex min-w-0 items-center gap-2.5" aria-label="I/O Port home">
@@ -66,7 +72,7 @@ export function IoProductShell({ children }: { children: ReactNode }) {
             size="sm"
             className="text-[var(--parchment)]/70 hover:bg-white/10 hover:text-[var(--parchment)]"
           >
-            <Link to="/app">
+            <Link to="/app" aria-label="Switch to Community">
               <Orbit className="mr-1.5 h-4 w-4" />
               <span className="hidden sm:inline">Community</span>
             </Link>
@@ -110,7 +116,12 @@ export function IoProductShell({ children }: { children: ReactNode }) {
         </nav>
       </header>
 
-      <main className="bg-[radial-gradient(circle_at_top_left,rgba(239,172,61,0.12),transparent_28%),linear-gradient(to_bottom,var(--indigo-night),color-mix(in_oklab,var(--indigo-night)_94%,black))] p-2 sm:p-3">
+      <main
+        id="io-workspace"
+        aria-label="I/O workspace"
+        tabIndex={-1}
+        className="bg-[radial-gradient(circle_at_top_left,rgba(239,172,61,0.12),transparent_28%),linear-gradient(to_bottom,var(--indigo-night),color-mix(in_oklab,var(--indigo-night)_94%,black))] p-2 sm:p-3"
+      >
         <IoWorkspaceShell>{children}</IoWorkspaceShell>
       </main>
     </div>

@@ -1,0 +1,36 @@
+
+Running 19 tests using 2 workers
+
+(node:29244) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:29243) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 [desktop-chromium] › tests/e2e/public-and-visual.spec.ts:11:3 › @public / renders without serious accessibility failures (4.8s)
+  ✓   2 [desktop-chromium] › tests/e2e/public-and-visual.spec.ts:11:3 › @public /io-port renders without serious accessibility failures (5.0s)
+  ✓   4 [desktop-chromium] › tests/e2e/public-and-visual.spec.ts:33:1 › @public brand contact card exposes both safe downloads (3.0s)
+  ✓   3 [desktop-chromium] › tests/e2e/public-and-visual.spec.ts:11:3 › @public /brand renders without serious accessibility failures (3.6s)
+  ✓   5 [desktop-chromium] › tests/e2e/public-and-visual.spec.ts:44:1 › @public homepage keeps its title and actions clear on a small phone (2.9s)
+  ✓   6 [desktop-chromium] › tests/e2e/public-and-visual.spec.ts:68:1 › @visual visiting card layout (3.0s)
+(node:29277) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:29278) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   8 [mobile-chromium] › tests/e2e/public-and-visual.spec.ts:11:3 › @public /io-port renders without serious accessibility failures (3.9s)
+  ✓   7 [mobile-chromium] › tests/e2e/public-and-visual.spec.ts:11:3 › @public / renders without serious accessibility failures (4.2s)
+  ✓   9 [mobile-chromium] › tests/e2e/public-and-visual.spec.ts:11:3 › @public /brand renders without serious accessibility failures (3.4s)
+  ✓  10 [mobile-chromium] › tests/e2e/public-and-visual.spec.ts:33:1 › @public brand contact card exposes both safe downloads (3.1s)
+  ✓  11 [mobile-chromium] › tests/e2e/public-and-visual.spec.ts:44:1 › @public homepage keeps its title and actions clear on a small phone (3.1s)
+  ✓  12 [mobile-chromium] › tests/e2e/public-and-visual.spec.ts:68:1 › @visual visiting card layout (3.9s)
+(node:29357) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:29358) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  13 [member-ui-regression] › tests/e2e/member-continuity.spec.ts:5:1 › @member-ui member navigation preserves the shared workspace shell (1.9s)
+  ✓  14 [member-ui-regression] › tests/e2e/member-continuity.spec.ts:29:1 › @member-ui narrow-screen navigation is named and closes after choosing a destination (2.4s)
+  ✓  16 [member-ui-regression] › tests/e2e/member-continuity.spec.ts:91:1 › @member-ui membership revocation and sign-out still close the member boundary (2.0s)
+  ✓  15 [member-ui-regression] › tests/e2e/member-continuity.spec.ts:54:1 › @member-ui tab return and same-account auth events preserve an unsent draft (3.7s)
+  ✓  17 [member-ui-regression] › tests/e2e/member-continuity.spec.ts:108:1 › @member-ui account changes clear drafts and obsolete access cannot revive a prior account (1.9s)
+  ✓  18 [member-ui-regression] › tests/e2e/member-continuity.spec.ts:142:1 › @member-ui initial membership verification failure fails closed and can recover (849ms)
+  ✓  19 [member-ui-regression] › tests/e2e/member-continuity.spec.ts:158:1 › @member-ui I/O-only access has named keyboard-safe drawers and canonical navigation (5.4s)
+
+  19 passed (37.5s)

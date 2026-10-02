@@ -16,13 +16,20 @@ import {
   Route,
   ShieldCheck,
   TerminalSquare,
-  X,
 } from "lucide-react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { useIsMobile } from "@/hooks/use-mobile";
 import type { IoWorkspaceView } from "@/features/io/io-workspace-view";
 import { IoWorkspaceViewContext } from "@/features/io/io-workspace-view-context";
 import { cn } from "@/lib/utils";
@@ -97,6 +104,16 @@ const evidenceGuideItems = [
   },
 ];
 
+const inspectorMediaQuery = "(min-width: 1280px)";
+function subscribeToInspectorChanges(notify: () => void) {
+  const query = window.matchMedia(inspectorMediaQuery);
+  query.addEventListener("change", notify);
+  return () => query.removeEventListener("change", notify);
+}
+function getInspectorSnapshot() {
+  return window.matchMedia(inspectorMediaQuery).matches;
+}
+
 type IoWorkspaceShellProps = {
   children: ReactNode;
 };
@@ -104,6 +121,12 @@ type IoWorkspaceShellProps = {
 export function IoWorkspaceShell({ children }: IoWorkspaceShellProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [inspectorOpen, setInspectorOpen] = useState(false);
+  const isMobile = useIsMobile();
+  const inlineInspector = useSyncExternalStore(
+    subscribeToInspectorChanges,
+    getInspectorSnapshot,
+    () => false,
+  );
   const { view: activeView } = useSearch({ from: "/io" });
   const navigate = useNavigate({ from: "/io" });
 
@@ -114,118 +137,126 @@ export function IoWorkspaceShell({ children }: IoWorkspaceShellProps) {
   }
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia("(min-width: 1280px)");
-    const updateInspector = () => setInspectorOpen(mediaQuery.matches);
-    const animationFrame = window.requestAnimationFrame(updateInspector);
-
-    mediaQuery.addEventListener("change", updateInspector);
-    return () => {
-      window.cancelAnimationFrame(animationFrame);
-      mediaQuery.removeEventListener("change", updateInspector);
-    };
-  }, []);
+    const animationFrame = window.requestAnimationFrame(() => setInspectorOpen(inlineInspector));
+    return () => window.cancelAnimationFrame(animationFrame);
+  }, [inlineInspector]);
 
   return (
     <IoWorkspaceViewContext.Provider value={activeView}>
-      <div className="app-ui mx-auto min-h-[calc(100vh-5.25rem)] max-w-[112rem] overflow-hidden rounded-2xl border border-border/80 bg-card/70 text-foreground shadow-[var(--app-shadow-strong)]">
-        <header className="flex min-h-14 items-center gap-2 border-b border-border/70 bg-card/80 px-3 sm:px-4">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="md:hidden"
-            aria-label={mobileNavOpen ? "Close I/O navigation" : "Open I/O navigation"}
-            aria-expanded={mobileNavOpen}
-            onClick={() => setMobileNavOpen((value) => !value)}
-          >
-            {mobileNavOpen ? <X /> : <Menu />}
-          </Button>
+      <Sheet open={isMobile && mobileNavOpen} onOpenChange={setMobileNavOpen}>
+        <div className="app-ui mx-auto min-h-[calc(100vh-5.25rem)] max-w-[112rem] overflow-hidden rounded-2xl border border-border/80 bg-card/70 text-foreground shadow-[var(--app-shadow-strong)]">
+          <header className="flex min-h-14 items-center gap-2 border-b border-border/70 bg-card/80 px-3 sm:px-4">
+            <SheetTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="md:hidden"
+                aria-label="Open I/O navigation"
+              >
+                <Menu />
+              </Button>
+            </SheetTrigger>
 
-          <div className="flex min-w-0 flex-1 items-center gap-2.5">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[var(--indigo-night)] text-[var(--parchment)] shadow-sm">
-              <TerminalSquare className="h-4 w-4" />
-            </span>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <p className="truncate text-sm font-semibold text-[var(--indigo-night)]">
-                  I/O Port
+            <div className="flex min-w-0 flex-1 items-center gap-2.5">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[var(--indigo-night)] text-[var(--parchment)] shadow-sm">
+                <TerminalSquare className="h-4 w-4" />
+              </span>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <p className="truncate text-sm font-semibold text-[var(--indigo-night)]">
+                    I/O Port
+                  </p>
+                  <Badge className="border-[var(--saffron)]/35 bg-[var(--saffron)]/12 text-[10px] text-[var(--indigo-night)] hover:bg-[var(--saffron)]/12">
+                    BETA
+                  </Badge>
+                </div>
+                <p className="hidden truncate text-[11px] text-muted-foreground sm:block">
+                  India-rooted model access, terminal work and shared capacity
                 </p>
-                <Badge className="border-[var(--saffron)]/35 bg-[var(--saffron)]/12 text-[10px] text-[var(--indigo-night)] hover:bg-[var(--saffron)]/12">
-                  BETA
-                </Badge>
               </div>
-              <p className="hidden truncate text-[11px] text-muted-foreground sm:block">
-                India-rooted model access, terminal work and shared capacity
-              </p>
             </div>
-          </div>
 
-          <div className="hidden items-center gap-2 lg:flex">
-            <div className="flex items-center gap-1.5 rounded-full border border-border/70 bg-background/50 px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
-              Authenticated workspace evidence
+            <div className="hidden items-center gap-2 lg:flex">
+              <div className="flex items-center gap-1.5 rounded-full border border-border/70 bg-background/50 px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
+                Authenticated workspace evidence
+              </div>
             </div>
-          </div>
 
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            aria-label={inspectorOpen ? "Hide activity inspector" : "Show activity inspector"}
-            aria-pressed={inspectorOpen}
-            onClick={() => setInspectorOpen((value) => !value)}
+            {inlineInspector ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label={inspectorOpen ? "Hide activity inspector" : "Show activity inspector"}
+                aria-expanded={inspectorOpen}
+                aria-controls="io-activity-inspector"
+                onClick={() => setInspectorOpen((value) => !value)}
+              >
+                {inspectorOpen ? <PanelRightClose /> : <PanelRightOpen />}
+              </Button>
+            ) : (
+              <Sheet open={inspectorOpen} onOpenChange={setInspectorOpen}>
+                <SheetTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Show activity inspector"
+                  >
+                    <PanelRightOpen />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent
+                  side="right"
+                  className="app-ui flex w-[calc(100vw-1rem)] max-w-sm flex-col overflow-hidden p-0 sm:p-0"
+                >
+                  <SheetTitle className="sr-only">Evidence and activity</SheetTitle>
+                  <SheetDescription className="sr-only">
+                    Inspect the evidence recorded by your I/O workspace.
+                  </SheetDescription>
+                  <IoActivityInspector className="flex min-h-0 flex-1 flex-col" />
+                </SheetContent>
+              </Sheet>
+            )}
+          </header>
+
+          <div
+            className={cn(
+              "relative grid min-h-[calc(100vh-8.85rem)] md:grid-cols-[13rem_minmax(0,1fr)]",
+              inspectorOpen
+                ? "xl:grid-cols-[14rem_minmax(0,1fr)_19rem]"
+                : "xl:grid-cols-[14rem_minmax(0,1fr)]",
+            )}
           >
-            {inspectorOpen ? <PanelRightClose /> : <PanelRightOpen />}
-          </Button>
-        </header>
-
-        <div
-          className={cn(
-            "relative grid min-h-[calc(100vh-8.85rem)] md:grid-cols-[13rem_minmax(0,1fr)]",
-            inspectorOpen
-              ? "xl:grid-cols-[14rem_minmax(0,1fr)_19rem]"
-              : "xl:grid-cols-[14rem_minmax(0,1fr)]",
-          )}
-        >
-          <IoContextNav
-            className={cn(
-              "absolute inset-y-0 left-0 z-20 w-[17rem] shadow-2xl transition-transform md:static md:z-auto md:w-auto md:translate-x-0 md:shadow-none",
-              mobileNavOpen ? "translate-x-0" : "-translate-x-full",
-            )}
-            activeView={activeView}
-            onSelect={selectView}
-          />
-
-          {mobileNavOpen ? (
-            <button
-              type="button"
-              className="absolute inset-0 z-10 bg-[var(--indigo-night)]/25 backdrop-blur-[2px] md:hidden"
-              aria-label="Close I/O navigation"
-              onClick={() => setMobileNavOpen(false)}
+            <IoContextNav
+              className="hidden md:flex"
+              activeView={activeView}
+              onSelect={selectView}
             />
-          ) : null}
 
-          <section aria-label="I/O Port working surface" className="min-w-0 bg-background/50">
-            {children}
-          </section>
+            <section aria-label="I/O Port working surface" className="min-w-0 bg-background/50">
+              {children}
+            </section>
 
-          <IoActivityInspector
-            className={cn(
-              "fixed inset-y-0 right-0 z-50 w-[min(21rem,90vw)] shadow-2xl transition-transform xl:static xl:z-auto xl:w-auto xl:shadow-none",
-              inspectorOpen ? "translate-x-0" : "translate-x-full xl:hidden",
-            )}
-            onClose={() => setInspectorOpen(false)}
-          />
-
-          {inspectorOpen ? (
-            <button
-              type="button"
-              className="fixed inset-0 z-40 bg-[var(--indigo-night)]/25 backdrop-blur-[2px] xl:hidden"
-              aria-label="Close activity inspector"
-              onClick={() => setInspectorOpen(false)}
-            />
-          ) : null}
+            {inlineInspector && inspectorOpen ? (
+              <div id="io-activity-inspector">
+                <IoActivityInspector />
+              </div>
+            ) : null}
+          </div>
         </div>
-      </div>
+        <SheetContent
+          side="left"
+          className="app-ui flex w-[calc(100vw-1rem)] max-w-xs flex-col overflow-hidden p-0 sm:p-0"
+        >
+          <SheetTitle className="sr-only">I/O navigation</SheetTitle>
+          <SheetDescription className="sr-only">
+            Choose a section of your I/O workspace.
+          </SheetDescription>
+          <IoContextNav className="min-h-0 flex-1" activeView={activeView} onSelect={selectView} />
+        </SheetContent>
+      </Sheet>
     </IoWorkspaceViewContext.Provider>
   );
 }
@@ -332,18 +363,25 @@ export function IoActivityInspector({
 }) {
   return (
     <aside className={cn("min-h-0 border-l border-border/70 bg-card/95", className)}>
-      <div className="flex h-14 items-center justify-between border-b border-border/60 px-4">
+      <div className="flex h-14 shrink-0 items-center justify-between border-b border-border/60 px-4 pr-12 xl:pr-4">
         <div>
           <p className="text-xs font-semibold text-[var(--indigo-night)]">Evidence & activity</p>
           <p className="text-[10px] text-muted-foreground">What the live workspace records</p>
         </div>
-        <Button type="button" variant="ghost" size="icon" className="xl:hidden" onClick={onClose}>
-          <X />
-          <span className="sr-only">Close activity inspector</span>
-        </Button>
+        {onClose ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
+            aria-label="Close activity inspector"
+          >
+            <PanelRightClose />
+          </Button>
+        ) : null}
       </div>
 
-      <ScrollArea className="h-[calc(100vh-12.4rem)] min-h-[26rem]">
+      <ScrollArea className="min-h-0 flex-1 xl:h-[calc(100vh-12.4rem)]">
         <div className="space-y-5 p-4">
           <section>
             <div className="mb-3 flex items-center justify-between">

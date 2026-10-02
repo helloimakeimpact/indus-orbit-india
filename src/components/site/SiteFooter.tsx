@@ -35,7 +35,7 @@ export function SiteFooter() {
       />
       <div className="bg-[var(--indigo-night)] text-[var(--parchment)]">
         <div className="mx-auto grid max-w-6xl gap-10 px-6 py-14 md:grid-cols-12">
-          <div className="md:col-span-5">
+          <div className="min-w-0 md:col-span-5">
             <div className="flex items-center gap-2">
               <img src={logo} alt="" width={32} height={32} className="h-8 w-8 invert" />
               <span className="font-display text-2xl font-semibold">Indus Orbit</span>
@@ -88,7 +88,7 @@ export function SiteFooter() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="your@email.com"
                   required
-                  className="flex-1 bg-transparent px-3 py-2 text-sm text-[var(--parchment)] placeholder:text-[var(--parchment)]/50 focus:outline-none"
+                  className="min-w-0 flex-1 bg-transparent px-3 py-2 text-sm text-[var(--parchment)] placeholder:text-[var(--parchment)]/50 focus:outline-none"
                 />
                 <button
                   type="submit"
@@ -159,13 +159,10 @@ export function SiteFooter() {
               <li>Mumbai (soon)</li>
             </ul>
             <div className="mt-6 flex gap-3 text-xs uppercase tracking-wider text-[var(--parchment)]/60">
-              <a href="#" className="hover:text-[var(--saffron)]">
-                Twitter
-              </a>
-              <a href="#" className="hover:text-[var(--saffron)]">
-                LinkedIn
-              </a>
-              <a href="#" className="hover:text-[var(--saffron)]">
+              <Link to="/contact" className="hover:text-[var(--saffron)]">
+                Get in touch
+              </Link>
+              <a href="mailto:hello@indusorbit.com" className="hover:text-[var(--saffron)]">
                 Email
               </a>
             </div>

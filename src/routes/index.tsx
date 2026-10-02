@@ -59,7 +59,7 @@ function HomePage() {
   return (
     <SiteShell navTone="dark">
       {/* HERO */}
-      <section className="relative h-[115svh] min-h-[820px] w-full overflow-hidden">
+      <section className="relative flex min-h-[100svh] w-full flex-col overflow-hidden pb-28 pt-44 md:block md:h-[115svh] md:min-h-[820px] md:p-0">
         <img
           src={heroImg}
           alt="Pixel-art dawn over an Indian city skyline with banyan tree and Himalayas"
@@ -70,12 +70,15 @@ function HomePage() {
         <div className="absolute inset-0 bg-gradient-to-b from-[var(--indigo-night)]/30 via-transparent to-[var(--indigo-night)]/85" />
 
         {/* Big pixel-art title overlay (outside the card) */}
-        <div className="absolute inset-x-0 top-[24%] md:top-[20%] px-6 text-center">
+        <div className="relative z-10 px-6 text-center md:absolute md:inset-x-0 md:top-[20%]">
           <h1 className="font-display text-glow text-[var(--parchment)] leading-[1.05] tracking-tight text-balance text-4xl sm:text-5xl md:text-7xl lg:text-[5.5rem] font-light">
             The General Intelligence
             <br />
             Company Of India
           </h1>
+          <p className="mt-5 text-sm font-medium tracking-[0.08em] text-[var(--parchment)]/90 md:text-base">
+            Intelligence, built together.
+          </p>
         </div>
 
         {/* Bottom-right tagline note */}
@@ -87,7 +90,7 @@ function HomePage() {
         </div>
 
         {/* Hero card (bottom-left) — lifted up & more transparent */}
-        <div className="absolute inset-x-0 bottom-24 md:bottom-32 px-4">
+        <div className="relative z-10 mt-24 px-4 md:absolute md:inset-x-0 md:bottom-32 md:mt-0">
           <div className="mx-auto w-full max-w-7xl">
             <div className="max-w-md rounded-3xl glass-card-soft p-6 md:p-7 animate-fade-up">
               <h2 className="font-display text-3xl font-light leading-[1.1] text-balance text-[var(--parchment)] md:text-4xl">
@@ -131,7 +134,7 @@ function HomePage() {
             />
           </div>
           <div className="text-center md:text-left">
-            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">
+            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-amber-800">
               A different kind of AI company
             </p>
             <h2 className="mt-5 font-display text-4xl font-light leading-tight text-balance md:text-5xl">
@@ -158,7 +161,7 @@ function HomePage() {
               <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[var(--saffron)] text-[var(--indigo-night)]">
                 <Lightbulb className="h-5 w-5" />
               </span>
-              <p className="mt-5 text-xs font-semibold uppercase tracking-[0.24em] text-[var(--saffron)]">
+              <p className="mt-5 text-xs font-semibold uppercase tracking-[0.24em] text-amber-800">
                 Ideas
               </p>
               <h3 className="mt-3 font-display text-3xl font-light leading-tight md:text-4xl">
@@ -195,7 +198,7 @@ function HomePage() {
               <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[var(--indigo-night)] text-[var(--parchment)]">
                 <GraduationCap className="h-5 w-5" />
               </span>
-              <p className="mt-5 text-xs font-semibold uppercase tracking-[0.24em] text-[var(--saffron)]">
+              <p className="mt-5 text-xs font-semibold uppercase tracking-[0.24em] text-amber-800">
                 Education
               </p>
               <h3 className="mt-3 font-display text-3xl font-light leading-tight md:text-4xl">
@@ -366,7 +369,7 @@ function HomePage() {
             </div>
           </div>
           <div className="p-8 md:p-12">
-            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">
+            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-amber-800">
               The Model Observatory
             </p>
             <h3 className="mt-4 font-display text-3xl font-light leading-tight md:text-4xl">
@@ -408,7 +411,7 @@ function HomePage() {
         <section className="px-6 pb-24">
           <div className="mx-auto w-full max-w-7xl">
             <div className="mb-10 text-center">
-              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--saffron)]">
+              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-amber-800">
                 Voices from the orbit
               </p>
               <h3 className="mt-4 font-display text-3xl font-medium leading-tight md:text-5xl">

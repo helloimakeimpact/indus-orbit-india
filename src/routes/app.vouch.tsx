@@ -30,6 +30,8 @@ function VouchPage() {
   const { user, isAdmin } = useAuth();
   const [status, setStatus] = useState<Status | null>(null);
   const [busy, setBusy] = useState(true);
+  const [issuedCode, setIssuedCode] = useState<{ code: string; expiresAt: string } | null>(null);
+  const [issuing, setIssuing] = useState(false);
   const [issueOpen, setIssueOpen] = useState(false);
   const [directOpen, setDirectOpen] = useState(false);
   const [verified, setVerified] = useState<boolean | null>(null);
@@ -58,8 +60,11 @@ function VouchPage() {
   }, [user]); // eslint-disable-line
 
   async function onIssue() {
+    if (issuing) return;
+    setIssuing(true);
     try {
       const r = await issueCode();
+      setIssuedCode(r);
       toast.success("Code generated");
       setIssueOpen(false);
       await navigator.clipboard
@@ -69,6 +74,8 @@ function VouchPage() {
       load();
     } catch (e) {
       toast.error((e as Error).message);
+    } finally {
+      setIssuing(false);
     }
   }
 
@@ -136,8 +143,38 @@ function VouchPage() {
         <p className="mt-8 text-muted-foreground">Loading…</p>
       ) : (
         <>
+          {issuedCode ? (
+            <section
+              className="mt-8 rounded-2xl border border-border bg-card p-4"
+              aria-label="New private vouch code"
+            >
+              <h2 className="font-display text-lg font-semibold">Copy your new code</h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                This code is shown only in this open page. Copy it before leaving or refreshing.
+              </p>
+              <code className="mt-3 block break-all rounded bg-muted px-2 py-1 font-mono">
+                {issuedCode.code}
+              </code>
+              <Button
+                className="mt-3"
+                variant="outline"
+                onClick={() => {
+                  void navigator.clipboard
+                    .writeText(issuedCode.code)
+                    .then(() => toast.success("Copied"))
+                    .catch(() => toast.error("Clipboard copy failed"));
+                }}
+              >
+                <Copy className="mr-2 h-3 w-3" />
+                Copy code
+              </Button>
+              <Button className="ml-2 mt-3" variant="ghost" onClick={() => setIssuedCode(null)}>
+                Hide code
+              </Button>
+            </section>
+          ) : null}
           <section className="mt-8">
-            <h2 className="font-display text-lg font-semibold">My active codes</h2>
+            <h2 className="font-display text-lg font-semibold">My code activity</h2>
             {!status || status.codes.length === 0 ? (
               <p className="mt-2 text-sm text-muted-foreground">No codes yet.</p>
             ) : (
@@ -148,7 +185,9 @@ function VouchPage() {
                     className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4"
                   >
                     <div>
-                      <code className="rounded bg-muted px-2 py-1 font-mono text-sm">{c.code}</code>
+                      <code className="rounded bg-muted px-2 py-1 font-mono text-sm">
+                        Private code
+                      </code>
                       <span className="ml-3 text-xs text-muted-foreground">
                         {c.status === "active"
                           ? `expires ${new Date(c.expires_at).toLocaleDateString()}`
@@ -159,18 +198,6 @@ function VouchPage() {
                       <Badge variant={c.status === "active" ? "default" : "secondary"}>
                         {c.status}
                       </Badge>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          navigator.clipboard
-                            .writeText(c.code)
-                            .then(() => toast.success("Copied"))
-                            .catch(() => toast.error("Clipboard copy failed"));
-                        }}
-                      >
-                        <Copy className="h-3 w-3" />
-                      </Button>
                     </div>
                   </div>
                 ))}
@@ -216,7 +243,9 @@ function VouchPage() {
             <Button variant="outline" onClick={() => setIssueOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={onIssue}>Generate</Button>
+            <Button disabled={issuing} onClick={onIssue}>
+              Generate
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

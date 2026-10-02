@@ -1,0 +1,19 @@
+
+Running 8 tests using 1 worker
+
+(node:26422) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [admin-ui] › tests/e2e/admin-session.spec.ts:117:1 › @admin-ui same-account token refresh preserves the control plane (5.7s)
+  ✓  2 [admin-ui] › tests/e2e/admin-session.spec.ts:146:1 › @admin-ui privilege and MFA outages fail closed with a usable retry (4.6s)
+  ✓  3 [admin-ui] › tests/e2e/admin-session.spec.ts:177:1 › @admin-ui AAL2 without a verified TOTP factor cannot enter (3.4s)
+  ✓  4 [admin-ui] › tests/e2e/admin-session.spec.ts:192:1 › @admin-ui obsolete access cannot restore privileges after account change or sign-out (3.1s)
+(node:26450) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  5 [desktop-chromium] › tests/e2e/admin-access.spec.ts:4:1 › @public configured admin application fails closed at sign-in (5.6s)
+  ✓  6 [desktop-chromium] › tests/e2e/admin-access.spec.ts:25:1 › @public admin sign-in remains usable on a mobile viewport (3.3s)
+(node:26468) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  7 [mobile-chromium] › tests/e2e/admin-access.spec.ts:4:1 › @public configured admin application fails closed at sign-in (6.7s)
+  ✓  8 [mobile-chromium] › tests/e2e/admin-access.spec.ts:25:1 › @public admin sign-in remains usable on a mobile viewport (3.0s)
+
+  8 passed (52.1s)

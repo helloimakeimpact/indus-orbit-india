@@ -243,6 +243,13 @@
       transform: rotate(-360deg);
     }
   }
+  @media (prefers-reduced-motion: reduce) {
+    .animate-fade-up,
+    .animate-orbit,
+    .animate-counter-orbit {
+      animation: none;
+    }
+  }
 
   .app-ui {
     --radius: 0.625rem;

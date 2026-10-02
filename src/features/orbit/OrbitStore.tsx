@@ -77,7 +77,7 @@ export function OrbitStoreProvider({ children }: { children: ReactNode }) {
         setConnectionState("offline");
         return;
       }
-      setConnectionState("reconnecting");
+      setConnectionState(!user || channel?.state === "joined" ? "online" : "reconnecting");
       void refreshAttention();
     };
     const markOffline = () => setConnectionState("offline");

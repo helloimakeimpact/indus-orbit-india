@@ -2,6 +2,10 @@
 
 Status: deployed provider foundation, operational core, terminal safety boundary, bounded OpenAI-compatible API and transparent commercial gate, updated 8 September 2026 with the locally Verified selective 9router transport boundary.
 
+## 2 October 2026 local shell completion
+
+The I/O product has a keyboard skip link and named main region. Its mobile navigation and inspector use named modal drawers with focus trapping, Escape and focus restoration; the wide inspector is mounted only at its intended breakpoint. The compact Community switch has an accessible name. The I/O-only synthetic scenario verifies mobile keyboard/axe/overflow behavior and canonical Terminal reload. This is local UI evidence within the seven-scenario member suite, not provider or hosted authorization evidence. The complete release record is `../../release-evidence/local-2026-10-02/verification.md`; zero routes/conformance/receipts remain the hosted boundary.
+
 ## Current operational truth
 
 I/O Port has a real web surface, Supabase control plane and registry-driven gateway. The last hosted verification found five provider/model/endpoint/control records and three capacity sources/grants. It does **not** yet have shared OpenRouter capacity or an active direct-provider route; route receipts and provider attempts were zero.

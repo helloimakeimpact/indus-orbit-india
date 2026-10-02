@@ -1,6 +1,6 @@
 # Final code-level audit — 6–7 September 2026
 
-Status: **all safe owner-independent work discovered in this final pass is implemented, verified and filed**. This does not mean every production operation is activated: several boundaries correctly require contracts, credentials, policy approvals, two real operators or external infrastructure.
+Status: **historical 6–7 September audit**, superseded for current launch decisions by the 2 October local finalization in `CODE_COMPLETION_REGISTER.md`, `FINALIZATION_EXECUTION_PLAN.md` and `PRODUCTION_OWNER_ACTIONS.md`. The older claim that all discovered independent code work was complete applies only to that dated pass. Subsequent review found and repaired member/admin auth races, keyboard/mobile obstruction, browser-trusted vouch/quiz writes and education-file exposure. Current local evidence is 166 member contracts, 19 member browser checks, 32 admin contracts, 8 admin browser checks and 883 database assertions; three forward migrations and broader operating/design work remain due. Full public production is not approved. The historical descriptions and counts below retain their original date.
 
 ## What is complete in code
 

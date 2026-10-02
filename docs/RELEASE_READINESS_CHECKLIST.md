@@ -1,10 +1,24 @@
 # Indus Orbit Production v1 release readiness checklist
 
-Status: historical 9 August phase checklist retained for provenance. Current release truth is `docs/io-system/CODE_COMPLETION_REGISTER.md` and `docs/io-system/FINAL_CODE_LEVEL_AUDIT_2026-09-06.md`; unchecked items below must not be read as a current implementation inventory.
+Status: full public production launch remains **not approved** on 2 October 2026. The detailed 9 August phase checklist below is retained for provenance; current implementation and launch gates are in `docs/io-system/CODE_COMPLETION_REGISTER.md` and `docs/io-system/FINALIZATION_EXECUTION_PLAN.md`. Unchecked historical items must not be read as a current implementation inventory.
 Release candidate: not assigned  
 Release owner: unassigned  
 Production target: not scheduled  
 Source plan: `MASTER_IMPLEMENTATION_AND_RELEASE_PLAN.md`
+
+## Current 2 October 2026 release checkpoint
+
+| Boundary                                    | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                | Decision                                                                                        |
+| ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Public member source                        | GitHub `main` at `6607d4039d766dc077153dd933802da02d28dba7`; [Quality](https://github.com/helloimakeimpact/indus-orbit-india/actions/runs/36876190693) and [Database quality](https://github.com/helloimakeimpact/indus-orbit-india/actions/runs/36876190503) passed; the restored landing and `/brand` were checked on the live public site                                                                            | Released public-site baseline; not whole-product approval                                       |
+| Approved brand follow-up                    | “Intelligence, built together.” is in the local homepage/card source; `npm run verify`, 10/10 public desktop/mobile browser checks and 2/2 visiting-card visual checks pass. Low-contrast homepage labels, reduced-motion behavior and 320px overflow were repaired during the local audit                                                                                                                              | Verified locally; uncommitted and undeployed at owner request                                   |
+| Product UI continuity and premium direction | Local source now preserves the Community shell on same-account auth refresh and keeps a joined Orbit channel online on tab focus; mobile hero uses flow on small phones. `docs/io-system/DESIGN_PHILOSOPHY_AND_UI_PLAN.md` specifies the distinct design philosophy and phased UI work. Controlled member browser coverage is added; real-session token-expiry/sleep/mobile and full 320px/zoom/overlay evidence remain | Partial; explicit production gate                                                               |
+| Hosted data and I/O                         | Supabase was healthy with 116 hosted migration records at the last connected check. Five staged providers have no routable connections, conformance runs or billable requests                                                                                                                                                                                                                                           | Partial; provider activation and production data operations are not approved                    |
+| Admin and operations                        | The 1 October admin source parity is historical; new session/MFA changes are local. Independent hosting, real operator personas, privacy execution, payment policies, backup/restore and incident evidence remain                                                                                                                                                                                                       | Partial; full public launch is blocked on the detailed gates in the canonical finalization plan |
+
+The 2 October local member gate passes 166 contracts; the final production-bundle browser suite covers 19 checks (10 public, 2 card visuals, 7 synthetic member/I/O scenarios). Admin passes 32 contracts and 8 browser checks (4 public, 4 synthetic). The isolated 121-migration chain passes 28 pgTAP files/883 assertions and zero-error public/private lint. Current dependency audits have zero findings. The final run evidence is in `docs/release-evidence/local-2026-10-02/verification.md`.
+
+Seven type-comparator contracts pass. Fresh replay matches the browser release contract plus exactly 97 pinned held-Spaces differences; the strict hosted comparison detects the 10 pending trusted-vouch/quiz contracts and must pass after delivery. Three forward migrations, remaining grant/RLS/Realtime review, a completed alias-safe hosted dry-run and a production-like upgrade/restore remain. Hosted currently has two private Storage buckets; education hardening is local and scanner/quarantine operation remains due. The ordered owner handoff is in `docs/io-system/PRODUCTION_OWNER_ACTIONS.md`. Release candidate, date and approvers remain unassigned. No historical checkbox is promoted to approved by these local results.
 
 ## 1. How this checklist is used
 
@@ -24,25 +38,25 @@ docs/release-evidence/<release>/<gate>/<artifact>
 
 External CI, design, issue, and monitoring links may be used when access and retention are appropriate.
 
-## 2. Current verified baseline — not release approval
+## 2. Historical 9 August verified baseline — not release approval
 
-| Check                             | Result on 9 August 2026                | Meaning                                                                                                                                |
-| --------------------------------- | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| Production web build              | Pass                                   | The current bundle builds; it does not prove runtime workflows                                                                         |
-| TypeScript `--noEmit`             | Pass                                   | Current TypeScript compiles                                                                                                            |
-| Unit tests                        | Pass — 38/38                           | Auth intent, product/location/schema-compat contracts, conversations, OpenCode, gateway/provider routing and email-template tests pass |
-| Formatting check                  | Pass                                   | Mechanical formatting drift has been removed                                                                                           |
-| Dependency audit (high and above) | Pass                                   | No critical, high, or moderate dependency advisory remains                                                                             |
-| Dependency audit (all severities) | Pass — 0 known vulnerabilities         | Patched overrides and non-breaking transitive updates clear the current npm advisory report                                            |
-| GitHub quality workflow           | Configured; no remote run recorded yet | PR/push audit, format, lint, typecheck, unit test and production build are defined                                                     |
-| GitHub database workflow          | Configured; no remote run recorded yet | Empty replay, pgTAP, public/private schema lint and guaranteed local-stack cleanup are defined                                         |
-| Repository lint                   | Pass — 0 errors                        | Local semantic lint gate passes; CI evidence and broader product/integration coverage remain incomplete                                |
-| Automated product/router tests    | Core selection coverage only           | New registry router/UI source is browser-build checked but still needs Deno, SQL/RLS and conformance tests                             |
-| Database contract tests           | Clean local pass — 446/446             | All 64 migrations and eleven pgTAP files pass; retained remote CI and production-like snapshot upgrade remain                          |
-| Provider conformance records      | Zero                                   | No provider is production-certified                                                                                                    |
-| Supabase missing-history recovery | Hosted ledger preserved                | 26 timestamp aliases are mapped; current forward set deployed without history repair or reset                                          |
-| Supabase migration equivalence    | Partial                                | Hosted Space contract, local types and clean replay pass; durable aliases, full object diff and snapshot upgrade remain                |
-| Supabase storage buckets          | Zero                                   | Education upload workflow is not operational                                                                                           |
+| Check                             | Result on 9 August 2026                | Meaning                                                                                                                                      |
+| --------------------------------- | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Production web build              | Pass                                   | The current bundle builds; it does not prove runtime workflows                                                                               |
+| TypeScript `--noEmit`             | Pass                                   | Current TypeScript compiles                                                                                                                  |
+| Unit tests                        | Pass — 38/38                           | Auth intent, product/location/schema-compat contracts, conversations, OpenCode, gateway/provider routing and email-template tests pass       |
+| Formatting check                  | Pass                                   | Mechanical formatting drift has been removed                                                                                                 |
+| Dependency audit (high and above) | Pass                                   | No critical, high, or moderate dependency advisory remains                                                                                   |
+| Dependency audit (all severities) | Pass — 0 known vulnerabilities         | Patched overrides and non-breaking transitive updates clear the current npm advisory report                                                  |
+| GitHub quality workflow           | Configured; no remote run recorded yet | PR/push audit, format, lint, typecheck, unit test and production build are defined                                                           |
+| GitHub database workflow          | Configured; no remote run recorded yet | Empty replay, pgTAP, public/private schema lint and guaranteed local-stack cleanup are defined                                               |
+| Repository lint                   | Pass — 0 errors                        | Local semantic lint gate passes; CI evidence and broader product/integration coverage remain incomplete                                      |
+| Automated product/router tests    | Core selection coverage only           | New registry router/UI source is browser-build checked but still needs Deno, SQL/RLS and conformance tests                                   |
+| Database contract tests           | Clean local pass — 446/446             | All 64 migrations and eleven pgTAP files pass; retained remote CI and production-like snapshot upgrade remain                                |
+| Provider conformance records      | Zero                                   | No provider is production-certified                                                                                                          |
+| Supabase missing-history recovery | Hosted ledger preserved                | 26 timestamp aliases are mapped; current forward set deployed without history repair or reset                                                |
+| Supabase migration equivalence    | Partial                                | Hosted Space contract, local types and clean replay pass; durable aliases, full object diff and snapshot upgrade remain                      |
+| Supabase storage buckets          | Zero                                   | Historical 9 August observation; the 2 October read-only review confirms two private buckets, with local education hardening still unapplied |
 
 ## 3. Blocker register
 

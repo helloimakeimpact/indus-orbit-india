@@ -54,6 +54,9 @@ jobs:
       - name: Public desktop, mobile and accessibility journeys
         run: npm run test:e2e
 
+      - name: Member workspace continuity with isolated synthetic identity
+        run: npm run test:e2e:member-ui
+
       - name: Build production bundle
         run: npm run build
 

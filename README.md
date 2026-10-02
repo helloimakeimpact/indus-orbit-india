@@ -1,6 +1,6 @@
 # Indus Orbit
 
-Indus Orbit is a people-centred Indian community and learning network with public knowledge, member collaboration, action programmes, and the future I/O Port for governed AI access.
+Indus Orbit is **The General Intelligence Company of India**. **Intelligence, built together.** Its product connects people, public knowledge, learning, collaboration and action with governed AI access through I/O Port. The whole product remains Partial for full public production; local verification and released capabilities are recorded separately.
 
 The living whole-product record is in [docs/io-system/README.md](docs/io-system/README.md). The complete delivery order and release gates are in [docs/MASTER_IMPLEMENTATION_AND_RELEASE_PLAN.md](docs/MASTER_IMPLEMENTATION_AND_RELEASE_PLAN.md), and the current I/O Port truth is in [docs/io-system/io-port-system/IO_PORT_IMPLEMENTATION_STATUS.md](docs/io-system/io-port-system/IO_PORT_IMPLEMENTATION_STATUS.md).
 
@@ -27,9 +27,15 @@ npm run audit:production
 npm run test:unit
 npm run lint
 npm run format:check
+npm run test:e2e
+npm run test:e2e:member-ui
 ```
 
-`lint` and `format:check` intentionally report inherited repository-wide cleanup debt at the start of the implementation programme. The first active CI gate is typecheck plus build; lint and format become required after their baseline remediation is complete.
+Formatting, lint, typecheck, unit/browser tests, dependency audit, production build and bundle budgets are required in the Quality workflow. Database quality separately replays migrations, runs pgTAP and lints schemas. The synthetic member browser suite makes no live Supabase writes; real authenticated evidence uses short-lived state outside Git as described in [tests/e2e/README.md](tests/e2e/README.md).
+
+Compare a fresh public-schema type generation with the checked-in browser contract using `npm run check:supabase-types -- --generated /absolute/path/to/generated.types.ts`. The check rejects schema differences; it excludes only generator helpers/metadata and formatting. Generate from the intended environment. Fresh local replay is checked with `--replay-boundary`, which permits only 97 exact held-Spaces differences pinned to that migration. The current release contract is 10 leaf contracts ahead of hosted for three pending forward migrations; the strict hosted gate must pass after their reviewed delivery. A protected manual Hosted schema contract workflow is defined for staging/production. See [the schema record](docs/SUPABASE_SCHEMA_RECONCILIATION.md).
+
+The current full-public launch sequence, owner actions and design specification are in [the finalization plan](docs/io-system/FINALIZATION_EXECUTION_PLAN.md), [owner actions](docs/io-system/PRODUCTION_OWNER_ACTIONS.md) and [design philosophy](docs/io-system/DESIGN_PHILOSOPHY_AND_UI_PLAN.md).
 
 ## Environments
 

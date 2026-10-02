@@ -2,6 +2,10 @@
 
 Status: separate application with Trust, Member Support, Content, Programmes, I/O, Finance, Team and Audit operations locally Verified; matching capability-checked database commands are Released to the connected demo, updated 6 September 2026. The application source is published to `admin-indus-orbit`, includes a deterministic Netlify deployment contract and is not yet connected to its production hostname.
 
+## 2 October 2026 local session/MFA completion
+
+The separate admin working tree now versions account-bound privilege/MFA responses, rejects stale initial and A→B→A responses, clears projection on sign-out/account change, and revalidates on tab/network return. Same-account checks preserve the successful shell; errors close privileged access with retry. Both AAL2 and a verified TOTP factor are required. Local code verification passes 32 contracts and the placeholder production test bundle passes eight browser checks (four public, four synthetic). Real independent operators, scoped-duty negative personas and deployment remain due. The prior 1 October local/remote content parity is historical; no commit/push/deploy occurred. See the separate repository implementation record and `../../release-evidence/local-2026-10-02/verification.md`.
+
 ## Ownership boundary
 
 - `helloimakeimpact/admin-indus-orbit` owns the standalone administrator web application.

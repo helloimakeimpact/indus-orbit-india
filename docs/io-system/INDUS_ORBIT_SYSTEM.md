@@ -1,6 +1,6 @@
 # What Indus Orbit is
 
-Status: product and system interpretation grounded in the current application and plans, 1 August 2026.
+Status: product and system interpretation grounded in the application and plans; identity/design specification refreshed 2 October 2026.
 
 ## Core proposition
 
@@ -60,13 +60,15 @@ I/O Port is intended to be India’s people-centred intelligence exchange: one g
 
 ## Brand translated into product behavior
 
-The canonical identity is **“The General Intelligence Company of India”**, never “for India.” There is currently no approved short brand line; do not publish the retired “Made of Many Minds.” line or substitute new wording without brand approval. The operating thesis remains people, institutions, models and capacity becoming more capable through cooperation. Public identity and stationery use `indusorbit.com`; `jri.ai` is not an Indus Orbit identity domain.
+The canonical identity is **“The General Intelligence Company of India”**, never “for India.” The owner-approved short brand line is **“Intelligence, built together.”** It expresses the operating thesis of people, institutions, models and capacity becoming more capable through cooperation. The former “Made of Many Minds.” line is retired. Public identity and stationery use `indusorbit.com`; `jri.ai` is not an Indus Orbit identity domain.
 
-The visiting-card front is intentionally limited to the mark and company definition while the short brand line is unapproved. Personal/contact information lives on the reverse with the compact product vocabulary—I/O Port/Intelligence, Network/People, Chapters/Places and Missions/Action. Its QR encodes the same downloadable vCard data, and the public brand page exports both 85 × 49 mm faces as one two-page high-resolution PDF.
+The visiting-card front is intentionally limited to the mark, company definition and approved short brand line. Personal/contact information lives on the reverse with the compact product vocabulary—I/O Port/Intelligence, Network/People, Chapters/Places and Missions/Action. Its QR encodes the same downloadable vCard data, and the public brand page exports both 85 × 49 mm faces as one two-page high-resolution PDF.
 
 Indigo provides structure and trust; parchment provides a calm working surface; saffron marks deliberate attention and action. Scientific credibility comes from evidence, timestamps, units, uncertainty and reproducibility—not decorative technical language. The voice should be ambitious without making claims that the system cannot yet prove.
 
 The spatial application model is a persistent Orbit rail, contextual navigation, main workspace and optional inspector. That geometry can support People, Learn, Action, Messages and I/O while keeping their data and permissions distinct.
+
+The finalized product-wide visual and interaction specification is filed in `DESIGN_PHILOSOPHY_AND_UI_PLAN.md`: an **orbit of agency** grounded in people, legible evidence, calm intensity, continuity and India-specific editorial art. It sets a high craft bar without borrowing another company's visual identity.
 
 ## Technical architecture in one sentence
 

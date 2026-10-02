@@ -1,13 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-
-function generateCode(): string {
-  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  const values = new Uint8Array(10);
-  globalThis.crypto.getRandomValues(values);
-
-  // The alphabet has 32 characters, so every five random bits maps evenly.
-  return Array.from(values, (value) => alphabet[value & 31]).join("");
-}
+import { isMissingSchemaContract } from "@/integrations/supabase/schema-compat";
 
 async function getRemainingForUser(userId: string): Promise<number> {
   const { data, error } = await supabase.rpc("vouch_remaining", { _user_id: userId });
@@ -19,43 +11,6 @@ async function getQuotaForUser(userId: string): Promise<number> {
   const { data, error } = await supabase.rpc("vouch_effective_quota", { _user_id: userId });
   if (error) throw new Error(error.message);
   return (data as number) ?? 0;
-}
-
-async function isAdminCheck(userId: string): Promise<boolean> {
-  const { data } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", userId)
-    .eq("role", "admin")
-    .maybeSingle();
-  return !!data;
-}
-
-async function assertCanIssue(userId: string) {
-  const { data: susp } = await supabase
-    .from("member_suspensions")
-    .select("id")
-    .eq("user_id", userId)
-    .is("lifted_at", null)
-    .maybeSingle();
-  if (susp) throw new Error("Your account is suspended.");
-
-  const admin = await isAdminCheck(userId);
-  if (admin) return;
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("is_verified")
-    .eq("user_id", userId)
-    .maybeSingle();
-  if (!profile?.is_verified) {
-    throw new Error("Only verified members can vouch.");
-  }
-
-  const remaining = await getRemainingForUser(userId);
-  if (remaining <= 0) {
-    throw new Error("You have used your vouch budget for this period.");
-  }
 }
 
 export async function getMyVouchStatus() {
@@ -73,7 +28,7 @@ export async function getMyVouchStatus() {
       .maybeSingle(),
     supabase
       .from("vouch_codes")
-      .select("*")
+      .select("id, issuer_id, created_at, expires_at, redeemed_at, redeemer_id, status")
       .eq("issuer_id", userId)
       .order("created_at", { ascending: false })
       .limit(20),
@@ -103,49 +58,22 @@ export async function getMyVouchStatus() {
 }
 
 export async function issueCode() {
-  const { data: userData } = await supabase.auth.getUser();
-  if (!userData.user) throw new Error("Unauthorized");
-
-  const userId = userData.user.id;
-  await assertCanIssue(userId);
-
-  const { data: settings } = await supabase
-    .from("vouch_settings")
-    .select("code_ttl_days")
-    .eq("id", "global")
-    .maybeSingle();
-  const ttl = settings?.code_ttl_days ?? 14;
-  const expires = new Date(Date.now() + ttl * 24 * 60 * 60 * 1000).toISOString();
-
-  let inserted: { id: string; code: string } | null = null;
-  for (let i = 0; i < 5; i++) {
-    const code = generateCode();
-    const { data, error } = await supabase
-      .from("vouch_codes")
-      .insert({ issuer_id: userId, code, expires_at: expires })
-      .select("id, code")
-      .single();
-    if (!error && data) {
-      inserted = data;
-      break;
-    }
-  }
-  if (!inserted) throw new Error("Could not generate code, please retry.");
-
-  await supabase.from("vouch_events").insert({
-    issuer_id: userId,
-    channel: "code",
-    code_id: inserted.id,
-  });
-
-  await supabase.from("audit_log").insert({
-    actor_id: userId,
-    action: "vouch.code_issued",
-    target_type: "vouch_code",
-    target_id: inserted.id,
-  });
-
-  return { code: inserted.code, expiresAt: expires };
+  const { data, error } = await supabase.rpc("issue_my_vouch_code");
+  if (error)
+    throw new Error(
+      isMissingSchemaContract(error)
+        ? "Vouch codes are temporarily unavailable. Please try again later."
+        : error.message,
+    );
+  if (
+    !data ||
+    typeof data !== "object" ||
+    Array.isArray(data) ||
+    typeof data.code !== "string" ||
+    typeof data.expiresAt !== "string"
+  )
+    throw new Error("Vouch issuance returned an invalid result.");
+  return { code: data.code, expiresAt: data.expiresAt };
 }
 
 export async function vouchDirectly(recipientId: string) {
