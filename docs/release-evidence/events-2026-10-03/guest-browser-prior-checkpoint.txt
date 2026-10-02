@@ -1,0 +1,11 @@
+
+Running 2 tests using 1 worker
+
+(node:76152) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [desktop-chromium] › tests/e2e/guest-registration.spec.ts:8:1 › @public @turnstile public guests verify email explicitly, preserve their draft, and manage a private receipt (37.3s)
+(node:76227) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  2 [mobile-chromium] › tests/e2e/guest-registration.spec.ts:8:1 › @public @turnstile public guests verify email explicitly, preserve their draft, and manage a private receipt (12.8s)
+
+  2 passed (1.1m)

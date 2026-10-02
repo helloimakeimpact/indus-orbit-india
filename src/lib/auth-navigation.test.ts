@@ -37,3 +37,16 @@ test("validated auth search is stable and safe", () => {
   );
   assert.deepEqual(getAuthSearch({}), { tab: "signin", intent: "io", next: "/io" });
 });
+
+const eventId = "98200000-0000-4000-8000-000000000001";
+test("event auth returns accept only a community invitation UUID and reject URLs, queries and traversal", () => {
+  assert.equal(resolveAuthReturnPath(`/events/${eventId}`, "community"), `/events/${eventId}`);
+  for (const path of [
+    `/events/${eventId}?next=//attacker.test`,
+    `/events/../admin`,
+    `//attacker.test/events/${eventId}`,
+    `/events/not-a-uuid`,
+  ])
+    assert.equal(resolveAuthReturnPath(path, "community"), "/app");
+  assert.equal(resolveAuthReturnPath(`/events/${eventId}`, "io"), "/io");
+});

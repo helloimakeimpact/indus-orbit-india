@@ -7,6 +7,8 @@ import footerBand from "@/assets/footer-band.jpg";
 import logo from "@/assets/indus-orbit-logo.png";
 
 const platformLinks = [
+  { to: "/events", label: "Events" },
+  { to: "/communities", label: "Communities" },
   { to: "/skills", label: "Skills" },
   { to: "/models", label: "Models" },
   { to: "/members", label: "Members" },
@@ -100,7 +102,12 @@ export function SiteFooter() {
                   {submitting ? "Sending…" : "Subscribe"}
                 </button>
               </div>
-              <HumanVerification onToken={setCaptchaToken} resetKey={captchaReset} />
+              <HumanVerification
+                onToken={setCaptchaToken}
+                resetKey={captchaReset}
+                enabled={Boolean(email)}
+                action="newsletter"
+              />
             </form>
           </div>
 

@@ -1,0 +1,1 @@
+PASS: 8 simultaneous member registrations allocate exactly 1 confirmed place and 7 waitlist positions.

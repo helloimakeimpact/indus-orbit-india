@@ -7,14 +7,14 @@ type CaptchaApi = {
 };
 declare global {
   interface Window {
-    hcaptcha?: CaptchaApi;
+    turnstile?: CaptchaApi;
     indusOrbitCaptchaReady?: () => void;
   }
 }
 let loading: Promise<CaptchaApi> | undefined;
 
 function loadCaptcha(): Promise<CaptchaApi> {
-  if (window.hcaptcha) return Promise.resolve(window.hcaptcha);
+  if (window.turnstile) return Promise.resolve(window.turnstile);
   if (loading) return loading;
   loading = new Promise((resolve, reject) => {
     const script = document.createElement("script");
@@ -30,11 +30,12 @@ function loadCaptcha(): Promise<CaptchaApi> {
     };
     const timer = window.setTimeout(failed, 15000);
     window.indusOrbitCaptchaReady = () => {
-      if (!window.hcaptcha) return failed();
+      if (!window.turnstile) return failed();
       finish();
-      resolve(window.hcaptcha);
+      resolve(window.turnstile);
     };
-    script.src = "https://js.hcaptcha.com/1/api.js?render=explicit&onload=indusOrbitCaptchaReady";
+    script.src =
+      "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=indusOrbitCaptchaReady";
     script.async = true;
     script.onerror = failed;
     document.head.appendChild(script);
@@ -45,17 +46,21 @@ function loadCaptcha(): Promise<CaptchaApi> {
 export function HumanVerification({
   onToken,
   resetKey,
+  enabled,
+  action,
 }: {
   onToken: (token: string) => void;
   resetKey: number;
+  enabled: boolean;
+  action: "contact" | "newsletter" | "event_registration";
 }) {
-  const sitekey = import.meta.env.VITE_HCAPTCHA_SITE_KEY?.trim();
-  const [active, setActive] = useState(false);
+  const sitekey = import.meta.env.VITE_TURNSTILE_SITE_KEY?.trim();
+  const [retry, setRetry] = useState(0);
   const [error, setError] = useState(false);
   const container = useRef<HTMLDivElement>(null);
   const widget = useRef<string | null>(null);
   useEffect(() => {
-    if (!active || !sitekey) return;
+    if (!enabled || !sitekey) return;
     let cancelled = false;
     void loadCaptcha()
       .then((api) => {
@@ -63,6 +68,9 @@ export function HumanVerification({
         widget.current = api.render(container.current, {
           sitekey,
           size: "compact",
+          action,
+          appearance: "interaction-only",
+          "response-field": false,
           callback: (token: string) => {
             onToken(token);
             setError(false);
@@ -79,12 +87,12 @@ export function HumanVerification({
       });
     return () => {
       cancelled = true;
-      if (widget.current !== null) window.hcaptcha?.remove(widget.current);
+      if (widget.current !== null) window.turnstile?.remove(widget.current);
       widget.current = null;
     };
-  }, [active, sitekey, onToken]);
+  }, [enabled, sitekey, onToken, action, retry]);
   useEffect(() => {
-    if (widget.current !== null) window.hcaptcha?.reset(widget.current);
+    if (widget.current !== null) window.turnstile?.reset(widget.current);
   }, [resetKey]);
   if (!sitekey)
     return (
@@ -94,24 +102,21 @@ export function HumanVerification({
     );
   return (
     <div className="space-y-2">
-      {!active && (
-        <button
-          type="button"
-          onClick={() => setActive(true)}
-          className="min-h-11 rounded-xl border border-current/30 px-4 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
-        >
-          Verify you’re human
-        </button>
-      )}
+      <p role="status" className="text-xs leading-5">
+        {enabled
+          ? "Spam protection runs automatically."
+          : "Spam protection starts when you fill in this form."}
+      </p>
       <div ref={container} />
       {error && (
         <p role="alert" className="text-sm">
-          Verification could not load.{" "}
+          Verification is unavailable.{" "}
           <button
             type="button"
             onClick={() => {
               setError(false);
-              setActive(false);
+              onToken("");
+              setRetry((value) => value + 1);
             }}
             className="min-h-11 underline underline-offset-4"
           >
@@ -120,9 +125,9 @@ export function HumanVerification({
         </p>
       )}
       <p className="text-xs leading-5">
-        This form uses hCaptcha. Its{" "}
+        Protected by Cloudflare Turnstile. Its{" "}
         <a
-          href="https://www.hcaptcha.com/privacy"
+          href="https://www.cloudflare.com/privacypolicy/"
           target="_blank"
           rel="noreferrer"
           className="underline underline-offset-2"
@@ -131,7 +136,7 @@ export function HumanVerification({
         </a>{" "}
         and{" "}
         <a
-          href="https://www.hcaptcha.com/terms"
+          href="https://www.cloudflare.com/website-terms/"
           target="_blank"
           rel="noreferrer"
           className="underline underline-offset-2"

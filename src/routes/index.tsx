@@ -103,16 +103,16 @@ function HomePage() {
               </p>
               <div className="mt-5 flex flex-wrap items-center gap-3">
                 <Link
-                  to="/about"
+                  to="/events"
                   className="inline-flex items-center gap-2 rounded-full bg-[var(--saffron)] px-5 py-2.5 text-sm font-semibold text-[var(--indigo-night)] hover:bg-[var(--parchment)] transition"
                 >
-                  Get to know us <ArrowRight className="h-4 w-4" />
+                  Explore events <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link
-                  to="/contact"
+                  to="/communities"
                   className="inline-flex items-center gap-2 rounded-full border border-[var(--parchment)]/40 px-5 py-2.5 text-sm font-medium text-[var(--parchment)] hover:bg-[var(--parchment)]/10"
                 >
-                  Get in touch
+                  Find your community
                 </Link>
               </div>
             </div>

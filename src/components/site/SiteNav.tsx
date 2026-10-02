@@ -30,13 +30,13 @@ import {
 } from "@/components/ui/sheet";
 
 const links = [
+  { to: "/events", label: "Events" },
+  { to: "/communities", label: "Communities" },
   { to: "/about", label: "About" },
   { to: "/our-work", label: "Our Work" },
   { to: "/models", label: "Models" },
-  { to: "/cities", label: "Cities" },
   { to: "/io-port", label: "I/O Port" },
   { to: "/writing", label: "Writing" },
-  { to: "/members", label: "Members" },
   { to: "/contact", label: "Contact" },
 ] as const;
 
@@ -124,7 +124,7 @@ export function SiteNav({ tone = "light" }: { tone?: "light" | "dark" }) {
   const { user } = useAuth();
   const dark = tone === "dark";
   useEffect(() => {
-    const desktop = window.matchMedia("(min-width: 1024px)");
+    const desktop = window.matchMedia("(min-width: 1280px)");
     const closeOnDesktop = () => {
       if (desktop.matches) setOpen(false);
     };
@@ -153,16 +153,16 @@ export function SiteNav({ tone = "light" }: { tone?: "light" | "dark" }) {
             </span>
           </Link>
 
-          <nav aria-label="Primary" className="hidden lg:flex items-center gap-1">
+          <nav aria-label="Primary" className="hidden xl:flex items-center gap-1">
             {links.map((l) => (
               <Link
                 key={l.to}
                 to={l.to}
-                className="rounded-full px-3 py-1.5 text-sm font-medium opacity-80 transition hover:bg-foreground/5 hover:opacity-100"
+                className="inline-flex min-h-11 items-center rounded-full px-3 py-1.5 text-sm font-medium opacity-80 transition hover:bg-foreground/5 hover:opacity-100"
                 activeProps={{
                   "aria-current": "page",
                   className:
-                    "rounded-full px-3 py-1.5 text-sm font-semibold opacity-100 bg-foreground/5",
+                    "inline-flex min-h-11 items-center rounded-full px-3 py-1.5 text-sm font-semibold opacity-100 bg-foreground/5",
                 }}
               >
                 {l.label}
@@ -178,7 +178,7 @@ export function SiteNav({ tone = "light" }: { tone?: "light" | "dark" }) {
               <Link
                 to="/auth"
                 search={{ tab: "signup", intent: "community", next: "/app" }}
-                className="hidden sm:inline-flex items-center rounded-full bg-[var(--indigo-night)] px-4 py-2 text-xs font-semibold uppercase tracking-wider text-[var(--parchment)] transition hover:bg-[var(--saffron)] hover:text-[var(--indigo-night)]"
+                className="hidden sm:inline-flex min-h-11 items-center rounded-full bg-[var(--indigo-night)] px-4 py-2 text-xs font-semibold uppercase tracking-wider text-[var(--parchment)] transition hover:bg-[var(--saffron)] hover:text-[var(--indigo-night)]"
               >
                 Join the Orbit
               </Link>
@@ -187,7 +187,7 @@ export function SiteNav({ tone = "light" }: { tone?: "light" | "dark" }) {
               <button
                 type="button"
                 aria-label="Open navigation"
-                className="inline-flex h-11 w-11 items-center justify-center rounded-full hover:bg-foreground/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:hidden"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full hover:bg-foreground/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring xl:hidden"
               >
                 <Menu className="h-5 w-5" />
               </button>

@@ -1,0 +1,11 @@
+
+Running 2 tests using 2 workers
+
+(node:71426) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:71425) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [desktop-chromium] › tests/e2e/turnstile-configured.spec.ts:4:1 › @public @turnstile configured forms verify automatically and retain a draft after server rejection (13.8s)
+  ✓  2 [mobile-chromium] › tests/e2e/turnstile-configured.spec.ts:4:1 › @public @turnstile configured forms verify automatically and retain a draft after server rejection (14.3s)
+
+  2 passed (15.7s)

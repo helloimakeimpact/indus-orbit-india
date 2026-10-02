@@ -1903,49 +1903,73 @@ export type Database = {
       };
       events: {
         Row: {
+          capacity: number | null;
           chapter_id: string | null;
+          cover_template: string;
           created_at: string;
           description: string;
           end_time: string;
           id: string;
+          lifecycle: string;
           link: string | null;
           location: string | null;
           location_type: string;
           mission_id: string | null;
           organizer_id: string;
+          public_location: string | null;
+          registration_scope: string;
+          requires_approval: boolean;
           start_time: string;
           status: string;
+          timezone: string;
           title: string;
+          visibility: string;
         };
         Insert: {
+          capacity?: number | null;
           chapter_id?: string | null;
+          cover_template?: string;
           created_at?: string;
           description: string;
           end_time: string;
           id?: string;
+          lifecycle?: string;
           link?: string | null;
           location?: string | null;
           location_type: string;
           mission_id?: string | null;
           organizer_id: string;
+          public_location?: string | null;
+          registration_scope?: string;
+          requires_approval?: boolean;
           start_time: string;
           status?: string;
+          timezone?: string;
           title: string;
+          visibility?: string;
         };
         Update: {
+          capacity?: number | null;
           chapter_id?: string | null;
+          cover_template?: string;
           created_at?: string;
           description?: string;
           end_time?: string;
           id?: string;
+          lifecycle?: string;
           link?: string | null;
           location?: string | null;
           location_type?: string;
           mission_id?: string | null;
           organizer_id?: string;
+          public_location?: string | null;
+          registration_scope?: string;
+          requires_approval?: boolean;
           start_time?: string;
           status?: string;
+          timezone?: string;
           title?: string;
+          visibility?: string;
         };
         Relationships: [
           {
@@ -6412,6 +6436,107 @@ export type Database = {
       };
     };
     Functions: {
+      request_event_guest_link: {
+        Args: { _event_id: string; _email: string; _name: string; _token_hash: string };
+        Returns: boolean;
+      };
+      event_guest_receipt: {
+        Args: { _event_id: string; _token_hash: string; _action: string };
+        Returns: Json;
+      };
+      prune_expired_event_guest_links: { Args: never; Returns: number };
+      discover_host_events: {
+        Args: { _host_id: string; _limit?: number };
+        Returns: {
+          id: string;
+          title: string;
+          description: string;
+          start_time: string;
+          location: string;
+          location_type: string;
+          status: string;
+        }[];
+      };
+
+      get_my_event_workspace: { Args: never; Returns: Json };
+      discover_events: {
+        Args: {
+          _chapter_id?: string;
+          _event_id?: string;
+          _format?: string;
+          _limit?: number;
+          _offset?: number;
+          _period?: string;
+          _search?: string;
+        };
+        Returns: {
+          capacity: number;
+          chapter_id: string;
+          chapter_name: string;
+          cover_template: string;
+          description: string;
+          end_time: string;
+          host_name: string;
+          id: string;
+          lifecycle: string;
+          location_type: string;
+          public_location: string;
+          registration_scope: string;
+          requires_approval: boolean;
+          start_time: string;
+          timezone: string;
+          title: string;
+          visibility: string;
+        }[];
+      };
+      discover_communities: {
+        Args: never;
+        Returns: {
+          city: string;
+          country: string;
+          description: string;
+          id: string;
+          name: string;
+          upcoming_events: number;
+        }[];
+      };
+      submit_my_event: { Args: { _input: Json }; Returns: Json };
+      review_event_host: {
+        Args: { _approved: boolean; _reason: string; _user_id: string };
+        Returns: undefined;
+      };
+      register_for_event: {
+        Args: { _event_id: string; _expected_user_id: string };
+        Returns: Json;
+      };
+      cancel_my_event_registration: {
+        Args: { _event_id: string; _expected_user_id: string };
+        Returns: undefined;
+      };
+      get_my_event_registration: { Args: { _event_id: string }; Returns: Json };
+      get_event_guest_list: {
+        Args: { _event_id: string; _limit?: number; _offset?: number };
+        Returns: {
+          checked_in_at: string;
+          created_at: string;
+          display_name: string;
+          id: string;
+          status: string;
+        }[];
+      };
+      manage_event_guest: {
+        Args: {
+          _action: string;
+          _event_id: string;
+          _expected_user_id: string;
+          _registration_id: string;
+        };
+        Returns: undefined;
+      };
+      cancel_hosted_event: {
+        Args: { _event_id: string; _expected_user_id: string };
+        Returns: undefined;
+      };
       issue_my_vouch_code: { Args: never; Returns: Json };
       submit_my_education_quiz: {
         Args: { _answers: Json; _quiz_id: string };

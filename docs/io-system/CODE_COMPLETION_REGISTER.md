@@ -1,5 +1,11 @@
 # Indus Orbit code completion register
 
+> Owner stop checkpoint, 3 October 2026: development and active verification stopped as requested. Source is saved locally without a push. Latest complete replay/types/browser refinements remain pending; see [the status report](PRODUCTION_STATUS_2026-10-03.md) and its evidence boundary before rollout.
+
+## 3 October 2026 — native events and simpler verification
+
+The owner requested a simpler replacement for hCaptcha and adaptation of Luma-like website elements. Current source uses Cloudflare Turnstile and native Community event discovery, invitation, free registration, host review, capacity/waitlists and scoped guest operations. Original branding/assets are retained. Read [PRODUCTION_STATUS_2026-10-03.md](PRODUCTION_STATUS_2026-10-03.md), [EVENTS_RELEASE_RUNBOOK.md](EVENTS_RELEASE_RUNBOOK.md) and [PUBLIC_FORMS_TURNSTILE_RUNBOOK.md](PUBLIC_FORMS_TURNSTILE_RUNBOOK.md) for the current implementation, local evidence and six remaining launch workstreams. Six forward migrations and matching hosted delivery remain pending. Earlier dated hCaptcha/planned-event descriptions below are historical and superseded for these capabilities.
+
 Status: whole-product code and release filing updated 2 October 2026. See `PHASED_COMPLETION_PLAN_2026-09-08.md` for the current handoff, `FINAL_CODE_LEVEL_AUDIT_2026-09-06.md` for the last full audit and `FULL_CODE_AUDIT_2026-08-19.md` for the cumulative record.
 
 This is the canonical answer to “what is done, what needs improvement, and what is left?” It separates checked-in/local evidence from the hosted demo and from production. A migration, secret, provider row or UI preview is not a release by itself.

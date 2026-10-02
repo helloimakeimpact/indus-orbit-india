@@ -17,3 +17,11 @@ The real-member suite checks I/O navigation/reload and Community tab-return draf
 ## Public forms configuration boundary
 
 `public-forms.spec.ts` uses the standard regression build without `VITE_HCAPTCHA_SITE_KEY`: it verifies unavailable submissions, named contact fields, the email alternative, 320px layout, retained input and no direct REST insertion or eager hCaptcha SDK load. The server-handler contracts verify the injected challenge/store boundary. Real staged hCaptcha completion/replay/expiry and hosted REST denial remain release evidence; no production challenge is solved by this suite.
+
+## Native Community events and automatic verification — 3 October 2026
+
+`community-events.spec.ts` checks public discovery/search, 320px invitation/community navigation, calendar download, accessibility, synthetic member waitlist/cancellation/access and the creation dialog's named fields/original covers/Escape/focus return. All data is intercepted; it is not genuine hosted-persona evidence.
+
+`turnstile-configured.spec.ts` is opt-in. Start an isolated local preview with a synthetic `VITE_TURNSTILE_SITE_KEY`, set `PLAYWRIGHT_BASE_URL` to that local origin and `PLAYWRIGHT_TURNSTILE_CONFIGURED=1`, then run that file. It intercepts the official SDK and function requests and verifies automatic execution, single-use token reset and draft preservation. The standard build lacks a production sitekey and skips the two configured scenarios. Never point synthetic member fixtures at a hosted application.
+
+`guest-registration.spec.ts` uses the same opt-in configured preview. Email and Turnstile are intercepted; desktop/mobile cover request rejection with draft preservation, explicit email confirmation (no automatic seat on open), fragment removal, receipt reload and private cancellation. This is not real deliverability or guest acceptance evidence.

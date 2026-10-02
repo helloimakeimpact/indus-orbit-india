@@ -38,6 +38,7 @@ type Role = Segment;
 function ContactPage() {
   const [role, setRole] = useState<Role>("youth");
   const [submitting, setSubmitting] = useState(false);
+  const [verificationEnabled, setVerificationEnabled] = useState(false);
   const [captchaToken, setCaptchaToken] = useState("");
   const [captchaReset, setCaptchaReset] = useState(0);
 
@@ -128,6 +129,7 @@ function ContactPage() {
           </div>
 
           <form
+            onFocusCapture={() => setVerificationEnabled(true)}
             onSubmit={onSubmit}
             className="rounded-3xl border border-border bg-card p-6 shadow-sm md:p-8"
           >
@@ -193,7 +195,12 @@ function ContactPage() {
             </div>
 
             <div className="mt-5">
-              <HumanVerification onToken={setCaptchaToken} resetKey={captchaReset} />
+              <HumanVerification
+                onToken={setCaptchaToken}
+                resetKey={captchaReset}
+                enabled={verificationEnabled}
+                action="contact"
+              />
             </div>
 
             <button

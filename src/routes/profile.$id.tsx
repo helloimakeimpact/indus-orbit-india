@@ -182,13 +182,7 @@ async function loadSocialData(userId: string, profileUrl: string): Promise<Socia
         .in("status", ["approved", "featured", "published"])
         .order("created_at", { ascending: false })
         .limit(8),
-      supabase
-        .from("events")
-        .select("id, title, description, start_time, location, location_type, status")
-        .eq("organizer_id", userId)
-        .eq("status", "approved")
-        .order("start_time", { ascending: false })
-        .limit(8),
+      supabase.rpc("discover_host_events", { _host_id: userId, _limit: 8 }),
       supabase
         .from("mission_updates")
         .select("id, content, created_at, mission_id, missions(id, title)")
@@ -268,7 +262,7 @@ async function loadSocialData(userId: string, profileUrl: string): Promise<Socia
     body: excerpt(event.description),
     date: event.start_time,
     status: event.status,
-    href: `/app/events/${event.id}`,
+    href: `/events/${event.id}`,
   }));
 
   const updateActivities: ProfileActivityItem[] = updates.map((update) => {

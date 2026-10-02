@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { submitEventDraft, discoverEvents } from "@/features/events/event-client";
 import { isMissingSchemaContract } from "@/integrations/supabase/schema-compat";
 
 async function isActiveChapterLead(userId: string, chapterId: string): Promise<boolean> {
@@ -138,35 +139,39 @@ export const submitEvent = async ({
     throw new Error("Add an online location or join link for virtual events");
   }
 
-  let status = "pending";
-  if (data.chapterId && (await isActiveChapterLead(userData.user.id, data.chapterId))) {
-    status = "approved";
-  }
-
-  const { error } = await supabase.from("events").insert({
-    organizer_id: userData.user.id,
-    title,
-    description,
-    start_time: start.toISOString(),
-    end_time: end.toISOString(),
-    location_type: data.locationType,
-    location,
-    link,
-    chapter_id: data.chapterId,
-    status,
-  });
-  if (error) throw new Error(error.message);
-  return { ok: true };
+  const result = await submitEventDraft(
+    {
+      title,
+      description,
+      startTime: start.toISOString(),
+      endTime: end.toISOString(),
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      locationType: data.locationType,
+      location: location ?? "",
+      link: link ?? "",
+      publicLocation: "",
+      chapterId: data.chapterId ?? "",
+      coverTemplate: "dawn",
+      visibility: "public",
+      registrationScope: "community",
+      capacity: "",
+      requiresApproval: false,
+    },
+    userData.user.id,
+    crypto.randomUUID(),
+  );
+  return { ok: true, ...result };
 };
 
 export const getApprovedEvents = async () => {
-  const { data, error } = await supabase
-    .from("events")
-    .select("*, chapters(name), profiles!events_organizer_id_fkey(display_name)")
-    .eq("status", "approved")
-    .order("start_time", { ascending: true });
-  if (error) throw new Error(error.message);
-  return data ?? [];
+  const data = await discoverEvents({ period: "all" });
+  return data.map((event) => ({
+    ...event,
+    location: event.public_location,
+    link: null,
+    chapters: event.chapter_name ? { name: event.chapter_name } : null,
+    profiles: { display_name: event.host_name },
+  }));
 };
 
 // 3. Chapters

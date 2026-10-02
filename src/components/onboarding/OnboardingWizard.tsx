@@ -54,12 +54,14 @@ type LocationMode = "skip" | "private" | "members";
 
 type OnboardingWizardProps = {
   userId: string;
+  returnEventId?: string;
   onboardingVersion: number;
   initialMeasurementConsent: boolean;
 };
 
 export function OnboardingWizard({
   userId,
+  returnEventId,
   onboardingVersion,
   initialMeasurementConsent,
 }: OnboardingWizardProps) {
@@ -184,7 +186,8 @@ export function OnboardingWizard({
         toast.success("Welcome to the Orbit");
       }
 
-      navigate({ to: "/app" });
+      if (returnEventId) navigate({ to: "/events/$id", params: { id: returnEventId } });
+      else navigate({ to: "/app" });
     } catch (error) {
       toast.error((error as Error).message || "Community setup could not be completed.");
     } finally {

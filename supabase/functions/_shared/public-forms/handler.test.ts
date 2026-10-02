@@ -16,23 +16,29 @@ function fixture(
     result?: unknown;
     unavailable?: boolean;
     saveFailure?: boolean;
-    configuration?: { secret: string; sitekey: string; origins: string[] };
+    configuration?: { secret: string; origins: string[] };
   } = {},
 ) {
   const saved: PublicSubmission[] = [];
   const checks: RequestInit[] = [];
+  let currentBody = "{}";
   const handler = createPublicFormHandler({
     configuration: () =>
       options.configuration ?? {
         secret: "server-only-secret",
-        sitekey: "real-sitekey",
         origins: [origin],
       },
     fetch: async (url, init) => {
-      assert.equal(url, "https://api.hcaptcha.com/siteverify");
+      assert.equal(url, "https://challenges.cloudflare.com/turnstile/v0/siteverify");
       checks.push(init!);
       if (options.unavailable) throw new Error("offline");
-      return Response.json(options.result ?? { success: true });
+      return Response.json(
+        options.result ?? {
+          success: true,
+          hostname: "indusorbit.com",
+          action: JSON.parse(String(currentBody)).kind,
+        },
+      );
     },
     save: async (submission) => {
       if (options.saveFailure) throw new Error("private DB details");
@@ -42,14 +48,16 @@ function fixture(
   const submit = (
     value: unknown = body,
     headers = { origin, "content-type": "application/json" },
-  ) =>
-    handler(
+  ) => {
+    currentBody = JSON.stringify(value);
+    return handler(
       new Request("https://example.supabase.co/functions/v1/public-form-submit", {
         method: "POST",
         headers,
-        body: JSON.stringify(value),
+        body: currentBody,
       }),
     );
+  };
   return { handler, submit, saved, checks };
 }
 
@@ -68,7 +76,6 @@ test("only a server-verified token saves normalized fields, without token or arb
   ]);
   const verification = f.checks[0];
   assert.equal(verification.method, "POST");
-  assert.equal((verification.body as URLSearchParams).get("sitekey"), "real-sitekey");
   assert.equal((verification.body as URLSearchParams).get("secret"), "server-only-secret");
   assert.ok(verification.signal);
   assert.equal((await response.text()).includes("token"), false);
@@ -94,7 +101,7 @@ for (const result of [
     assert.equal(f.saved.length, 0);
   });
 }
-test("missing token, invalid role/email and oversized fields fail before contacting hCaptcha", async () => {
+test("missing token, invalid role/email and oversized fields fail before contacting Turnstile", async () => {
   const f = fixture();
   for (const value of [
     { ...body, captchaToken: "" },
@@ -133,9 +140,9 @@ test("preflight and disallowed methods do not verify or write", async () => {
 });
 test("missing production configuration and official bypass test keys are refused", async () => {
   for (const configuration of [
-    { secret: "", sitekey: "real", origins: [origin] },
-    { secret: "real", sitekey: "10000000-ffff-ffff-ffff-000000000001", origins: [origin] },
-    { secret: "0x0000000000000000000000000000000000000000", sitekey: "real", origins: [origin] },
+    { secret: "", origins: [origin] },
+    { secret: "1x0000000000000000000000000000000AA", origins: [origin] },
+    { secret: "2x0000000000000000000000000000000AA", origins: [origin] },
   ]) {
     const f = fixture({ configuration });
     assert.equal((await f.submit()).status, 503);
@@ -149,5 +156,17 @@ test("verification outage and failed persistence return no success or private de
     assert.equal(response.status, 503);
     assert.equal(f.saved.length, 0);
     assert.equal((await response.text()).includes("private DB"), false);
+  }
+});
+
+test("tokens for a different hostname or form action cannot write", async () => {
+  for (const result of [
+    { success: true, hostname: "attacker.test", action: "contact" },
+    { success: true, hostname: "indusorbit.com", action: "newsletter" },
+    { success: true },
+  ]) {
+    const f = fixture({ result });
+    assert.equal((await f.submit()).status, 403);
+    assert.equal(f.saved.length, 0);
   }
 });

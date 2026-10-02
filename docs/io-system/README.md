@@ -1,12 +1,18 @@
 # Indus Orbit living system record
 
+> Owner stop checkpoint, 3 October 2026: development and active verification stopped as requested. Source is saved locally without a push. Latest complete replay/types/browser refinements remain pending; see [the status report](PRODUCTION_STATUS_2026-10-03.md) and its evidence boundary before rollout.
+
+## 3 October 2026 — native events and simpler verification
+
+The owner requested a simpler replacement for hCaptcha and adaptation of Luma-like website elements. Current source uses Cloudflare Turnstile and native Community event discovery, invitation, free registration, host review, capacity/waitlists and scoped guest operations. Original branding/assets are retained. Read [PRODUCTION_STATUS_2026-10-03.md](PRODUCTION_STATUS_2026-10-03.md), [EVENTS_RELEASE_RUNBOOK.md](EVENTS_RELEASE_RUNBOOK.md) and [PUBLIC_FORMS_TURNSTILE_RUNBOOK.md](PUBLIC_FORMS_TURNSTILE_RUNBOOK.md) for the current implementation, local evidence and six remaining launch workstreams. Six forward migrations and matching hosted delivery remain pending. Earlier dated hCaptcha/planned-event descriptions below are historical and superseded for these capabilities.
+
 Status: canonical documentation hub, updated 2 October 2026 for member continuity, the finalized design specification and the full-public-production owner handoff.
 
 This folder files the Indus Orbit product as a system: what it means, which code exists, what is operational, what remains, and how every subsystem fits the people-centred mission. Runtime source stays in its correct `src/` and `supabase/` locations; this record points to that source and distinguishes implementation from deployment.
 
 ## Current Community direction
 
-Read `COMMUNITY_EVENTS_DIRECTION_AND_LUMA_ANALYSIS.md` for the 2 October events/community priority, Luma research, approved host/access decisions, source audit and E0–E6 execution gates. Core branding remains unchanged. hCaptcha is selected for public forms; operational setup and hosted enforcement remain pending.
+Read `COMMUNITY_EVENTS_DIRECTION_AND_LUMA_ANALYSIS.md` for the 2 October events/community priority, Luma research, approved host/access decisions, source audit and E0–E6 execution gates. Core branding remains unchanged. Cloudflare Turnstile now replaces the earlier hCaptcha selection for public forms; operational setup and hosted enforcement remain pending.
 
 ## 2 October source delivery
 
@@ -115,3 +121,5 @@ The root `AGENTS.md` requires code and this record to change together. Every mat
 - Direct-message pending sends survive same-tab reload safely and are cleared across real sign-out or account changes.
 - This checkpoint changes no hosted migration, Supabase row, Edge Function deployment, provider activation, payment or customer charge.
 - Remaining production and owner work is filed in `CODE_COMPLETION_REGISTER.md` and sequenced in `PHASED_COMPLETION_PLAN_2026-09-08.md`.
+
+Guest registration: [public guest delivery runbook](EVENT_GUEST_REGISTRATION_RUNBOOK.md). The owner selected public name/email guests by default with optional community-only events.

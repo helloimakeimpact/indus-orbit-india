@@ -4,8 +4,7 @@ import { createPublicFormHandler } from "../_shared/public-forms/handler.ts";
 Deno.serve(
   createPublicFormHandler({
     configuration: () => ({
-      secret: Deno.env.get("HCAPTCHA_SECRET_KEY")?.trim() ?? "",
-      sitekey: Deno.env.get("HCAPTCHA_SITE_KEY")?.trim() ?? "",
+      secret: Deno.env.get("TURNSTILE_SECRET_KEY")?.trim() ?? "",
       origins: (Deno.env.get("PUBLIC_FORM_ALLOWED_ORIGINS") ?? "")
         .split(",")
         .map((origin) => origin.trim())

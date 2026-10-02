@@ -1,5 +1,7 @@
 # Supabase schema-reconciliation record
 
+Current checkpoint: 3 October 2026. Native Community events and Turnstile source are implemented; see `io-system/PRODUCTION_STATUS_2026-10-03.md` and `io-system/EVENTS_RELEASE_RUNBOOK.md`. Source now contains 124 migrations, with six forward changes pending hosted delivery. No hosted migration/function/provider/payment was activated in this increment. Earlier dated numbers and hCaptcha descriptions below retain their historical boundary.
+
 Status: read-only hosted review and local code finalization updated 2 October 2026. Hosted remains at 116 migration records; source now has 121 migration files, including the local/demo-only content seed, intentionally held structured Spaces and three new unapplied forward migrations. An isolated database replayed 120 files from empty and applied the education-file forward migration; all 121 source migrations are present. Its final 28 pgTAP files/883 assertions pass, with zero error-level public/private lint findings. Older totals below retain their dated historical meaning.
 
 The 6 September repair was forward-only. It corrected `admin_trust_case_queue` to read `conversation_messages.content`, derives a failed payment timestamp from `state = 'failed'` plus `updated_at`, and repairs ambiguous Room-admin replay lookups only when the structured-Space functions exist. Production contained only the first two functions, so the same verified migration applied without prematurely releasing structured Spaces. Grants, RLS and capability checks were preserved.

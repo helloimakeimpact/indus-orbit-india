@@ -1,0 +1,190 @@
+
+> build
+> vite build
+
+vite v7.3.6 building client environment for production...
+transforming...
+✓ 2903 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                                    0.88 kB │ gzip:   0.45 kB
+dist/assets/indus-orbit-logo-DVzubhqJ.png                         43.61 kB
+dist/assets/merch-mug-Dc4ifKOj.jpg                                66.66 kB
+dist/assets/merch-tee-general-minimal-DrITaJFE.jpg                77.32 kB
+dist/assets/merch-hoodie-SYKM0PyM.jpg                             88.26 kB
+dist/assets/merch-tshirt-CnK_634j.jpg                             90.39 kB
+dist/assets/brand-hero-DL1gaa8S.jpg                               91.03 kB
+dist/assets/blog-announcements-DSIyu8_6.jpg                      152.39 kB
+dist/assets/blog-vision-CtgJF7wk.jpg                             156.48 kB
+dist/assets/blog-research-Bj_ug_7x.jpg                           158.39 kB
+dist/assets/merch-kit-CVB8ahJ1.jpg                               168.01 kB
+dist/assets/models-hero-TMN9EAN8.jpg                             181.53 kB
+dist/assets/blog-community-BRJsyZUG.jpg                          182.04 kB
+dist/assets/blog-playbooks-C34lsl23.jpg                          189.20 kB
+dist/assets/blog-bharat-YtGnxZiF.jpg                             208.28 kB
+dist/assets/hero-india-dawn-BirkAODF.jpg                         218.70 kB
+dist/assets/soda-hero-H67shMJA.jpg                               218.92 kB
+dist/assets/contact-rooftop-C8TorGZa.jpg                         229.49 kB
+dist/assets/about-banyan-CUTrKEjR.jpg                            234.08 kB
+dist/assets/cities-hero-BTLgTBZD.jpg                             241.40 kB
+dist/assets/footer-band-DUHSAJZf.jpg                             261.63 kB
+dist/assets/work-citylights-BH2Zkaez.jpg                         373.46 kB
+dist/assets/lotus-pixel-C4EGA6sq.png                             675.30 kB
+dist/assets/merch-bottle-DY4Kxu1k.jpg                          1,150.07 kB
+dist/assets/merch-tee-signature-BIczs8LY.jpg                   1,208.34 kB
+dist/assets/merch-tee-backprint-BNgT9xFa.jpg                   1,214.00 kB
+dist/assets/merch-tee-pattern-Dd6-350x.jpg                     1,280.52 kB
+dist/assets/merch-tee-pocket-DMap3t8t.jpg                      1,309.51 kB
+dist/assets/merch-notebook-ff13YB8w.jpg                        1,382.98 kB
+dist/assets/merch-tee-line-C7tx6Idt.jpg                        1,437.13 kB
+dist/assets/merch-cap-BjKMcc3U.jpg                             1,482.06 kB
+dist/assets/merch-tote-LWmZCKqD.jpg                            1,566.16 kB
+dist/assets/styles-BMNy7LKq.css                                  224.30 kB │ gzip:  30.99 kB
+dist/assets/lotus-pixel-9a3tYkAn.js                                0.06 kB │ gzip:   0.08 kB
+dist/assets/indus-orbit-logo-a0WOYav1.js                           0.06 kB │ gzip:   0.08 kB
+dist/assets/errors-B5wX_5qV.js                                     0.12 kB │ gzip:   0.13 kB
+dist/assets/io-workspace-view-context-jHKRdWIX.js                  0.14 kB │ gzip:   0.14 kB
+dist/assets/app.education-Dwc6H16S.js                              0.15 kB │ gzip:   0.14 kB
+dist/assets/app.events-Dwc6H16S.js                                 0.15 kB │ gzip:   0.14 kB
+dist/assets/app.missions-Dwc6H16S.js                               0.15 kB │ gzip:   0.14 kB
+dist/assets/app.skills-Dwc6H16S.js                                 0.15 kB │ gzip:   0.14 kB
+dist/assets/app.soda-Dwc6H16S.js                                   0.15 kB │ gzip:   0.14 kB
+dist/assets/app.stories-Dwc6H16S.js                                0.15 kB │ gzip:   0.14 kB
+dist/assets/app.education._courseSlug-CrkeM8Tc.js                  0.15 kB │ gzip:   0.14 kB
+dist/assets/app.io-DbwgPCgl.js                                     0.17 kB │ gzip:   0.16 kB
+dist/assets/schema-compat-B759watd.js                              0.34 kB │ gzip:   0.24 kB
+dist/assets/label-3It6foTi.js                                      0.41 kB │ gzip:   0.28 kB
+dist/assets/HumanVerification-BqSWdG8D.js                          0.45 kB │ gzip:   0.33 kB
+dist/assets/progress-BxPcZs6c.js                                   0.48 kB │ gzip:   0.33 kB
+dist/assets/VerifiedBadge-BODg1g1C.js                              0.52 kB │ gzip:   0.37 kB
+dist/assets/textarea-BOTqtbq3.js                                   0.53 kB │ gzip:   0.37 kB
+dist/assets/EventCover-BfnMC1Et.js                                 0.55 kB │ gzip:   0.38 kB
+dist/assets/communities-DKRD0YEi.js                                0.60 kB │ gzip:   0.36 kB
+dist/assets/events-BhJBZ2HJ.js                                     0.60 kB │ gzip:   0.36 kB
+dist/assets/input-IWWJzJLk.js                                      0.63 kB │ gzip:   0.40 kB
+dist/assets/events.index-LAvvgkRK.js                               0.68 kB │ gzip:   0.38 kB
+dist/assets/avatar-Br_-gjLD.js                                     0.68 kB │ gzip:   0.34 kB
+dist/assets/app.events.index-DzXzH1d2.js                           0.69 kB │ gzip:   0.39 kB
+dist/assets/index-LHNt3CwB.js                                      0.70 kB │ gzip:   0.43 kB
+dist/assets/events._id-ZVt54r-H.js                                 0.70 kB │ gzip:   0.41 kB
+dist/assets/app.events._id-DRPYGBVA.js                             0.71 kB │ gzip:   0.42 kB
+dist/assets/communities.index-D2spa1zg.js                          0.72 kB │ gzip:   0.40 kB
+dist/assets/notification.functions-e5YSUsVV.js                     0.73 kB │ gzip:   0.32 kB
+dist/assets/communities._id-CXvtz-QF.js                            0.77 kB │ gzip:   0.43 kB
+dist/assets/badge-BS4Nr54n.js                                      0.79 kB │ gzip:   0.41 kB
+dist/assets/location-VAVB-ulQ.js                                   0.84 kB │ gzip:   0.42 kB
+dist/assets/switch-ksiEbeZX.js                                     0.86 kB │ gzip:   0.46 kB
+dist/assets/event-calendar-CYw5VNr9.js                             0.98 kB │ gzip:   0.60 kB
+dist/assets/tabs-DPEnFEZx.js                                       1.14 kB │ gzip:   0.48 kB
+dist/assets/ReportDialog-C5tOqqTu.js                               1.29 kB │ gzip:   0.73 kB
+dist/assets/button-Chq6Hi1x.js                                     1.39 kB │ gzip:   0.68 kB
+dist/assets/saved-items-xjWY4Gzn.js                                1.42 kB │ gzip:   0.75 kB
+dist/assets/admin-CkDZrkdO.js                                      1.45 kB │ gzip:   0.76 kB
+dist/assets/skill.functions-DSAqD61I.js                            1.68 kB │ gzip:   0.68 kB
+dist/assets/BookMentorDialog-DNPep0fW.js                           1.85 kB │ gzip:   0.92 kB
+dist/assets/product-access-DOH_xBbX.js                             1.98 kB │ gzip:   0.69 kB
+dist/assets/mentor.functions-DOnq38oL.js                           1.99 kB │ gzip:   0.85 kB
+dist/assets/alert-dialog-D12LSOQM.js                               2.11 kB │ gzip:   0.77 kB
+dist/assets/reset-password-DSLCEsyx.js                             2.12 kB │ gzip:   1.02 kB
+dist/assets/ReachOutDialog-DLxJ2FTC.js                             2.14 kB │ gzip:   1.13 kB
+dist/assets/vouch.functions-CpS_FHNl.js                            2.36 kB │ gzip:   0.88 kB
+dist/assets/dialog-zxLkhpn9.js                                     2.46 kB │ gzip:   0.98 kB
+dist/assets/location-client-Ddw398i8.js                            2.47 kB │ gzip:   0.87 kB
+dist/assets/sheet-D5wOC47i.js                                      2.60 kB │ gzip:   1.02 kB
+dist/assets/app.notifications-DZYCAZNV.js                          2.60 kB │ gzip:   1.14 kB
+dist/assets/redeem._code-AqvfrMdI.js                               2.79 kB │ gzip:   1.28 kB
+dist/assets/app.stories._id-B9VGeYFj.js                            2.83 kB │ gzip:   1.22 kB
+dist/assets/soda.functions-BsrlvymY.js                             2.87 kB │ gzip:   0.95 kB
+dist/assets/CommunityDiscovery-BXFk__0q.js                         2.96 kB │ gzip:   1.15 kB
+dist/assets/VerificationCard-BS5bbu-G.js                           2.98 kB │ gzip:   1.17 kB
+dist/assets/app.admin.audit-xxD4551g.js                            3.01 kB │ gzip:   1.24 kB
+dist/assets/app-QXstyibS.js                                        3.01 kB │ gzip:   1.39 kB
+dist/assets/event-client-BtiHEU75.js                               3.03 kB │ gzip:   1.14 kB
+dist/assets/select-BSDY9m5h.js                                     3.16 kB │ gzip:   1.17 kB
+dist/assets/app.admin.submissions-DGd7o2Gu.js                      3.42 kB │ gzip:   1.27 kB
+dist/assets/dropdown-menu-pEIAKJd0.js                              3.83 kB │ gzip:   1.07 kB
+dist/assets/app.investor-feed-CG-LrW3x.js                          3.84 kB │ gzip:   1.54 kB
+dist/assets/app.saved-CorVrSRo.js                                  4.05 kB │ gzip:   1.66 kB
+dist/assets/app.skills.index-B8JN_-aH.js                           4.08 kB │ gzip:   1.61 kB
+dist/assets/app.admin.reports-DidKuJwI.js                          4.37 kB │ gzip:   1.82 kB
+dist/assets/app.chapters.propose-DbbmSvXU.js                       4.66 kB │ gzip:   1.87 kB
+dist/assets/members-D3nYW8Dj.js                                    4.82 kB │ gzip:   1.92 kB
+dist/assets/app.skills._slug-BSe7c4ea.js                           4.94 kB │ gzip:   1.49 kB
+dist/assets/app.events.hosting-DNsUemAd.js                         5.08 kB │ gzip:   2.01 kB
+dist/assets/writing._slug-BELUpDSN.js                              5.13 kB │ gzip:   1.67 kB
+dist/assets/useDirectConversation-xHonTqZp.js                      5.32 kB │ gzip:   2.17 kB
+dist/assets/app.chapters.index-B8WnpTw4.js                         5.48 kB │ gzip:   2.16 kB
+dist/assets/app.mission-admin-DZ93gJkZ.js                          5.52 kB │ gzip:   2.10 kB
+dist/assets/contact-DKke5XR5.js                                    5.58 kB │ gzip:   2.13 kB
+dist/assets/EventDiscovery-DiBviB7W.js                             5.65 kB │ gzip:   2.14 kB
+dist/assets/SegmentDetailsForm-DsJO5guL.js                         5.83 kB │ gzip:   1.61 kB
+dist/assets/app.moderation-AF7mJxmF.js                             6.01 kB │ gzip:   2.35 kB
+dist/assets/app.mentor-D385jYgz.js                                 6.14 kB │ gzip:   2.28 kB
+dist/assets/app.stories.index-Bohc1H10.js                          6.22 kB │ gzip:   2.44 kB
+dist/assets/about-ChlWCG3b.js                                      6.29 kB │ gzip:   2.24 kB
+dist/assets/CreateEventDialog-BL58TuG-.js                          6.71 kB │ gzip:   2.44 kB
+dist/assets/auth-DbBpMBE5.js                                       6.89 kB │ gzip:   2.54 kB
+dist/assets/app.board-DopBgXnm.js                                  6.90 kB │ gzip:   2.63 kB
+dist/assets/skills-BPHNRusp.js                                     7.00 kB │ gzip:   2.33 kB
+dist/assets/app.admin.queue-BDLB_pgz.js                            7.61 kB │ gzip:   2.61 kB
+dist/assets/app.education._courseSlug.index-VvH18ZOZ.js            7.74 kB │ gzip:   2.36 kB
+dist/assets/our-work-AHXGhc3l.js                                   7.77 kB │ gzip:   2.80 kB
+dist/assets/writing.index-Ez0MUZLT.js                              7.86 kB │ gzip:   2.53 kB
+dist/assets/app.admin.skills-CFslg1dj.js                           8.01 kB │ gzip:   2.71 kB
+dist/assets/app.admin.members-DjlS4LMP.js                          8.21 kB │ gzip:   2.95 kB
+dist/assets/app.admin.spotlights-7o3drB3u.js                       8.29 kB │ gzip:   2.74 kB
+dist/assets/app.vouch-BS1OaVd1.js                                  8.30 kB │ gzip:   2.83 kB
+dist/assets/app.admin.index-DCXsdV8v.js                            8.45 kB │ gzip:   2.34 kB
+dist/assets/CertificateDialog-Cv9bkDuF.js                          8.48 kB │ gzip:   2.99 kB
+dist/assets/app.soda._slug-DlQeCiD2.js                             8.59 kB │ gzip:   2.23 kB
+dist/assets/app.admin.hubs-CFEebZrU.js                             8.78 kB │ gzip:   2.25 kB
+dist/assets/education.functions-teiKCcZC.js                        8.91 kB │ gzip:   2.32 kB
+dist/assets/profile._id-CDm7poyI.js                                9.05 kB │ gzip:   3.46 kB
+dist/assets/mission.functions-D2FRPXXi.js                          9.18 kB │ gzip:   2.39 kB
+dist/assets/app.soda.index-C4AJhREi.js                             9.92 kB │ gzip:   2.95 kB
+dist/assets/app.education._courseSlug._lessonSlug-a3XvECi_.js      9.96 kB │ gzip:   3.20 kB
+dist/assets/app.admin.content-A3GZitTE.js                         10.18 kB │ gzip:   3.11 kB
+dist/assets/app.chapter-admin-DtxwdwRE.js                         10.42 kB │ gzip:   3.15 kB
+dist/assets/app.messages-Dd6dn2B9.js                              10.71 kB │ gzip:   3.62 kB
+dist/assets/society.functions-CXT_SSRM.js                         11.20 kB │ gzip:   2.64 kB
+dist/assets/app.missions.index-ClBqkskX.js                        11.46 kB │ gzip:   3.88 kB
+dist/assets/app.missions._missionId-vCQBMhT5.js                   12.32 kB │ gzip:   3.55 kB
+dist/assets/app.admin.vouches-D1U5HLeO.js                         12.55 kB │ gzip:   3.30 kB
+dist/assets/SiteShell-DZ_GiIBZ.js                                 12.94 kB │ gzip:   4.17 kB
+dist/assets/SocialProfile-Bhc27pGR.js                             13.14 kB │ gzip:   4.00 kB
+dist/assets/index-BeoRn2gJ.js                                     13.73 kB │ gzip:   5.41 kB
+dist/assets/app.directory-iOEsD_7z.js                             14.19 kB │ gzip:   4.91 kB
+dist/assets/app.admin.soda-5hoSr_kw.js                            14.29 kB │ gzip:   4.04 kB
+dist/assets/app.profile-b8-uaEJj.js                               16.25 kB │ gzip:   5.30 kB
+dist/assets/io-1xblyVnA.js                                        16.54 kB │ gzip:   4.86 kB
+dist/assets/app.chapters._chapterId-CuHDOaK3.js                   16.82 kB │ gzip:   4.09 kB
+dist/assets/EventInvitationPage-ap8wMRlb.js                       17.29 kB │ gzip:   5.38 kB
+dist/assets/onboarding-tSDhRZxJ.js                                17.33 kB │ gzip:   5.45 kB
+dist/assets/app.education.index-CdQMO6ys.js                       17.56 kB │ gzip:   4.91 kB
+dist/assets/index-CSxpNPaf.js                                     18.68 kB │ gzip:   5.28 kB
+dist/assets/io-port-kSQ8qXI0.js                                   18.73 kB │ gzip:   5.39 kB
+dist/assets/models-CSB2Shs1.js                                    19.30 kB │ gzip:   5.96 kB
+dist/assets/space-client-Dr-kTPON.js                              19.44 kB │ gzip:   5.76 kB
+dist/assets/app.admin.education-Bz0nN3tV.js                       19.45 kB │ gzip:   4.94 kB
+dist/assets/app.index-D5ZR2JSw.js                                 21.59 kB │ gzip:   7.04 kB
+dist/assets/app.settings-ChIRfI7B.js                              22.00 kB │ gzip:   6.80 kB
+dist/assets/AppShell-CfTPwufw.js                                  22.85 kB │ gzip:   6.67 kB
+dist/assets/soda-DQSblEqu.js                                      23.02 kB │ gzip:   7.67 kB
+dist/assets/what-is-indus-orbit-DEd-Put1.js                       25.18 kB │ gzip:   7.88 kB
+dist/assets/browser-DjzmzKyt.js                                   25.40 kB │ gzip:   9.97 kB
+dist/assets/utils-BQHNewu7.js                                     26.69 kB │ gzip:   8.42 kB
+dist/assets/purify.es-BPuvlvQ_.js                                 29.05 kB │ gzip:  11.09 kB
+dist/assets/brand-2NjB1wxr.js                                     41.17 kB │ gzip:  12.43 kB
+dist/assets/icons-vendor-OsynniAb.js                              42.33 kB │ gzip:  13.97 kB
+dist/assets/cities-CD4S1WPz.js                                    43.11 kB │ gzip:  12.38 kB
+dist/assets/app.spaces._spaceId-D9l__Hxv.js                       63.01 kB │ gzip:  16.39 kB
+dist/assets/tanstack-vendor-DfNkUL30.js                           89.41 kB │ gzip:  29.50 kB
+dist/assets/io.index-CZbEGSfI.js                                 137.81 kB │ gzip:  36.89 kB
+dist/assets/radix-vendor-BUxLwhSo.js                             139.90 kB │ gzip:  42.68 kB
+dist/assets/index-BwEKTCIL.js                                    155.40 kB │ gzip:  43.01 kB
+dist/assets/index.es-DNQY7f3O.js                                 158.98 kB │ gzip:  53.11 kB
+dist/assets/react-vendor-DpVJyn6f.js                             193.08 kB │ gzip:  60.58 kB
+dist/assets/html2canvas.esm-DXEQVQnt.js                          201.04 kB │ gzip:  47.43 kB
+dist/assets/supabase-vendor-C-jn6JqG.js                          215.98 kB │ gzip:  56.82 kB
+dist/assets/jspdf.es.min-HKMy_ZJ1.js                             386.17 kB │ gzip: 126.42 kB
+✓ built in 8m 11s

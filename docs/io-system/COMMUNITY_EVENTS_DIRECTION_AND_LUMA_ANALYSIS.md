@@ -1,6 +1,18 @@
 # Community and events direction — Luma analysis
 
+> Owner stop checkpoint, 3 October 2026: development and active verification stopped as requested. Source is saved locally without a push. Latest complete replay/types/browser refinements remain pending; see [the status report](PRODUCTION_STATUS_2026-10-03.md) and its evidence boundary before rollout.
+
+## 3 October 2026 — native events and simpler verification
+
+The owner requested a simpler replacement for hCaptcha and adaptation of Luma-like website elements. Current source uses Cloudflare Turnstile and native Community event discovery, invitation, free registration, host review, capacity/waitlists and scoped guest operations. Original branding/assets are retained. Read [PRODUCTION_STATUS_2026-10-03.md](PRODUCTION_STATUS_2026-10-03.md), [EVENTS_RELEASE_RUNBOOK.md](EVENTS_RELEASE_RUNBOOK.md) and [PUBLIC_FORMS_TURNSTILE_RUNBOOK.md](PUBLIC_FORMS_TURNSTILE_RUNBOOK.md) for the current implementation, local evidence and six remaining launch workstreams. Six forward migrations and matching hosted delivery remain pending. Earlier dated hCaptcha/planned-event descriptions below are historical and superseded for these capabilities.
+
 Status: **Planned**, 2 October 2026. The owner explicitly directed Community toward a Luma-like, events-focused experience while preserving the core Indus Orbit identity. This changes the product priority and release backlog. It does not prove that the proposed registration, calendar or host features exist. The owner confirmed approved member hosts with review for new hosts, and public discovery with registration restricted to Community members. The owner selected native event workflows with free events first; Razorpay ticketing follows later. Current event foundations are **Partial**. Source-publication authorization persists; hosted migrations and launch approval remain separate.
+
+## Latest registration clarification — 3 October
+
+The owner requested the nearest Luma adaptation when asked about global versus chapter membership. Luma documents that ordinary guests register with a name and email without an account/signin, while member-only ticket types gate registration to active calendar members. Visibility and ticket eligibility are separate. [Guest registration](https://help.luma.com/p/event-registration-process), [calendar membership/ticket rules](https://help.luma.com/p/calendar-memberships).
+
+The owner explicitly chose public name/email guest registration by default with host-selected community-only restrictions. This supersedes the earlier mandatory-membership rule. The guest confirmation/link source is implemented; review [EVENT_GUEST_REGISTRATION_RUNBOOK.md](EVENT_GUEST_REGISTRATION_RUNBOOK.md). Hosted activation, real delivery and retention acceptance remain pending.
 
 ## Executive decision
 
@@ -96,7 +108,7 @@ Use Indus Orbit's parchment for breathing room, indigo for the main structure, s
 
 1. **Separate entities:** event publication lifecycle, event visibility, registration status, payment status and attendance are independent. Preserve existing RSVPs during a reviewed migration; do not silently reinterpret all Going rows as approved registrations.
 2. **Community/calendar home:** one managing community or organizer owns each event. Curating it into another community grants visibility through an explicit record; it does not transfer ownership or host authority.
-3. **Registration identity:** the owner selected public discovery with Community membership required to register. Verify active membership server-side for registration and subsequent protected actions. A signed-in account alone is insufficient. Public visitors see a clear membership requirement and a route to the existing membership process; discovering or following an event never grants membership, private Space access or I/O budget. Confirm whether an event may additionally require its own chapter membership before implementing that narrower rule.
+3. **Registration identity:** the owner superseded the initial membership rule with public name/email guest registration by default, with host-selected Community/chapter restrictions. Public guests verify email through a private receipt link; no platform account or Community membership is created. Restriction, suspension, private access and capacity rules remain server-enforced. Discovering, following or registering never grants private Space access or I/O budget.
 4. **Visibility:** legacy events retain their existing effective audience until reviewed. New public publication is explicit. Members-only content is enforced at database/API boundaries; precise venue/join access may require an approved registration even for a public invitation.
 5. **Authority:** organizer, cohost, community/calendar manager, check-in staff and platform moderator have separately enumerated powers. Scope guest exports and message delivery explicitly; recheck suspended/removed access and step-up where appropriate.
 6. **Capacity:** reservation/approval/cancellation uses atomic database operations under concurrency. Waitlist ordering and host overrides are explicit. Replayed requests are idempotent; no duplicate place, charge or notification.
@@ -121,10 +133,10 @@ Production work already open for privacy, SMTP/scanning, hosted schema/grants/RL
 
 ## Decisions requested from the owner
 
-Questions were sent on 2 October. All three initial scope answers are recorded. The global-versus-chapter membership rule is a follow-up question.
+Questions were sent on 2 October. All three initial scope answers are recorded. The subsequent owner answer changed registration to public guests by default with optional Community/chapter restrictions.
 
 1. **Confirmed:** approved member hosts, with review for new hosts. Define the approver, host eligibility and review turnaround in the operating policy.
-2. **Confirmed:** public discovery, registration requires Community membership. Enforce this at the server/database boundary; keep the public invitation free of private location/join and guest data.
+2. **Superseded:** initial mandatory Community registration; **Confirmed current:** public guest registration by default, with optional community-only events. Enforce this at the server/database boundary; keep the public invitation free of private location/join and guest data.
 3. **Confirmed:** native event workflows, with free events first and Razorpay ticketing later. Event-ticket payments stay out of the initial release.
 
 Following those decisions, confirm initial communities/cities, event formats/cadence and named pilot hosts. Use actual upcoming events with host consent; no fabricated schedule. hCaptcha is the selected public-form supplier. Its site key, server secret, allowed origins and staged deployment still need operational setup. Broader owner prerequisites remain in `PRODUCTION_OWNER_ACTIONS.md`.

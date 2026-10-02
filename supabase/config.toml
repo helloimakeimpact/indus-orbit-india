@@ -20,6 +20,10 @@ verify_jwt = false
 [functions.orbit-attachment-scan-webhook]
 verify_jwt = false
 
-# Anonymous forms are authorized by server-side hCaptcha verification.
+# Anonymous forms are authorized by server-side Turnstile verification.
 [functions.public-form-submit]
+verify_jwt = false
+
+# Guest registration is authorized by verified email bearer links and Turnstile.
+[functions.event-guest-session]
 verify_jwt = false

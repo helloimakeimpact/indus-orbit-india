@@ -16,7 +16,9 @@ import { Route as AppRouteImport } from './routes/app'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BrandRouteImport } from './routes/brand'
 import { Route as CitiesRouteImport } from './routes/cities'
+import { Route as CommunitiesRouteImport } from './routes/communities'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as EventsRouteImport } from './routes/events'
 import { Route as IoRouteImport } from './routes/io'
 import { Route as IoPortRouteImport } from './routes/io-port'
 import { Route as MembersRouteImport } from './routes/members'
@@ -49,6 +51,10 @@ import { Route as AppSkillsRouteImport } from './routes/app.skills'
 import { Route as AppSodaRouteImport } from './routes/app.soda'
 import { Route as AppStoriesRouteImport } from './routes/app.stories'
 import { Route as AppVouchRouteImport } from './routes/app.vouch'
+import { Route as CommunitiesIndexRouteImport } from './routes/communities.index'
+import { Route as CommunitiesIdRouteImport } from './routes/communities.$id'
+import { Route as EventsIndexRouteImport } from './routes/events.index'
+import { Route as EventsIdRouteImport } from './routes/events.$id'
 import { Route as IoIndexRouteImport } from './routes/io.index'
 import { Route as ProfileIdRouteImport } from './routes/profile.$id'
 import { Route as RedeemCodeRouteImport } from './routes/redeem.$code'
@@ -75,6 +81,7 @@ import { Route as AppEducationIndexRouteImport } from './routes/app.education.in
 import { Route as AppEducationCourseSlugRouteImport } from './routes/app.education.$courseSlug'
 import { Route as AppEventsIndexRouteImport } from './routes/app.events.index'
 import { Route as AppEventsIdRouteImport } from './routes/app.events.$id'
+import { Route as AppEventsHostingRouteImport } from './routes/app.events.hosting'
 import { Route as AppMissionsIndexRouteImport } from './routes/app.missions.index'
 import { Route as AppMissionsMissionIdRouteImport } from './routes/app.missions.$missionId'
 import { Route as AppSkillsIndexRouteImport } from './routes/app.skills.index'
@@ -122,9 +129,19 @@ const CitiesRoute = CitiesRouteImport.update({
   path: '/cities',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CommunitiesRoute = CommunitiesRouteImport.update({
+  id: '/communities',
+  path: '/communities',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ContactRoute = ContactRouteImport.update({
   id: '/contact',
   path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EventsRoute = EventsRouteImport.update({
+  id: '/events',
+  path: '/events',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IoRoute = IoRouteImport.update({
@@ -287,6 +304,26 @@ const AppVouchRoute = AppVouchRouteImport.update({
   path: '/vouch',
   getParentRoute: () => AppRoute,
 } as any)
+const CommunitiesIndexRoute = CommunitiesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CommunitiesRoute,
+} as any)
+const CommunitiesIdRoute = CommunitiesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => CommunitiesRoute,
+} as any)
+const EventsIndexRoute = EventsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => EventsRoute,
+} as any)
+const EventsIdRoute = EventsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => EventsRoute,
+} as any)
 const IoIndexRoute = IoIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -417,6 +454,11 @@ const AppEventsIdRoute = AppEventsIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AppEventsRoute,
 } as any)
+const AppEventsHostingRoute = AppEventsHostingRouteImport.update({
+  id: '/hosting',
+  path: '/hosting',
+  getParentRoute: () => AppEventsRoute,
+} as any)
 const AppMissionsIndexRoute = AppMissionsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -483,7 +525,9 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/brand': typeof BrandRoute
   '/cities': typeof CitiesRoute
+  '/communities': typeof CommunitiesRouteWithChildren
   '/contact': typeof ContactRoute
+  '/events': typeof EventsRouteWithChildren
   '/io': typeof IoRouteWithChildren
   '/io-port': typeof IoPortRoute
   '/members': typeof MembersRoute
@@ -515,10 +559,14 @@ export interface FileRoutesByFullPath {
   '/app/soda': typeof AppSodaRouteWithChildren
   '/app/stories': typeof AppStoriesRouteWithChildren
   '/app/vouch': typeof AppVouchRoute
+  '/communities/$id': typeof CommunitiesIdRoute
+  '/events/$id': typeof EventsIdRoute
   '/profile/$id': typeof ProfileIdRoute
   '/redeem/$code': typeof RedeemCodeRoute
   '/writing/$slug': typeof WritingSlugRoute
   '/app/': typeof AppIndexRoute
+  '/communities/': typeof CommunitiesIndexRoute
+  '/events/': typeof EventsIndexRoute
   '/io/': typeof IoIndexRoute
   '/writing/': typeof WritingIndexRoute
   '/app/admin/audit': typeof AppAdminAuditRoute
@@ -538,6 +586,7 @@ export interface FileRoutesByFullPath {
   '/app/chapters/propose': typeof AppChaptersProposeRoute
   '/app/education/$courseSlug': typeof AppEducationCourseSlugRouteWithChildren
   '/app/events/$id': typeof AppEventsIdRoute
+  '/app/events/hosting': typeof AppEventsHostingRoute
   '/app/missions/$missionId': typeof AppMissionsMissionIdRoute
   '/app/skills/$slug': typeof AppSkillsSlugRoute
   '/app/soda/$slug': typeof AppSodaSlugRoute
@@ -585,10 +634,14 @@ export interface FileRoutesByTo {
   '/app/saved': typeof AppSavedRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/vouch': typeof AppVouchRoute
+  '/communities/$id': typeof CommunitiesIdRoute
+  '/events/$id': typeof EventsIdRoute
   '/profile/$id': typeof ProfileIdRoute
   '/redeem/$code': typeof RedeemCodeRoute
   '/writing/$slug': typeof WritingSlugRoute
   '/app': typeof AppIndexRoute
+  '/communities': typeof CommunitiesIndexRoute
+  '/events': typeof EventsIndexRoute
   '/io': typeof IoIndexRoute
   '/writing': typeof WritingIndexRoute
   '/app/admin/audit': typeof AppAdminAuditRoute
@@ -607,6 +660,7 @@ export interface FileRoutesByTo {
   '/app/chapters/$chapterId': typeof AppChaptersChapterIdRoute
   '/app/chapters/propose': typeof AppChaptersProposeRoute
   '/app/events/$id': typeof AppEventsIdRoute
+  '/app/events/hosting': typeof AppEventsHostingRoute
   '/app/missions/$missionId': typeof AppMissionsMissionIdRoute
   '/app/skills/$slug': typeof AppSkillsSlugRoute
   '/app/soda/$slug': typeof AppSodaSlugRoute
@@ -632,7 +686,9 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/brand': typeof BrandRoute
   '/cities': typeof CitiesRoute
+  '/communities': typeof CommunitiesRouteWithChildren
   '/contact': typeof ContactRoute
+  '/events': typeof EventsRouteWithChildren
   '/io': typeof IoRouteWithChildren
   '/io-port': typeof IoPortRoute
   '/members': typeof MembersRoute
@@ -664,10 +720,14 @@ export interface FileRoutesById {
   '/app/soda': typeof AppSodaRouteWithChildren
   '/app/stories': typeof AppStoriesRouteWithChildren
   '/app/vouch': typeof AppVouchRoute
+  '/communities/$id': typeof CommunitiesIdRoute
+  '/events/$id': typeof EventsIdRoute
   '/profile/$id': typeof ProfileIdRoute
   '/redeem/$code': typeof RedeemCodeRoute
   '/writing/$slug': typeof WritingSlugRoute
   '/app/': typeof AppIndexRoute
+  '/communities/': typeof CommunitiesIndexRoute
+  '/events/': typeof EventsIndexRoute
   '/io/': typeof IoIndexRoute
   '/writing/': typeof WritingIndexRoute
   '/app/admin/audit': typeof AppAdminAuditRoute
@@ -687,6 +747,7 @@ export interface FileRoutesById {
   '/app/chapters/propose': typeof AppChaptersProposeRoute
   '/app/education/$courseSlug': typeof AppEducationCourseSlugRouteWithChildren
   '/app/events/$id': typeof AppEventsIdRoute
+  '/app/events/hosting': typeof AppEventsHostingRoute
   '/app/missions/$missionId': typeof AppMissionsMissionIdRoute
   '/app/skills/$slug': typeof AppSkillsSlugRoute
   '/app/soda/$slug': typeof AppSodaSlugRoute
@@ -713,7 +774,9 @@ export interface FileRouteTypes {
     | '/auth'
     | '/brand'
     | '/cities'
+    | '/communities'
     | '/contact'
+    | '/events'
     | '/io'
     | '/io-port'
     | '/members'
@@ -745,10 +808,14 @@ export interface FileRouteTypes {
     | '/app/soda'
     | '/app/stories'
     | '/app/vouch'
+    | '/communities/$id'
+    | '/events/$id'
     | '/profile/$id'
     | '/redeem/$code'
     | '/writing/$slug'
     | '/app/'
+    | '/communities/'
+    | '/events/'
     | '/io/'
     | '/writing/'
     | '/app/admin/audit'
@@ -768,6 +835,7 @@ export interface FileRouteTypes {
     | '/app/chapters/propose'
     | '/app/education/$courseSlug'
     | '/app/events/$id'
+    | '/app/events/hosting'
     | '/app/missions/$missionId'
     | '/app/skills/$slug'
     | '/app/soda/$slug'
@@ -815,10 +883,14 @@ export interface FileRouteTypes {
     | '/app/saved'
     | '/app/settings'
     | '/app/vouch'
+    | '/communities/$id'
+    | '/events/$id'
     | '/profile/$id'
     | '/redeem/$code'
     | '/writing/$slug'
     | '/app'
+    | '/communities'
+    | '/events'
     | '/io'
     | '/writing'
     | '/app/admin/audit'
@@ -837,6 +909,7 @@ export interface FileRouteTypes {
     | '/app/chapters/$chapterId'
     | '/app/chapters/propose'
     | '/app/events/$id'
+    | '/app/events/hosting'
     | '/app/missions/$missionId'
     | '/app/skills/$slug'
     | '/app/soda/$slug'
@@ -861,7 +934,9 @@ export interface FileRouteTypes {
     | '/auth'
     | '/brand'
     | '/cities'
+    | '/communities'
     | '/contact'
+    | '/events'
     | '/io'
     | '/io-port'
     | '/members'
@@ -893,10 +968,14 @@ export interface FileRouteTypes {
     | '/app/soda'
     | '/app/stories'
     | '/app/vouch'
+    | '/communities/$id'
+    | '/events/$id'
     | '/profile/$id'
     | '/redeem/$code'
     | '/writing/$slug'
     | '/app/'
+    | '/communities/'
+    | '/events/'
     | '/io/'
     | '/writing/'
     | '/app/admin/audit'
@@ -916,6 +995,7 @@ export interface FileRouteTypes {
     | '/app/chapters/propose'
     | '/app/education/$courseSlug'
     | '/app/events/$id'
+    | '/app/events/hosting'
     | '/app/missions/$missionId'
     | '/app/skills/$slug'
     | '/app/soda/$slug'
@@ -941,7 +1021,9 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   BrandRoute: typeof BrandRoute
   CitiesRoute: typeof CitiesRoute
+  CommunitiesRoute: typeof CommunitiesRouteWithChildren
   ContactRoute: typeof ContactRoute
+  EventsRoute: typeof EventsRouteWithChildren
   IoRoute: typeof IoRouteWithChildren
   IoPortRoute: typeof IoPortRoute
   MembersRoute: typeof MembersRoute
@@ -1009,11 +1091,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CitiesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/communities': {
+      id: '/communities'
+      path: '/communities'
+      fullPath: '/communities'
+      preLoaderRoute: typeof CommunitiesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/contact': {
       id: '/contact'
       path: '/contact'
       fullPath: '/contact'
       preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/events': {
+      id: '/events'
+      path: '/events'
+      fullPath: '/events'
+      preLoaderRoute: typeof EventsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/io': {
@@ -1240,6 +1336,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppVouchRouteImport
       parentRoute: typeof AppRoute
     }
+    '/communities/': {
+      id: '/communities/'
+      path: '/'
+      fullPath: '/communities/'
+      preLoaderRoute: typeof CommunitiesIndexRouteImport
+      parentRoute: typeof CommunitiesRoute
+    }
+    '/communities/$id': {
+      id: '/communities/$id'
+      path: '/$id'
+      fullPath: '/communities/$id'
+      preLoaderRoute: typeof CommunitiesIdRouteImport
+      parentRoute: typeof CommunitiesRoute
+    }
+    '/events/': {
+      id: '/events/'
+      path: '/'
+      fullPath: '/events/'
+      preLoaderRoute: typeof EventsIndexRouteImport
+      parentRoute: typeof EventsRoute
+    }
+    '/events/$id': {
+      id: '/events/$id'
+      path: '/$id'
+      fullPath: '/events/$id'
+      preLoaderRoute: typeof EventsIdRouteImport
+      parentRoute: typeof EventsRoute
+    }
     '/io/': {
       id: '/io/'
       path: '/'
@@ -1422,6 +1546,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppEventsIdRouteImport
       parentRoute: typeof AppEventsRoute
     }
+    '/app/events/hosting': {
+      id: '/app/events/hosting'
+      path: '/hosting'
+      fullPath: '/app/events/hosting'
+      preLoaderRoute: typeof AppEventsHostingRouteImport
+      parentRoute: typeof AppEventsRoute
+    }
     '/app/missions/': {
       id: '/app/missions/'
       path: '/'
@@ -1573,11 +1704,13 @@ const AppEducationRouteWithChildren = AppEducationRoute._addFileChildren(
 
 interface AppEventsRouteChildren {
   AppEventsIdRoute: typeof AppEventsIdRoute
+  AppEventsHostingRoute: typeof AppEventsHostingRoute
   AppEventsIndexRoute: typeof AppEventsIndexRoute
 }
 
 const AppEventsRouteChildren: AppEventsRouteChildren = {
   AppEventsIdRoute: AppEventsIdRoute,
+  AppEventsHostingRoute: AppEventsHostingRoute,
   AppEventsIndexRoute: AppEventsIndexRoute,
 }
 
@@ -1700,6 +1833,33 @@ const AppRouteChildren: AppRouteChildren = {
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
+interface CommunitiesRouteChildren {
+  CommunitiesIdRoute: typeof CommunitiesIdRoute
+  CommunitiesIndexRoute: typeof CommunitiesIndexRoute
+}
+
+const CommunitiesRouteChildren: CommunitiesRouteChildren = {
+  CommunitiesIdRoute: CommunitiesIdRoute,
+  CommunitiesIndexRoute: CommunitiesIndexRoute,
+}
+
+const CommunitiesRouteWithChildren = CommunitiesRoute._addFileChildren(
+  CommunitiesRouteChildren,
+)
+
+interface EventsRouteChildren {
+  EventsIdRoute: typeof EventsIdRoute
+  EventsIndexRoute: typeof EventsIndexRoute
+}
+
+const EventsRouteChildren: EventsRouteChildren = {
+  EventsIdRoute: EventsIdRoute,
+  EventsIndexRoute: EventsIndexRoute,
+}
+
+const EventsRouteWithChildren =
+  EventsRoute._addFileChildren(EventsRouteChildren)
+
 interface IoRouteChildren {
   IoIndexRoute: typeof IoIndexRoute
 }
@@ -1718,7 +1878,9 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   BrandRoute: BrandRoute,
   CitiesRoute: CitiesRoute,
+  CommunitiesRoute: CommunitiesRouteWithChildren,
   ContactRoute: ContactRoute,
+  EventsRoute: EventsRouteWithChildren,
   IoRoute: IoRouteWithChildren,
   IoPortRoute: IoPortRoute,
   MembersRoute: MembersRoute,

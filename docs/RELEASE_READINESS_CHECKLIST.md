@@ -1,5 +1,7 @@
 # Indus Orbit Production v1 release readiness checklist
 
+Current checkpoint: 3 October 2026. Native Community events and Turnstile source are implemented; see `io-system/PRODUCTION_STATUS_2026-10-03.md` and `io-system/EVENTS_RELEASE_RUNBOOK.md`. Source now contains 124 migrations, with six forward changes pending hosted delivery. No hosted migration/function/provider/payment was activated in this increment. Earlier dated numbers and hCaptcha descriptions below retain their historical boundary.
+
 Status: full public production launch remains **not approved** on 2 October 2026. The detailed 9 August phase checklist below is retained for provenance; current implementation and launch gates are in `docs/io-system/CODE_COMPLETION_REGISTER.md` and `docs/io-system/FINALIZATION_EXECUTION_PLAN.md`. Unchecked historical items must not be read as a current implementation inventory.
 Release candidate: not assigned  
 Release owner: unassigned  

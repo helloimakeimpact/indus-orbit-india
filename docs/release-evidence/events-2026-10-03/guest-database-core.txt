@@ -1,0 +1,202 @@
+BEGIN
+CREATE EXTENSION
+SET
+ no_plan
+---------
+(0 rows)
+
+INSERT 0 2
+INSERT 0 1
+INSERT 0 3
+INSERT 0 3
+                                      ok
+------------------------------------------------------------------------------
+ ok 1 - Browsers cannot bypass Turnstile and send guest emails through an RPC
+(1 row)
+
+                                     ok
+-----------------------------------------------------------------------------
+ ok 2 - Authenticated browsers cannot bypass the service credential boundary
+(1 row)
+
+                       ok
+-------------------------------------------------
+ ok 3 - Guest email and token hashes are private
+(1 row)
+
+                               ok
+-----------------------------------------------------------------
+ ok 4 - Members cannot enumerate guest identities or credentials
+(1 row)
+
+SET
+                               is
+-----------------------------------------------------------------
+ ok 5 - Guest requests cannot bypass community-only registration
+(1 row)
+
+                           is
+--------------------------------------------------------
+ ok 6 - Public events accept a name/email guest request
+(1 row)
+
+                      is
+----------------------------------------------
+ ok 7 - Opening a link never allocates a seat
+(1 row)
+
+                         is
+-----------------------------------------------------
+ ok 8 - Unconfirmed email receives no private access
+(1 row)
+
+                  throws_ok
+----------------------------------------------
+ ok 9 - A link cannot authorize another event
+(1 row)
+
+                                        is
+-----------------------------------------------------------------------------------
+ ok 10 - Explicit email proof reserves the first place without platform membership
+(1 row)
+
+                    is
+-------------------------------------------
+ ok 11 - Confirmation replay is idempotent
+(1 row)
+
+                          is
+-------------------------------------------------------
+ ok 12 - Only confirmed guests receive the private URL
+(1 row)
+
+                    is
+------------------------------------------
+ ok 13 - Another email can request a link
+(1 row)
+
+                      is
+----------------------------------------------
+ ok 14 - Guests share the same capacity limit
+(1 row)
+
+                              is
+--------------------------------------------------------------
+ ok 15 - A guest waitlist receipt excludes access credentials
+(1 row)
+
+                           is
+---------------------------------------------------------
+ ok 16 - A private link can cancel only its registration
+(1 row)
+
+                            is
+-----------------------------------------------------------
+ ok 17 - Cancellation atomically promotes a verified guest
+(1 row)
+
+                     is
+--------------------------------------------
+ ok 18 - Approval event accepts guest proof
+(1 row)
+
+                            is
+----------------------------------------------------------
+ ok 19 - Email verification does not bypass host approval
+(1 row)
+
+                        is
+--------------------------------------------------
+ ok 20 - Pending guest receives no private access
+(1 row)
+
+                          is
+------------------------------------------------------
+ ok 21 - Email owner can request another private link
+(1 row)
+
+                         is
+----------------------------------------------------
+ ok 22 - Email request budget allows three attempts
+(1 row)
+
+                         is
+----------------------------------------------------
+ ok 23 - Email rate limit closes the fourth request
+(1 row)
+
+RESET
+                          is
+-------------------------------------------------------
+ ok 24 - Two identities have exactly two registrations
+(1 row)
+
+                              is
+---------------------------------------------------------------
+ ok 25 - Guest registration does not create a platform account
+(1 row)
+
+UPDATE 1
+SET
+                   throws_ok
+------------------------------------------------
+ ok 26 - Expired verification links fail closed
+(1 row)
+
+RESET
+SET
+SET
+                              is
+--------------------------------------------------------------
+ ok 27 - Host sees the guest name without a public email list
+(1 row)
+
+                     lives_ok
+--------------------------------------------------
+ ok 28 - Hosts can approve verified public guests
+(1 row)
+
+                      lives_ok
+----------------------------------------------------
+ ok 29 - Hosts can check in a confirmed email guest
+(1 row)
+
+RESET
+SET
+                    throws_ok
+--------------------------------------------------
+ ok 30 - Guest cannot erase checked-in attendance
+(1 row)
+
+RESET
+SET
+SET
+                                           is
+-----------------------------------------------------------------------------------------
+ ok 31 - A verified account without Community membership can register for a public event
+(1 row)
+
+RESET
+SET
+                          is
+-------------------------------------------------------
+ ok 32 - A known email can request its private receipt
+(1 row)
+
+                                   is
+------------------------------------------------------------------------
+ ok 33 - Email guest path reuses an existing authenticated registration
+(1 row)
+
+RESET
+                        is
+---------------------------------------------------
+ ok 34 - Account and email proof never double book
+(1 row)
+
+ finish
+--------
+ 1..34
+(1 row)
+
+ROLLBACK

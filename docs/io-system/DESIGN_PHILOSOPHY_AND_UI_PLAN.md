@@ -1,8 +1,16 @@
 # Indus Orbit design philosophy and UI execution plan
 
+> Owner stop checkpoint, 3 October 2026: development and active verification stopped as requested. Source is saved locally without a push. Latest complete replay/types/browser refinements remain pending; see [the status report](PRODUCTION_STATUS_2026-10-03.md) and its evidence boundary before rollout.
+
+## 3 October 2026 — native events and simpler verification
+
+The owner requested a simpler replacement for hCaptcha and adaptation of Luma-like website elements. Current source uses Cloudflare Turnstile and native Community event discovery, invitation, free registration, host review, capacity/waitlists and scoped guest operations. Original branding/assets are retained. Read [PRODUCTION_STATUS_2026-10-03.md](PRODUCTION_STATUS_2026-10-03.md), [EVENTS_RELEASE_RUNBOOK.md](EVENTS_RELEASE_RUNBOOK.md) and [PUBLIC_FORMS_TURNSTILE_RUNBOOK.md](PUBLIC_FORMS_TURNSTILE_RUNBOOK.md) for the current implementation, local evidence and six remaining launch workstreams. Six forward migrations and matching hosted delivery remain pending. Earlier dated hCaptcha/planned-event descriptions below are historical and superseded for these capabilities.
+
+The owner now selected public name/email guest registration by default with optional community-only events. The new Community UI applies the six principles below in locally verified discovery/invitation/host surfaces; the broader product visual rollout remains **Partial**. See [guest delivery](EVENT_GUEST_REGISTRATION_RUNBOOK.md).
+
 Status: **Planned** product-wide design specification, finalized 2 October 2026 at the owner’s request. Initial continuity/accessibility/mobile repairs are implemented locally; the broader visual system remains to be applied and verified. This specification does not approve a production release. The canonical company definition is **“The General Intelligence Company of India”** and the approved short line is **“Intelligence, built together.”** The existing dawn, lotus, banyan, pixel mark, indigo, parchment and saffron are the identity assets to develop. The retired “Made of Many Minds.” line and the reverted neon/flat-poster campaign are not part of this direction.
 
-## 2 October Community direction update
+## 2 October Community direction update — historical, superseded by the 3 October checkpoint
 
 The owner directs Community toward a Luma-like events and community experience. Preserve the company definition, approved line, original assets and six principles below. Events become the invitation; communities provide the lasting relationship. Approved member hosts publish with review for new hosts. Discovery is public; registration requires Community membership. The owner selected native event workflows with free events first; Razorpay ticketing follows later. The evidence, brand interpretation, current-code gaps, permission design and phased acceptance are in `COMMUNITY_EVENTS_DIRECTION_AND_LUMA_ANALYSIS.md`. That workstream is **Planned**; existing member event/RSVP foundations are **Partial**. Public discovery must use a reviewed public-safe projection, not expanded access to raw event/guest rows.
 

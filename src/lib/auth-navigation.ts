@@ -1,11 +1,18 @@
 export type AuthIntent = "io" | "community";
 export type AuthTab = "signin" | "signup";
-export type AuthReturnPath = "/io" | "/app";
+export type AuthReturnPath = "/io" | "/app" | `/events/${string}`;
 
 const DEFAULT_RETURN_PATH: Record<AuthIntent, AuthReturnPath> = {
   io: "/io",
   community: "/app",
 };
+
+export function validEventId(value: unknown): value is string {
+  return (
+    typeof value === "string" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)
+  );
+}
 
 export function parseAuthIntent(value: unknown): AuthIntent {
   return value === "community" ? "community" : "io";
@@ -22,6 +29,13 @@ export function parseAuthTab(value: unknown): AuthTab {
 export function resolveAuthReturnPath(value: unknown, intent: AuthIntent): AuthReturnPath {
   if (intent === "io" && value === "/io") return "/io";
   if (intent === "community" && value === "/app") return "/app";
+  if (
+    intent === "community" &&
+    typeof value === "string" &&
+    value.startsWith("/events/") &&
+    validEventId(value.slice(8))
+  )
+    return value as AuthReturnPath;
   return DEFAULT_RETURN_PATH[intent];
 }
 

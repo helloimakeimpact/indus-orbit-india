@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ArrowRight, Orbit, TerminalSquare } from "lucide-react";
 import { toast } from "sonner";
 import logo from "@/assets/indus-orbit-logo.png";
+import { validEventId } from "@/lib/auth-navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,9 @@ import {
 } from "@/features/product/product-access";
 
 export const Route = createFileRoute("/onboarding")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    eventId: validEventId(search.eventId) ? search.eventId : undefined,
+  }),
   head: () => ({
     meta: [{ title: "Community setup — Indus Orbit" }, { name: "robots", content: "noindex" }],
   }),
@@ -26,6 +30,7 @@ export const Route = createFileRoute("/onboarding")({
 function OnboardingPage() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const { eventId } = Route.useSearch();
   const [access, setAccess] = useState<ProductAccess | null>(null);
   const [checking, setChecking] = useState(true);
   const [starting, setStarting] = useState(false);
@@ -36,7 +41,8 @@ function OnboardingPage() {
     try {
       const nextAccess = await getMyProductAccess();
       if (nextAccess.communityAccess) {
-        navigate({ to: "/app", replace: true });
+        if (eventId) navigate({ to: "/events/$id", params: { id: eventId }, replace: true });
+        else navigate({ to: "/app", replace: true });
         return;
       }
       setAccess(nextAccess);
@@ -47,7 +53,7 @@ function OnboardingPage() {
     } finally {
       setChecking(false);
     }
-  }, [navigate]);
+  }, [navigate, eventId]);
 
   useEffect(() => {
     if (loading) return;
@@ -174,7 +180,9 @@ function OnboardingPage() {
   return (
     <PageFrame>
       <OnboardingWizard
+        key={user.id}
         userId={user.id}
+        returnEventId={eventId}
         onboardingVersion={access.communityVersion}
         initialMeasurementConsent={access.measurementConsent}
       />

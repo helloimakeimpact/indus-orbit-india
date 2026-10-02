@@ -1,0 +1,19 @@
+✔ guest mail contains a 256-bit fragment credential; only a hash is stored and no token is returned (185.346708ms)
+✔ denied or throttled guest request uses the same generic receipt and sends no email (8.701208ms)
+✔ guest mail rejects an invalid challenge {"success":true,"action":"contact","hostname":"indusorbit.com"} (2.20875ms)
+✔ guest mail rejects an invalid challenge {"success":true,"action":"event_registration","hostname":"attacker.test"} (1.408209ms)
+✔ guest mail rejects an invalid challenge {"success":"true"} (4.999541ms)
+✔ guest mail rejects an invalid challenge null (2.342ms)
+✔ guest links authorize receipt/confirm/cancel by hash without requiring a platform account (8.887458ms)
+✔ invalid actions, addresses, identifiers, tokens and oversized bodies cannot send email (4.647875ms)
+✔ unapproved origins and methods cannot request or confirm a registration (1.304209ms)
+✔ missing mail config, bypass keys and unsafe canonical URLs fail closed (6.280791ms)
+✔ provider failure is not reported as sent and its body is never exposed (6.071084ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2907.505125

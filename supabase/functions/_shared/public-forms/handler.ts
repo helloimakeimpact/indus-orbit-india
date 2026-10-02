@@ -2,7 +2,7 @@ export type PublicSubmission =
   | { kind: "newsletter"; email: string }
   | { kind: "contact"; email: string; name: string; role: string; message: string };
 
-type Configuration = { secret: string; sitekey: string; origins: string[] };
+type Configuration = { secret: string; origins: string[] };
 type Dependencies = {
   configuration: () => Configuration;
   fetch: typeof fetch;
@@ -30,7 +30,7 @@ function parseSubmission(value: unknown): { submission: PublicSubmission; token:
     !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ||
     email.length > 254 ||
     !token ||
-    token.length > 8192
+    token.length > 2048
   )
     return null;
   if (body.kind === "newsletter") return { submission: { kind: "newsletter", email }, token };
@@ -49,7 +49,7 @@ function parseSubmission(value: unknown): { submission: PublicSubmission; token:
   return { submission: { kind: "contact", email, name, role, message }, token };
 }
 
-async function boundedBody(request: Request) {
+export async function boundedBody(request: Request) {
   const reader = request.body?.getReader();
   if (!reader) throw new Error("invalid_body");
   const chunks: Uint8Array[] = [];
@@ -96,13 +96,7 @@ export function createPublicFormHandler(dependencies: Dependencies) {
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers });
     if (request.method !== "POST") return reply(405, "method_not_allowed");
     // Public test keys deliberately provide no protection. Never accept them in this endpoint.
-    if (
-      !config.secret ||
-      !config.sitekey ||
-      /^0x0+$/.test(config.secret) ||
-      /^[123]0000000-ffff-ffff-ffff-00000000000[123]$/.test(config.sitekey)
-    )
-      return reply(503, "unavailable");
+    if (!config.secret || /^[123]x0{20,}/.test(config.secret)) return reply(503, "unavailable");
     if (
       request.headers.get("content-type")?.split(";")[0].trim().toLowerCase() !== "application/json"
     )
@@ -120,16 +114,18 @@ export function createPublicFormHandler(dependencies: Dependencies) {
 
     let verification: unknown;
     try {
-      const response = await dependencies.fetch("https://api.hcaptcha.com/siteverify", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({
-          secret: config.secret,
-          sitekey: config.sitekey,
-          response: parsed.token,
-        }),
-        signal: AbortSignal.timeout(8000),
-      });
+      const response = await dependencies.fetch(
+        "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({
+            secret: config.secret,
+            response: parsed.token,
+          }),
+          signal: AbortSignal.timeout(8000),
+        },
+      );
       if (!response.ok) return reply(503, "verification_unavailable");
       verification = await response.json();
     } catch {
@@ -138,7 +134,9 @@ export function createPublicFormHandler(dependencies: Dependencies) {
     if (
       !verification ||
       typeof verification !== "object" ||
-      (verification as { success?: unknown }).success !== true
+      (verification as { success?: unknown }).success !== true ||
+      (verification as { action?: unknown }).action !== parsed.submission.kind ||
+      (verification as { hostname?: unknown }).hostname !== new URL(origin).hostname
     )
       return reply(403, "verification_failed");
     try {

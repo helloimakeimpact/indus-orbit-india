@@ -40,7 +40,9 @@ function AuthPage() {
 
   useEffect(() => {
     if (!loading && user) {
-      navigate({ to: search.next, replace: true });
+      if (search.next.startsWith("/events/"))
+        navigate({ to: "/events/$id", params: { id: search.next.slice(8) }, replace: true });
+      else navigate({ to: search.next as "/io" | "/app", replace: true });
     }
   }, [user, loading, navigate, search.next]);
 

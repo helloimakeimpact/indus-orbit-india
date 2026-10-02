@@ -54,6 +54,16 @@ jobs:
       - name: Public desktop, mobile and accessibility journeys
         run: npm run test:e2e
 
+      - name: Guest email links and automatic verification with intercepted services
+        env:
+          VITE_TURNSTILE_SITE_KEY: synthetic-configured-key
+          PLAYWRIGHT_TURNSTILE_CONFIGURED: "1"
+        run: >-
+          npx --no-install playwright test
+          tests/e2e/turnstile-configured.spec.ts
+          tests/e2e/guest-registration.spec.ts
+          --workers=2
+
       - name: Member workspace continuity with isolated synthetic identity
         run: npm run test:e2e:member-ui
 

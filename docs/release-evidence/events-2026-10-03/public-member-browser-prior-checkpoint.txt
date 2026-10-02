@@ -1,0 +1,49 @@
+
+Running 31 tests using 2 workers
+
+(node:73014) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:73015) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 [desktop-chromium] › tests/e2e/public-and-visual.spec.ts:11:3 › @public / renders without serious accessibility failures (8.9s)
+  ✓   2 [desktop-chromium] › tests/e2e/community-events.spec.ts:31:1 › @public event discovery, search, invitation and community links fit 320px (10.6s)
+  ✓   3 [desktop-chromium] › tests/e2e/public-and-visual.spec.ts:11:3 › @public /io-port renders without serious accessibility failures (6.1s)
+  ✓   4 [desktop-chromium] › tests/e2e/public-and-visual.spec.ts:11:3 › @public /brand renders without serious accessibility failures (7.3s)
+  ✓   5 [desktop-chromium] › tests/e2e/public-and-visual.spec.ts:33:1 › @public brand contact card exposes both safe downloads (5.0s)
+  ✓   6 [desktop-chromium] › tests/e2e/public-and-visual.spec.ts:44:1 › @public homepage keeps its title and actions clear on a small phone (4.1s)
+  ✓   7 [desktop-chromium] › tests/e2e/public-and-visual.spec.ts:68:1 › @visual visiting card layout (4.1s)
+  ✓   8 [desktop-chromium] › tests/e2e/public-forms.spec.ts:3:1 › @public unconfigured verification keeps forms closed and contact details available (3.1s)
+  ✓  10 [desktop-chromium] › tests/e2e/public-navigation.spec.ts:51:1 › @public storage notice is in flow and works with blocked persistence (6.0s)
+  -  11 [desktop-chromium] › tests/e2e/turnstile-configured.spec.ts:4:1 › @public @turnstile configured forms verify automatically and retain a draft after server rejection
+(node:73101) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   9 [desktop-chromium] › tests/e2e/public-navigation.spec.ts:4:1 › @public short-screen navigation traps focus, closes and follows the viewport (15.4s)
+(node:73111) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  12 [mobile-chromium] › tests/e2e/community-events.spec.ts:31:1 › @public event discovery, search, invitation and community links fit 320px (11.1s)
+  ✓  13 [mobile-chromium] › tests/e2e/public-and-visual.spec.ts:11:3 › @public / renders without serious accessibility failures (7.6s)
+  ✓  14 [mobile-chromium] › tests/e2e/public-and-visual.spec.ts:11:3 › @public /io-port renders without serious accessibility failures (7.0s)
+  ✓  15 [mobile-chromium] › tests/e2e/public-and-visual.spec.ts:11:3 › @public /brand renders without serious accessibility failures (6.8s)
+  ✓  16 [mobile-chromium] › tests/e2e/public-and-visual.spec.ts:33:1 › @public brand contact card exposes both safe downloads (4.5s)
+  ✓  17 [mobile-chromium] › tests/e2e/public-and-visual.spec.ts:44:1 › @public homepage keeps its title and actions clear on a small phone (3.6s)
+  ✓  19 [mobile-chromium] › tests/e2e/public-forms.spec.ts:3:1 › @public unconfigured verification keeps forms closed and contact details available (3.8s)
+  ✓  18 [mobile-chromium] › tests/e2e/public-and-visual.spec.ts:68:1 › @visual visiting card layout (7.5s)
+  ✓  21 [mobile-chromium] › tests/e2e/public-navigation.spec.ts:51:1 › @public storage notice is in flow and works with blocked persistence (5.8s)
+  -  22 [mobile-chromium] › tests/e2e/turnstile-configured.spec.ts:4:1 › @public @turnstile configured forms verify automatically and retain a draft after server rejection
+(node:73165) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  20 [mobile-chromium] › tests/e2e/public-navigation.spec.ts:4:1 › @public short-screen navigation traps focus, closes and follows the viewport (17.1s)
+(node:73173) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  24 [member-ui-regression] › tests/e2e/community-events.spec.ts:145:1 › @member-ui host creation has named fields, review copy and original cover options (5.8s)
+  ✓  23 [member-ui-regression] › tests/e2e/community-events.spec.ts:92:1 › @member-ui native registration shows the server status and withholds access until confirmation (7.4s)
+  ✓  25 [member-ui-regression] › tests/e2e/member-continuity.spec.ts:5:1 › @member-ui member navigation preserves the shared workspace shell (5.4s)
+  ✓  26 [member-ui-regression] › tests/e2e/member-continuity.spec.ts:29:1 › @member-ui narrow-screen navigation is named and closes after choosing a destination (5.4s)
+  ✓  28 [member-ui-regression] › tests/e2e/member-continuity.spec.ts:91:1 › @member-ui membership revocation and sign-out still close the member boundary (5.0s)
+  ✓  27 [member-ui-regression] › tests/e2e/member-continuity.spec.ts:54:1 › @member-ui tab return and same-account auth events preserve an unsent draft (8.6s)
+  ✓  29 [member-ui-regression] › tests/e2e/member-continuity.spec.ts:108:1 › @member-ui account changes clear drafts and obsolete access cannot revive a prior account (7.5s)
+  ✓  30 [member-ui-regression] › tests/e2e/member-continuity.spec.ts:142:1 › @member-ui initial membership verification failure fails closed and can recover (4.6s)
+  ✓  31 [member-ui-regression] › tests/e2e/member-continuity.spec.ts:158:1 › @member-ui I/O-only access has named keyboard-safe drawers and canonical navigation (10.1s)
+
+  2 skipped
+  29 passed (2.2m)

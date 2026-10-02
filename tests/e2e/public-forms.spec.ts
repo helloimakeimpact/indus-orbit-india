@@ -11,7 +11,8 @@ test("@public unconfigured verification keeps forms closed and contact details a
       /\/rest\/v1\/(contact_submissions|newsletter_subscriptions)/.test(request.url())
     )
       unsafeInsert = true;
-    if (request.url().startsWith("https://js.hcaptcha.com/")) captchaLoaded = true;
+    if (request.url().startsWith("https://challenges.cloudflare.com/turnstile/"))
+      captchaLoaded = true;
   });
   await page.setViewportSize({ width: 320, height: 640 });
   await page.goto("/contact");
