@@ -1,0 +1,187 @@
+{
+  "policies": [
+    {
+      "name": "Admins can read contact submissions",
+      "check": null,
+      "roles": ["authenticated"],
+      "table": "contact_submissions",
+      "using": "(EXISTS ( SELECT 1\n   FROM user_roles\n  WHERE ((user_roles.user_id = auth.uid()) AND (user_roles.role = 'admin'::app_role))))",
+      "command": "SELECT"
+    },
+    {
+      "name": "Anyone can submit contact form",
+      "check": "true",
+      "roles": ["anon"],
+      "table": "contact_submissions",
+      "using": null,
+      "command": "INSERT"
+    },
+    {
+      "name": "Members delete own RSVP",
+      "check": null,
+      "roles": ["authenticated"],
+      "table": "event_rsvps",
+      "using": "(auth.uid() = user_id)",
+      "command": "DELETE"
+    },
+    {
+      "name": "Members insert own RSVP",
+      "check": "((auth.uid() = user_id) AND (NOT is_suspended(auth.uid())) AND (EXISTS ( SELECT 1\n   FROM events e\n  WHERE ((e.id = event_rsvps.event_id) AND (e.status = 'approved'::text)))))",
+      "roles": ["authenticated"],
+      "table": "event_rsvps",
+      "using": null,
+      "command": "INSERT"
+    },
+    {
+      "name": "Members update own RSVP",
+      "check": "(auth.uid() = user_id)",
+      "roles": ["authenticated"],
+      "table": "event_rsvps",
+      "using": "(auth.uid() = user_id)",
+      "command": "UPDATE"
+    },
+    {
+      "name": "Read own RSVP or as organizer/lead/admin",
+      "check": null,
+      "roles": ["authenticated"],
+      "table": "event_rsvps",
+      "using": "((auth.uid() = user_id) OR has_role(auth.uid(), 'admin'::app_role) OR (EXISTS ( SELECT 1\n   FROM events e\n  WHERE ((e.id = event_rsvps.event_id) AND ((e.organizer_id = auth.uid()) OR ((e.chapter_id IS NOT NULL) AND is_chapter_lead(auth.uid(), e.chapter_id)))))))",
+      "command": "SELECT"
+    },
+    {
+      "name": "Admins can delete events",
+      "check": null,
+      "roles": ["authenticated"],
+      "table": "events",
+      "using": "has_role(auth.uid(), 'admin'::app_role)",
+      "command": "DELETE"
+    },
+    {
+      "name": "Admins can update events",
+      "check": null,
+      "roles": ["public"],
+      "table": "events",
+      "using": "has_role(auth.uid(), 'admin'::app_role)",
+      "command": "UPDATE"
+    },
+    {
+      "name": "Admins can view all events",
+      "check": null,
+      "roles": ["public"],
+      "table": "events",
+      "using": "has_role(auth.uid(), 'admin'::app_role)",
+      "command": "SELECT"
+    },
+    {
+      "name": "Anyone can view approved events",
+      "check": null,
+      "roles": ["public"],
+      "table": "events",
+      "using": "(status = 'approved'::text)",
+      "command": "SELECT"
+    },
+    {
+      "name": "Chapter leads can create chapter events",
+      "check": "((organizer_id = auth.uid()) AND (has_role(auth.uid(), 'admin'::app_role) OR ((chapter_id IS NOT NULL) AND (EXISTS ( SELECT 1\n   FROM chapter_members cm\n  WHERE ((cm.chapter_id = events.chapter_id) AND (cm.user_id = auth.uid()) AND (cm.role = 'lead'::text)))))))",
+      "roles": ["public"],
+      "table": "events",
+      "using": null,
+      "command": "INSERT"
+    },
+    {
+      "name": "Chapter leads can update chapter events",
+      "check": null,
+      "roles": ["public"],
+      "table": "events",
+      "using": "((organizer_id = auth.uid()) OR has_role(auth.uid(), 'admin'::app_role) OR ((chapter_id IS NOT NULL) AND (EXISTS ( SELECT 1\n   FROM chapter_members cm\n  WHERE ((cm.chapter_id = events.chapter_id) AND (cm.user_id = auth.uid()) AND (cm.role = 'lead'::text))))))",
+      "command": "UPDATE"
+    },
+    {
+      "name": "Editors update events",
+      "check": "has_role(auth.uid(), 'editor'::app_role)",
+      "roles": ["authenticated"],
+      "table": "events",
+      "using": "has_role(auth.uid(), 'editor'::app_role)",
+      "command": "UPDATE"
+    },
+    {
+      "name": "Editors view all events",
+      "check": null,
+      "roles": ["authenticated"],
+      "table": "events",
+      "using": "has_role(auth.uid(), 'editor'::app_role)",
+      "command": "SELECT"
+    },
+    {
+      "name": "Leads view pending chapter events",
+      "check": null,
+      "roles": ["authenticated"],
+      "table": "events",
+      "using": "((chapter_id IS NOT NULL) AND is_chapter_lead(auth.uid(), chapter_id))",
+      "command": "SELECT"
+    },
+    {
+      "name": "Organizers can view their events",
+      "check": null,
+      "roles": ["public"],
+      "table": "events",
+      "using": "(auth.uid() = organizer_id)",
+      "command": "SELECT"
+    },
+    {
+      "name": "Users can create events",
+      "check": "(auth.uid() = organizer_id)",
+      "roles": ["public"],
+      "table": "events",
+      "using": null,
+      "command": "INSERT"
+    },
+    {
+      "name": "Admins can read newsletter subscriptions",
+      "check": null,
+      "roles": ["authenticated"],
+      "table": "newsletter_subscriptions",
+      "using": "(EXISTS ( SELECT 1\n   FROM user_roles\n  WHERE ((user_roles.user_id = auth.uid()) AND (user_roles.role = 'admin'::app_role))))",
+      "command": "SELECT"
+    },
+    {
+      "name": "Anyone can subscribe to newsletter",
+      "check": "true",
+      "roles": ["anon"],
+      "table": "newsletter_subscriptions",
+      "using": null,
+      "command": "INSERT"
+    }
+  ],
+  "table_grants": [
+    {
+      "relation": "public.events",
+      "anon_insert": true,
+      "anon_select": true,
+      "authenticated_insert": true,
+      "authenticated_select": true
+    },
+    {
+      "relation": "public.event_rsvps",
+      "anon_insert": true,
+      "anon_select": true,
+      "authenticated_insert": true,
+      "authenticated_select": true
+    },
+    {
+      "relation": "public.contact_submissions",
+      "anon_insert": true,
+      "anon_select": true,
+      "authenticated_insert": true,
+      "authenticated_select": true
+    },
+    {
+      "relation": "public.newsletter_subscriptions",
+      "anon_insert": true,
+      "anon_select": true,
+      "authenticated_insert": true,
+      "authenticated_select": true
+    }
+  ],
+  "anon_counts_execute": false
+}

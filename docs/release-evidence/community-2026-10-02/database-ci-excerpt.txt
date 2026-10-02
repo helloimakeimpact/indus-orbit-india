@@ -1,0 +1,6 @@
+2026-10-02T18:43:47.4065475Z Fresh replay matches the browser release contract plus 97 exact, hash-bound held Spaces differences.
+2026-10-02T18:43:51.4769626Z psql:/home/runner/work/indus-orbit-india/indus-orbit-india/supabase/tests/database/public_form_submission_boundary.test.sql:2: NOTICE:  extension "pgtap" already exists, skipping
+2026-10-02T18:43:51.4878887Z /home/runner/work/indus-orbit-india/indus-orbit-india/supabase/tests/database/public_form_submission_boundary.test.sql .......... ok
+2026-10-02T18:43:51.6924022Z All tests successful.
+2026-10-02T18:43:51.6925169Z Files=29, Tests=893,  1 wallclock secs ( 0.09 usr  0.03 sys +  0.21 cusr  0.09 csys =  0.42 CPU)
+2026-10-02T18:43:51.6925835Z Result: PASS
