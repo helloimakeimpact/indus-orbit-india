@@ -15,6 +15,6 @@ insert into public.newsletter_subscriptions(email) values ('hcaptcha-newsletter@
 reset role;
 select is((select count(*)::int from public.contact_submissions where email = 'hcaptcha-contact@example.test'), 1, 'Service insertion works under RLS');
 select is((select count(*)::int from public.newsletter_subscriptions where email = 'hcaptcha-newsletter@example.test'), 1, 'Service newsletter insertion works under RLS');
-select ok(has_table_privilege('authenticated', 'public.contact_submissions', 'SELECT'), 'Existing read privilege is retained; policies still scope admin reads');
+select is((select count(*)::int from pg_policies where schemaname = 'public' and cmd = 'SELECT' and ((tablename = 'contact_submissions' and policyname = 'Admins can read contact submissions') or (tablename = 'newsletter_subscriptions' and policyname = 'Admins can read newsletter subscriptions'))), 2, 'Existing scoped admin read policies are retained without granting browser SELECT');
 select * from finish();
 rollback;

@@ -28,7 +28,7 @@ The premium benchmark is **discipline of craft**: purposeful hierarchy, precise 
 | Name                | Indus Orbit                                                                                                                               |
 | Company definition  | The General Intelligence Company of India                                                                                                 |
 | Approved short line | Intelligence, built together.                                                                                                             |
-| Product purpose     | Help people find trusted people, knowledge, opportunities and governed intelligence, then turn them into useful work.                     |
+| Product purpose     | Bring people together through communities and events, then help them build useful work with trusted knowledge and governed intelligence.  |
 | Character           | Human, lucid, rooted and exact. Editorial warmth invites people in; precise interaction helps them act.                                   |
 | Signature           | Original pixel mark and selected dawn/lotus/banyan art; indigo structure, parchment space, saffron emphasis and restrained monsoon green. |
 | Typography          | Fraunces for selected editorial moments; Inter for actions, forms and working information.                                                |
