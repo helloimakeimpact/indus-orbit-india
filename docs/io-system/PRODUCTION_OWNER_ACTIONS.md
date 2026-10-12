@@ -1,10 +1,30 @@
 # Full public production launch — owner actions
 
-> Owner stop checkpoint, 3 October 2026: development and active verification stopped as requested. Source is saved locally without a push. Latest complete replay/types/browser refinements remain pending; see [the status report](PRODUCTION_STATUS_2026-10-03.md) and its evidence boundary before rollout.
+Current handoff: [13 October production status](PRODUCTION_STATUS_2026-10-13.md). Event email, education safety and revised event-review boundaries have local implementation evidence. Source now has ten reviewed forward releases, with paired member/admin delivery after backend rollout. The next privacy code dependency is your retention/export/hold matrix; service configuration, staging delivery, host/MFA and real operating acceptance remain required.
+
+## Updated handoff — 8 October 2026
+
+The owner chose to supply different retention rules; the 90-day proposal is not approved. Use [the policy worksheet](PRIVACY_RETENTION_WORKSHEET.md). Event communication and education quarantine workers now exist in source; [the current report](PRODUCTION_STATUS_2026-10-08.md) separates their verification from real supplier setup, schedules and hosted delivery. Existing domain, Resend, first host/reviewer and provider choices remain resolved.
+
+> Resumed 3 October 2026: the owner confirmed indusorbit.com/Netlify, Resend, themselves as initial host/reviewer, and OpenAI/DeepSeek. See [verified connections and setup](LAUNCH_SETUP_AND_CONNECTIONS.md), [current status](PRODUCTION_STATUS_2026-10-03.md), and [resume evidence](../release-evidence/resume-2026-10-03/verification.md). The earlier stop checkpoint remains preserved in Git/evidence. New work stays local; hosted delivery remains pending.
+
+## Current owner actions — resumed 3 October
+
+Read [the plain-language setup record](LAUNCH_SETUP_AND_CONNECTIONS.md) for exact verified identities. Domain, Netlify hosting, Resend, initial host/reviewer and OpenAI/DeepSeek supplier choices are resolved.
+
+1. Put real Turnstile keys in Netlify/Supabase for indusorbit.com; use the exact origins in the setup record.
+2. Verify the Resend sending domain and configure `Indus Orbit <events@indusorbit.com>`; configure Auth SMTP separately. The owner delegated the address choice.
+3. Establish a separate approved staging project/branch for delivery rehearsals. The current live backend is jpwvgpnbkrktipwhvqss; no project-role guess is needed.
+4. Use the actual owner login for initial host/reviewer onboarding and enroll MFA. Initial approved-host bootstrap requires trusted delivery or another authorized reviewer.
+5. Supply the different retention rules you chose to provide, including export/deletion inventory and safety/legal holds; choose the upload-scanning scope/service. The proposed 90 days is not approved. OpenAI/DeepSeek selection does not configure file malware scanning.
+6. Prepare OpenAI/DeepSeek accounts/models and activation evidence; approve bounded conformance when the concrete request is ready.
+7. Review the remaining engineering/delivery work in the current status report. No hosted rollout or paid activation is inferred from these setup answers.
+
+The older dated worksheets below remain historical; resolved supplier/domain/host choices must not be requested again.
 
 ## 3 October 2026 — native events and simpler verification
 
-The owner requested a simpler replacement for hCaptcha and adaptation of Luma-like website elements. Current source uses Cloudflare Turnstile and native Community event discovery, invitation, free registration, host review, capacity/waitlists and scoped guest operations. Original branding/assets are retained. Read [PRODUCTION_STATUS_2026-10-03.md](PRODUCTION_STATUS_2026-10-03.md), [EVENTS_RELEASE_RUNBOOK.md](EVENTS_RELEASE_RUNBOOK.md) and [PUBLIC_FORMS_TURNSTILE_RUNBOOK.md](PUBLIC_FORMS_TURNSTILE_RUNBOOK.md) for the current implementation, local evidence and six remaining launch workstreams. Six forward migrations and matching hosted delivery remain pending. Earlier dated hCaptcha/planned-event descriptions below are historical and superseded for these capabilities.
+The owner requested a simpler replacement for hCaptcha and adaptation of Luma-like website elements. Current source uses Cloudflare Turnstile and native Community event discovery, invitation, free registration, host review, capacity/waitlists, scoped guest operations and revision-protected editing/rescheduling. Original branding/assets are retained. Read [PRODUCTION_STATUS_2026-10-03.md](PRODUCTION_STATUS_2026-10-03.md), [EVENTS_RELEASE_RUNBOOK.md](EVENTS_RELEASE_RUNBOOK.md) and [PUBLIC_FORMS_TURNSTILE_RUNBOOK.md](PUBLIC_FORMS_TURNSTILE_RUNBOOK.md) for the current implementation, local evidence and six remaining launch workstreams. Seven forward migrations and matching hosted delivery remain pending. See [event editing](EVENT_EDITING_RUNBOOK.md) for the resumed increment. Earlier dated hCaptcha/planned-event descriptions below are historical and superseded for these capabilities.
 
 Status: **Partial**, 2 October 2026. This is the owner handoff within the canonical living record. Engineering implementation and exit criteria remain in `FINALIZATION_EXECUTION_PLAN.md`; this document explains the decisions, accounts and operating evidence the owner needs to supply. Full public launch is not approved.
 
@@ -35,7 +55,7 @@ The approved code/docs are now committed and published to both GitHub repositori
 - Hosted Supabase is healthy. The preceding browser declarations matched it. The current local release contract adds 10 leaf contracts for the pending trusted-vouch/quiz migration, so the strict hosted check correctly fails until that release is delivered. Fresh replay matches the local release contract plus exactly 97 held Spaces differences; this does not establish full hosted grants/RLS/Realtime equivalence.
 - Provider and payment foundations exist but no provider route is commercially ready. Admin hosting, real operator evidence, privacy execution, worker operations and recovery drills remain open.
 
-## Decisions to answer first
+## Historical decision worksheet (superseded choices)
 
 | Decision              | What to supply                                                                                                  | What engineering can do next                                                                                                                             |
 | --------------------- | --------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |

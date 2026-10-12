@@ -1,0 +1,77 @@
+BEGIN
+NOTICE:  extension "pgtap" already exists, skipping
+CREATE EXTENSION
+SET
+INSERT 0 4
+INSERT 0 4
+INSERT 0 1
+INSERT 0 2
+INSERT 0 2
+INSERT 0 3
+INSERT 0 3
+INSERT 0 1
+ok 1 - Anonymous clients cannot read revision evidence
+ok 2 - Anonymous clients cannot decide on events
+ok 3 - Anonymous clients cannot read private chapter invitations
+ok 4 - The original unversioned lifecycle implementation is not browser-callable
+ok 5 - The original unversioned event review helper is not browser-callable
+SET
+SET
+ok 6 - An ordinary member receives no private invitations
+ok 7 - An ordinary member cannot read the admin queue
+ok 8 - An ordinary member cannot use a guessed current revision
+SET
+ok 9 - The lead sees only another host submission in their active chapter
+ok 10 - Chapter invitation and revision start together at zero
+ok 11 - Authorized chapter review includes the private access link
+ok 12 - Chapter review includes the complete invitation body
+ok 13 - An authorized legacy approval requires a fresh versioned review
+ok 14 - An authorized legacy rejection cannot omit the revision
+ok 15 - A chapter lead cannot publish outside their chapter
+ok 16 - A chapter lead cannot approve their own submission
+SET
+ok 17 - A private-link change also advances the invitation revision
+SET
+ok 18 - An old chapter review cannot publish a changed private link
+ok 19 - A refreshed chapter review receives the changed revision
+ok 20 - Current chapter review can publish
+ok 21 - A published invitation leaves the pending chapter review queue
+SET
+SET
+ok 22 - The versioned admin event command requires MFA
+SET
+ok 23 - Even an MFA operator cannot publish through the legacy generic command
+ok 24 - The admin queue carries the changed invitation revision
+ok 25 - Admin evidence retains the bounded summary contract
+ok 26 - Non-event content has no fabricated event revision
+ok 27 - The new queue preserves bounded limits
+ok 28 - A missing admin revision is refused
+ok 29 - A wrong admin revision is refused
+ok 30 - A missing publication state is refused
+ok 31 - A wrong publication state is refused
+ok 32 - The allowed event lifecycle graph remains enforced
+ok 33 - A bounded meaningful reason remains required
+ok 34 - A current MFA event decision publishes
+ok 35 - An earlier publication state cannot undo the current decision
+ok 36 - Other Content lifecycles retain their existing command
+RESET
+ok 37 - Only the accepted admin transition records lifecycle evidence
+ok 38 - Private audit records the inspected event revision
+UPDATE 1
+SET
+SET
+ok 39 - A former lead receives no chapter review evidence
+RESET
+INSERT 0 1
+SET
+SET
+ok 40 - A suspended operator cannot obtain refreshed evidence
+ok 41 - A suspended MFA operator cannot decide on events
+RESET
+DELETE 1
+SET
+SET
+ok 42 - A deleted account token cannot obtain chapter evidence
+RESET
+1..42
+ROLLBACK

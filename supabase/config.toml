@@ -27,3 +27,10 @@ verify_jwt = false
 # Guest registration is authorized by verified email bearer links and Turnstile.
 [functions.event-guest-session]
 verify_jwt = false
+
+# Internal worker verifies a server-only Supabase secret before claiming mail.
+[functions.event-email-worker]
+verify_jwt = false
+
+[functions.education-file-scan-worker]
+verify_jwt = false

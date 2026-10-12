@@ -1,8 +1,16 @@
 # Native Community events — implementation and rollout
 
-> Owner stop checkpoint, 3 October 2026: development and active verification stopped as requested. Source is saved locally without a push. Latest complete replay/types/browser refinements remain pending; see [the status report](PRODUCTION_STATUS_2026-10-03.md) and its evidence boundary before rollout.
+## Current review increment — 13 October 2026
+
+[The current handoff](PRODUCTION_STATUS_2026-10-13.md) adds `20261012220739_require_event_review_versions.sql`, bringing source to 128 migration files and ten reviewed forward releases. Chapter and separate-admin decisions identify the inspected invitation; admin also checks publication state. Legacy event decisions fail closed, while other Content commands remain supported. Deliver backend first, then both frontends; preserve the versioned boundary during rollback. [Event review details](EVENT_EDITING_RUNBOOK.md) and [local evidence](../release-evidence/finalization-2026-10-13/verification.md) define the exact scope. Older dated rollout descriptions below are historical.
+
+> Resumed 3 October 2026: the owner confirmed indusorbit.com/Netlify, Resend, themselves as initial host/reviewer, and OpenAI/DeepSeek. See [verified connections and setup](LAUNCH_SETUP_AND_CONNECTIONS.md), [current status](PRODUCTION_STATUS_2026-10-03.md), and [resume evidence](../release-evidence/resume-2026-10-03/verification.md). The earlier stop checkpoint remains preserved in Git/evidence. New work stays local; hosted delivery remains pending.
 
 Status: **Partial**, 3 October 2026. Core source capabilities are **Verified** only where the evidence below passes. Hosted activation and full public production acceptance remain pending. Razorpay event ticketing is **Planned** for a later release.
+
+## Resumed editing increment — 3 October
+
+Source adds a seventh reviewed forward migration for event editing and revision-aware main review. See [EVENT_EDITING_RUNBOOK.md](EVENT_EDITING_RUNBOOK.md) and [resume evidence](../release-evidence/resume-2026-10-03/verification.md). The older six-migration/editing-planned wording below describes the preceding checkpoint. Automatic event status/reminder delivery and real operating acceptance remain pending.
 
 ## Product and visual contract
 

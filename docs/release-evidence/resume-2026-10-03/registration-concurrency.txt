@@ -1,0 +1,2 @@
+PASS: 8 simultaneous member registrations allocate exactly 1 confirmed place and 7 waitlist positions.
+PASS: 4 accounts and 4 verified email guests racing allocate exactly 1 confirmed place and 7 waitlist positions.

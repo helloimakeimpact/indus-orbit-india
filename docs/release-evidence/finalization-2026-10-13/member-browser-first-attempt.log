@@ -1,0 +1,57 @@
+[WebServer] (node:82372) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 2 tests using 1 worker
+
+(node:82402) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 [member-ui-regression] › tests/e2e/chapter-event-review.spec.ts:10:1 › @member-ui chapter event review sends the inspected revision and supports a fresh review after a stale decision (30.2s)
+(node:82449) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  2 [member-ui-regression] › tests/e2e/event-edit.spec.ts:7:1 › @member-ui host editing preserves registration conditions and a stale-write rejection preserves the draft (9.0s)
+
+
+  1) [member-ui-regression] › tests/e2e/chapter-event-review.spec.ts:10:1 › @member-ui chapter event review sends the inspected revision and supports a fresh review after a stale decision
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText('Chapter gathering', { exact: true })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for getByText('Chapter gathering', { exact: true })
+
+
+      80 |   );
+      81 |   await page.goto("/app/chapter-admin", { waitUntil: "domcontentloaded" });
+    > 82 |   await expect(page.getByText("Chapter gathering", { exact: true })).toBeVisible();
+         |                                                                      ^
+      83 |   await page.getByText("Review invitation details", { exact: true }).click();
+      84 |   await expect(page.getByRole("link", { name: "Review private access link" })).toHaveAttribute(
+      85 |     "href",
+        at /Users/amarpandey/Desktop/JRI work/indus-orbit-india/tests/e2e/chapter-event-review.spec.ts:82:70
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/playwright/chapter-event-review--memb-01a56-view-after-a-stale-decision-member-ui-regression/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/playwright/chapter-event-review--memb-01a56-view-after-a-stale-decision-member-ui-regression/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/playwright/chapter-event-review--memb-01a56-view-after-a-stale-decision-member-ui-regression/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/playwright/chapter-event-review--memb-01a56-view-after-a-stale-decision-member-ui-regression/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/playwright/chapter-event-review--memb-01a56-view-after-a-stale-decision-member-ui-regression/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [member-ui-regression] › tests/e2e/chapter-event-review.spec.ts:10:1 › @member-ui chapter event review sends the inspected revision and supports a fresh review after a stale decision
+  1 passed (1.1m)

@@ -1,0 +1,4 @@
+Connecting to remote database...
+Linting schema: public
+Linting schema: private
+{"results":[],"message":"db lint"}

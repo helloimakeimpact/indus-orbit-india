@@ -24,7 +24,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { formatChapterBaseLocation, formatEventLocation } from "@/lib/location";
+import { formatChapterBaseLocation } from "@/lib/location";
 import { getErrorMessage } from "@/lib/errors";
 
 export const Route = createFileRoute("/app/chapter-admin")({
@@ -49,6 +49,7 @@ function ChapterAdminPage() {
   });
   const [busy, setBusy] = useState(true);
   const [search, setSearch] = useState("");
+  const [reviewingEvent, setReviewingEvent] = useState(false);
   const [memberToRemove, setMemberToRemove] = useState<{
     chapterId: string;
     userId: string;
@@ -91,22 +92,17 @@ function ChapterAdminPage() {
       toast.error(getErrorMessage(error));
     }
   }
-  async function onApproveEvent(id: string) {
+  async function onReviewEvent(event: InboxEvent, approved: boolean) {
+    setReviewingEvent(true);
     try {
-      await approveEvent({ data: { eventId: id } });
-      toast.success("Event approved");
-      load();
+      const review = approved ? approveEvent : rejectEvent;
+      await review({ data: { eventId: event.id, revision: event.revision } });
+      toast.success(approved ? "Event approved" : "Event declined");
+      await load();
     } catch (error) {
       toast.error(getErrorMessage(error));
-    }
-  }
-  async function onRejectEvent(id: string) {
-    try {
-      await rejectEvent({ data: { eventId: id } });
-      toast.success("Event rejected");
-      load();
-    } catch (error) {
-      toast.error(getErrorMessage(error));
+    } finally {
+      setReviewingEvent(false);
     }
   }
 
@@ -177,6 +173,15 @@ function ChapterAdminPage() {
           <p className="text-sm text-muted-foreground mt-1">
             Review what your members have submitted to your chapters.
           </p>
+          <Button
+            className="mt-3"
+            variant="outline"
+            size="sm"
+            disabled={reviewingEvent}
+            onClick={() => void load()}
+          >
+            Refresh submissions
+          </Button>
 
           {inbox.stories.length > 0 && (
             <div className="mt-6">
@@ -217,17 +222,56 @@ function ChapterAdminPage() {
                       <div className="min-w-0 flex-1">
                         <p className="font-semibold">{ev.title}</p>
                         <p className="text-xs text-muted-foreground">
-                          by {ev.profiles?.display_name || "Member"} ·{" "}
-                          {new Date(ev.start_time).toLocaleString()} · {formatEventLocation(ev)}
+                          by {ev.host_name} ·{" "}
+                          {new Date(ev.start_time).toLocaleString(undefined, {
+                            timeZone: ev.timezone,
+                          })}{" "}
+                          · {ev.timezone}
                         </p>
                         <p className="mt-2 text-sm line-clamp-3">{ev.description}</p>
+                        <details className="mt-3 text-sm">
+                          <summary className="cursor-pointer font-medium">
+                            Review invitation details
+                          </summary>
+                          <p className="mt-3 whitespace-pre-wrap">{ev.description}</p>
+                          <p className="mt-3">
+                            Ends{" "}
+                            {new Date(ev.end_time).toLocaleString(undefined, {
+                              timeZone: ev.timezone,
+                            })}{" "}
+                            · {ev.timezone}
+                          </p>
+                          <p>{ev.public_location || ev.location_type}</p>
+                          {ev.location && (
+                            <p className="whitespace-pre-wrap">Private venue: {ev.location}</p>
+                          )}
+                          {ev.join_url?.startsWith("https://") && (
+                            <a
+                              className="underline"
+                              href={ev.join_url}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              Review private access link
+                            </a>
+                          )}
+                        </details>
                       </div>
                       <div className="flex gap-2">
-                        <Button size="sm" onClick={() => onApproveEvent(ev.id)}>
+                        <Button
+                          size="sm"
+                          disabled={reviewingEvent}
+                          onClick={() => void onReviewEvent(ev, true)}
+                        >
                           <Check className="h-4 w-4 mr-1" /> Approve
                         </Button>
-                        <Button size="sm" variant="outline" onClick={() => onRejectEvent(ev.id)}>
-                          <XIcon className="h-4 w-4 mr-1" /> Reject
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={reviewingEvent}
+                          onClick={() => void onReviewEvent(ev, false)}
+                        >
+                          <XIcon className="h-4 w-4 mr-1" /> Decline
                         </Button>
                       </div>
                     </div>

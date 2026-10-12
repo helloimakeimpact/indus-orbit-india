@@ -1,0 +1,2054 @@
+IO_CONTRACT_FILE admin_member_support_and_audit.test.sql
+BEGIN
+NOTICE:  extension "pgtap" already exists, skipping
+CREATE EXTENSION
+SET
+1..33
+ok 1 - scoped member search exists
+ok 2 - transactional member suspension command exists
+ok 3 - transactional member verification command exists
+ok 4 - redacted admin event queue exists
+ok 5 - member support command is reachable only through authenticated capability checks
+ok 6 - browser roles cannot mutate suspension rows directly
+INSERT 0 5
+INSERT 0 1
+INSERT 0 2
+UPDATE 3
+SET
+SET
+SET
+ok 7 - member support operator receives matching privacy-minimised members
+ok 8 - member support search omits email and private location
+ok 9 - member search rejects undersized queries
+ok 10 - member search bounds result size
+ok 11 - support operator suspends through the transactional command
+RESET
+ok 12 - one active suspension row is created
+ok 13 - suspension creates private operation evidence
+SET
+SET
+SET
+ok 14 - identical desired suspension state is idempotent
+RESET
+ok 15 - idempotent suspension retry creates no duplicate evidence
+SET
+SET
+SET
+ok 16 - stale suspension state fails closed
+ok 17 - active admin-team members are protected from support suspension
+ok 18 - active admin-team members are protected from support verification changes
+ok 19 - support operator lifts the suspension transactionally
+RESET
+ok 20 - lifted suspension records the authenticated operator
+SET
+SET
+SET
+ok 21 - support operator records a verification decision
+RESET
+ok 22 - member profile reflects the verified decision
+ok 23 - verification command appends the legacy-compatible decision record
+ok 24 - verification command appends private operation evidence
+SET
+SET
+SET
+ok 25 - identical verification retry is idempotent
+RESET
+SET
+SET
+SET
+ok 26 - audit viewer reads redacted operation evidence
+ok 27 - audit queue filters domains and omits raw actor identity
+ok 28 - audit queue rejects unknown domains
+ok 29 - audit queue rejects incomplete cursors
+SET
+SET
+SET
+ok 30 - ordinary member cannot search support records
+ok 31 - ordinary member cannot mutate suspension state
+ok 32 - ordinary member cannot mutate verification state
+ok 33 - ordinary member cannot read admin operation evidence
+RESET
+ROLLBACK
+IO_CONTRACT_FILE admin_trust_report_commands.test.sql
+BEGIN
+NOTICE:  extension "pgtap" already exists, skipping
+CREATE EXTENSION
+SET
+1..19
+ok 1 - admin operation audit table exists
+ok 2 - browser roles have no direct admin audit table access
+ok 3 - admin operation evidence has an explicit browser-deny RLS policy
+ok 4 - admin report queue RPC exists
+ok 5 - admin report resolution RPC exists
+ok 6 - only authenticated callers can reach the capability-checked command
+INSERT 0 3
+INSERT 0 1
+INSERT 0 1
+SET
+SET
+SET
+ok 7 - trust operator receives the bounded report queue
+ok 8 - report queue omits reporter identity
+ok 9 - report queue rejects incomplete cursors
+ok 10 - report queue bounds page size
+ok 11 - trust operator resolves through the transactional command
+RESET
+ok 12 - report records the authenticated resolver
+SET
+SET
+SET
+ok 13 - authenticated browser cannot read private audit events
+ok 14 - identical resolution retries are idempotent
+ok 15 - opposite resolution cannot overwrite a completed decision
+RESET
+ok 16 - one append-only admin operation event records the decision
+ok 17 - audit metadata records only classified target evidence
+SET
+SET
+SET
+ok 18 - ordinary member cannot read the trust queue
+ok 19 - ordinary member cannot resolve reports
+RESET
+ROLLBACK
+IO_CONTRACT_FILE anonymous_definer_acl.test.sql
+BEGIN
+NOTICE:  extension "pgtap" already exists, skipping
+CREATE EXTENSION
+SET
+1..24
+ok 1 - public.admin_resolve_vouch_request(uuid,boolean,text) denies anonymous execution
+ok 2 - public.approve_chapter_proposal(uuid) denies anonymous execution
+ok 3 - public.create_my_connection_request(uuid,text,text,uuid) denies anonymous execution
+ok 4 - public.handle_new_user() denies anonymous execution
+ok 5 - public.lead_approve_event(uuid) denies anonymous execution
+ok 6 - public.lead_approve_story(uuid) denies anonymous execution
+ok 7 - public.lead_reject_event(uuid,text) denies anonymous execution
+ok 8 - public.lead_reject_story(uuid,text) denies anonymous execution
+ok 9 - public.lead_remove_chapter_member(uuid,uuid) denies anonymous execution
+ok 10 - public.lead_remove_mission_member(uuid,uuid) denies anonymous execution
+ok 11 - public.post_my_mission_update(uuid,text,uuid) denies anonymous execution
+ok 12 - public.reject_chapter_proposal(uuid) denies anonymous execution
+ok 13 - public.request_my_mentor_session(uuid,text,integer,uuid) denies anonymous execution
+ok 14 - public.request_my_vouch(text,uuid,uuid) denies anonymous execution
+ok 15 - public.respond_to_my_connection_request(uuid,text) denies anonymous execution
+ok 16 - public.transition_my_mentor_session(uuid,text,text,timestamptz) denies anonymous execution
+ok 17 - public.admin_resolve_vouch_request(uuid,boolean,text) retains authenticated execution when present
+ok 18 - public.lead_approve_event(uuid) retains authenticated execution when present
+ok 19 - public.lead_approve_story(uuid) retains authenticated execution when present
+ok 20 - public.lead_reject_event(uuid,text) retains authenticated execution when present
+ok 21 - public.lead_reject_story(uuid,text) retains authenticated execution when present
+ok 22 - public.lead_remove_chapter_member(uuid,uuid) is retired for authenticated callers
+ok 23 - public.lead_remove_mission_member(uuid,uuid) is retired for authenticated callers
+ok 24 - auth trigger helper denies direct authenticated execution
+ROLLBACK
+IO_CONTRACT_FILE chapter_mission_space_foundation.test.sql
+BEGIN
+NOTICE:  extension "pgtap" already exists, skipping
+CREATE EXTENSION
+SET
+ok 1 - conversation Spaces exist
+ok 2 - Space membership projection exists
+ok 3 - Space roles exist
+ok 4 - Space context groups exist
+ok 5 - typed Rooms exist
+ok 6 - Threads exist
+ok 7 - durable Room messages exist
+ok 8 - per-member Room read state exists
+ok 9 - conversation reports exist
+ok 10 - moderation actions are private
+ok 11 - conversation delivery outbox is private
+ok 12 - Chapters have a lifecycle state
+ok 13 - Chapters use optimistic concurrency
+ok 14 - Chapters have an explicit join policy
+ok 15 - managed Chapter creation is idempotent
+ok 16 - Chapter proposals are idempotent
+ok 17 - Chapter memberships have lifecycle
+ok 18 - Missions have a lifecycle state
+ok 19 - Mission creation is idempotent
+ok 20 - Mission memberships have lifecycle
+ok 21 - Spaces use RLS
+ok 22 - Room messages use RLS
+ok 23 - private outbox keeps RLS defense in depth
+ok 24 - Room messages are published for realtime fan-out
+ok 25 - Function public.create_my_chapter_proposal(text, text, text, text, text, text, text, integer, text, text, uuid) should exist
+ok 26 - Function public.create_managed_chapter(text, text, text, text, text, text, uuid) should exist
+ok 27 - Function public.create_my_mission(text, text, text, uuid, text, text, uuid) should exist
+ok 28 - Function public.request_my_space_membership(uuid, text, text, uuid) should exist
+ok 29 - Function public.set_managed_space_lead(uuid, uuid, boolean, bigint, text) should exist
+ok 30 - Function public.transition_managed_chapter(uuid, text, bigint, text) should exist
+ok 31 - Function public.send_my_conversation_message(uuid, uuid, text, uuid) should exist
+ok 32 - Function public.mark_my_conversation_room_read(uuid, uuid) should exist
+ok 33 - authenticated members can execute the atomic Mission contract
+ok 34 - anonymous callers cannot create Missions
+ok 35 - browser roles cannot mutate Missions directly
+ok 36 - browser roles cannot forge domain membership
+ok 37 - browser roles cannot bypass the message RPC
+ok 38 - browser roles cannot inspect conversation delivery work
+INSERT 0 4
+INSERT 0 4
+INSERT 0 1
+SET
+SET
+SET
+ok 39 - member cannot bypass the Chapter proposal RPC
+ok 40 - an onboarded member can submit an atomic Chapter proposal
+ok 41 - identical Chapter proposal retry is idempotent
+RESET
+SET
+SET
+SET
+ok 42 - programme authority can approve a submitted Chapter proposal atomically
+RESET
+ok 43 - approval creates exactly one Chapter
+ok 44 - approval creates exactly one Chapter Space
+ok 45 - Chapter blueprint creates seven deterministic Rooms
+ok 46 - proposal owner becomes the authoritative active Chapter lead
+SET
+SET
+SET
+ok 47 - Chapter lead can atomically create its Mission, lead membership and Space
+ok 48 - member cannot forge Mission leadership directly
+RESET
+ok 49 - Mission blueprint creates six deterministic Rooms
+ok 50 - Mission creator is its authoritative active lead
+SET
+SET
+SET
+ok 51 - open Mission membership becomes active through the caller-bound contract
+ok 52 - active Mission member can post through the Room message RPC
+ok 53 - member can advance a validated Room read cursor
+ok 54 - Space projection synchronizes the authoritative Mission membership
+RESET
+SET
+SET
+SET
+ok 55 - a discoverable Space does not grant an outsider content access
+ok 56 - Room message RLS hides member content from an outsider
+RESET
+SET
+SET
+SET
+ok 57 - platform admin authority does not imply private Space membership
+1..57
+ROLLBACK
+IO_CONTRACT_FILE community_events.test.sql
+BEGIN
+NOTICE:  extension "pgtap" already exists, skipping
+CREATE EXTENSION
+SET
+INSERT 0 5
+INSERT 0 4
+INSERT 0 1
+INSERT 0 2
+INSERT 0 1
+INSERT 0 5
+INSERT 0 5
+ok 1 - Anonymous discovery cannot select raw event rows
+ok 2 - Members cannot self-publish through a table insert
+ok 3 - Members cannot forge publication or ownership through an update
+ok 4 - Legacy RSVP upsert cannot bypass registration capacity
+ok 5 - Anonymous registration is denied
+ok 6 - Raw guest records are private
+SET
+SET
+ok 7 - Only approved public events appear in anonymous discovery
+ok 8 - Unlisted events open only through an explicit invitation ID
+ok 9 - A direct link cannot bypass members-only visibility
+ok 10 - Public invitation excludes private venue and join credentials
+ok 11 - Discovery query limits are bounded
+RESET
+SET
+SET
+ok 12 - I/O-only users cannot register
+ok 13 - A signed-in nonmember cannot read the join link
+SET
+ok 14 - Active members can open member invitations
+ok 15 - An account change fails atomically before reservation
+ok 16 - First eligible guest receives a place
+ok 17 - Repeated registration is idempotent
+ok 18 - Confirmed eligible guest receives access details
+ok 19 - An ordinary guest cannot enumerate the guest list
+SET
+ok 20 - Capacity allocates no second confirmed place
+ok 21 - Waitlisted guests cannot obtain access credentials
+ok 22 - Chapter restriction is enforced server-side
+ok 23 - An approval event creates a request rather than a reservation
+ok 24 - Pending guests cannot obtain access details
+SET
+ok 25 - A guest can cancel
+SET
+ok 26 - Cancellation promotes the oldest eligible waitlisted guest
+SET
+ok 27 - The event host can view scoped guests
+ok 28 - The host can approve a pending registration
+ok 29 - The host can check in a confirmed eligible guest near the event
+ok 30 - Check-in is idempotent
+SET
+ok 31 - A checked-in guest cannot erase their attendance or reopen a used place
+SET
+ok 32 - A submitting host cannot approve their own pending event
+ok 33 - The host may cancel the event
+SET
+ok 34 - Cancellation withdraws guest access credentials
+ok 35 - Cancelled events cannot accept registrations
+RESET
+INSERT 0 1
+SET
+SET
+ok 36 - Suspension closes previously confirmed access
+ok 37 - Suspension denies registration
+SET
+SET
+ok 38 - A missing AAL claim fails closed for host approval
+SET
+ok 39 - Operators require MFA to publish
+ok 40 - Existing admin content RPC cannot bypass event MFA guard
+SET
+ok 41 - A content operator with MFA can approve a separate host
+ok 42 - Versioned event rejection uses the real declined schema state
+ok 43 - Operators cannot grant themselves host approval
+SET
+ok 44 - Approved hosts publish their own general events
+ok 45 - Submission replay returns the original event
+ok 46 - Submission IDs cannot be reused for changed content
+SET
+ok 47 - New hosts cannot supply a forged approved status
+RESET
+ok 48 - Retries create exactly one event
+ok 49 - Private fields are never stored in the public event row
+1..49
+ROLLBACK
+IO_CONTRACT_FILE direct_message_rpc.test.sql
+BEGIN
+SET
+1..47
+ok 1 - direct messages keep row-level security enabled
+ok 2 - direct messages carry a caller idempotency key
+ok 3 - sender idempotency key has a unique partial index
+ok 4 - conversation history has a recent-message index
+ok 5 - recipient unread lookup has a partial index
+ok 6 - caller-bound direct-message send RPC exists
+ok 7 - caller-bound read receipt RPC exists
+ok 8 - caller-bound paginated direct-conversation RPC exists
+ok 9 - direct-message RPCs use definer execution
+ok 10 - direct-message RPCs pin an empty search path
+ok 11 - authenticated members can call the send RPC
+ok 12 - authenticated members can call the read RPC
+ok 13 - authenticated members can call the paginated history RPC
+ok 14 - anonymous clients cannot call the send RPC
+ok 15 - anonymous clients cannot call the read RPC
+ok 16 - anonymous clients cannot call the paginated history RPC
+ok 17 - authenticated clients cannot insert message rows directly
+ok 18 - authenticated clients cannot update message rows directly
+ok 19 - authenticated clients retain RLS-scoped message reads
+ok 20 - message read policy caches caller identity with a scalar subquery
+INSERT 0 4
+INSERT 0 2
+SET
+SET
+SET
+ok 21 - member cannot bypass the send RPC with a direct insert
+WARNING:  WarnSendingBroadcastMessage: no partition of relation "messages" found for row
+ok 22 - connected active member can send through the RPC
+ok 23 - send RPC binds the sender and trims the message
+RESET
+ok 24 - send creates one fixed notification without message content
+SET
+SET
+SET
+ok 25 - an identical retry with the same client request ID succeeds
+ok 26 - an identical retry does not duplicate the message
+RESET
+WARNING:  WarnSendingBroadcastMessage: no partition of relation "messages" found for row
+WARNING:  WarnSendingBroadcastMessage: no partition of relation "messages" found for row
+WARNING:  WarnSendingBroadcastMessage: no partition of relation "messages" found for row
+INSERT 0 3
+SET
+SET
+SET
+ok 27 - conversation history rejects an excessive page limit
+ok 28 - conversation history rejects a partial cursor
+ok 29 - first conversation page is newest-first with an ID tie-break
+ok 30 - conversation page returns one look-ahead row
+ok 31 - conversation cursor continues strictly before its timestamp and ID
+ok 32 - conversation history does not expose another member pair
+RESET
+ok 33 - an identical retry does not duplicate the notification
+SET
+SET
+SET
+ok 34 - reusing an idempotency key for another payload is rejected
+ok 35 - unconnected members cannot be messaged
+ok 36 - self messaging is rejected
+ok 37 - blank messages are rejected
+ok 38 - oversized messages are rejected
+RESET
+SET
+SET
+SET
+WARNING:  WarnSendingBroadcastMessage: no partition of relation "messages" found for row
+ok 39 - the connected member can reply through the same contract
+RESET
+SET
+SET
+SET
+WARNING:  WarnSendingBroadcastMessage: no partition of relation "messages" found for row
+ok 40 - recipient marks exactly one inbound message read
+ok 41 - inbound message read marker is persisted
+ok 42 - read RPC cannot mark the caller outbound message read
+ok 43 - read RPC is idempotent when no unread rows remain
+ok 44 - member cannot bypass the read RPC with a direct update
+RESET
+SET
+SET
+SET
+ok 45 - unrelated member cannot read another conversation
+RESET
+INSERT 0 1
+SET
+SET
+SET
+ok 46 - a suspended recipient cannot receive a new message
+RESET
+WARNING:  WarnSendingBroadcastMessage: no partition of relation "messages" found for row
+WARNING:  WarnSendingBroadcastMessage: no partition of relation "messages" found for row
+WARNING:  WarnSendingBroadcastMessage: no partition of relation "messages" found for row
+WARNING:  WarnSendingBroadcastMessage: no partition of relation "messages" found for row
+WARNING:  WarnSendingBroadcastMessage: no partition of relation "messages" found for row
+WARNING:  WarnSendingBroadcastMessage: no partition of relation "messages" found for row
+WARNING:  WarnSendingBroadcastMessage: no partition of relation "messages" found for row
+WARNING:  WarnSendingBroadcastMessage: no partition of relation "messages" found for row
+WARNING:  WarnSendingBroadcastMessage: no partition of relation "messages" found for row
+WARNING:  WarnSendingBroadcastMessage: no partition of relation "messages" found for row
+WARNING:  WarnSendingBroadcastMessage: no partition of relation "messages" found for row
+WARNING:  WarnSendingBroadcastMessage: no partition of relation "messages" found for row
+WARNING:  WarnSendingBroadcastMessage: no partition of relation "messages" found for row
+WARNING:  WarnSendingBroadcastMessage: no partition of relation "messages" found for row
+WARNING:  WarnSendingBroadcastMessage: no partition of relation "messages" found for row
+WARNING:  WarnSendingBroadcastMessage: no partition of relation "messages" found for row
+WARNING:  WarnSendingBroadcastMessage: no partition of relation "messages" found for row
+WARNING:  WarnSendingBroadcastMessage: no partition of relation "messages" found for row
+WARNING:  WarnSendingBroadcastMessage: no partition of relation "messages" found for row
+WARNING:  WarnSendingBroadcastMessage: no partition of relation "messages" found for row
+WARNING:  WarnSendingBroadcastMessage: no partition of relation "messages" found for row
+WARNING:  WarnSendingBroadcastMessage: no partition of relation "messages" found for row
+WARNING:  WarnSendingBroadcastMessage: no partition of relation "messages" found for row
+WARNING:  WarnSendingBroadcastMessage: no partition of relation "messages" found for row
+WARNING:  WarnSendingBroadcastMessage: no partition of relation "messages" found for row
+WARNING:  WarnSendingBroadcastMessage: no partition of relation "messages" found for row
+WARNING:  WarnSendingBroadcastMessage: no partition of relation "messages" found for row
+WARNING:  WarnSendingBroadcastMessage: no partition of relation "messages" found for row
+WARNING:  WarnSendingBroadcastMessage: no partition of relation "messages" found for row
+WARNING:  WarnSendingBroadcastMessage: no partition of relation "messages" found for row
+INSERT 0 30
+SET
+SET
+SET
+ok 47 - per-sender minute rate limit is enforced at the trusted boundary
+RESET
+ROLLBACK
+IO_CONTRACT_FILE education_storage_visibility.test.sql
+BEGIN
+NOTICE:  extension "pgtap" already exists, skipping
+CREATE EXTENSION
+SET
+ok 1 - Education bucket is private and bounded
+INSERT 0 2
+INSERT 0 1
+INSERT 0 2
+INSERT 0 3
+UPDATE 3
+SET
+SET
+SET
+ok 2 - Member can see only the published reference
+ok 3 - Draft and unreferenced files remain private
+ok 4 - Ordinary member cannot upload education content
+SET
+ok 5 - Author can upload within their own canonical path
+ok 6 - Author cannot choose another uploader path
+ok 7 - Unknown upload prefixes are denied
+ok 8 - Quarantined uploads cannot be read or renamed by a browser
+RESET
+UPDATE 1
+SET
+SET
+ok 9 - Archiving a reference withdraws member access
+RESET
+INSERT 0 1
+SET
+SET
+ok 10 - Suspension closes education file reads
+ok 11 - Suspension closes education uploads
+1..11
+ROLLBACK
+IO_CONTRACT_FILE education_upload_quarantine.test.sql
+BEGIN
+CREATE EXTENSION
+SET
+NOTICE:  extension "pgtap" already exists, skipping
+INSERT 0 3
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+ok 1 - New files start quarantined
+ok 2 - Editors cannot mark files clean
+ok 3 - Browsers cannot submit scanner verdicts
+SET
+SET
+ok 4 - A browser JWT cannot claim private scanner work
+ok 5 - Published unscanned files cannot be downloaded
+ok 6 - Authorized readers receive a safe pending state
+ok 7 - Unpublished paths are not enumerable by ordinary readers
+SET
+ok 8 - Editor reads cannot bypass quarantine
+RESET
+SET
+SELECT 1
+ok 9 - A service worker claims the bounded pending file
+ok 10 - Claims use stored object metadata
+ok 11 - Concurrent workers cannot reclaim a live lease
+ok 12 - Wrong leases cannot release quarantine
+ok 13 - Clean verdicts require digest evidence
+ok 14 - A current trusted clean result releases the object
+ok 15 - Clean is recorded only by the service contract
+SET
+SET
+SET
+ok 16 - Published clean files become readable
+SET
+ok 17 - An editor cannot replace bytes behind an issued signed path
+ok 18 - An editor cannot delete and reuse a previously signed path
+ok 19 - Existing education paths cannot be reused by a new upload
+RESET
+DELETE 1
+SET
+SET
+ok 20 - An old JWT for a deleted account cannot create new download links
+ok 21 - Deleted identities lose the safe download status contract
+RESET
+UPDATE 1
+ok 22 - Replacing bytes invalidates a previous clean verdict
+SET
+SELECT 1
+UPDATE 1
+ok 23 - A result from replaced bytes cannot mark the new version clean
+SELECT 1
+ok 24 - Malware verdicts are recorded without releasing the file
+SET
+SET
+SET
+ok 25 - Blocked files remain unreadable
+ok 26 - Readers receive an explicit blocked state
+RESET
+UPDATE 1
+SET
+SELECT 1
+ok 27 - Scanner outages schedule retries
+ok 28 - Failed checks remain quarantined while retrying
+ok 29 - Scanner errors are redacted
+UPDATE 1
+SELECT 1
+UPDATE 1
+ok 30 - Crashed final leases are reconciled
+ok 31 - Exhausted scans fail closed
+DELETE 1
+ok 32 - Deleting an object removes its security metadata
+1..32
+ROLLBACK
+IO_CONTRACT_FILE event_communications.test.sql
+BEGIN
+CREATE EXTENSION
+SET
+NOTICE:  extension "pgtap" already exists, skipping
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+ok 1 - Members cannot read queued recipient data
+ok 2 - Visitors cannot enqueue arbitrary mail
+ok 3 - Members cannot claim mail
+ok 4 - Guests cannot inspect delivery leases
+ok 5 - Members cannot settle mail
+ok 6 - Registration transitions and future confirmed reminders are enqueued atomically
+ok 7 - New registrations start at version one
+ok 8 - Repeated enqueue is safe
+ok 9 - Repeated enqueue does not duplicate a notification
+SET
+SET
+ok 10 - A browser JWT cannot claim recipients
+RESET
+SET
+SELECT 2
+ok 11 - Only due registration jobs are claimed
+ok 12 - Verified guest registrations can receive transaction emails
+ok 13 - Another worker cannot claim live leases
+ok 14 - Claims exclude private venue credentials
+ok 15 - Template payload excludes names and recipient emails
+ok 16 - Valid current jobs pass preflight
+ok 17 - Browsers cannot prepare arbitrary recipient mail
+ok 18 - Preparation cannot change the verified recipient
+SELECT 2
+ok 19 - The complete provider payload is frozen before sending
+ok 20 - Template and sender changes cannot alter the payload under an existing idempotency key
+ok 21 - A wrong lease cannot settle a job
+ok 22 - Null delivery results are rejected
+ok 23 - Successful provider response settles a job
+ok 24 - Successful jobs are delivered
+ok 25 - Failed delivery schedules a bounded retry
+ok 26 - Untrusted errors are reduced to fixed redacted codes
+UPDATE 1
+SELECT 1
+ok 27 - Retries preserve provider idempotency identity
+ok 28 - Retry payload is immutable
+UPDATE 1
+ok 29 - Waitlist promotion advances registration version
+ok 30 - Promotion suppresses an obsolete leased waitlist email
+ok 31 - Superseded leased messages are terminal
+UPDATE 1
+ok 32 - Check-in does not emit duplicate registration mail
+UPDATE 1
+UPDATE 1
+INSERT 0 1
+ok 33 - Rescheduling enqueues each active attendee
+ok 34 - Rescheduling creates reminders for the new revision
+SELECT 2
+ok 35 - Old confirmations are suppressed; latest change messages are claimed
+ok 36 - Claim contains current change information
+ok 37 - Old schedule reminders are suppressed
+UPDATE 1
+ok 38 - Cancellation invalidates a leased event update
+SELECT 2
+ok 39 - Cancellation messages cover both member and guest attendees
+ok 40 - Cancellation template is explicit
+ok 41 - Cancelled events have no pending reminder delivery
+UPDATE 1
+ok 42 - A crashed final attempt can be recovered
+ok 43 - Exhausted crashed leases become dead letters
+UPDATE 2
+ok 44 - Old ambiguous delivery is handled without resending
+ok 45 - No retry occurs outside the provider idempotency window
+ok 46 - Exhaustion is recorded with a fixed operational code
+1..46
+ROLLBACK
+IO_CONTRACT_FILE event_edit_history.test.sql
+BEGIN
+NOTICE:  extension "pgtap" already exists, skipping
+CREATE EXTENSION
+SET
+INSERT 0 3
+INSERT 0 3
+INSERT 0 1
+INSERT 0 1
+INSERT 0 2
+INSERT 0 2
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+CREATE FUNCTION
+ok 1 - Change history is not directly readable by members
+ok 2 - Anonymous clients cannot edit events
+ok 3 - Anonymous clients cannot read private drafts
+ok 4 - Anonymous clients cannot review event revisions
+SET
+SET
+ok 5 - Another member cannot read the host draft
+ok 6 - Another member cannot edit an event
+SET
+ok 7 - A draft starts at revision zero
+ok 8 - The authorized host receives private draft fields
+ok 9 - Account switching fails closed
+ok 10 - The editing RPC cannot change registration conditions
+ok 11 - The editing RPC cannot forge publication state
+ok 12 - Private access links require HTTPS
+ok 13 - Invalid IANA zones are refused
+ok 14 - A bounded meaningful change reason is required
+ok 15 - Rescheduling into the past is refused
+ok 16 - An approved host can reschedule and edit
+ok 17 - A lost-response retry returns the original revision
+ok 18 - A request ID cannot be reused for different changes
+ok 19 - A stale editor cannot overwrite a newer change
+ok 20 - Rescheduling preserves capacity
+ok 21 - Retries create exactly one history entry
+SET
+ok 22 - A new host can edit a pending event without publishing
+RESET
+ok 23 - Exactly one audit event records the edit
+ok 24 - Existing confirmed registrations survive rescheduling
+ok 25 - Verified active receipts follow the new event end plus seven days
+ok 26 - Rescheduling does not revive an expired receipt
+ok 27 - Rescheduling does not extend an unconfirmed email challenge
+ok 28 - History summaries exclude private access credentials
+UPDATE 1
+SET
+SET
+ok 29 - A revoked host cannot rewrite a reviewed published event
+SET
+SET
+ok 30 - Content reviewers require MFA to edit another host event
+SET
+ok 31 - An MFA content reviewer can make an audited change
+ok 32 - The review workspace identifies the version presented
+ok 33 - Reviewing an obsolete draft cannot publish changed content
+ok 34 - The reviewer can publish the inspected revision
+RESET
+UPDATE 1
+SET
+SET
+ok 35 - Editing cannot revive a cancelled event
+RESET
+1..35
+ROLLBACK
+IO_CONTRACT_FILE event_review_versions.test.sql
+BEGIN
+CREATE EXTENSION
+SET
+NOTICE:  extension "pgtap" already exists, skipping
+INSERT 0 4
+INSERT 0 4
+INSERT 0 1
+INSERT 0 2
+INSERT 0 2
+INSERT 0 3
+INSERT 0 3
+INSERT 0 1
+ok 1 - Anonymous clients cannot read revision evidence
+ok 2 - Anonymous clients cannot decide on events
+ok 3 - Anonymous clients cannot read private chapter invitations
+ok 4 - The original unversioned lifecycle implementation is not browser-callable
+ok 5 - The original unversioned event review helper is not browser-callable
+SET
+SET
+ok 6 - An ordinary member receives no private invitations
+ok 7 - An ordinary member cannot read the admin queue
+ok 8 - An ordinary member cannot use a guessed current revision
+SET
+ok 9 - The lead sees only another host submission in their active chapter
+ok 10 - Chapter invitation and revision start together at zero
+ok 11 - Authorized chapter review includes the private access link
+ok 12 - Chapter review includes the complete invitation body
+ok 13 - An authorized legacy approval requires a fresh versioned review
+ok 14 - An authorized legacy rejection cannot omit the revision
+ok 15 - A chapter lead cannot publish outside their chapter
+ok 16 - A chapter lead cannot approve their own submission
+SET
+ok 17 - A private-link change also advances the invitation revision
+SET
+ok 18 - An old chapter review cannot publish a changed private link
+ok 19 - A refreshed chapter review receives the changed revision
+ok 20 - Current chapter review can publish
+ok 21 - A published invitation leaves the pending chapter review queue
+SET
+SET
+ok 22 - The versioned admin event command requires MFA
+SET
+ok 23 - Even an MFA operator cannot publish through the legacy generic command
+ok 24 - The admin queue carries the changed invitation revision
+ok 25 - Admin evidence retains the bounded summary contract
+ok 26 - Non-event content has no fabricated event revision
+ok 27 - The new queue preserves bounded limits
+ok 28 - A missing admin revision is refused
+ok 29 - A wrong admin revision is refused
+ok 30 - A missing publication state is refused
+ok 31 - A wrong publication state is refused
+ok 32 - The allowed event lifecycle graph remains enforced
+ok 33 - A bounded meaningful reason remains required
+ok 34 - A current MFA event decision publishes
+ok 35 - An earlier publication state cannot undo the current decision
+ok 36 - Other Content lifecycles retain their existing command
+RESET
+ok 37 - Only the accepted admin transition records lifecycle evidence
+ok 38 - Private audit records the inspected event revision
+INSERT 0 1
+SET
+SET
+ok 39 - An MFA operator can withdraw a published invitation
+ok 40 - A cancelled invitation cannot return to pending publication
+RESET
+ok 41 - Withdrawal closes the invitation lifecycle atomically
+ok 42 - Withdrawal enqueues one guest cancellation notice
+ok 43 - The cancellation notice remains eligible after publication withdrawal
+SET
+SET
+ok 44 - The submitting host can cancel a pending invitation
+SET
+ok 45 - Versioned host/chapter review cannot publish a cancelled submission
+ok 46 - A cancelled pending submission can still be declined
+RESET
+INSERT 0 1
+SET
+SET
+ok 47 - The current lead sees a fresh pending invitation before revocation
+RESET
+UPDATE 1
+SET
+SET
+ok 48 - A former lead receives no chapter review evidence
+RESET
+INSERT 0 1
+SET
+SET
+ok 49 - A suspended operator cannot obtain refreshed evidence
+ok 50 - A suspended MFA operator cannot decide on events
+RESET
+DELETE 1
+SET
+SET
+ok 51 - A deleted account token cannot obtain chapter evidence
+RESET
+1..51
+ROLLBACK
+IO_CONTRACT_FILE io_endpoint_eligibility.test.sql
+BEGIN
+NOTICE:  extension "pgtap" already exists, skipping
+CREATE EXTENSION
+SET
+1..43
+INSERT 0 2
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 2
+INSERT 0 2
+INSERT 0 2
+INSERT 0 2
+INSERT 0 2
+INSERT 0 2
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 2
+ok 1 - authenticated cannot execute the internal evidence function
+ok 2 - anon cannot execute the internal evidence function
+ok 3 - authenticated cannot execute the service resolver
+ok 4 - service role can execute the service resolver
+ok 5 - anon cannot execute the admin I/O evidence summary
+ok 6 - anon cannot execute the admin I/O receipt feed
+ok 7 - authenticated callers can reach the capability-checked evidence summary
+ok 8 - authenticated callers can reach the capability-checked receipt feed
+ok 9 - endpoint A starts eligible with a latest bound pass
+ok 10 - endpoint B starts eligible with a latest bound pass
+SET
+SET
+SET
+ok 11 - admin snapshot reports both endpoints eligible
+ok 12 - admin evidence summary counts redacted route receipts
+ok 13 - admin evidence summary counts provider attempts
+ok 14 - admin evidence summary groups exact cost nanos by currency
+ok 15 - admin receipt feed returns the selected provider key
+ok 16 - admin receipt feed includes aggregate attempt count
+ok 17 - admin receipt feed includes aggregate failed-attempt count
+ok 18 - admin receipt feed rejects incomplete cursors
+ok 19 - admin can enable a provider with a current eligible endpoint
+RESET
+SET
+ok 20 - resolver initially returns both eligible sibling endpoints
+RESET
+INSERT 0 1
+ok 21 - a newer capability without a run for that version is fail-closed
+ok 22 - the helper reports the newest capability rather than an older verified version
+SET
+ok 23 - snapshot uses the same fail-closed capability/conformance binding
+RESET
+SET
+ok 24 - provider-wide switch does not expose an ineligible sibling endpoint
+RESET
+INSERT 0 1
+ok 25 - a latest failed run remains ineligible even when it is correctly bound
+INSERT 0 1
+ok 26 - a newer pass bound to the newest capability restores eligibility
+ok 27 - the selected conformance evidence is bound to the selected capability
+ok 28 - a passed run must identify its capability version
+ok 29 - a run cannot cite a capability from another endpoint
+INSERT 0 2
+ok 30 - equal start times resolve deterministically by descending run ID
+DELETE 2
+ok 31 - removing the tie fixtures exposes endpoint B original bound pass again
+INSERT 0 1
+ok 32 - a newer failed run invalidates endpoint B historical pass
+SET
+ok 33 - resolver returns only endpoint A after endpoint B latest failure
+RESET
+INSERT 0 1
+ok 34 - endpoint A also becomes ineligible after its newer failure
+SET
+ok 35 - resolver fails closed when every switched endpoint has newer failed evidence
+RESET
+SET
+ok 36 - activation rejects a provider whose endpoints only have historical passes
+RESET
+INSERT 0 1
+ok 37 - a new bound pass restores endpoint B after its failure
+SET
+ok 38 - activation succeeds again after fresh passing evidence
+RESET
+SET
+ok 39 - resolver returns only the endpoint with fresh passing evidence
+RESET
+SET
+SET
+ok 40 - a regular member cannot read the operator snapshot
+ok 41 - a regular member cannot read the admin I/O evidence summary
+ok 42 - a regular member cannot read the admin route receipt feed
+ok 43 - a regular member cannot manage provider routing
+RESET
+ROLLBACK
+IO_CONTRACT_FILE io_finance_razorpay_fx_contract.test.sql
+BEGIN
+NOTICE:  extension "pgtap" already exists, skipping
+CREATE EXTENSION
+SET
+1..23
+ok 1 - payment receipt is retained
+ok 2 - verified checkout payment is retained
+ok 3 - only checkout signature hash is retained
+ok 4 - checkout verification time is retained
+ok 5 - payment events are environment-bound
+ok 6 - invoice records source currency
+ok 7 - invoice records approved FX version
+ok 8 - invoice snapshots FX numerator
+ok 9 - invoice snapshots FX denominator
+ok 10 - invoice lines preserve source amount
+ok 11 - caller-bound checkout verification context exists
+ok 12 - service-only checkout verification recorder exists
+ok 13 - environment-bound provider event recorder exists
+ok 14 - approved-FX invoice draft function exists
+ok 15 - authenticated caller can obtain only their checkout verification context
+ok 16 - browser caller cannot record server verification evidence
+ok 17 - payment service can record verified checkout evidence
+ok 18 - browser caller cannot invoke private FX arithmetic directly
+ok 19 - one-open-checkout partial unique index exists
+ok 20 - captured-payment semantic idempotency index exists
+ok 21 - processed-refund semantic idempotency index exists
+ok 22 - browser callers cannot mutate payment intents directly
+ok 23 - browser callers cannot read or write signed provider events
+ROLLBACK
+IO_CONTRACT_FILE io_openai_api_foundation.test.sql
+BEGIN
+NOTICE:  extension "pgtap" already exists, skipping
+CREATE EXTENSION
+SET
+1..24
+INSERT 0 2
+INSERT 0 1
+INSERT 0 2
+ok 1 - authenticated callers can enter the owner/admin key-issuance boundary
+ok 2 - anonymous callers cannot issue API keys
+ok 3 - authenticated callers can enter the owner/admin revocation boundary
+ok 4 - browser users cannot authenticate or meter an API key directly
+ok 5 - service role can use the API-key authentication boundary
+ok 6 - browser users cannot inspect service rate windows
+ok 7 - browser users cannot forge service rate windows
+ok 8 - key issuance is a reviewed security-definer boundary
+ok 9 - key issuance has an empty search path
+CREATE TABLE
+GRANT
+GRANT
+SET
+SET
+SET
+INSERT 0 1
+ok 10 - raw API key has the documented high-entropy test-key format
+ok 11 - new test API key is active
+ok 12 - default test API key has exactly the model and inference scopes
+RESET
+ok 13 - database stores only the SHA-256 key hash
+ok 14 - raw API key is not persisted in the API key row
+ok 15 - key issuance writes a content-free audit event
+SET
+SET
+ok 16 - analyst cannot issue an API key
+RESET
+UPDATE 1
+SET
+ok 17 - first scoped API request is allowed atomically
+ok 18 - request above the key minute limit is rejected
+ok 19 - rate window never increments past its enforced limit
+ok 20 - unknown key hash fails with no identity disclosure
+RESET
+SET
+SET
+SET
+ok 21 - owner can revoke the API key
+ok 22 - API key revocation is idempotent
+ok 23 - idempotent revocation writes exactly one audit event
+RESET
+SET
+ok 24 - revoked key cannot authenticate
+ROLLBACK
+IO_CONTRACT_FILE io_operational_core.test.sql
+BEGIN
+CREATE EXTENSION
+SET
+1..46
+INSERT 0 3
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+ok 1 - browser users cannot begin trusted route requests
+ok 2 - service role can begin trusted route requests
+ok 3 - browser users cannot finalize trusted route requests
+ok 4 - service role can finalize trusted route requests
+ok 5 - browser users cannot forge endpoint health
+SET
+NOTICE:  extension "pgtap" already exists, skipping
+ok 6 - first request atomically reserves its budget
+ok 7 - reservation starts active
+ok 8 - reservation preserves integer minor units
+ok 9 - reserve creates one ledger transaction
+ok 10 - reserve ledger entries balance to zero
+ok 11 - same idempotency key and fingerprint replays without a new hold
+ok 12 - idempotent replay creates no duplicate reservation
+ok 13 - same key with different fingerprint fails closed
+ok 14 - hard budget includes active holds and rejects overspend
+ok 15 - finalization atomically records a successful route
+ok 16 - successful route settles its reservation
+ok 17 - settlement uses actual integer minor units
+ok 18 - settled usage is linked to the route receipt
+ok 19 - finalization writes one immutable route receipt
+ok 20 - receipt and attempts are committed in the same transaction
+ok 21 - finalization replay returns the original terminal result
+ok 22 - finalization replay creates no duplicate receipt
+ok 23 - completed route has reserve and settle transactions
+ok 24 - every route ledger transaction independently balances
+ok 25 - second request reserves remaining budget
+ok 26 - failed route finalizes without charging provider cost
+ok 27 - failed route releases its reservation
+ok 28 - failed route creates no settled usage record
+ok 29 - stale-request fixture starts with a durable hold
+UPDATE 1
+ok 30 - a new request performs stale-hold housekeeping before reserving
+ok 31 - stale reservation becomes terminal and no longer consumes budget
+ok 32 - stale idempotency record becomes explicitly retryable with a new key
+ok 33 - expiration releases the hold through a balanced ledger transaction
+ok 34 - housekeeping trigger request releases normally
+ok 35 - health evidence starts empty rather than invented
+{"ok": true, "retryAfter": null, "healthState": "degraded", "circuitState": "closed", "consecutiveFailures": 1}
+{"ok": true, "retryAfter": null, "healthState": "degraded", "circuitState": "closed", "consecutiveFailures": 2}
+{"ok": true, "retryAfter": null, "healthState": "degraded", "circuitState": "closed", "consecutiveFailures": 3}
+{"ok": true, "retryAfter": null, "healthState": "degraded", "circuitState": "closed", "consecutiveFailures": 4}
+{"ok": true, "retryAfter": "2026-10-12T23:42:31.436866+00:00", "healthState": "unavailable", "circuitState": "open", "consecutiveFailures": 5}
+ok 36 - five consecutive failures open the endpoint circuit
+ok 37 - circuit preserves its consecutive failure count
+ok 38 - open endpoint circuit blocks a new reservation
+ok 39 - successful outcome closes the automatic circuit
+ok 40 - successful outcome records fresh healthy evidence
+RESET
+SET
+SET
+SET
+ok 41 - workspace member sees settled budget evidence
+ok 42 - workspace member reads only its RLS-scoped usage
+RESET
+SET
+SET
+SET
+ok 43 - unrelated member cannot read workspace usage
+ok 44 - unrelated member cannot read the workspace budget projection
+RESET
+SET
+SET
+SET
+ok 45 - authorized operator sees redacted workspace budget evidence
+ok 46 - authorized operator sees endpoint circuit evidence
+ROLLBACK
+IO_CONTRACT_FILE io_provider_policy_and_conformance.test.sql
+BEGIN
+NOTICE:  extension "pgtap" already exists, skipping
+CREATE EXTENSION
+SET
+1..50
+ok 1 - workspace provider policy exists
+ok 2 - CN hosting consent is explicit
+ok 3 - possible training consent is explicit
+ok 4 - workspace provider policy uses RLS
+ok 5 - authenticated members can enter the RLS-protected read boundary
+ok 6 - browser users cannot bypass the audited policy RPC
+ok 7 - members can read their workspace provider policy through a caller-bound RPC
+ok 8 - owners/admins can enter the audited provider-policy mutation boundary
+ok 9 - gateway service can enforce the workspace policy
+ok 10 - browser users cannot call the service-only policy projection
+ok 11 - key limit policy is versioned
+ok 12 - key minute request cap exists
+ok 13 - key daily request cap exists
+ok 14 - key monthly request cap exists
+ok 15 - key daily spend cap exists
+ok 16 - key monthly spend cap exists
+ok 17 - multi-period request counters are private
+ok 18 - key spend windows are private
+ok 19 - key spend reservations are private
+ok 20 - browser users cannot inspect request windows
+ok 21 - browser users cannot inspect spend reservations
+ok 22 - conformance approval capability foreign key is indexed
+ok 23 - conformance event actor foreign key is indexed
+ok 24 - conformance event approval foreign key is indexed
+ok 25 - conformance event endpoint foreign key is indexed
+ok 26 - API service can enforce the immutable key policy through the deployed RPC
+ok 27 - the deployed compatibility overload preserves its existing parameter names
+ok 28 - the deployed RPC preserves its default argument for two-argument callers
+ok 29 - the immutable policy helper is not directly callable by the API service
+ok 30 - API service can atomically reserve workspace and key spend
+ok 31 - browser users cannot reserve API-key spend directly
+ok 32 - API service can atomically settle key and workspace spend
+ok 33 - browser users cannot settle API-key spend directly
+ok 34 - single-use conformance approvals are private
+ok 35 - conformance events are private
+ok 36 - runs bind to an approval
+ok 37 - runs bind to a suite version
+ok 38 - authenticated admin clients can enter the capability-checked approval boundary
+ok 39 - anonymous callers cannot approve provider traffic
+ok 40 - conformance service can load an approved connection
+ok 41 - browser users cannot read the private conformance connection
+ok 42 - conformance service can finalize redacted evidence
+ok 43 - browser users cannot forge conformance results
+ok 44 - admin clients can enter the capability-checked conformance projection
+ok 45 - anonymous callers cannot read conformance evidence
+ok 46 - conformance approval has an empty search path
+ok 47 - conformance finalization has an empty search path
+ok 48 - conformance can start from the latest staged capability declaration
+ok 49 - a passing conformance run seals the tested capability declaration
+ok 50 - the database rejects incomplete pass evidence even from the service boundary
+ROLLBACK
+IO_CONTRACT_FILE io_service_fee_and_commercial_gate.test.sql
+BEGIN
+CREATE EXTENSION
+NOTICE:  extension "pgtap" already exists, skipping
+SET
+1..26
+ok 1 - provider registry stores explicit onward-resale authorization
+ok 2 - provider registry stores commercial access state
+ok 3 - service fee policy is private
+ok 4 - browser users cannot inspect private pricing policy rows directly
+ok 5 - browser users cannot change the I/O fee
+ok 6 - browser users cannot invoke the service-only pricing projection
+ok 7 - gateway service can load the current fee policy
+ok 8 - gateway service can enter the priced finalization boundary
+ok 9 - browser users cannot finalize priced usage
+ok 10 - authenticated admin clients can enter the capability-checked commercial projection
+ok 11 - anonymous clients cannot inspect provider commercial evidence
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+SET
+ok 12 - service fee policy version is immutable evidence
+ok 13 - owner-approved fee is exactly 5.5 percent
+RESET
+ok 14 - there is exactly one active service fee policy
+ok 15 - pending provider remains commercially blocked
+ok 16 - pending provider is not falsely marked resale-authorized
+ok 17 - no-training status remains a claim rather than a contract
+ok 18 - provider default residency disclosure is retained
+ok 19 - endpoint carries its reviewed residency disclosure
+ok 20 - endpoint carries its reviewed retention class
+ok 21 - current input price is versioned in currency nanos
+ok 22 - current cached-input price is versioned
+ok 23 - current output price is versioned
+ok 24 - price evidence is pinned to an explicit version
+ok 25 - commercial gate blocks an otherwise privileged route enable
+ok 26 - failed commercial activation leaves routing disabled
+ROLLBACK
+IO_CONTRACT_FILE io_terminal_session_foundation.test.sql
+BEGIN
+NOTICE:  extension "pgtap" already exists, skipping
+CREATE EXTENSION
+SET
+1..24
+INSERT 0 2
+INSERT 0 1
+INSERT 0 1
+ok 1 - authenticated members can select RLS-scoped terminal sessions
+ok 2 - browser users cannot directly forge terminal sessions
+ok 3 - browser users cannot directly forge terminal events
+ok 4 - browser approval mutation remains closed until its reviewed RPC ships
+ok 5 - anonymous callers cannot create terminal sessions
+ok 6 - authenticated callers can use the validated terminal-session boundary
+ok 7 - anonymous callers cannot enumerate terminal sessions
+SET
+SET
+SET
+WARNING:  WarnSendingBroadcastMessage: no partition of relation "messages" found for row
+ok 8 - member creates a durable running session through the narrow RPC
+ok 9 - member sees its RLS-scoped terminal session
+ok 10 - member receives the bounded durable terminal-session projection
+ok 11 - connector origin is stored only as a SHA-256 hash
+ok 12 - local OpenCode session reference is stored only as a SHA-256 hash
+ok 13 - durable session rows contain neither raw origin nor raw runtime reference
+ok 14 - session creator receives the durable owner membership
+ok 15 - session creation writes the first ordered safe event
+ok 16 - safe timeline does not copy the user title or prompt-like content into event payloads
+ok 17 - direct browser insert fails at the privilege boundary
+ok 18 - non-loopback connector registration fails closed
+WARNING:  WarnSendingBroadcastMessage: no partition of relation "messages" found for row
+ok 19 - session owner finalizes the durable lifecycle
+ok 20 - terminal session preserves monotonic event sequence
+ok 21 - terminal completion adds exactly one immutable safe event
+ok 22 - terminal completion is idempotent after reaching a terminal state
+RESET
+SET
+SET
+SET
+ok 23 - unrelated member cannot read terminal sessions
+ok 24 - unrelated member cannot mutate a terminal lifecycle
+ROLLBACK
+IO_CONTRACT_FILE io_terminal_timeline_and_approval.test.sql
+BEGIN
+CREATE EXTENSION
+NOTICE:  extension "pgtap" already exists, skipping
+SET
+1..30
+INSERT 0 2
+INSERT 0 1
+INSERT 0 1
+ok 1 - browser users still cannot directly write terminal events
+ok 2 - private terminal Broadcast authorization function exists
+ok 3 - private terminal Broadcast policy exists
+ok 4 - authenticated members can use the narrow terminal event RPC
+ok 5 - anonymous callers cannot append terminal events
+SET
+SET
+SET
+WARNING:  WarnSendingBroadcastMessage: no partition of relation "messages" found for row
+ok 6 - session starts with a created metadata event
+ok 7 - active terminal owner can receive the exact private session topic
+ok 8 - malformed terminal topic is rejected
+WARNING:  WarnSendingBroadcastMessage: no partition of relation "messages" found for row
+ok 9 - owner appends an ordered runtime-connected metadata event
+ok 10 - the same event key and metadata replay safely
+ok 11 - event replay does not advance the terminal sequence
+ok 12 - event-key reuse with different metadata fails closed
+ok 13 - prompt acceptance refuses arbitrary content payloads
+WARNING:  WarnSendingBroadcastMessage: no partition of relation "messages" found for row
+ok 14 - prompt acceptance stores only ordered metadata
+ok 15 - owner receives a bounded terminal metadata timeline
+ok 16 - timeline RPC never returns the event payload column
+ok 17 - timeline RPC bounds page size
+WARNING:  WarnSendingBroadcastMessage: no partition of relation "messages" found for row
+ok 18 - owner records a classified terminal approval request
+ok 19 - approval request is represented by one safe timeline event
+ok 20 - approval reason is not copied into timeline payloads
+ok 21 - critical approval records cannot create persistent session policy
+WARNING:  WarnSendingBroadcastMessage: no partition of relation "messages" found for row
+ok 22 - owner records an approval decision
+ok 23 - approval decision adds one ordered safe timeline event
+ok 24 - same approval decision is idempotent
+ok 25 - opposite approval replay fails closed
+1a07eb8e-e8eb-4592-a873-62f1dd71c317
+RESET
+SET
+SET
+SET
+ok 26 - unrelated member cannot receive the private terminal topic
+ok 27 - unrelated member cannot read terminal event rows directly
+ok 28 - unrelated member cannot list a guessed terminal timeline
+ok 29 - unrelated member cannot append a guessed terminal event
+ok 30 - unrelated member cannot decide a terminal approval
+RESET
+ROLLBACK
+IO_CONTRACT_FILE loops_archive_contract.test.sql
+BEGIN
+CREATE EXTENSION
+SET
+NOTICE:  extension "pgtap" already exists, skipping
+1..12
+ok 1 - archived Loops rows retain their table
+ok 2 - archived Loops table keeps row-level security enabled
+ok 3 - archived Loops table has no browser-facing policies
+ok 4 - retired product update trigger is removed
+ok 5 - PUBLIC has no table ACL on archived Loops
+ok 6 - browser roles have no column-level Loops grants
+ok 7 - anonymous role has no Loops table privileges
+ok 8 - authenticated role has no Loops table privileges
+ok 9 - service role retains archive read access
+ok 10 - service role archive contract is read-only
+ok 11 - table comment records the archived service-role-only contract
+INSERT 0 1
+SET
+ok 12 - service role can export a preserved archived row
+RESET
+ROLLBACK
+IO_CONTRACT_FILE member_block_and_dm_broadcast.test.sql
+BEGIN
+NOTICE:  extension "pgtap" already exists, skipping
+CREATE EXTENSION
+SET
+1..26
+ok 1 - member block table exists
+ok 2 - member block table has RLS enabled
+ok 3 - browser members can only read caller-owned block rows
+ok 4 - caller-bound block RPC exists
+ok 5 - caller-bound unblock RPC exists
+ok 6 - only authenticated members can call the block RPC
+ok 7 - direct-message changes have a private Broadcast trigger
+ok 8 - Realtime Broadcast has a participant-scoped read policy
+ok 9 - legacy substring-based Realtime policy is removed
+INSERT 0 3
+INSERT 0 1
+SET
+SET
+SET
+WARNING:  WarnSendingBroadcastMessage: no partition of relation "messages" found for row
+ok 10 - connected member can send before blocking
+ok 11 - caller can create a categorized block
+ok 12 - blocker sees only their caller-owned block row
+ok 13 - existing direct-message history is hidden immediately after blocking
+ok 14 - blocker cannot send while the block is active
+ok 15 - blocker cannot bypass block through history RPC
+ok 16 - active block denies the private direct-message topic
+SET
+ok 17 - blocked member is not told who blocked them through table reads
+ok 18 - blocked member cannot read the existing direct-message history
+ok 19 - blocked member cannot send in the reverse direction
+ok 20 - blocked member cannot mutate read receipts
+SET
+ok 21 - unrelated member cannot join another pair private topic
+ok 22 - malformed private topics fail closed
+SET
+ok 23 - blocker can remove their block
+ok 24 - unblocking restores caller access to existing history
+ok 25 - unblocking restores participant authorization for the private topic
+ok 26 - unblock is idempotent when no block remains
+ROLLBACK
+IO_CONTRACT_FILE member_location_foundation.test.sql
+BEGIN
+NOTICE:  extension "pgtap" already exists, skipping
+CREATE EXTENSION
+SET
+1..54
+ok 1 - country catalogue exists
+ok 2 - country catalogue contains all ISO alpha-2 assignments
+ok 3 - India uses the canonical alpha-2 code
+ok 4 - normalized region foundation exists
+ok 5 - normalized place foundation exists
+ok 6 - preferences stay private
+ok 7 - deliberate shares have a public-schema projection
+ok 8 - consent events stay private
+ok 9 - events exclude country
+ok 10 - events exclude region
+ok 11 - events exclude city
+ok 12 - events exclude timezone
+ok 13 - member location storage contains no coordinates
+ok 14 - anonymous users can read active geography references
+ok 15 - members can read but not mutate geography references
+ok 16 - browser roles cannot read private preferences directly
+ok 17 - browser roles cannot read private consent history directly
+ok 18 - share rows are RPC-managed and read-only to browsers
+ok 19 - anonymous callers cannot read private preferences through the RPC
+ok 20 - caller-bound location RPC grants exclude anonymous users
+ok 21 - location shares retain row-level security
+INSERT 0 4
+UPDATE 1
+UPDATE 1
+INSERT 0 3
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+ok 22 - unmatched legacy location remains explicitly unconfirmed
+ok 23 - legacy values never infer consent or allowed uses
+ok 24 - legacy import creates neither a share nor a consent event
+ok 25 - location remains optional for a valid account
+SET
+SET
+SET
+ok 26 - owner can grant private scheduling and recommendation use
+RESET
+ok 27 - confirmed preferences are normalized and purpose-bound
+ok 28 - private use does not imply community sharing
+SET
+ok 29 - caller can read only their private preference projection
+ok 30 - an identical client operation is idempotent
+RESET
+ok 31 - operation replay writes one ledger row and one consent event
+SET
+ok 32 - a client operation ID cannot be reused with different inputs
+ok 33 - unknown country codes are rejected
+ok 34 - scheduling requires a valid IANA timezone
+ok 35 - timezone is not retained without scheduling consent
+ok 36 - sharing audience and precision are atomic
+ok 37 - region precision requires a region value
+ok 38 - a community-complete owner can share an explicit precision
+RESET
+ok 39 - city sharing retains only the fields required for that precision
+SET
+SET
+ok 40 - another completed community member can read a members share
+RESET
+SET
+SET
+ok 41 - an authenticated nonmember cannot read a members share
+ok 42 - an authenticated nonmember cannot create a members share
+RESET
+SET
+SET
+ok 43 - an in-progress onboarding can stage a country share before atomic completion
+RESET
+SET
+SET
+ok 44 - a nonpublic profile cannot create a public share
+RESET
+SET
+ok 45 - anonymous users cannot read members-only shares
+RESET
+SET
+SET
+ok 46 - a public profile can deliberately publish country precision
+RESET
+ok 47 - country precision removes region and city from the share row
+SET
+ok 48 - anonymous users can read a deliberate public-profile share
+RESET
+SET
+SET
+ok 49 - withdrawal immediately removes active location state
+RESET
+ok 50 - withdrawal deletes both private preferences and sharing projection
+ok 51 - withdrawal keeps only an append-only metadata event
+SET
+ok 52 - withdrawal replay is idempotent
+ok 53 - withdrawn location is absent from the caller projection
+RESET
+ok 54 - withdrawal replay does not duplicate its consent event
+ROLLBACK
+IO_CONTRACT_FILE notification_acl.test.sql
+BEGIN
+SET
+1..30
+ok 1 - notifications has row-level security enabled
+ok 2 - anonymous clients cannot select notifications
+ok 3 - anonymous clients cannot insert notifications
+ok 4 - anonymous clients cannot update notifications
+ok 5 - anonymous clients cannot delete notifications
+ok 6 - authenticated clients can select notifications subject to RLS
+ok 7 - authenticated clients cannot insert notifications directly
+ok 8 - authenticated clients can update the read marker
+ok 9 - authenticated clients cannot rewrite notification content
+ok 10 - authenticated clients cannot transfer notification ownership
+ok 11 - authenticated clients cannot delete notifications
+ok 12 - anonymous clients cannot invoke the category trigger helper
+ok 13 - authenticated clients cannot invoke the category trigger helper
+ok 14 - anonymous clients cannot invoke the vouch notification trigger helper
+ok 15 - authenticated clients cannot invoke the vouch notification trigger helper
+ok 16 - authenticated clients cannot invoke the retired arbitrary notification RPC
+ok 17 - anonymous clients cannot invoke the legacy notification RPC
+ok 18 - legacy notification RPC is explicitly documented as retired
+ok 19 - recent owner notification index exists
+ok 20 - unread owner notification index exists
+INSERT 0 2
+INSERT 0 2
+SET
+SET
+SET
+ok 21 - owner A sees only their notification
+ok 22 - owner A cannot read owner B notification
+ok 23 - owner A can mark their notification read
+ok 24 - owner A read marker was persisted
+ok 25 - owner A cannot mark owner B notification read
+ok 26 - owner A cannot rewrite notification content
+ok 27 - owner A cannot insert even a self-addressed notification directly
+ok 28 - legacy authenticated notification RPC remains unavailable during runtime checks
+RESET
+SET
+SET
+SET
+ok 29 - owner B sees only their seed row after legacy cutover
+ok 30 - owner B cannot read owner A notification
+RESET
+ROLLBACK
+IO_CONTRACT_FILE operational_function_schema_drift.test.sql
+BEGIN
+NOTICE:  extension "pgtap" already exists, skipping
+CREATE EXTENSION
+SET
+1..11
+ok 1 - trust queue reads the current conversation message content column
+ok 2 - trust queue contains no legacy conversation message body reference
+ok 3 - payment queue derives a failure timestamp from current payment state
+ok 4 - payment queue contains no removed failed_at reference
+ok 5 - Room reorder replay lookup has no ambiguous actor reference
+ok 6 - Room archive replay lookup has no ambiguous actor reference
+ok 7 - anonymous callers cannot execute the trust queue
+ok 8 - anonymous callers cannot execute the payment queue
+ok 9 - root-change requester foreign key has a covering index
+ok 10 - root-change decision-maker foreign key has a covering index
+ok 11 - privacy-request assignee foreign key has a covering index
+ROLLBACK
+IO_CONTRACT_FILE orbit_collaboration_controls.test.sql
+BEGIN
+NOTICE:  extension "pgtap" already exists, skipping
+CREATE EXTENSION
+SET
+1..44
+ok 1 - Function public.list_my_conversation_room_feed(uuid, uuid, integer, timestamptz, uuid) should exist
+ok 2 - Function public.toggle_my_conversation_reaction(uuid, text) should exist
+ok 3 - Function public.report_my_conversation_message(uuid, text, text, uuid) should exist
+ok 4 - Function public.update_managed_conversation_room(uuid, text, text, text) should exist
+ok 5 - Function public.update_managed_conversation_room_v2(uuid, text, text, text, integer) should exist
+ok 6 - Function public.set_managed_conversation_room_permission(uuid, uuid, uuid, text, text) should exist
+ok 7 - Function public.moderate_conversation_message(uuid, text, text, uuid) should exist
+ok 8 - Function public.set_managed_conversation_thread_lock(uuid, boolean, text, uuid) should exist
+ok 9 - Function public.prepare_my_conversation_attachment(uuid, text, text, bigint, text, uuid) should exist
+ok 10 - Function public.finalize_my_conversation_attachment(uuid) should exist
+ok 11 - Function private.can_moderate_conversation_room(uuid) should exist
+ok 12 - Function private.can_create_conversation_thread(uuid) should exist
+ok 13 - Function public.get_my_conversation_thread_controls(uuid) should exist
+ok 14 - Function public.replace_managed_conversation_thread_members(uuid, uuid[]) should exist
+ok 15 - Function public.search_my_conversation_messages_v2(uuid, text, integer, real, timestamptz, uuid) should exist
+ok 16 - reports retain replay-safe request IDs
+ok 17 - Rooms retain bounded slow-mode policy
+ok 18 - moderation evidence identifies the target message
+ok 19 - moderation evidence identifies the target Thread
+ok 20 - moderation evidence retains replay-safe request IDs
+ok 21 - Orbit attachment bucket is private
+ok 22 - attachment insertion is policy gated
+ok 23 - attachment reads require authorship or a clean member-visible object
+ok 24 - anonymous callers cannot mutate collaboration tables
+ok 25 - authenticated browsers cannot bypass collaboration RPCs
+ok 26 - private moderation evidence is unavailable to browser roles
+ok 27 - members can execute the caller-bound feed
+ok 28 - members can execute reaction toggle
+ok 29 - members can execute message reporting
+ok 30 - authenticated managers can reach the room command
+ok 31 - authenticated managers can configure Room slow mode
+ok 32 - members can read caller-bound Thread controls
+ok 33 - authorized creators and managers can reach atomic Thread membership replacement
+ok 34 - members can execute keyset-paged permission-filtered search
+ok 35 - anonymous callers cannot execute the feed
+ok 36 - anonymous callers cannot inspect private Thread membership
+ok 37 - anonymous callers cannot replace private Thread membership
+ok 38 - anonymous callers cannot page Space search
+ok 39 - anonymous callers cannot configure Room slow mode
+ok 40 - anonymous callers cannot execute moderation
+ok 41 - anonymous callers cannot reserve attachment paths
+ok 42 - one parent message maps to at most one Thread
+ok 43 - Room slow mode has an author/time covering index
+ok 44 - role mention delivery side effects are gated by the first durable mention insert
+ROLLBACK
+IO_CONTRACT_FILE orbit_dm_reconnect_presence.test.sql
+BEGIN
+1..4
+ok 1 - private direct-message typing has an explicit insert policy
+ok 2 - the signal policy authorizes insert only
+ok 3 - authenticated callers may evaluate exact DM topic access
+ok 4 - ephemeral direct-message signals add no durable presence history
+ROLLBACK
+IO_CONTRACT_FILE orbit_member_safety_controls.test.sql
+BEGIN
+NOTICE:  extension "pgtap" already exists, skipping
+CREATE EXTENSION
+SET
+1..15
+ok 1 - Space managers have a bounded member-control roster
+ok 2 - Space timeout mutation has an explicit contract
+ok 3 - source-aware membership decisions remain canonical
+ok 4 - Room sends retain the canonical caller-bound contract
+ok 5 - authenticated managers can reach the roster command
+ok 6 - authenticated managers can reach the timeout command
+ok 7 - anonymous callers cannot inspect the managed roster
+ok 8 - anonymous callers cannot mutate timeout state
+ok 9 - browser roles cannot bypass the moderation RPC boundary
+ok 10 - global member rate windows have a covering index
+ok 11 - active timeout checks have a covering index
+ok 12 - Room sends enforce active Space timeouts
+ok 13 - Room sends enforce bounded burst and duplicate controls
+ok 14 - timeouts serialize and reject stale member state
+ok 15 - membership removal protects elevated source roles
+ROLLBACK
+IO_CONTRACT_FILE product_access_separation.test.sql
+BEGIN
+NOTICE:  extension "pgtap" already exists, skipping
+CREATE EXTENSION
+SET
+1..50
+ok 1 - private community onboarding state exists
+ok 2 - private measurement preferences exist
+ok 3 - private measurement events exist
+ok 4 - private client-operation idempotency ledger exists
+ok 5 - all product-boundary private tables keep RLS enabled
+ok 6 - authenticated users have no direct private table access
+ok 7 - anonymous users have no direct private table access
+ok 8 - service role receives explicit private read grants
+ok 9 - measurement storage has no arbitrary JSON or sensitive request/profile fields
+ok 10 - community onboarding state has no location requirement field
+ok 11 - community state admits the four intended lifecycle statuses
+ok 12 - caller product-access RPC exists
+ok 13 - community start RPC exists
+ok 14 - community completion RPC exists
+ok 15 - measurement-consent RPC exists
+ok 16 - allowlisted product-event RPC exists
+ok 17 - all product-boundary RPCs use definer execution
+ok 18 - all product-boundary RPCs pin an empty search path
+ok 19 - authenticated and service roles receive explicit RPC execution grants
+ok 20 - anonymous callers receive no product-boundary RPC grants
+ok 21 - product access is caller-bound
+ok 22 - migration backfills existing segmented profiles as community-complete
+INSERT 0 1
+ok 23 - a new unsegmented, location-free profile is not implicitly community-complete
+SET
+SET
+SET
+ok 24 - I/O is available while community and measurement remain off by default
+ok 25 - consent-off measurement deterministically no-ops
+RESET
+ok 26 - consent-off no-op writes neither an event nor an operation trace
+SET
+SET
+SET
+ok 27 - event surface is allowlisted
+ok 28 - event name is allowlisted
+ok 29 - community start advances an unsegmented caller from version zero
+ok 30 - replaying the community start operation is idempotent
+RESET
+ok 31 - start replay creates one state mutation and one idempotency row
+SET
+SET
+SET
+ok 32 - community completion requires identity but not location
+RESET
+UPDATE 1
+SET
+SET
+SET
+ok 33 - location-free community onboarding can complete without affecting I/O access
+ok 34 - replaying the community completion operation is idempotent
+RESET
+ok 35 - completion replay preserves one state row and two lifecycle operations
+ok 36 - community completion function contains no location-field dependency
+SET
+SET
+SET
+ok 37 - caller can explicitly enable product measurement
+ok 38 - replaying consent enablement is idempotent
+RESET
+ok 39 - consent replay creates one preference version and one operation row
+SET
+SET
+SET
+ok 40 - consented caller can record an allowlisted I/O event
+ok 41 - replaying the same product event succeeds idempotently
+RESET
+ok 42 - duplicate event client ID does not duplicate the event
+SET
+SET
+SET
+ok 43 - a client ID cannot be replayed with a different event surface
+ok 44 - consented caller can record an allowlisted community event
+RESET
+ok 45 - I/O and community measurement remain separate event surfaces
+SET
+SET
+SET
+ok 46 - caller can revoke product measurement consent
+ok 47 - replaying consent revocation is idempotent
+ok 48 - measurement no-ops again after consent is revoked
+RESET
+ok 49 - revoked-consent event creates no event and no operation trace
+SET
+SET
+SET
+ok 50 - final access keeps I/O and completed community available with measurement off
+RESET
+ROLLBACK
+IO_CONTRACT_FILE proposal_identity_and_legacy_membership.test.sql
+BEGIN
+NOTICE:  extension "pgtap" already exists, skipping
+CREATE EXTENSION
+SET
+1..9
+ok 1 - Proposal identity resolves through the member profile
+ok 2 - Members cannot call legacy Chapter deletion
+ok 3 - Members cannot call legacy Mission deletion
+ok 4 - Anonymous callers cannot call legacy deletion
+ok 5 - Service clients cannot bypass the canonical lifecycle
+ok 6 - Even owners cannot use retired physical deletion
+INSERT 0 1
+INSERT 0 1
+ok 7 - A valid profile can own a proposal
+DELETE 1
+ok 8 - Removing the profile removes its proposal consistently with hosted behavior
+ok 9 - An auth identity without a profile cannot create an orphan proposal
+ROLLBACK
+IO_CONTRACT_FILE public_event_guests.test.sql
+BEGIN
+NOTICE:  extension "pgtap" already exists, skipping
+CREATE EXTENSION
+SET
+INSERT 0 2
+INSERT 0 1
+INSERT 0 3
+INSERT 0 3
+ok 1 - Browsers cannot bypass Turnstile and send guest emails through an RPC
+ok 2 - Authenticated browsers cannot bypass the service credential boundary
+ok 3 - Guest email and token hashes are private
+ok 4 - Members cannot enumerate guest identities or credentials
+SET
+ok 5 - Guest requests cannot bypass community-only registration
+ok 6 - Public events accept a name/email guest request
+ok 7 - Opening a link never allocates a seat
+ok 8 - Unconfirmed email receives no private access
+ok 9 - A link cannot authorize another event
+ok 10 - Explicit email proof reserves the first place without platform membership
+ok 11 - Confirmation replay is idempotent
+ok 12 - Only confirmed guests receive the private URL
+ok 13 - Another email can request a link
+ok 14 - Guests share the same capacity limit
+ok 15 - A guest waitlist receipt excludes access credentials
+ok 16 - A private link can cancel only its registration
+ok 17 - Cancellation atomically promotes a verified guest
+ok 18 - Approval event accepts guest proof
+ok 19 - Email verification does not bypass host approval
+ok 20 - Pending guest receives no private access
+ok 21 - Email owner can request another private link
+ok 22 - Email request budget allows three attempts
+ok 23 - Email rate limit closes the fourth request
+RESET
+ok 24 - Two identities have exactly two registrations
+ok 25 - Guest registration does not create a platform account
+UPDATE 1
+SET
+ok 26 - Expired verification links fail closed
+RESET
+SET
+SET
+ok 27 - Host sees the guest name without a public email list
+ok 28 - Hosts can approve verified public guests
+ok 29 - Hosts can check in a confirmed email guest
+RESET
+SET
+ok 30 - Guest cannot erase checked-in attendance
+RESET
+SET
+SET
+ok 31 - A verified account without Community membership can register for a public event
+RESET
+SET
+ok 32 - A known email can request its private receipt
+ok 33 - Email guest path reuses an existing authenticated registration
+RESET
+ok 34 - Account and email proof never double book
+SET
+ok 35 - Anonymous profile activity uses only the safe public event projection
+ok 36 - Public profile projection cannot expose a private venue
+ok 37 - Public host event limits are bounded
+RESET
+1..37
+ROLLBACK
+IO_CONTRACT_FILE public_form_submission_boundary.test.sql
+BEGIN
+NOTICE:  extension "pgtap" already exists, skipping
+CREATE EXTENSION
+SET
+1..10
+ok 1 - Anonymous contact inserts cannot bypass verification
+ok 2 - Anonymous newsletter inserts cannot bypass verification
+ok 3 - Signed-in contact inserts cannot bypass verification
+ok 4 - Signed-in newsletter inserts cannot bypass verification
+ok 5 - Verified service may store contact
+ok 6 - Verified service may store newsletter
+ok 7 - Legacy insert policies are retired
+SET
+INSERT 0 1
+INSERT 0 1
+RESET
+ok 8 - Service insertion works under RLS
+ok 9 - Service newsletter insertion works under RLS
+ok 10 - Existing scoped admin read policies are retained without granting browser SELECT
+ROLLBACK
+IO_CONTRACT_FILE schema_contract.test.sql
+BEGIN
+NOTICE:  extension "pgtap" already exists, skipping
+CREATE EXTENSION
+1..29
+ok 1 - profiles table exists
+ok 2 - user roles table exists
+ok 3 - direct messages table exists
+ok 4 - notifications table exists
+ok 5 - I/O workspaces table exists
+ok 6 - I/O workspace members table exists
+ok 7 - I/O providers table exists
+ok 8 - I/O models table exists
+ok 9 - I/O model endpoints table exists
+ok 10 - I/O route receipts table exists
+ok 11 - I/O provider attempts table exists
+ok 12 - admin team assignments table exists
+ok 13 - provider runtime controls table exists
+ok 14 - authenticated workspace creation RPC exists
+ok 15 - server-only ready endpoint resolver exists
+ok 16 - caller-bound admin access RPC exists
+ok 17 - admin I/O operational snapshot RPC exists
+ok 18 - admin provider routing RPC exists
+ok 19 - profiles has row-level security enabled
+ok 20 - direct messages has row-level security enabled
+ok 21 - I/O providers has row-level security enabled
+ok 22 - I/O route receipts has row-level security enabled
+ok 23 - authenticated may execute workspace creation RPC
+ok 24 - anonymous users cannot execute workspace creation RPC
+ok 25 - service role may execute the ready endpoint resolver
+ok 26 - authenticated users cannot execute the ready endpoint resolver
+ok 27 - authenticated retains RLS-scoped user-role reads
+ok 28 - authenticated cannot mutate root user roles directly
+ok 29 - authenticated cannot read private admin assignments directly
+ROLLBACK
+IO_CONTRACT_FILE trusted_product_events.test.sql
+BEGIN
+NOTICE:  extension "pgtap" already exists, skipping
+CREATE EXTENSION
+SET
+ok 1 - private fixed-template email outbox exists
+ok 2 - email outbox keeps row-level security enabled
+ok 3 - email outbox has a due-work partial index
+ok 4 - email outbox recipient foreign key has a covering index
+ok 5 - connection requests carry a caller idempotency key
+ok 6 - mentor sessions carry a caller idempotency key
+ok 7 - mission updates carry a caller idempotency key
+ok 8 - vouch requests carry a caller idempotency key
+ok 9
+ok 10
+ok 11
+ok 12
+ok 13 - Function public.create_my_connection_request(uuid, text, text, uuid) should exist
+ok 14 - Function public.respond_to_my_connection_request(uuid, text) should exist
+ok 15 - Function public.request_my_mentor_session(uuid, text, integer, uuid) should exist
+ok 16 - Function public.transition_my_mentor_session(uuid, text, text, timestamptz) should exist
+ok 17 - Function public.post_my_mission_update(uuid, text, uuid) should exist
+ok 18 - Function public.request_my_vouch(text, uuid, uuid) should exist
+ok 19 - Function public.approve_chapter_proposal(uuid) should exist
+ok 20 - Function public.reject_chapter_proposal(uuid) should exist
+ok 21 - Function public.claim_email_delivery_batch(integer) should exist
+ok 22 - Function public.complete_email_delivery(uuid, uuid, boolean, text, text) should exist
+ok 23 - public.create_my_connection_request(uuid,text,text,uuid) is available to authenticated members
+ok 24 - public.respond_to_my_connection_request(uuid,text) is available to authenticated members
+ok 25 - public.request_my_mentor_session(uuid,text,integer,uuid) is available to authenticated members
+ok 26 - public.transition_my_mentor_session(uuid,text,text,timestamptz) is available to authenticated members
+ok 27 - public.post_my_mission_update(uuid,text,uuid) is available to authenticated members
+ok 28 - public.request_my_vouch(text,uuid,uuid) is available to authenticated members
+ok 29 - public.approve_chapter_proposal(uuid) is available to authenticated members
+ok 30 - public.reject_chapter_proposal(uuid) is available to authenticated members
+ok 31 - public.create_my_connection_request(uuid,text,text,uuid) denies anonymous execution
+ok 32 - public.respond_to_my_connection_request(uuid,text) denies anonymous execution
+ok 33 - public.request_my_mentor_session(uuid,text,integer,uuid) denies anonymous execution
+ok 34 - public.transition_my_mentor_session(uuid,text,text,timestamptz) denies anonymous execution
+ok 35 - public.post_my_mission_update(uuid,text,uuid) denies anonymous execution
+ok 36 - public.request_my_vouch(text,uuid,uuid) denies anonymous execution
+ok 37 - public.approve_chapter_proposal(uuid) denies anonymous execution
+ok 38 - public.reject_chapter_proposal(uuid) denies anonymous execution
+ok 39 - public.claim_email_delivery_batch(integer) denies anonymous execution
+ok 40 - public.complete_email_delivery(uuid,uuid,boolean,text,text) denies anonymous execution
+ok 41 - service worker can claim email jobs
+ok 42 - service worker can complete email jobs
+ok 43 - members cannot claim email jobs
+ok 44 - members cannot complete email jobs
+ok 45 - legacy arbitrary notification RPC is retired
+ok 46
+ok 47
+ok 48
+ok 49
+ok 50
+ok 51
+ok 52
+ok 53
+ok 54
+ok 55
+ok 56
+ok 57
+ok 58
+ok 59
+INSERT 0 4
+SET
+UPDATE 2
+INSERT 0 1
+INSERT 0 1
+INSERT 0 2
+INSERT 0 1
+SET
+SET
+SET
+ok 60 - member can create an atomic connection request
+ok 61 - identical connection retry is idempotent
+RESET
+ok 62 - connection retry creates one request
+ok 63 - connection event creates one fixed recipient notification
+SET
+SET
+SET
+ok 64 - recipient can atomically accept a connection request
+RESET
+ok 65 - connection acceptance content is server-owned
+ok 66 - connection response records its trusted transition time
+SET
+SET
+SET
+ok 67 - verified member can request mentorship atomically
+RESET
+ok 68 - mentor request creates one fixed expert notification
+SET
+SET
+SET
+ok 69 - expert can atomically accept a mentorship session
+RESET
+ok 70 - mentor acceptance queues one fixed-template email job
+ok 71 - email outbox stores scalar template data, not caller-authored subject or HTML
+SET
+SET
+ok 72 - service worker can atomically claim a due email job
+ok 73 - claimed job carries a lease and bounded attempt count
+ok 74 - service worker can complete the matching lease
+RESET
+ok 75 - successful completion seals the outbox job
+RESET
+UPDATE 1
+INSERT 0 1
+SET
+SET
+ok 76 - claiming fails closed for an account without an email address
+RESET
+ok 77 - missing-email job becomes operator-visible dead work instead of retrying forever
+SET
+SET
+SET
+ok 78 - mission member can publish through the atomic event RPC
+ok 79 - member can create a targeted vouch request through the event RPC
+RESET
+ok 80 - mission and vouch mutations derive their recipient notifications
+SET
+SET
+SET
+ok 81 - admin can approve a proposal with one trusted transaction
+RESET
+ok 82 - chapter, lead membership and proposal status commit together
+ok 83 - chapter approval derives one proposer notification
+1..83
+ROLLBACK
+IO_CONTRACT_FILE trusted_vouch_and_quiz.test.sql
+BEGIN
+NOTICE:  extension "pgtap" already exists, skipping
+CREATE EXTENSION
+SET
+ok 1 - Anonymous issuance denied
+ok 2 - Anonymous grading denied
+ok 3 - Direct code issuance denied
+ok 4 - Quota ledger cannot be forged
+ok 5 - Quiz scores cannot be forged
+ok 6 - Answer keys are not browser-readable
+ok 7 - Code hashes are not browser-readable
+ok 8 - Issuance requires identity
+ok 9 - Grading requires identity
+INSERT 0 2
+SET
+UPDATE 1
+SET
+INSERT 0 1
+CREATE TABLE
+GRANT
+SET
+SET
+ok 10 - Unverified issuance denied
+SET
+INSERT 0 1
+ok 11 - One-time code has 80 random bits
+ok 12 - Issuance atomically consumes quota
+ok 13 - Client cannot bypass code secrecy
+ok 14 - Client cannot bypass answer-key secrecy
+RESET
+ok 15 - Quota failure writes no second event
+ok 16 - Raw code is absent from storage
+ok 17 - Issuance evidence is atomic
+SET
+SET
+ok 18 - Unrelated member cannot enumerate issued codes
+ok 19 - Hashed code can be redeemed
+ok 20 - Hashed code stays single-use
+RESET
+INSERT 0 1
+ok 21 - Legacy insert cannot restore plaintext
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 2
+SET
+SET
+ok 22 - Unanswered question grades zero
+ok 23 - Wrong answer cannot claim pass
+ok 24 - Server grades a valid correct answer
+ok 25 - Foreign question rejected
+ok 26 - Malformed answer rejected
+ok 27 - Ordinary member cannot obtain editor answers
+ok 28 - Direct score forgery denied
+RESET
+ok 29 - Invalid attempts persist no scores
+UPDATE 1
+SET
+ok 30 - Unpublished lesson cannot be graded
+RESET
+INSERT 0 1
+SET
+SET
+ok 31 - Authorized editor uses the protected answer projection
+RESET
+INSERT 0 1
+SET
+ok 32 - Suspension blocks issuance before quota
+ok 33 - Suspended author loses answer projection
+1..33
+ROLLBACK
+IO_CONTRACT_FILE vouch_function_contract.test.sql
+BEGIN
+NOTICE:  extension "pgtap" already exists, skipping
+CREATE EXTENSION
+SET
+1..26
+ok 1 - code redemption RPC exists
+ok 2 - direct vouch RPC exists
+ok 3 - both vouch RPCs retain required definer execution
+ok 4 - both vouch RPCs use an empty search path
+ok 5 - authenticated may redeem a vouch code
+ok 6 - anonymous users cannot redeem a vouch code
+ok 7 - authenticated may vouch directly
+ok 8 - anonymous users cannot vouch directly
+ok 9 - code redemption serialises the single-use code row
+ok 10 - direct vouch serialises issuer quota use
+ok 11 - code redemption requires an authenticated caller
+ok 12 - direct vouch requires an authenticated caller
+INSERT 0 3
+INSERT 0 1
+SET
+SET
+SET
+ok 13 - admin member can directly vouch for an unverified recipient
+ok 14 - direct vouch restores the caller request role
+RESET
+ok 15 - direct vouch verifies the recipient with issuer provenance
+ok 16 - direct vouch records a UUID audit target
+ok 17 - direct vouch appends one ledger event
+ok 18 - direct vouch notifies the recipient
+INSERT 0 1
+INSERT 0 1
+SET
+SET
+SET
+ok 19 - member redeems a normalized active vouch code
+ok 20 - code redemption restores the caller request role
+RESET
+ok 21 - code redemption atomically seals the code to the redeemer
+ok 22 - code redemption verifies the member with issuer provenance
+ok 23 - code redemption assigns the ledger event recipient
+ok 24 - code redemption records a UUID audit target
+ok 25 - code redemption notifies the issuer
+SET
+SET
+SET
+ok 26 - a redeemed code cannot be replayed
+RESET
+ROLLBACK

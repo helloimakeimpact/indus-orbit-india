@@ -288,9 +288,14 @@ export async function uploadEducationFile(file: File, prefix: string) {
 }
 
 export async function getSignedEducationUrl(path: string) {
+  const scan = await sb.rpc("education_file_status", { _path: path });
+  if (scan.error) throw new Error("This file is currently unavailable.");
+  if (scan.data === "pending" || scan.data === "processing")
+    throw new Error("This file is being checked. Please try again later.");
+  if (scan.data !== "clean") throw new Error("This file is currently unavailable.");
   const { data, error } = await supabase.storage
     .from(BUCKET)
-    .createSignedUrl(path, 60 * 60, { download: true });
+    .createSignedUrl(path, 5 * 60, { download: true });
   if (error) throw new Error(error.message);
   return data.signedUrl;
 }
@@ -384,8 +389,9 @@ export async function addLessonAttachment(lessonId: string, file: File) {
   if (error) throw new Error(error.message);
 }
 
-export async function deleteLessonAttachment(id: string, path: string) {
-  await supabase.storage.from(BUCKET).remove([path]);
+export async function deleteLessonAttachment(id: string) {
+  // Remove the lesson reference. Immutable Storage objects are physically
+  // removed by trusted cleanup after the approved retention/hold policy.
   const { error } = await sb.from("lesson_attachments").delete().eq("id", id);
   if (error) throw new Error(error.message);
 }

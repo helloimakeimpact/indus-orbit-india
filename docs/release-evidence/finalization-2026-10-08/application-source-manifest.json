@@ -1,0 +1,14 @@
+{
+  "package.json": "5639480e82f59829f7f77e39be1c2bb253ba4b5cd7dc5834ff8d59af8ce0a69d",
+  "src/integrations/supabase/types.ts": "572448f8159e1b93f8ed370e3de7b5f0e2dbaf4e26773888918297ff96b53f10",
+  "src/routes/app.admin.education.tsx": "8c7c635f4d0ce16de319021283bf9c7507f7bd92fed6b30debab975c015c48f7",
+  "src/server/education.functions.ts": "3d45b0cd98a13a2da0cfb63357ef30490e760e0e867267a039583dd5af031873",
+  "supabase/config.toml": "44b033793f23165f3a190c28318c01b5b05ae09bce364f292b170c23c244a001",
+  "supabase/functions/_shared/attachments/education-scan-worker.test.ts": "bb0e5a2bc29d90a25a5648a7e455e26012db044c4120e10b1636b83dea688c95",
+  "supabase/functions/_shared/attachments/education-scan-worker.ts": "df9319bc38959fc6545ec3239bef637b7dc00796041575edebad5a9404bae35a",
+  "supabase/functions/_shared/events/email-template.ts": "5e02aa3d0981c32776d036536c136a032afec98774d3d7dd9c19df89ef42af61",
+  "supabase/functions/_shared/events/email-worker.test.ts": "89069271503128dfd1275105c8cdd34842cfab6ce263ea4ee81550d43af6f6ff",
+  "supabase/functions/_shared/events/email-worker.ts": "483898ae45ca8527c21177947175fbec7209f51936ce3d99fa93afd1a00ffb35",
+  "supabase/functions/education-file-scan-worker/index.ts": "b5772f522c986cc9aeef06eef72654c5dc0e154447d963999f4a4a97e89fa387",
+  "supabase/functions/event-email-worker/index.ts": "49fa5fdd51ca3a6e9f9791a84e76c74509074abdd4844f71b317f0b6941ee679"
+}

@@ -1,5 +1,30 @@
 # Production completion report — 3 October 2026
 
+> This is the dated implementation/test record. Read [the 7 October status audit](PRODUCTION_STATUS_2026-10-07.md) for the current local, GitHub and hosted snapshot. No new release or full test pass is implied by that audit.
+
+## Current resumed status — 3 October 2026
+
+Overall: **Partial**. The owner resumed development and clarified deployment/supplier choices. Production backend identity is now verified: local member/admin and the live Netlify browser all use healthy **Indus Orbit `jpwvgpnbkrktipwhvqss`**. Both GitHub connections match the intended repositories; admin source trees match. No separate Indus Orbit staging project was returned. Resend is confirmed; the owner delegated sender choice, so **events@indusorbit.com** is the intended sender pending Resend verification/configuration. The owner is initial host/reviewer; **OpenAI and DeepSeek** are the chosen initial AI providers. Their hosted records remain `resale_pending` with routing disabled. See [plain-language setup](LAUNCH_SETUP_AND_CONNECTIONS.md).
+
+The stopped 124-migration checkpoint has now passed a fresh replay, **979 assertions**, 195 units, all four configured desktop/mobile guest/Turnstile scenarios, exact generated-type verification (97 held-Spaces differences), zero-error schema lint and both member/mixed guest capacity races. Public/member browser regression on that production build passed **29 tests / 4 configured cases skipped**; the four skipped scenarios passed separately with intercepted configuration.
+
+This resume also adds **event editing/rescheduling with private history, audited reasons, revision/retry protection, active guest-receipt expiry reconciliation, and revision-aware main event review**. Pending events remain pending; published edits require approved host/chapter authority or an MFA content reviewer. Capacity/registration/publication settings cannot be altered by this editor. Async dialog focus restoration and explicit device/display timezone wording are repaired. Read [editing contract and delivery](EVENT_EDITING_RUNBOOK.md). The final current-source pass completed **125 migrations, 1,014 database assertions, generated-type verification, zero-error schema lint, TypeScript/lint, production build/budgets and ten production member browser scenarios**. Gates are recorded in [resume verification](../release-evidence/resume-2026-10-03/verification.md); earlier passing numbers are not substitutes for that new gate.
+
+Source now contains **125 migration files**. There are **seven forward migrations pending hosted delivery**: the six listed in the original checkpoint below plus `20261003100000_version_host_event_edits.sql`. Hosted still has 116 recorded migrations; `public-form-submit` and `event-guest-session` remain absent. Current edits are uncommitted above local checkpoint `e63290c85bfab9dcdbd591aa87bf488e803f6611`; GitHub remains at `04e10e5f754b219c6774a8da6b5159183e38fe7c`. No push, hosted change, new supplier provisioning or paid provider activation occurs in this resume.
+
+### What remains now
+
+1. **Hosted release preparation and delivery:** establish staging, review seven forward migrations and held Spaces separately, verify permissions/types/personas, backup/restore and rollback, then coordinate database/functions/Netlify delivery.
+2. **Event communications:** implement durable confirmation/change/cancellation/waitlist/reminder outbox and delivery/retry/suppression. The initial guest proof email is implemented; saving edits does not send attendee update emails. Real host/guest/reviewer and email/device acceptance remain pending. Broader Luma-like follows, teams/QR, recurring series, uploaded covers and larger workspace paging remain scoped product work; Razorpay tickets remain later.
+3. **Identity and email setup:** real Turnstile keys/origins, verified events sender and Supabase Auth SMTP/redirects, recovery and worker schedules, actual deliverability/challenge acceptance. Exact secret-name inventory timed out and remains unverified.
+4. **Privacy and upload safety:** approve actual retention/export/delete rules, complete export/purge workers and connect malware scanning/quarantine (or withhold uploads pending it). A 90-day post-event guest retention policy is proposed for review, not approved or enforced.
+5. **I/O runtime/commercial acceptance:** OpenAI/DeepSeek models/accounts, reviewed activation/data evidence, authorized bounded conformance, runtime/terminal and any exposed finance operations. No provider route is active.
+6. **Production operations:** initial owner identity/MFA/host bootstrap, separate admin deployment and independent root recovery, branch protection, monitoring/support, real role/device checks and recovery rehearsal.
+
+Owner decisions are no longer requested as if domain, email supplier, host/reviewer or first provider were unknown. Engineering-owned missing code remains named above. Full public production readiness is not claimed.
+
+## Original stop checkpoint report (preserved)
+
 Work stopped at the owner's explicit request on 3 October 2026. Current source is saved as a **local checkpoint**, with no push. This is a work-in-progress commit, not a production release candidate. The GitHub main comparison before the checkpoint was exactly `04e10e5f754b219c6774a8da6b5159183e38fe7c`, with zero local/remote commits differing. The checkpoint adds local work above that remote base.
 
 Overall: **Partial**. This is a concrete event-focused code increment and launch ledger, not approval of a full public production launch. Read the accompanying evidence and runbooks before rollout.

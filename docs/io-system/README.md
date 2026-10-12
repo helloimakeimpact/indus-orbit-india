@@ -1,12 +1,28 @@
 # Indus Orbit living system record
 
-> Owner stop checkpoint, 3 October 2026: development and active verification stopped as requested. Source is saved locally without a push. Latest complete replay/types/browser refinements remain pending; see [the status report](PRODUCTION_STATUS_2026-10-03.md) and its evidence boundary before rollout.
+## Current source finalization — 13 October 2026
+
+Read [the latest handoff](PRODUCTION_STATUS_2026-10-13.md). Chapter and separate admin event decisions now use inspected revisions; older commands cannot publish changed invitations. Withdrawal of a published invitation closes its lifecycle and queues guest cancellation mail. Source contains 128 migration files with ten reviewed forward releases awaiting hosted delivery. [Current verification](../release-evidence/finalization-2026-10-13/verification.md) separates local checks from hosted acceptance. The owner authorized commit/push of completed source; privacy export/deletion and physical cleanup still await their rules. Earlier dated checkpoints below retain their original evidence.
+
+## Current handoff — 12 October 2026
+
+Read [the production handoff](PRODUCTION_STATUS_2026-10-12.md): source hashes still match the 8 October database gates (127 files / 1,092 assertions), and the full app gate passes again with 214 units and build/budgets. Reliable event communications and education quarantine/immutable paths are Verified locally. Privacy execution awaits the owner's rules; nine reviewed migrations, four functions and genuine service/operating acceptance remain pending. No commit/push/deployment occurred.
+
+## Continued finalization — 8 October 2026
+
+Event communications and education quarantine/scanning are implemented in source. Read [the current report](PRODUCTION_STATUS_2026-10-08.md), [communications delivery](EVENT_COMMUNICATIONS_RUNBOOK.md) and [scanning delivery](EDUCATION_UPLOAD_SCANNING_RUNBOOK.md) for validation and release boundaries. Source contains 127 migrations, with nine reviewed forward releases pending. The owner will provide different retention rules; the proposed 90 days is not approved and deletion remains disabled. Earlier dated snapshots retain their original evidence.
+
+## Current status — 7 October 2026
+
+Overall: **Partial**. The latest read-only audit confirms the member checkout is one unpublished commit ahead of GitHub, with additional local event editing work. Admin source matches GitHub. The public Netlify site uses the healthy Indus Orbit backend, but seven forward migrations and both new event/form functions remain undelivered. OpenAI/DeepSeek routing remains disabled. Read [the current status report](PRODUCTION_STATUS_2026-10-07.md) and [dated observations](../release-evidence/status-2026-10-07/snapshot.json). The last full local test evidence remains 3 October; SQL hashes match that checkpoint. No product source, commit, push or hosted deployment changed in this audit.
+
+> Resumed 3 October 2026: the owner confirmed indusorbit.com/Netlify, Resend, themselves as initial host/reviewer, and OpenAI/DeepSeek. See [verified connections and setup](LAUNCH_SETUP_AND_CONNECTIONS.md), [current status](PRODUCTION_STATUS_2026-10-03.md), and [resume evidence](../release-evidence/resume-2026-10-03/verification.md). The earlier stop checkpoint remains preserved in Git/evidence. New work stays local; hosted delivery remains pending.
 
 ## 3 October 2026 — native events and simpler verification
 
-The owner requested a simpler replacement for hCaptcha and adaptation of Luma-like website elements. Current source uses Cloudflare Turnstile and native Community event discovery, invitation, free registration, host review, capacity/waitlists and scoped guest operations. Original branding/assets are retained. Read [PRODUCTION_STATUS_2026-10-03.md](PRODUCTION_STATUS_2026-10-03.md), [EVENTS_RELEASE_RUNBOOK.md](EVENTS_RELEASE_RUNBOOK.md) and [PUBLIC_FORMS_TURNSTILE_RUNBOOK.md](PUBLIC_FORMS_TURNSTILE_RUNBOOK.md) for the current implementation, local evidence and six remaining launch workstreams. Six forward migrations and matching hosted delivery remain pending. Earlier dated hCaptcha/planned-event descriptions below are historical and superseded for these capabilities.
+The owner requested a simpler replacement for hCaptcha and adaptation of Luma-like website elements. Current source uses Cloudflare Turnstile and native Community event discovery, invitation, free registration, host review, capacity/waitlists, scoped guest operations and revision-protected editing/rescheduling. Original branding/assets are retained. Read [PRODUCTION_STATUS_2026-10-03.md](PRODUCTION_STATUS_2026-10-03.md), [EVENTS_RELEASE_RUNBOOK.md](EVENTS_RELEASE_RUNBOOK.md) and [PUBLIC_FORMS_TURNSTILE_RUNBOOK.md](PUBLIC_FORMS_TURNSTILE_RUNBOOK.md) for the current implementation, local evidence and six remaining launch workstreams. Seven forward migrations and matching hosted delivery remain pending. See [event editing](EVENT_EDITING_RUNBOOK.md) for the resumed increment. Earlier dated hCaptcha/planned-event descriptions below are historical and superseded for these capabilities.
 
-Status: canonical documentation hub, updated 2 October 2026 for member continuity, the finalized design specification and the full-public-production owner handoff.
+Status: canonical documentation hub, updated 7 October 2026 for the local/GitHub/hosted status audit. Earlier dated checkpoints below retain their original evidence boundaries.
 
 This folder files the Indus Orbit product as a system: what it means, which code exists, what is operational, what remains, and how every subsystem fits the people-centred mission. Runtime source stays in its correct `src/` and `supabase/` locations; this record points to that source and distinguishes implementation from deployment.
 
@@ -75,7 +91,9 @@ flowchart TB
 
 The product is not an AI router with a community attached. It is a people network in which trusted relationships, knowledge, action, and governed intelligence reinforce one another. I/O Port supplies capability; people remain the principals, beneficiaries, reviewers, and accountable decision-makers.
 
-## Current high-level truth
+## High-level baseline — 2 October 2026
+
+This dated baseline is preserved. The 3 October event increment and [7 October status audit](PRODUCTION_STATUS_2026-10-07.md) supersede its migration/test counts and current delivery snapshot.
 
 | System                                | State   | Current truth                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | ------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -111,7 +129,7 @@ The root `AGENTS.md` requires code and this record to change together. Every mat
 5. update provider/model/price sources before changing route eligibility;
 6. never mark paid traffic or production readiness complete from a local test alone.
 
-## Current checkpoint
+## Earlier publication checkpoints — 1–2 October 2026
 
 - Member GitHub `main` at `6607d4039d766dc077153dd933802da02d28dba7` passed Quality and Database quality CI on 1 October. The live public homepage and `/brand` page were checked after the restoration of the indigo/parchment/saffron pixel-art landing and removal of the retired short line. This establishes public-site delivery evidence, not whole-product production readiness.
 - The owner has since approved **“Intelligence, built together.”** for the short brand line and requested a full public production launch target. The local source/doc edits pass the member verification gate, 8/8 public desktop/mobile browser checks including homepage accessibility, and 2/2 visiting-card visual checks. They remain uncommitted and undeployed until separately delivered. The detailed release gates remain in `FINALIZATION_EXECUTION_PLAN.md` and `CODE_COMPLETION_REGISTER.md`.

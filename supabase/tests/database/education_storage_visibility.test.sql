@@ -14,6 +14,9 @@ insert into storage.objects(bucket_id,name) values
 ('education','resources/97000000-0000-4000-8000-000000000001/published.pdf'),
 ('education','resources/97000000-0000-4000-8000-000000000001/draft.pdf'),
 ('education','resources/97000000-0000-4000-8000-000000000001/unreferenced.pdf');
+-- Trusted fixture verdicts keep this contract focused on publication/ownership.
+-- The scanner service and quarantine transitions have a separate contract.
+update private.education_file_scans set state='clean',content_sha256=repeat('a',64),scanned_at=now();
 set local role authenticated;
 set local "request.jwt.claim.sub"='97000000-0000-4000-8000-000000000002';
 set local "request.jwt.claim.role"='authenticated';
@@ -24,7 +27,8 @@ set local "request.jwt.claim.sub"='97000000-0000-4000-8000-000000000001';
 select lives_ok($$insert into storage.objects(bucket_id,name) values ('education','resources/97000000-0000-4000-8000-000000000001/new.pdf')$$,'Author can upload within their own canonical path');
 select throws_ok($$insert into storage.objects(bucket_id,name) values ('education','resources/97000000-0000-4000-8000-000000000002/forged.pdf')$$,'42501',null,'Author cannot choose another uploader path');
 select throws_ok($$insert into storage.objects(bucket_id,name) values ('education','arbitrary/97000000-0000-4000-8000-000000000001/forged.pdf')$$,'42501',null,'Unknown upload prefixes are denied');
-select throws_ok($$update storage.objects set name='resources/97000000-0000-4000-8000-000000000002/moved.pdf' where bucket_id='education' and name='resources/97000000-0000-4000-8000-000000000001/new.pdf'$$,'42501',null,'Rename cannot cross uploader ownership');
+with changed as (update storage.objects set name='resources/97000000-0000-4000-8000-000000000002/moved.pdf' where bucket_id='education' and name='resources/97000000-0000-4000-8000-000000000001/new.pdf' returning id)
+select is(count(*)::integer,0,'Quarantined uploads cannot be read or renamed by a browser') from changed;
 reset role;
 update public.resources set status='archived' where id='97100000-0000-4000-8000-000000000001';
 set local role authenticated;

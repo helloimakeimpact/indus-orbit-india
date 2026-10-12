@@ -12,8 +12,10 @@ import { Button } from "@/components/ui/button";
 import {
   discoverCommunities,
   submitEventDraft,
+  updateEventDraft,
   type CommunitySummary,
   type EventDraft,
+  type EventEdit,
 } from "./event-client";
 import { getErrorMessage } from "@/lib/errors";
 import { EventCover } from "./EventCover";
@@ -37,18 +39,26 @@ const initial: EventDraft = {
 export function CreateEventDialog({
   onClose,
   onSubmitted,
+  edit,
+  returnFocusTo,
 }: {
   onClose: () => void;
   onSubmitted: () => void;
+  edit?: EventEdit;
+  returnFocusTo?: HTMLElement;
 }) {
   const { user } = useAuth();
-  const [opener] = useState(() =>
-    typeof document === "undefined" ? null : document.activeElement,
+  const [opener] = useState(
+    () => returnFocusTo ?? (typeof document === "undefined" ? null : document.activeElement),
   );
-  const [draft, setDraft] = useState<EventDraft>(() => ({
-    ...initial,
-    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-  }));
+  const [draft, setDraft] = useState<EventDraft>(
+    () =>
+      edit?.draft ?? {
+        ...initial,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      },
+  );
+  const [reason, setReason] = useState("");
   const [communities, setCommunities] = useState<CommunitySummary[]>([]);
   const alive = useRef(true);
   useEffect(() => {
@@ -88,10 +98,13 @@ export function CreateEventDialog({
         className="event-create-dialog max-w-2xl max-h-[90svh] overflow-y-auto"
       >
         <DialogHeader>
-          <DialogTitle className="font-display text-3xl">Bring people together.</DialogTitle>
+          <DialogTitle className="font-display text-3xl">
+            {edit ? "Update your gathering." : "Bring people together."}
+          </DialogTitle>
           <DialogDescription>
-            Free events, open to everyone by default. New hosts and chapter submissions go through
-            review.
+            {edit
+              ? "Update the invitation or reschedule. Registration conditions stay fixed. Let your guests know about changes to the time or place."
+              : "Free events, open to everyone by default. New hosts and chapter submissions go through review."}
           </DialogDescription>
         </DialogHeader>
         <form
@@ -101,9 +114,17 @@ export function CreateEventDialog({
             setBusy(true);
             setError("");
             try {
-              const fingerprint = JSON.stringify(draft);
+              const fingerprint = JSON.stringify({ draft, reason });
               if (submission.current.fingerprint !== fingerprint)
                 submission.current = { fingerprint, id: crypto.randomUUID() };
+              if (edit) {
+                await updateEventDraft(edit, draft, reason, user!.id, submission.current.id);
+                if (!alive.current) return;
+                toast.success("Your event is updated.");
+                onSubmitted();
+                onClose();
+                return;
+              }
               const result = await submitEventDraft(draft, user!.id, submission.current.id);
               if (!alive.current) return;
               toast.success(
@@ -168,9 +189,19 @@ export function CreateEventDialog({
             </div>
             <p className="text-xs text-muted-foreground">
               Enter times in your device timezone:{" "}
-              {Intl.DateTimeFormat().resolvedOptions().timeZone}. The invitation displays this
-              timezone explicitly.
+              {Intl.DateTimeFormat().resolvedOptions().timeZone}. Set the invitation’s display
+              timezone separately below.
             </p>
+            <label>
+              Invitation timezone
+              <input
+                required
+                maxLength={100}
+                value={draft.timezone}
+                onChange={(e) => change("timezone", e.target.value)}
+                placeholder="Asia/Kolkata"
+              />
+            </label>
             <label>
               Format
               <select
@@ -222,10 +253,12 @@ export function CreateEventDialog({
             <label>
               Community
               <select
+                disabled={Boolean(edit)}
                 value={draft.chapterId}
                 onChange={(e) => {
                   change("chapterId", e.target.value);
-                  if (!e.target.value) change("registrationScope", "community");
+                  if (!e.target.value && draft.registrationScope === "chapter")
+                    change("registrationScope", "community");
                 }}
               >
                 <option value="">Indus Orbit</option>
@@ -240,6 +273,7 @@ export function CreateEventDialog({
               <label>
                 Discovery
                 <select
+                  disabled={Boolean(edit)}
                   value={draft.visibility}
                   onChange={(e) => {
                     change("visibility", e.target.value);
@@ -255,6 +289,7 @@ export function CreateEventDialog({
               <label>
                 Who can register?
                 <select
+                  disabled={Boolean(edit)}
                   value={draft.registrationScope}
                   onChange={(e) => change("registrationScope", e.target.value)}
                 >
@@ -270,6 +305,7 @@ export function CreateEventDialog({
               <label>
                 Guest capacity
                 <input
+                  disabled={Boolean(edit)}
                   type="number"
                   min={1}
                   max={100000}
@@ -281,6 +317,7 @@ export function CreateEventDialog({
               </label>
               <label className="event-checkbox">
                 <input
+                  disabled={Boolean(edit)}
                   type="checkbox"
                   checked={draft.requiresApproval}
                   onChange={(e) => change("requiresApproval", e.target.checked)}
@@ -306,6 +343,35 @@ export function CreateEventDialog({
                 ))}
               </div>
             </fieldset>
+            {edit && (
+              <>
+                <label>
+                  Change reason
+                  <textarea
+                    required
+                    minLength={8}
+                    maxLength={500}
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value)}
+                    placeholder="Explain what changed for the hosting team"
+                  />
+                </label>
+                {edit.history.length > 0 && (
+                  <details>
+                    <summary>Recent changes</summary>
+                    <ul>
+                      {edit.history.map((change) => (
+                        <li key={change.revision}>
+                          Revision {change.revision} ·{" "}
+                          {new Date(change.created_at).toLocaleString()} ·{" "}
+                          {change.changed_fields.join(", ")}
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                )}
+              </>
+            )}
           </fieldset>
           {error && (
             <p role="alert" className="text-sm text-destructive">
@@ -317,7 +383,7 @@ export function CreateEventDialog({
               Cancel
             </Button>
             <Button type="submit" disabled={busy}>
-              {busy ? "Submitting…" : "Submit event"}
+              {busy ? "Saving…" : edit ? "Save changes" : "Submit event"}
             </Button>
           </div>
         </form>

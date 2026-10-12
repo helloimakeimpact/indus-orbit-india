@@ -1,0 +1,1 @@
+{"project_id_filter":"indus-community-launch-20261002","backup":true,"message":"Stopped supabase local development setup."}

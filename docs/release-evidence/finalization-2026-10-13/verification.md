@@ -1,0 +1,31 @@
+# Event review finalization — 13 October 2026
+
+Overall production: **Partial**. This source increment is **Verified locally** at the boundaries below; hosted and real operator acceptance is separate. The owner authorized source commit/push after verification.
+
+## Scope
+
+Migration `20261012220739_require_event_review_versions.sql` upgrades the dedicated local fixture `indus_release_verified_20261008` in container `supabase_db_indus-launch-finalize-20261007`. It uses PostgreSQL 17.6.1.156 at local port 55562. The preceding fixture replay/evidence is retained in `../finalization-2026-10-08/`. This is one forward local upgrade; it does not assert a new 128-file replay from empty or a hosted migration.
+
+## Final gates
+
+| Gate                        | Result and boundary                                                                                                                                                                                                                                                                  |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Forward upgrade             | `migration-upgrade-final.log`: final source passed transactionally after the fixture's preceding function definitions were restored. The reset changed only the isolated fixture.                                                                                                    |
+| Complete database contracts | `database-contracts-final.log`: **35 files / 1,143 assertions passed**, all plans complete, fixtures rolled back.                                                                                                                                                                    |
+| Event review integration    | **51 assertions** cover stale revisions, private-link changes, scope/MFA/ACL denial, cancellation notices, prevented republication and non-event compatibility. `event-review-contract-final.log` is the extracted segment of the complete final SQL run.                            |
+| Public type contract        | `type-contract.log`: generated local schema matches the member declaration plus **97 exact hash-bound held Spaces differences**. Generation used the upgraded fixture, despite the checker's generic “Fresh replay” success text. Final lifecycle changes preserve those signatures. |
+| Schema lint                 | `schema-lint-final.log`: **zero error-level findings** in `public,private`.                                                                                                                                                                                                          |
+| Full member gate            | `member-verify.log`: formatting, lint, types, **214 unit tests**, three package builds, production build **2m 5s** and bundle budgets passed. Largest JS **377.12 KiB / 500**, CSS **219.04 KiB / 250**.                                                                             |
+| Member browser              | `member-browser.log`: **2 passed**, chapter revision/refresh flow and host editor stale-write preservation, synthetic/intercepted backend only.                                                                                                                                      |
+| Separate admin              | Its `admin-verify-final.log`: formatting, typecheck, zero-warning lint, **33 units**, production build **9.31s** and budgets passed. Largest JS **210.48 KiB / 500**, CSS **22.09 KiB / 100**.                                                                                       |
+| Admin browser               | Its `event-review-browser-final.log`: **3 passed**, stale review/reason preservation, versionless decision denial and explicit published-event cancellation confirmation; synthetic/intercepted backend only.                                                                        |
+
+The current manifests pin **128 migration files, 35 SQL contracts and 63 member application/test paths**; the separate admin manifest pins five changed application/test paths. All 127 predecessor migration hashes and seven worker file hashes still match the 8 October record. Worker contracts are included in the 214-unit gate; native Edge/Deno acceptance remains outside this local pass. `reviewed-forward-release-manifest.json` lists the ten explicitly reviewed forward files and four candidate functions. It excludes automatic historical alias/held-Spaces delivery.
+
+`external-refresh.json` records the 13 October read-only GitHub/Supabase metadata. The Indus Orbit project remains healthy with 116 migration records and ten active functions; none of the four candidate functions is hosted. This is metadata evidence, not supplier or real-persona acceptance.
+
+The first lint attempt required TLS against a local fixture that does not serve TLS and failed before validation; it is retained as `schema-lint-ssl-attempt.log`. A resource-bound retry timed out before a later corrected run passed. `sslmode=disable` applies only to the isolated local connection; hosted TLS settings are unchanged. The first member browser attempt required an explicit cold-route readiness wait. The first admin stale test exposed a real plain-object PostgREST error-feedback gap; the client now maps stale event decisions to a clear refresh instruction. Final reruns passed. Automatic approval review briefly hit an account usage limit; no rejected action was bypassed, and later authorized reruns completed.
+
+Browser sessions/roles and all SQL fixture users are synthetic; no real operator, provider, email, payment or private-file acceptance is implied. Native Edge/Deno entrypoints are unchanged in this pass. No hosted mutation, real supplier request or privacy deletion occurred. Source publication can trigger the connected Netlify build; it does not activate or verify the pending backend releases.
+
+The dedicated test container was stopped after the final gates and Docker confirmed `exited false` (status exited, Running false). Other Docker projects were not stopped.

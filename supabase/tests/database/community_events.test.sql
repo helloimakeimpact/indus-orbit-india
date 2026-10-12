@@ -84,7 +84,7 @@ select throws_ok($$select public.lead_approve_event('98200000-0000-4000-8000-000
 select throws_ok($$select public.admin_transition_content('event','98200000-0000-4000-8000-000000000005','approved','pending','A deliberate publication review')$$,'42501',null,'Existing admin content RPC cannot bypass event MFA guard');
 set local "request.jwt.claims"='{"aal":"aal2"}';
 select lives_ok($$select public.review_event_host('98000000-0000-4000-8000-000000000001',true,'A reviewed host contract')$$,'A content operator with MFA can approve a separate host');
-select lives_ok($$select public.lead_reject_event('98200000-0000-4000-8000-000000000005','Declined after event review')$$,'Event rejection uses the real declined schema state');
+select lives_ok($$select public.review_event_revision('98200000-0000-4000-8000-000000000005',0,false,'Declined after event review')$$,'Versioned event rejection uses the real declined schema state');
 select throws_ok($$select public.review_event_host('98000000-0000-4000-8000-000000000005',true,'Review my own host access')$$,'42501',null,'Operators cannot grant themselves host approval');
 set local "request.jwt.claim.sub"='98000000-0000-4000-8000-000000000001';
 select is(public.submit_my_event(jsonb_build_object('title','Trusted event','description','A proper description for the event','startTime',now()+interval '2 days','endTime',now()+interval '2 days 2 hours','timezone','Asia/Kolkata','locationType','virtual','link','https://example.test/secret','clientRequestId','98300000-0000-4000-8000-000000000001','expectedUserId','98000000-0000-4000-8000-000000000001'))->>'status','approved','Approved hosts publish their own general events');

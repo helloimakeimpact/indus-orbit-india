@@ -2,7 +2,14 @@ import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { getEventWorkspace, reviewEvent, reviewHost, type HostedEvent } from "./event-client";
+import {
+  getEventWorkspace,
+  getHostEventDraft,
+  reviewEvent,
+  reviewHost,
+  type HostedEvent,
+  type EventEdit,
+} from "./event-client";
 import { CreateEventDialog } from "./CreateEventDialog";
 import { getErrorMessage } from "@/lib/errors";
 export function EventHostWorkspace() {
@@ -10,12 +17,14 @@ export function EventHostWorkspace() {
   return <HostContent key={user?.id} />;
 }
 function HostContent() {
+  const [loadedAt] = useState(Date.now);
   const [workspace, setWorkspace] = useState<Awaited<ReturnType<typeof getEventWorkspace>> | null>(
     null,
   );
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [create, setCreate] = useState(false);
+  const [edit, setEdit] = useState<{ data: EventEdit; opener: HTMLElement } | null>(null);
   const [selectedHost, setSelectedHost] = useState<HostedEvent | null>(null);
   const [reason, setReason] = useState("");
   const active = useRef(true);
@@ -102,6 +111,26 @@ function HostContent() {
                         Open invitation
                       </Link>
                     )}
+                    {event.lifecycle !== "cancelled" &&
+                      new Date(event.start_time).getTime() > loadedAt &&
+                      (event.status === "pending" ||
+                        (event.status === "approved" &&
+                          (workspace.approvedHost || workspace.canReviewHosts))) && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={busy}
+                          onClick={(clickEvent) => {
+                            const opener = clickEvent.currentTarget;
+                            void action(async () => {
+                              const details = await getHostEventDraft(event.id);
+                              if (active.current) setEdit({ data: details, opener });
+                            });
+                          }}
+                        >
+                          Edit event
+                        </Button>
+                      )}
                   </li>
                 ))}
               </ul>
@@ -148,7 +177,9 @@ function HostContent() {
                       <Button
                         size="sm"
                         disabled={busy}
-                        onClick={() => void action(() => reviewEvent(event.id, true))}
+                        onClick={() =>
+                          void action(() => reviewEvent(event.id, true, event.revision))
+                        }
                       >
                         Approve event
                       </Button>
@@ -156,7 +187,9 @@ function HostContent() {
                         size="sm"
                         variant="outline"
                         disabled={busy}
-                        onClick={() => void action(() => reviewEvent(event.id, false))}
+                        onClick={() =>
+                          void action(() => reviewEvent(event.id, false, event.revision))
+                        }
                       >
                         Decline
                       </Button>
@@ -226,6 +259,14 @@ function HostContent() {
       {create && (
         <CreateEventDialog
           onClose={() => setCreate(false)}
+          onSubmitted={() => void action(async () => {})}
+        />
+      )}
+      {edit && (
+        <CreateEventDialog
+          edit={edit.data}
+          returnFocusTo={edit.opener}
+          onClose={() => setEdit(null)}
           onSubmitted={() => void action(async () => {})}
         />
       )}

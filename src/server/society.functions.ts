@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { submitEventDraft, discoverEvents } from "@/features/events/event-client";
+import { submitEventDraft, discoverEvents, reviewEvent } from "@/features/events/event-client";
 import { isMissingSchemaContract } from "@/integrations/supabase/schema-compat";
 
 async function isActiveChapterLead(userId: string, chapterId: string): Promise<boolean> {
@@ -495,14 +495,7 @@ export const getLeadInbox = async () => {
       .in("chapter_id", chapterIds)
       .eq("status", "pending")
       .order("created_at", { ascending: false }),
-    supabase
-      .from("events")
-      .select(
-        "id, title, description, start_time, location, location_type, status, chapter_id, profiles!events_organizer_id_fkey(display_name)",
-      )
-      .in("chapter_id", chapterIds)
-      .eq("status", "pending")
-      .order("start_time", { ascending: true }),
+    supabase.rpc("get_chapter_event_review_queue"),
   ]);
   if (chapters.error) throw new Error(chapters.error.message);
   if (stories.error) throw new Error(stories.error.message);
@@ -530,18 +523,13 @@ export const rejectStory = async ({ data }: { data: { storyId: string; reason?: 
   return { ok: true };
 };
 
-export const approveEvent = async ({ data }: { data: { eventId: string } }) => {
-  const { error } = await supabase.rpc("lead_approve_event", { _event_id: data.eventId });
-  if (error) throw new Error(error.message);
+export const approveEvent = async ({ data }: { data: { eventId: string; revision: number } }) => {
+  await reviewEvent(data.eventId, true, data.revision);
   return { ok: true };
 };
 
-export const rejectEvent = async ({ data }: { data: { eventId: string; reason?: string } }) => {
-  const { error } = await supabase.rpc("lead_reject_event", {
-    _event_id: data.eventId,
-    _reason: data.reason,
-  });
-  if (error) throw new Error(error.message);
+export const rejectEvent = async ({ data }: { data: { eventId: string; revision: number } }) => {
+  await reviewEvent(data.eventId, false, data.revision);
   return { ok: true };
 };
 

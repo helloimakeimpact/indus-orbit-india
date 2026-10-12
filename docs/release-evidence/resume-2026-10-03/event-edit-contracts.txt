@@ -1,0 +1,6 @@
+Connecting to local database...
+psql:/Users/amarpandey/Desktop/JRI work/indus-orbit-india/supabase/tests/database/event_edit_history.test.sql:2: NOTICE:  extension "pgtap" already exists, skipping
+/Users/amarpandey/Desktop/JRI work/indus-orbit-india/supabase/tests/database/event_edit_history.test.sql .. ok
+All tests successful.
+Files=1, Tests=32,  1 wallclock secs ( 0.04 usr  0.03 sys +  0.03 cusr  0.03 csys =  0.13 CPU)
+Result: PASS

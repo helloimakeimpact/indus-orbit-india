@@ -1,0 +1,209 @@
+{
+  "observed_date": "2026-10-07",
+  "scope": "Read-only status audit; documentation updated separately. No new production acceptance or deployment.",
+  "github": {
+    "member": {
+      "repository": "helloimakeimpact/indus-orbit-india",
+      "main_sha": "04e10e5f754b219c6774a8da6b5159183e38fe7c",
+      "tree": "ed6dd61195597483db8f8e8ea91267257bb16f1f",
+      "commit_date": "2026-10-02T18:49:49Z"
+    },
+    "admin": {
+      "repository": "helloimakeimpact/admin-indus-orbit",
+      "main_sha": "20b594081394ecbfec41e9a053aaf7ea3f243ce1",
+      "tree": "5e1ef524d10d6fb2986ab7ff7c6c8785acbe332e",
+      "commit_date": "2026-10-02T14:27:54Z"
+    }
+  },
+  "github_ci": [
+    {
+      "name": "Quality",
+      "head_sha": "04e10e5f754b219c6774a8da6b5159183e38fe7c",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-10-02T18:49:54Z",
+      "url": "https://github.com/helloimakeimpact/indus-orbit-india/actions/runs/37050086207"
+    },
+    {
+      "name": "Quality",
+      "head_sha": "8b5adeef4bac352fb9b4a6effcdc3685c04ac89e",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-10-02T18:41:18Z",
+      "url": "https://github.com/helloimakeimpact/indus-orbit-india/actions/runs/37049117004"
+    },
+    {
+      "name": "Database quality",
+      "head_sha": "8b5adeef4bac352fb9b4a6effcdc3685c04ac89e",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-10-02T18:41:18Z",
+      "url": "https://github.com/helloimakeimpact/indus-orbit-india/actions/runs/37049116821"
+    },
+    {
+      "name": "Admin quality",
+      "head_sha": "20b594081394ecbfec41e9a053aaf7ea3f243ce1",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-10-02T14:28:10Z",
+      "url": "https://github.com/helloimakeimpact/admin-indus-orbit/actions/runs/37020079978"
+    }
+  ],
+  "supabase": {
+    "project": {
+      "id": "jpwvgpnbkrktipwhvqss",
+      "name": "Indus Orbit",
+      "region": "ap-south-1",
+      "status": "ACTIVE_HEALTHY",
+      "postgres_version": "17.6.1.104"
+    },
+    "migration_count": 116,
+    "latest_migrations": [
+      {
+        "version": "20260904092309",
+        "name": "release_orbit_member_safety_controls"
+      },
+      {
+        "version": "20260904092817",
+        "name": "harden_orbit_member_timeout_replay"
+      },
+      {
+        "version": "20260906100111",
+        "name": "fix_operational_function_schema_drift"
+      },
+      {
+        "version": "20260907090226",
+        "name": "add_final_fk_covering_indexes"
+      }
+    ],
+    "pending_forward_versions": [
+      "20261002110000",
+      "20261002120000",
+      "20261002130000",
+      "20261002180809",
+      "20261002201815",
+      "20261002224602",
+      "20261003100000"
+    ],
+    "functions": [
+      {
+        "name": "resend-email-dispatcher",
+        "version": 16,
+        "status": "ACTIVE"
+      },
+      {
+        "name": "io-gateway",
+        "version": 28,
+        "status": "ACTIVE"
+      },
+      {
+        "name": "io-openai",
+        "version": 12,
+        "status": "ACTIVE"
+      },
+      {
+        "name": "io-provider-conformance",
+        "version": 3,
+        "status": "ACTIVE"
+      },
+      {
+        "name": "notification-email-worker",
+        "version": 2,
+        "status": "ACTIVE"
+      },
+      {
+        "name": "orbit-attachment-scan-webhook",
+        "version": 2,
+        "status": "ACTIVE"
+      },
+      {
+        "name": "io-payment-webhook",
+        "version": 2,
+        "status": "ACTIVE"
+      },
+      {
+        "name": "io-payments",
+        "version": 3,
+        "status": "ACTIVE"
+      },
+      {
+        "name": "orbit-attachment-scan-worker",
+        "version": 1,
+        "status": "ACTIVE"
+      },
+      {
+        "name": "io-health-probe",
+        "version": 1,
+        "status": "ACTIVE"
+      }
+    ],
+    "queried_new_event_rpcs_present": [],
+    "staging_project_returned": false,
+    "other_project": {
+      "name": "JRI Backup Replica",
+      "status": "INACTIVE"
+    },
+    "providers": [
+      {
+        "key": "openai",
+        "lifecycle_state": "conformance",
+        "commercial_access_state": "resale_pending",
+        "routing_enabled": false
+      },
+      {
+        "key": "deepseek",
+        "lifecycle_state": "conformance",
+        "commercial_access_state": "resale_pending",
+        "routing_enabled": false
+      }
+    ]
+  },
+  "public_site": {
+    "url": "https://indusorbit.com",
+    "http_status": 200,
+    "server": "Netlify",
+    "netlify_request_header_present": true,
+    "title": "Indus Orbit — The general intelligence company of India",
+    "entry_script": "/assets/index-CYYVv5k3.js",
+    "supabase_project_refs": ["jpwvgpnbkrktipwhvqss"],
+    "exact_deployed_git_commit": "unverified"
+  },
+  "evidence_boundary": {
+    "last_full_local_verification_date": "2026-10-03",
+    "today_full_tests_rerun": false,
+    "no_netlify_dashboard_or_resend_domain_auth_smtp_secret_inventory_verification": true
+  },
+  "local": {
+    "member": {
+      "branch": "main",
+      "head": "e63290c85bfab9dcdbd591aa87bf488e803f6611",
+      "commit_date": "2026-10-02T23:33:19Z",
+      "ahead_of_github_main": 1,
+      "uncommitted_product_work": [
+        "src/features/events/CreateEventDialog.tsx",
+        "src/features/events/EventHostWorkspace.tsx",
+        "src/features/events/event-client.ts",
+        "src/integrations/supabase/types.ts",
+        "supabase/migrations/20261003100000_version_host_event_edits.sql",
+        "supabase/tests/database/event_edit_history.test.sql",
+        "tests/e2e/event-edit.spec.ts"
+      ],
+      "public_asset_diff_against_local_head": []
+    },
+    "admin": {
+      "head": "b46a815c7a9652ddd2ef6191f2ccd018f7ce9b4a",
+      "clean": true,
+      "source_tree": "5e1ef524d10d6fb2986ab7ff7c6c8785acbe332e",
+      "matches_github_source_tree": true
+    },
+    "sql_hash_comparison": {
+      "reference": "docs/release-evidence/resume-2026-10-03/final-source-manifest.json",
+      "migration_files": 125,
+      "database_contract_files": 32,
+      "all_match": true,
+      "added": [],
+      "removed": [],
+      "changed": []
+    }
+  }
+}

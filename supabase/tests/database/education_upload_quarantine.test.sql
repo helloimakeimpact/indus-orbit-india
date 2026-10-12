@@ -1,0 +1,80 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+set local search_path=public,extensions;
+select no_plan();
+insert into auth.users(id,email) values
+('94700000-0000-4000-8000-000000000001','scan-author@example.test'),
+('94700000-0000-4000-8000-000000000002','scan-reader@example.test'),
+('94700000-0000-4000-8000-000000000003','removed-reader@example.test');
+insert into public.user_roles(user_id,role) values ('94700000-0000-4000-8000-000000000001','editor');
+insert into public.resources(id,title,status,created_by,kind,file_path) values
+('94800000-0000-4000-8000-000000000001','Scanned file','published','94700000-0000-4000-8000-000000000001','file','resources/94700000-0000-4000-8000-000000000001/check.pdf');
+insert into storage.objects(id,bucket_id,name,version,metadata) values
+('94900000-0000-4000-8000-000000000001','education','resources/94700000-0000-4000-8000-000000000001/check.pdf','version-one','{"size":100,"mimetype":"application/pdf"}');
+select is((select state from private.education_file_scans where object_id='94900000-0000-4000-8000-000000000001'),'pending','New files start quarantined');
+select ok(not has_table_privilege('authenticated','private.education_file_scans','UPDATE'),'Editors cannot mark files clean');
+select ok(not has_function_privilege('authenticated','public.complete_education_scan(uuid,uuid,text,text,text,text,text)','EXECUTE'),'Browsers cannot submit scanner verdicts');
+set local role authenticated;
+set local "request.jwt.claim.sub"='94700000-0000-4000-8000-000000000002';
+select throws_ok($$select * from public.claim_education_scan_batch(5)$$,'42501',null,'A browser JWT cannot claim private scanner work');
+select is((select count(*)::integer from storage.objects where bucket_id='education'),0,'Published unscanned files cannot be downloaded');
+select is(public.education_file_status('resources/94700000-0000-4000-8000-000000000001/check.pdf'),'pending','Authorized readers receive a safe pending state');
+select throws_ok($$select public.education_file_status('resources/unknown/private.pdf')$$,'42501',null,'Unpublished paths are not enumerable by ordinary readers');
+set local "request.jwt.claim.sub"='94700000-0000-4000-8000-000000000001';
+select is((select count(*)::integer from storage.objects where bucket_id='education'),0,'Editor reads cannot bypass quarantine');
+reset role;
+set local "request.jwt.claims"='{"role":"service_role"}';
+create temp table first_scan as select * from public.claim_education_scan_batch(5);
+select is((select count(*)::integer from first_scan),1,'A service worker claims the bounded pending file');
+select is((select byte_size from first_scan),100::bigint,'Claims use stored object metadata');
+select is((select count(*)::integer from public.claim_education_scan_batch(5)),0,'Concurrent workers cannot reclaim a live lease');
+select throws_ok($$select public.complete_education_scan(id,gen_random_uuid(),'clean',repeat('a',64),'scanner_test','synthetic-event') from first_scan$$,'22023',null,'Wrong leases cannot release quarantine');
+select throws_ok($$select public.complete_education_scan(id,lease_token,'clean',null,'scanner_test','synthetic-event') from first_scan$$,'22023',null,'Clean verdicts require digest evidence');
+select lives_ok($$select public.complete_education_scan(id,lease_token,'clean',repeat('a',64),'scanner_test','synthetic-event') from first_scan$$,'A current trusted clean result releases the object');
+select is((select state from private.education_file_scans where object_id='94900000-0000-4000-8000-000000000001'),'clean','Clean is recorded only by the service contract');
+set local role authenticated;
+set local "request.jwt.claim.sub"='94700000-0000-4000-8000-000000000002';
+set local "request.jwt.claims"='{"role":"authenticated"}';
+select is((select count(*)::integer from storage.objects where bucket_id='education'),1,'Published clean files become readable');
+set local "request.jwt.claim.sub"='94700000-0000-4000-8000-000000000001';
+with changed as (update storage.objects set version='browser-replacement' where id='94900000-0000-4000-8000-000000000001' returning id)
+select is(count(*)::integer,0,'An editor cannot replace bytes behind an issued signed path') from changed;
+with removed as (delete from storage.objects where id='94900000-0000-4000-8000-000000000001' returning id)
+select is(count(*)::integer,0,'An editor cannot delete and reuse a previously signed path') from removed;
+select throws_ok($$insert into storage.objects(bucket_id,name) values ('education','resources/94700000-0000-4000-8000-000000000001/check.pdf')$$,'23505',null,'Existing education paths cannot be reused by a new upload');
+reset role;
+delete from auth.users where id='94700000-0000-4000-8000-000000000003';
+set local role authenticated;
+set local "request.jwt.claim.sub"='94700000-0000-4000-8000-000000000003';
+select is((select count(*)::integer from storage.objects where bucket_id='education'),0,'An old JWT for a deleted account cannot create new download links');
+select throws_ok($$select public.education_file_status('resources/94700000-0000-4000-8000-000000000001/check.pdf')$$,'42501',null,'Deleted identities lose the safe download status contract');
+reset role;
+update storage.objects set version='version-two' where id='94900000-0000-4000-8000-000000000001';
+select is((select state from private.education_file_scans where object_id='94900000-0000-4000-8000-000000000001'),'pending','Replacing bytes invalidates a previous clean verdict');
+set local "request.jwt.claims"='{"role":"service_role"}';
+create temp table second_scan as select * from public.claim_education_scan_batch(5);
+update storage.objects set version='version-three' where id='94900000-0000-4000-8000-000000000001';
+select throws_ok($$select public.complete_education_scan(id,lease_token,'clean',repeat('b',64),'scanner_test','stale-result') from second_scan$$,'22023',null,'A result from replaced bytes cannot mark the new version clean');
+create temp table third_scan as select * from public.claim_education_scan_batch(5);
+select lives_ok($$select public.complete_education_scan(id,lease_token,'blocked',repeat('c',64),'scanner_test','infected-result') from third_scan$$,'Malware verdicts are recorded without releasing the file');
+set local role authenticated;
+set local "request.jwt.claim.sub"='94700000-0000-4000-8000-000000000002';
+set local "request.jwt.claims"='{"role":"authenticated"}';
+select is((select count(*)::integer from storage.objects where bucket_id='education'),0,'Blocked files remain unreadable');
+select is(public.education_file_status('resources/94700000-0000-4000-8000-000000000001/check.pdf'),'blocked','Readers receive an explicit blocked state');
+reset role;
+update storage.objects set version='version-four' where id='94900000-0000-4000-8000-000000000001';
+set local "request.jwt.claims"='{"role":"service_role"}';
+create temp table failed_scan as select * from public.claim_education_scan_batch(5);
+select lives_ok($$select public.complete_education_scan(id,lease_token,'failed',null,null,null,'private/path/secret') from failed_scan$$,'Scanner outages schedule retries');
+select is((select state from private.education_file_scans where object_id='94900000-0000-4000-8000-000000000001'),'pending','Failed checks remain quarantined while retrying');
+select is((select error_code from private.education_file_scans where object_id='94900000-0000-4000-8000-000000000001'),'scanner_unavailable','Scanner errors are redacted');
+update private.education_file_scans set due_at=now()-interval '1 second';
+create temp table final_scan as select * from public.claim_education_scan_batch(5);
+update private.education_file_scans set attempt_count=5,leased_at=now()-interval '6 minutes';
+select lives_ok($$select * from public.claim_education_scan_batch(5)$$,'Crashed final leases are reconciled');
+select is((select state from private.education_file_scans where object_id='94900000-0000-4000-8000-000000000001'),'failed','Exhausted scans fail closed');
+delete from storage.objects where id='94900000-0000-4000-8000-000000000001';
+select is((select count(*)::integer from private.education_file_scans),0,'Deleting an object removes its security metadata');
+select * from finish();
+rollback;

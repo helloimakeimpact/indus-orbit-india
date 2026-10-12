@@ -1,0 +1,17 @@
+
+Running 10 tests using 1 worker
+
+(node:91309) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 [member-ui-regression] › tests/e2e/community-events.spec.ts:92:1 › @member-ui native registration shows the server status and withholds access until confirmation (1.9s)
+  ✓   2 [member-ui-regression] › tests/e2e/community-events.spec.ts:145:1 › @member-ui host creation has named fields, review copy and original cover options (1.4s)
+  ✓   3 [member-ui-regression] › tests/e2e/event-edit.spec.ts:7:1 › @member-ui host editing preserves registration conditions and a stale-write rejection preserves the draft (2.0s)
+  ✓   4 [member-ui-regression] › tests/e2e/member-continuity.spec.ts:5:1 › @member-ui member navigation preserves the shared workspace shell (1.2s)
+  ✓   5 [member-ui-regression] › tests/e2e/member-continuity.spec.ts:29:1 › @member-ui narrow-screen navigation is named and closes after choosing a destination (2.1s)
+  ✓   6 [member-ui-regression] › tests/e2e/member-continuity.spec.ts:54:1 › @member-ui tab return and same-account auth events preserve an unsent draft (1.8s)
+  ✓   7 [member-ui-regression] › tests/e2e/member-continuity.spec.ts:91:1 › @member-ui membership revocation and sign-out still close the member boundary (409ms)
+  ✓   8 [member-ui-regression] › tests/e2e/member-continuity.spec.ts:108:1 › @member-ui account changes clear drafts and obsolete access cannot revive a prior account (785ms)
+  ✓   9 [member-ui-regression] › tests/e2e/member-continuity.spec.ts:142:1 › @member-ui initial membership verification failure fails closed and can recover (496ms)
+  ✓  10 [member-ui-regression] › tests/e2e/member-continuity.spec.ts:158:1 › @member-ui I/O-only access has named keyboard-safe drawers and canonical navigation (4.9s)
+
+  10 passed (19.9s)

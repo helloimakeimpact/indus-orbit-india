@@ -637,7 +637,7 @@ function LessonEditor({
 
   async function removeAttachment(attachment: LessonAttachment) {
     try {
-      await deleteLessonAttachment(attachment.id, attachment.file_path);
+      await deleteLessonAttachment(attachment.id);
       reload();
     } catch (error) {
       toast.error(getErrorMessage(error));

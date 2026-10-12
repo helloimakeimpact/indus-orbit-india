@@ -1,0 +1,503 @@
+
+> verify
+> npm run format:check && npm run lint -- --quiet && npm run typecheck && npm run test:unit && npm run build:transport-core && npm run build:execution-adapter && npm run build:opencode-client && npm run build && npm run check:bundle
+
+
+> format:check
+> prettier --check .
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> lint
+> eslint . --quiet
+
+
+> typecheck
+> tsc --noEmit
+
+
+> test:unit
+> node --import tsx --test src/lib/auth-navigation.test.ts src/integrations/supabase/runtime-config.test.ts src/integrations/supabase/schema-compat.test.ts src/features/conversations/conversation-state.test.ts src/features/orbit/saved-items.test.ts src/features/privacy/account-privacy-client.test.ts src/features/spaces/space-client.test.ts src/features/spaces/space-send-recovery.test.ts src/features/io/api-key-usage.test.ts src/features/io/terminal-policy.test.ts src/features/io/io-workspace-view.test.ts src/features/io/opencode.test.ts packages/io-opencode-client/src/index.test.ts packages/io-transport-core/src/index.test.ts packages/io-execution-adapter/src/index.test.ts src/features/product/product-access.test.ts src/features/location/location-client.test.ts supabase/functions/_shared/attachments/scanner-contract.test.ts supabase/functions/_shared/io/openai-api.test.ts supabase/functions/_shared/io/openai-output.test.ts supabase/functions/_shared/io/operations.test.ts supabase/functions/_shared/io/provider-adapter.test.ts supabase/functions/_shared/io/routing.test.ts supabase/functions/_shared/io/transport-rollout.test.ts supabase/functions/_shared/io/validation.test.ts supabase/functions/_shared/notifications/email-template.test.ts scripts/supabase/generated-type-contract.test.mjs supabase/functions/_shared/public-forms/handler.test.ts src/features/events/event-calendar.test.ts supabase/functions/_shared/events/guest-handler.test.ts supabase/functions/_shared/events/email-worker.test.ts supabase/functions/_shared/attachments/education-scan-worker.test.ts
+
+✔ a valid grant binds the full route and injects server-only credentials (146.149792ms)
+✔ request bytes are snapshotted before asynchronous credential resolution (3.27625ms)
+✔ tampering with a grant or any bound route field is rejected (2.264292ms)
+✔ expired and overlong grants fail before execution (1.187125ms)
+✔ exact-host HTTPS policy blocks SSRF-shaped endpoints before secret resolution (2.128667ms)
+✔ caller cancellation and timeout are distinct and redacted (32.364208ms)
+✔ provider client, rate-limit and server failures are classified without body or fallback hints (18.380333ms)
+✔ request and response byte limits fail closed (2.71475ms)
+✔ the concurrency cap fails fast and releases capacity (29.290208ms)
+✔ secret resolver and transport failures never expose arbitrary details (4.459958ms)
+✔ credential headers cannot overwrite transport authority or framing (4.873375ms)
+✔ service identity binds the exact request and only an allowed workload (1.115917ms)
+✔ a consumed route grant cannot execute twice (2.331459ms)
+✔ streaming forwards chunks before completion and releases concurrency (3.813542ms)
+✔ stream byte overflow and consumer cancellation terminate upstream safely (4.24975ms)
+▶ packaged OpenCode client
+  ✔ pairs only with a password-protected loopback origin (89.615625ms)
+  ✔ decodes split SSE frames and rejects an unconfirmed permission reply (2.102833ms)
+  ✔ loads bounded task trees, full diffs and continued prompts (4.865875ms)
+  ✔ negotiates capabilities and requires positive mutation acknowledgements (4.670125ms)
+  ✔ executes only an advertised command with an exact, one-time review (5.945458ms)
+  ✔ rejects a reviewed command when its exact fields are modified (2.247417ms)
+  ✔ fails closed when OpenCode does not acknowledge abort or revert (2.304417ms)
+  ✔ subscribes to the global SSE stream and scopes events to the requested session (2.790708ms)
+✔ packaged OpenCode client (116.792833ms)
+✔ SSE frames survive chunk and CRLF boundaries (6.706625ms)
+✔ SSE data lines join without accepting unrelated fields (0.834167ms)
+✔ SSE decoder rejects oversized pending and complete frames (0.972625ms)
+✔ JSON SSE decoding distinguishes terminal and malformed frames (2.538167ms)
+✔ UTF-8 SSE decoding preserves multibyte content across every byte boundary (2.8665ms)
+✔ finish reasons normalize without turning unknown failures into success (0.176083ms)
+✔ usage dimensions remain separate for exact downstream billing (0.521542ms)
+✔ transport registry is an explicit duplicate-free allowlist (1.90375ms)
+✔ reviewed versioned descriptors remain immutable and unregistered (21.887875ms)
+✔ transport registry rejects invalid descriptor versions and review metadata (0.587125ms)
+▶ bounded JSON validation rejects adversarial structure without recursion
+  ✔ depth boundary (0.326208ms)
+  ✔ node and container boundaries (22.274792ms)
+  ✔ UTF-8 byte boundary (1.100667ms)
+  ✔ cycles, aliases and sparse arrays (6.347833ms)
+  ✔ accessors, symbols, classes and non-finite numbers (5.594167ms)
+✔ bounded JSON validation rejects adversarial structure without recursion (48.3835ms)
+✔ translation loss policy fails closed unless every loss is explicitly allowed (0.47075ms)
+✔ OpenAI Chat translates to Anthropic with explicit, inspectable losses (2.524666ms)
+✔ OpenAI Chat translator fails closed on invalid tool JSON (0.3695ms)
+✔ request translators enforce nested JSON, container and UTF-8 input bounds (59.855916ms)
+✔ JSON SSE decoding rejects a deeply nested adversarial event (0.816958ms)
+✔ Anthropic message translates to OpenAI Chat with usage dimensions (1.016917ms)
+✔ Anthropic stream translates role, text, tools, usage and terminal events (9.515083ms)
+✔ Anthropic stream rejects content before message_start and data after stop (1.245708ms)
+✔ OpenAI Chat translates to stateless Responses without dropping image input (1.368416ms)
+✔ completed Responses translate to Chat with tools, refusal and exact usage dimensions (2.456ms)
+✔ Responses stream translates ordered text, tools, usage and terminal events (2.135291ms)
+✔ Responses stream rejects missing creation, unknown tool order and provider failure (1.454042ms)
+✔ type comparison ignores comments, layout and formatter separators (31.586583ms)
+✔ column additions, removals, optionality and nullability are detected (5.393375ms)
+✔ RPC arguments, returns, enum values and relationship targets are compared (4.213125ms)
+✔ generator metadata outside the public schema is excluded (2.823833ms)
+✔ malformed, empty and incomplete inputs fail closed (3.092041ms)
+✔ reviewed replay boundary requires the entire exact delta (0.603833ms)
+✔ malformed and duplicate replay allowances fail closed (0.3095ms)
+▶ conversation state
+  ✔ accepts only messages between the selected participants (2.104041ms)
+  ✔ deduplicates by durable ID and renders chronologically (3.730583ms)
+  ✔ accepts only a complete private Broadcast row (0.522084ms)
+  ✔ reconciles an optimistic send with its replay-safe durable row (0.268208ms)
+  ✔ restores only the expected account's bounded replay-safe outbox (0.820083ms)
+  ✔ projects a restored outbox only into its matching conversation (0.423666ms)
+  ✔ treats unavailable private storage as an in-memory-only recovery path (1.686667ms)
+  ✔ removes corrupt state and keeps accounts isolated (2.148667ms)
+  ✔ removes storage after delivery or discard leaves the outbox empty (1.0445ms)
+  ✔ clears only the prior owner on a real auth transition (1.636375ms)
+✔ conversation state (19.137167ms)
+✔ calendar uses UTC instants, escaped text and a stable public invitation URL (6.086167ms)
+✔ long Unicode calendar lines fold at at most 75 UTF-8 octets (2.075708ms)
+✔ description newlines cannot inject calendar fields (2.851208ms)
+✔ event date uses the event timezone rather than the browser timezone (354.218833ms)
+▶ I/O API-key usage evidence
+  ✔ accepts exact current-window counters and drops malformed rows (2.308ms)
+  ✔ marks active keys for rotation seven days before expiry (0.603334ms)
+  ✔ bounds usage percentages for safe progress display (0.339917ms)
+✔ I/O API-key usage evidence (4.800125ms)
+✔ accepts every supported I/O workspace view (9.381209ms)
+✔ invalid or missing workspace views fail safely to overview (0.836ms)
+▶ normalizeOpenCodeOrigin
+  ✔ accepts only credential-free loopback root origins (2.732291ms)
+✔ normalizeOpenCodeOrigin (4.151333ms)
+▶ local OpenCode continuity
+  ✔ stores only a validated device-local session binding (6.651209ms)
+  ✔ reconnects to the exact local session and returns metadata only (269.914541ms)
+✔ local OpenCode continuity (276.902333ms)
+▶ runOpenCodeSession
+  ✔ validates responses and encodes the returned session identifier (31.463709ms)
+  ✔ reports a failed durable lifecycle after local prompt rejection (10.922542ms)
+  ✔ reports a failed durable lifecycle when the prompt response is malformed (5.240584ms)
+  ✔ fails closed on an invalid session response (1.136875ms)
+  ✔ records a stopped lifecycle when the member cancels an in-flight prompt (4.099209ms)
+  ✔ does not record stopped when the daemon fails to acknowledge abort (1.62425ms)
+  ✔ bounds local response size, input size, and request duration (48.776292ms)
+✔ runOpenCodeSession (111.417792ms)
+▶ I/O terminal mode policy
+  ✔ classifies exact OpenCode permission families (1.814708ms)
+  ✔ keeps Observe read-only and Plan non-mutating (0.389584ms)
+  ✔ allows reviewed Build edits without opening a shell (0.19725ms)
+  ✔ keeps critical and external-directory access blocked in Run (0.164625ms)
+  ✔ expires the in-memory daemon credential after fifteen minutes (5.453083ms)
+✔ I/O terminal mode policy (9.39175ms)
+✔ decodes a successful location mutation (14.607083ms)
+✔ rejects malformed location mutation responses (0.903458ms)
+✔ decodes private location preferences without inventing consent (84.47025ms)
+✔ rejects unknown location preference policy values (7.226375ms)
+✔ saved-work parser keeps complete authorized projections only (2.742333ms)
+▶ account privacy request contract
+  ✔ keeps only complete caller-bound request projections (4.8675ms)
+  ✔ fails closed on unknown states and invalid timestamps (1.049625ms)
+✔ account privacy request contract (8.034875ms)
+✔ decodes a caller-bound product access row (20.788666ms)
+✔ rejects malformed or unknown product access state (0.888292ms)
+✔ Orbit Room slow mode accepts only bounded policy values and preserves retry evidence (1.9075ms)
+✔ managed Space roster fails closed and preserves timeout evidence (0.213333ms)
+✔ Orbit Space feed preserves chronological collaboration evidence (0.625458ms)
+✔ Orbit Space feed drops malformed rows and unsafe reaction keys (0.084333ms)
+✔ Orbit Room controls preserve only recognized caller-bound attention state (44.105416ms)
+✔ Orbit private Thread controls require a bounded creator-inclusive audience (0.726584ms)
+✔ Orbit Room controls validate quiet-hour delivery evidence (0.818167ms)
+✔ Orbit search keeps only complete authorized-result shapes (1.1295ms)
+✔ Orbit search pagination accepts only a complete finite keyset cursor (0.4335ms)
+✔ Orbit Room permission decoder drops incomplete or unsafe overrides (2.115459ms)
+✔ Orbit mentions are unique, actor-free and bounded (0.565417ms)
+✔ Orbit role mentions are unique and manager-scale bounded (0.300458ms)
+✔ Orbit send recovery creates stable independent replay keys (3.023167ms)
+✔ Orbit attachment recovery ignores only an explicit object conflict (1.62125ms)
+▶ resolveBrowserSupabaseConfig
+  ✔ returns trimmed browser-safe values (2.075459ms)
+  ✔ names a missing URL in the setup error (3.552834ms)
+  ✔ names a missing publishable key in the setup error (0.551541ms)
+✔ resolveBrowserSupabaseConfig (8.150125ms)
+✔ recognizes only missing schema contract errors (2.448ms)
+✔ auth intent defaults to I/O and accepts only the community alternative (1.143083ms)
+✔ auth tab accepts signup and otherwise defaults to sign in (0.321417ms)
+✔ auth returns are fixed to the selected product (0.197542ms)
+✔ validated auth search is stable and safe (6.845625ms)
+✔ event auth returns accept only a community invitation UUID and reject URLs, queries and traversal (4.196042ms)
+✔ education scans require service authentication and configured supplier before claiming (70.860875ms)
+✔ clean verdicts carry bounded trusted evidence to the completion contract (5.731166ms)
+✔ blocked verdicts never turn into clean results (12.388125ms)
+✔ stale future malformed and unbounded scanner verdicts fail closed (8.086209ms)
+✔ unknown empty and oversized files are not submitted (0.517083ms)
+✔ supplier errors are redacted and leave the object quarantined (0.465167ms)
+✔ completion failures are visible but never expose private paths (0.36625ms)
+✔ scanner response accepts only a complete normalized verdict (9.379833ms)
+✔ scanner failures become bounded operational codes (0.311583ms)
+✔ event templates handle every lifecycle and registration state without private credentials (116.893333ms)
+✔ template rejects foreign paths, invalid origins, identifiers, dates and timezones (0.780125ms)
+✔ host titles are escaped and cannot inject email headers (0.859833ms)
+✔ service authentication and configuration are checked before claiming recipients (79.326375ms)
+✔ obsolete jobs are suppressed before the provider call (5.117834ms)
+✔ delivery sends the immutable job id as provider idempotency key (4.577791ms)
+✔ provider bodies and thrown errors never reach durable errors or responses (7.925709ms)
+✔ malformed success is retried under the same idempotency identity (4.78675ms)
+✔ acknowledgement failures remain observable without exposing database errors (3.160375ms)
+✔ malformed claim data fails closed and does not send (2.2855ms)
+✔ retry sends the frozen provider payload across renderer and sender changes (5.629584ms)
+✔ a change during preparation suppresses the provider request (3.066417ms)
+✔ guest mail contains a 256-bit fragment credential; only a hash is stored and no token is returned (134.539625ms)
+✔ denied or throttled guest request uses the same generic receipt and sends no email (2.479417ms)
+✔ guest mail rejects an invalid challenge {"success":true,"action":"contact","hostname":"indusorbit.com"} (0.663958ms)
+✔ guest mail rejects an invalid challenge {"success":true,"action":"event_registration","hostname":"attacker.test"} (0.419833ms)
+✔ guest mail rejects an invalid challenge {"success":"true"} (0.445875ms)
+✔ guest mail rejects an invalid challenge null (0.360583ms)
+✔ guest links authorize receipt/confirm/cancel by hash without requiring a platform account (9.62225ms)
+✔ invalid actions, addresses, identifiers, tokens and oversized bodies cannot send email (4.45875ms)
+✔ unapproved origins and methods cannot request or confirm a registration (0.967209ms)
+✔ missing mail config, bypass keys and unsafe canonical URLs fail closed (1.900334ms)
+✔ provider failure is not reported as sent and its body is never exposed (3.242958ms)
+✔ rejects browser-origin API-key requests (9.567625ms)
+✔ parses the supported non-streaming OpenAI chat subset (4.155709ms)
+✔ accepts bounded tools, structured output, streaming, and HTTPS image input (1.220125ms)
+✔ parses the stateless Responses API input and function-tool shape (0.685417ms)
+✔ rejects unsupported or unsafe OpenAI fields instead of silently ignoring them (0.471ms)
+✔ requires a correctly shaped test API key (0.49ms)
+✔ validates caller idempotency keys and hashes deterministically (140.799208ms)
+▶ OpenAI-compatible stream output
+  ✔ emits chat usage followed by the terminal sentinel (53.158792ms)
+  ✔ emits the ordered Responses lifecycle and terminal usage (1.6415ms)
+  ✔ forwards live Chat deltas before settlement and usage (2.813667ms)
+  ✔ forwards live Responses deltas through the completed receipt boundary (1.054334ms)
+✔ OpenAI-compatible stream output (60.098083ms)
+▶ I/O operational calculations
+  ✔ uses integer arithmetic and rounds provider nanos upward (76.564333ms)
+  ✔ calculates the transparent 5.5% fee in currency nanos (2.192917ms)
+  ✔ reserves the total worst-case cost across every allowed attempt (1.505875ms)
+  ✔ settles from complete provider usage and labels missing usage estimates (0.716542ms)
+  ✔ fingerprints canonical route intent without exposing prompt data (55.952583ms)
+  ✔ records endpoint health against the exact database contract (0.972167ms)
+  ✔ records a scheduled probe through its service-only contract (1.011666ms)
+✔ I/O operational calculations (145.514ms)
+▶ sendProviderChat request contracts
+  ✔ uses the reviewed provider-specific completion and reasoning fields (91.434709ms)
+  ✔ uses the Gemini native endpoint and request structure (1.816167ms)
+  ✔ decodes split upstream SSE with tools and terminal usage (43.276833ms)
+  ✔ discovers the exact configured model without exposing catalogue content (5.142792ms)
+  ✔ probes the exact Gemini model without issuing inference (2.475416ms)
+  ✔ rejects a successful response without assistant content (24.945333ms)
+  ✔ normalizes rate-limit and upstream failures without returning provider bodies (23.16325ms)
+  ✔ propagates client cancellation to the upstream provider request (2.395375ms)
+  ✔ rejects oversized or invalid successful provider responses (6.026042ms)
+✔ sendProviderChat request contracts (203.373834ms)
+▶ selectProviderRoute
+  ✔ chooses the newest reviewed model that remains within the affordability band (1.932ms)
+  ✔ chooses the least costly entitled model when lowest-cost is requested (1.144459ms)
+  ✔ does not substitute another model for an explicit approved selection (3.815625ms)
+  ✔ fails closed instead of comparing currencies without approved FX data (0.870917ms)
+  ✔ excludes unentitled, deprecated and undersized candidates (0.353208ms)
+  ✔ uses a deterministic provider key tie-break (29.975291ms)
+✔ selectProviderRoute (45.267417ms)
+▶ selectRouteAttempts
+  ✔ defaults to one provider attempt (1.280125ms)
+  ✔ requires an explicit bounded setting for fallback (0.188166ms)
+✔ selectRouteAttempts (1.796792ms)
+▶ workspace provider residency policy
+  ✔ keeps CN routes excluded until both disclosures are accepted (0.26275ms)
+✔ workspace provider residency policy (0.434083ms)
+✔ current transport evidence is explicit for every released adapter style (1.382208ms)
+✔ fixture shadow flags are absent by default and exact-provider/capability scoped (0.610583ms)
+✔ fixture comparison is content-free and cannot accept a billable/provider result (0.673334ms)
+▶ gateway request validation
+  ✔ accepts a bounded partner request (1.302417ms)
+  ✔ rejects malformed actions, workspaces, modes and explicit routes (0.894417ms)
+  ✔ enforces message count, per-message and total limits (0.4625ms)
+✔ gateway request validation (3.543917ms)
+✔ mentor acceptance renders a fixed Indus Orbit template (40.583333ms)
+✔ template escapes profile text and rejects unsafe meeting links (0.383917ms)
+✔ unknown templates fail closed (0.607541ms)
+✔ only a server-verified token saves normalized fields, without token or arbitrary source (60.651667ms)
+✔ newsletter uses the same verification boundary (3.680042ms)
+✔ rejected or malformed verification never writes: {"success":false,"error-codes":["expired-input-response"]} (1.934834ms)
+✔ rejected or malformed verification never writes: {"success":false,"error-codes":["already-seen-response"]} (2.32325ms)
+✔ rejected or malformed verification never writes: {"success":"true"} (0.742917ms)
+✔ rejected or malformed verification never writes: {} (0.561167ms)
+✔ missing token, invalid role/email and oversized fields fail before contacting Turnstile (4.124583ms)
+✔ oversized bodies are bounded even without a content-length header (1.352375ms)
+✔ unlisted and null origins cannot reach verification or storage (1.123542ms)
+✔ preflight and disallowed methods do not verify or write (1.237083ms)
+✔ missing production configuration and official bypass test keys are refused (1.225209ms)
+✔ verification outage and failed persistence return no success or private details (2.821208ms)
+✔ tokens for a different hostname or form action cannot write (2.573458ms)
+ℹ tests 214
+ℹ suites 16
+ℹ pass 214
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4333.628792
+
+> build:transport-core
+> npm --prefix packages/io-transport-core run build
+
+
+> @indus-orbit/io-transport-core@0.1.0 build
+> tsc -p tsconfig.json
+
+
+> build:execution-adapter
+> npm --prefix packages/io-execution-adapter run build
+
+
+> @indus-orbit/io-execution-adapter@0.1.0 build
+> tsc -p tsconfig.json
+
+
+> build:opencode-client
+> npm --prefix packages/io-opencode-client run build
+
+
+> @indus-orbit/opencode-client@0.1.0 build
+> tsc -p tsconfig.json
+
+
+> build
+> vite build
+
+vite v7.3.6 building client environment for production...
+transforming...
+✓ 2903 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                                    0.88 kB │ gzip:   0.45 kB
+dist/assets/indus-orbit-logo-DVzubhqJ.png                         43.61 kB
+dist/assets/merch-mug-Dc4ifKOj.jpg                                66.66 kB
+dist/assets/merch-tee-general-minimal-DrITaJFE.jpg                77.32 kB
+dist/assets/merch-hoodie-SYKM0PyM.jpg                             88.26 kB
+dist/assets/merch-tshirt-CnK_634j.jpg                             90.39 kB
+dist/assets/brand-hero-DL1gaa8S.jpg                               91.03 kB
+dist/assets/blog-announcements-DSIyu8_6.jpg                      152.39 kB
+dist/assets/blog-vision-CtgJF7wk.jpg                             156.48 kB
+dist/assets/blog-research-Bj_ug_7x.jpg                           158.39 kB
+dist/assets/merch-kit-CVB8ahJ1.jpg                               168.01 kB
+dist/assets/models-hero-TMN9EAN8.jpg                             181.53 kB
+dist/assets/blog-community-BRJsyZUG.jpg                          182.04 kB
+dist/assets/blog-playbooks-C34lsl23.jpg                          189.20 kB
+dist/assets/blog-bharat-YtGnxZiF.jpg                             208.28 kB
+dist/assets/hero-india-dawn-BirkAODF.jpg                         218.70 kB
+dist/assets/soda-hero-H67shMJA.jpg                               218.92 kB
+dist/assets/contact-rooftop-C8TorGZa.jpg                         229.49 kB
+dist/assets/about-banyan-CUTrKEjR.jpg                            234.08 kB
+dist/assets/cities-hero-BTLgTBZD.jpg                             241.40 kB
+dist/assets/footer-band-DUHSAJZf.jpg                             261.63 kB
+dist/assets/work-citylights-BH2Zkaez.jpg                         373.46 kB
+dist/assets/lotus-pixel-C4EGA6sq.png                             675.30 kB
+dist/assets/merch-bottle-DY4Kxu1k.jpg                          1,150.07 kB
+dist/assets/merch-tee-signature-BIczs8LY.jpg                   1,208.34 kB
+dist/assets/merch-tee-backprint-BNgT9xFa.jpg                   1,214.00 kB
+dist/assets/merch-tee-pattern-Dd6-350x.jpg                     1,280.52 kB
+dist/assets/merch-tee-pocket-DMap3t8t.jpg                      1,309.51 kB
+dist/assets/merch-notebook-ff13YB8w.jpg                        1,382.98 kB
+dist/assets/merch-tee-line-C7tx6Idt.jpg                        1,437.13 kB
+dist/assets/merch-cap-BjKMcc3U.jpg                             1,482.06 kB
+dist/assets/merch-tote-LWmZCKqD.jpg                            1,566.16 kB
+dist/assets/styles-BMNy7LKq.css                                  224.30 kB │ gzip:  30.99 kB
+dist/assets/lotus-pixel-9a3tYkAn.js                                0.06 kB │ gzip:   0.08 kB
+dist/assets/indus-orbit-logo-a0WOYav1.js                           0.06 kB │ gzip:   0.08 kB
+dist/assets/errors-B5wX_5qV.js                                     0.12 kB │ gzip:   0.13 kB
+dist/assets/io-workspace-view-context-jHKRdWIX.js                  0.14 kB │ gzip:   0.14 kB
+dist/assets/app.education-Dwc6H16S.js                              0.15 kB │ gzip:   0.14 kB
+dist/assets/app.events-Dwc6H16S.js                                 0.15 kB │ gzip:   0.14 kB
+dist/assets/app.missions-Dwc6H16S.js                               0.15 kB │ gzip:   0.14 kB
+dist/assets/app.skills-Dwc6H16S.js                                 0.15 kB │ gzip:   0.14 kB
+dist/assets/app.soda-Dwc6H16S.js                                   0.15 kB │ gzip:   0.14 kB
+dist/assets/app.stories-Dwc6H16S.js                                0.15 kB │ gzip:   0.14 kB
+dist/assets/app.education._courseSlug-CrkeM8Tc.js                  0.15 kB │ gzip:   0.14 kB
+dist/assets/app.io-DbwgPCgl.js                                     0.17 kB │ gzip:   0.16 kB
+dist/assets/schema-compat-B759watd.js                              0.34 kB │ gzip:   0.24 kB
+dist/assets/label-3It6foTi.js                                      0.41 kB │ gzip:   0.28 kB
+dist/assets/HumanVerification-BqSWdG8D.js                          0.45 kB │ gzip:   0.33 kB
+dist/assets/progress-BxPcZs6c.js                                   0.48 kB │ gzip:   0.33 kB
+dist/assets/VerifiedBadge-BODg1g1C.js                              0.52 kB │ gzip:   0.37 kB
+dist/assets/textarea-BOTqtbq3.js                                   0.53 kB │ gzip:   0.37 kB
+dist/assets/EventCover-BZ2usi-t.js                                 0.55 kB │ gzip:   0.38 kB
+dist/assets/communities-Dwm0XTDm.js                                0.60 kB │ gzip:   0.36 kB
+dist/assets/events-CDdxVfOV.js                                     0.60 kB │ gzip:   0.36 kB
+dist/assets/input-IWWJzJLk.js                                      0.63 kB │ gzip:   0.40 kB
+dist/assets/events.index-2nF-7-ep.js                               0.68 kB │ gzip:   0.38 kB
+dist/assets/avatar-Br_-gjLD.js                                     0.68 kB │ gzip:   0.34 kB
+dist/assets/app.events.index-CGljQTXR.js                           0.69 kB │ gzip:   0.39 kB
+dist/assets/index-LHNt3CwB.js                                      0.70 kB │ gzip:   0.43 kB
+dist/assets/events._id-DmUkYoek.js                                 0.70 kB │ gzip:   0.41 kB
+dist/assets/app.events._id-D6XtOjCV.js                             0.71 kB │ gzip:   0.42 kB
+dist/assets/communities.index-DNvR4y5E.js                          0.72 kB │ gzip:   0.40 kB
+dist/assets/notification.functions-DHJks0jL.js                     0.73 kB │ gzip:   0.32 kB
+dist/assets/communities._id-Df8sgGEA.js                            0.77 kB │ gzip:   0.43 kB
+dist/assets/badge-BS4Nr54n.js                                      0.79 kB │ gzip:   0.41 kB
+dist/assets/location-VAVB-ulQ.js                                   0.84 kB │ gzip:   0.42 kB
+dist/assets/switch-ksiEbeZX.js                                     0.86 kB │ gzip:   0.46 kB
+dist/assets/event-calendar-CYw5VNr9.js                             0.98 kB │ gzip:   0.60 kB
+dist/assets/tabs-DPEnFEZx.js                                       1.14 kB │ gzip:   0.48 kB
+dist/assets/ReportDialog-CuRNfSB3.js                               1.29 kB │ gzip:   0.73 kB
+dist/assets/button-Chq6Hi1x.js                                     1.39 kB │ gzip:   0.68 kB
+dist/assets/saved-items-CtYi404j.js                                1.42 kB │ gzip:   0.75 kB
+dist/assets/admin-CkDZrkdO.js                                      1.45 kB │ gzip:   0.76 kB
+dist/assets/skill.functions-BtsbUcJv.js                            1.68 kB │ gzip:   0.68 kB
+dist/assets/BookMentorDialog-D-fVqHs4.js                           1.85 kB │ gzip:   0.91 kB
+dist/assets/product-access-B52WJsji.js                             1.98 kB │ gzip:   0.69 kB
+dist/assets/mentor.functions-TkLe-GNi.js                           1.99 kB │ gzip:   0.85 kB
+dist/assets/alert-dialog-D12LSOQM.js                               2.11 kB │ gzip:   0.77 kB
+dist/assets/reset-password-DBOY0jRF.js                             2.12 kB │ gzip:   1.02 kB
+dist/assets/ReachOutDialog-B1wPIq6S.js                             2.14 kB │ gzip:   1.13 kB
+dist/assets/vouch.functions-CxhMk2A7.js                            2.36 kB │ gzip:   0.88 kB
+dist/assets/dialog-zxLkhpn9.js                                     2.46 kB │ gzip:   0.98 kB
+dist/assets/location-client-CP8qnUK3.js                            2.47 kB │ gzip:   0.87 kB
+dist/assets/sheet-D5wOC47i.js                                      2.60 kB │ gzip:   1.02 kB
+dist/assets/app.notifications-Dz9ERCHt.js                          2.60 kB │ gzip:   1.14 kB
+dist/assets/redeem._code-DBIaqqdO.js                               2.79 kB │ gzip:   1.28 kB
+dist/assets/app.stories._id-BYtsjcY7.js                            2.83 kB │ gzip:   1.22 kB
+dist/assets/soda.functions-DaLijaI2.js                             2.87 kB │ gzip:   0.95 kB
+dist/assets/CommunityDiscovery-rw0n-udd.js                         2.96 kB │ gzip:   1.15 kB
+dist/assets/VerificationCard-Ck0Th_lH.js                           2.98 kB │ gzip:   1.17 kB
+dist/assets/app.admin.audit-Dwkdd9xO.js                            3.01 kB │ gzip:   1.24 kB
+dist/assets/app-mRMCcaq3.js                                        3.01 kB │ gzip:   1.38 kB
+dist/assets/select-BSDY9m5h.js                                     3.16 kB │ gzip:   1.17 kB
+dist/assets/app.admin.submissions-B2uVNziC.js                      3.42 kB │ gzip:   1.27 kB
+dist/assets/dropdown-menu-pEIAKJd0.js                              3.83 kB │ gzip:   1.07 kB
+dist/assets/app.investor-feed-C8U6fAtw.js                          3.84 kB │ gzip:   1.54 kB
+dist/assets/app.saved-BhuhMacx.js                                  4.05 kB │ gzip:   1.66 kB
+dist/assets/app.skills.index-WCe3A96Q.js                           4.08 kB │ gzip:   1.61 kB
+dist/assets/app.admin.reports-B78RfWWd.js                          4.37 kB │ gzip:   1.82 kB
+dist/assets/app.chapters.propose-Cuf-c7-h.js                       4.66 kB │ gzip:   1.87 kB
+dist/assets/members-CWQuyHgk.js                                    4.82 kB │ gzip:   1.91 kB
+dist/assets/app.skills._slug-BXjsv4tS.js                           4.94 kB │ gzip:   1.49 kB
+dist/assets/writing._slug-CqMTRE87.js                              5.13 kB │ gzip:   1.67 kB
+dist/assets/event-client-y5QfMTM2.js                               5.16 kB │ gzip:   1.77 kB
+dist/assets/useDirectConversation-DjPuawbV.js                      5.32 kB │ gzip:   2.18 kB
+dist/assets/app.chapters.index-DAVa7Y7A.js                         5.48 kB │ gzip:   2.16 kB
+dist/assets/app.mission-admin-CjeJB8WK.js                          5.52 kB │ gzip:   2.10 kB
+dist/assets/contact-9fJHcNW_.js                                    5.58 kB │ gzip:   2.13 kB
+dist/assets/app.events.hosting-DdAGh6Zc.js                         5.59 kB │ gzip:   2.19 kB
+dist/assets/EventDiscovery-B0jRfjkO.js                             5.65 kB │ gzip:   2.14 kB
+dist/assets/SegmentDetailsForm-DsJO5guL.js                         5.83 kB │ gzip:   1.61 kB
+dist/assets/app.moderation-B3G5HlUv.js                             6.01 kB │ gzip:   2.35 kB
+dist/assets/app.mentor-CfMHoNhl.js                                 6.14 kB │ gzip:   2.28 kB
+dist/assets/app.stories.index-Tewh1h6e.js                          6.22 kB │ gzip:   2.44 kB
+dist/assets/about-Ds0-qoTZ.js                                      6.29 kB │ gzip:   2.24 kB
+dist/assets/auth-i2l45dI0.js                                       6.89 kB │ gzip:   2.54 kB
+dist/assets/app.board-DVE6sEQL.js                                  6.90 kB │ gzip:   2.62 kB
+dist/assets/skills-BOfRerh1.js                                     7.00 kB │ gzip:   2.32 kB
+dist/assets/app.admin.queue-FAcZrftn.js                            7.61 kB │ gzip:   2.61 kB
+dist/assets/app.education._courseSlug.index-B-14wP0b.js            7.74 kB │ gzip:   2.36 kB
+dist/assets/our-work-C7hP_Ctj.js                                   7.77 kB │ gzip:   2.80 kB
+dist/assets/writing.index-CWScB08A.js                              7.86 kB │ gzip:   2.53 kB
+dist/assets/CreateEventDialog-Bv2wv0Pe.js                          7.88 kB │ gzip:   2.84 kB
+dist/assets/app.admin.skills-DzHa0CGn.js                           8.01 kB │ gzip:   2.70 kB
+dist/assets/app.admin.members-CYdSSKOl.js                          8.21 kB │ gzip:   2.95 kB
+dist/assets/app.admin.spotlights-DOvNjOAk.js                       8.29 kB │ gzip:   2.73 kB
+dist/assets/app.vouch-p0CeQfkC.js                                  8.30 kB │ gzip:   2.83 kB
+dist/assets/app.admin.index-BuEFM0sE.js                            8.45 kB │ gzip:   2.34 kB
+dist/assets/CertificateDialog-MslU4qMQ.js                          8.48 kB │ gzip:   2.99 kB
+dist/assets/app.soda._slug-CZ-lU5zK.js                             8.59 kB │ gzip:   2.23 kB
+dist/assets/app.admin.hubs-D29OwDFF.js                             8.78 kB │ gzip:   2.25 kB
+dist/assets/profile._id-BqoQrmca.js                                9.05 kB │ gzip:   3.46 kB
+dist/assets/mission.functions-JUJBPTyS.js                          9.18 kB │ gzip:   2.39 kB
+dist/assets/education.functions-e9Rhswt4.js                        9.19 kB │ gzip:   2.39 kB
+dist/assets/app.soda.index-CPKpI5pt.js                             9.92 kB │ gzip:   2.95 kB
+dist/assets/app.education._courseSlug._lessonSlug-DCxMX1gO.js      9.96 kB │ gzip:   3.20 kB
+dist/assets/app.admin.content-CXEe7kfB.js                         10.18 kB │ gzip:   3.11 kB
+dist/assets/app.chapter-admin-CYRGEZOr.js                         10.42 kB │ gzip:   3.15 kB
+dist/assets/app.messages-BX_RdLi2.js                              10.71 kB │ gzip:   3.62 kB
+dist/assets/society.functions-xVPFVkLt.js                         11.20 kB │ gzip:   2.64 kB
+dist/assets/app.missions.index-DwRWKLyS.js                        11.46 kB │ gzip:   3.88 kB
+dist/assets/app.missions._missionId-BWYx0vjj.js                   12.32 kB │ gzip:   3.55 kB
+dist/assets/app.admin.vouches-56fe737J.js                         12.55 kB │ gzip:   3.30 kB
+dist/assets/SiteShell-CFdLvPpt.js                                 12.94 kB │ gzip:   4.17 kB
+dist/assets/SocialProfile-BnY876CZ.js                             13.14 kB │ gzip:   4.00 kB
+dist/assets/index-BeoRn2gJ.js                                     13.73 kB │ gzip:   5.41 kB
+dist/assets/app.directory-SenaCp7Q.js                             14.19 kB │ gzip:   4.91 kB
+dist/assets/app.admin.soda-OhLDNNS-.js                            14.29 kB │ gzip:   4.04 kB
+dist/assets/app.profile-DHsD6w7O.js                               16.25 kB │ gzip:   5.31 kB
+dist/assets/io-DO07ins_.js                                        16.54 kB │ gzip:   4.86 kB
+dist/assets/app.chapters._chapterId-cn2Nokgl.js                   16.82 kB │ gzip:   4.09 kB
+dist/assets/EventInvitationPage-Yk78Pt0X.js                       17.29 kB │ gzip:   5.38 kB
+dist/assets/onboarding-CVVkcOsY.js                                17.33 kB │ gzip:   5.45 kB
+dist/assets/app.education.index-BBibtFHJ.js                       17.56 kB │ gzip:   4.91 kB
+dist/assets/index-3-iOOZSv.js                                     18.68 kB │ gzip:   5.28 kB
+dist/assets/io-port-BcvAn2fp.js                                   18.73 kB │ gzip:   5.39 kB
+dist/assets/models-C0ff28-h.js                                    19.30 kB │ gzip:   5.95 kB
+dist/assets/app.admin.education-_jZgPuks.js                       19.44 kB │ gzip:   4.94 kB
+dist/assets/space-client-C-G7KI2f.js                              19.44 kB │ gzip:   5.75 kB
+dist/assets/app.index-Ph0ALhQx.js                                 21.59 kB │ gzip:   7.05 kB
+dist/assets/app.settings-DrHqjfP6.js                              22.00 kB │ gzip:   6.79 kB
+dist/assets/AppShell-Fj9Czrhh.js                                  22.85 kB │ gzip:   6.67 kB
+dist/assets/soda-B9b2Htgr.js                                      23.02 kB │ gzip:   7.66 kB
+dist/assets/what-is-indus-orbit-piEN43iY.js                       25.18 kB │ gzip:   7.88 kB
+dist/assets/browser-DjzmzKyt.js                                   25.40 kB │ gzip:   9.97 kB
+dist/assets/utils-BQHNewu7.js                                     26.69 kB │ gzip:   8.42 kB
+dist/assets/purify.es-BPuvlvQ_.js                                 29.05 kB │ gzip:  11.09 kB
+dist/assets/brand-DjH-xJlv.js                                     41.17 kB │ gzip:  12.43 kB
+dist/assets/icons-vendor-OsynniAb.js                              42.33 kB │ gzip:  13.97 kB
+dist/assets/cities-CoPN3ESN.js                                    43.11 kB │ gzip:  12.38 kB
+dist/assets/app.spaces._spaceId-Kznfr10y.js                       63.01 kB │ gzip:  16.38 kB
+dist/assets/tanstack-vendor-DfNkUL30.js                           89.41 kB │ gzip:  29.50 kB
+dist/assets/io.index-OG6PotJk.js                                 137.81 kB │ gzip:  36.89 kB
+dist/assets/radix-vendor-BUxLwhSo.js                             139.90 kB │ gzip:  42.68 kB
+dist/assets/index-vcu6I_28.js                                    155.40 kB │ gzip:  42.99 kB
+dist/assets/index.es-Psyp0t_4.js                                 158.98 kB │ gzip:  53.11 kB
+dist/assets/react-vendor-DpVJyn6f.js                             193.08 kB │ gzip:  60.58 kB
+dist/assets/html2canvas.esm-DXEQVQnt.js                          201.04 kB │ gzip:  47.43 kB
+dist/assets/supabase-vendor-C-jn6JqG.js                          215.98 kB │ gzip:  56.82 kB
+dist/assets/jspdf.es.min-PTmX5mNE.js                             386.17 kB │ gzip: 126.41 kB
+✓ built in 1m 53s
+
+> check:bundle
+> node scripts/check-bundle-size.mjs
+
+assets/jspdf.es.min-PTmX5mNE.js: 377.12 KiB / 500 KiB
+assets/styles-BMNy7LKq.css: 219.04 KiB / 250 KiB
+assets/supabase-vendor-C-jn6JqG.js: 210.91 KiB / 500 KiB
+assets/html2canvas.esm-DXEQVQnt.js: 196.33 KiB / 500 KiB
+assets/react-vendor-DpVJyn6f.js: 188.55 KiB / 500 KiB
+assets/index.es-Psyp0t_4.js: 155.25 KiB / 500 KiB
+assets/index-vcu6I_28.js: 151.76 KiB / 500 KiB
+assets/radix-vendor-BUxLwhSo.js: 136.62 KiB / 500 KiB

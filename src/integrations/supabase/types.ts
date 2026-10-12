@@ -6436,6 +6436,97 @@ export type Database = {
       };
     };
     Functions: {
+      admin_content_queue_revision: {
+        Args: { _content_type?: string; _limit?: number; _status?: string };
+        Returns: {
+          content_id: string;
+          content_type: string;
+          created_at: string;
+          event_revision: number;
+          owner_display_name: string;
+          published_at: string;
+          status: string;
+          summary: string;
+          title: string;
+        }[];
+      };
+      admin_transition_event_revision: {
+        Args: {
+          _event_id: string;
+          _expected_revision: number;
+          _expected_status: string;
+          _reason: string;
+          _target_status: string;
+        };
+        Returns: Json;
+      };
+      get_chapter_event_review_queue: {
+        Args: never;
+        Returns: {
+          chapter_id: string;
+          description: string;
+          end_time: string;
+          host_name: string;
+          id: string;
+          join_url: string;
+          location: string;
+          location_type: string;
+          public_location: string;
+          revision: number;
+          start_time: string;
+          timezone: string;
+          title: string;
+        }[];
+      };
+      prepare_event_delivery: {
+        Args: { _id: string; _lease_token: string; _payload: Json };
+        Returns: Json;
+      };
+      claim_event_delivery_batch: {
+        Args: { _limit?: number };
+        Returns: {
+          id: string;
+          lease_token: string;
+          recipient_email: string;
+          template_data: Json;
+          template_key: string;
+        }[];
+      };
+      event_delivery_ready: { Args: { _id: string; _lease_token: string }; Returns: boolean };
+      complete_event_delivery: {
+        Args: {
+          _id: string;
+          _lease_token: string;
+          _succeeded: boolean;
+          _provider_message_id?: string;
+          _error_code?: string;
+        };
+        Returns: undefined;
+      };
+      claim_education_scan_batch: {
+        Args: { _limit?: number };
+        Returns: {
+          byte_size: number;
+          content_type: string;
+          id: string;
+          lease_token: string;
+          object_version: string;
+          storage_path: string;
+        }[];
+      };
+      complete_education_scan: {
+        Args: {
+          _id: string;
+          _lease_token: string;
+          _verdict: string;
+          _sha256?: string;
+          _provider_key?: string;
+          _provider_event_id?: string;
+          _error_code?: string;
+        };
+        Returns: undefined;
+      };
+      education_file_status: { Args: { _path: string }; Returns: string };
       request_event_guest_link: {
         Args: { _event_id: string; _email: string; _name: string; _token_hash: string };
         Returns: boolean;
@@ -6448,17 +6539,28 @@ export type Database = {
       discover_host_events: {
         Args: { _host_id: string; _limit?: number };
         Returns: {
-          id: string;
-          title: string;
           description: string;
-          start_time: string;
+          id: string;
           location: string;
           location_type: string;
+          start_time: string;
           status: string;
+          title: string;
         }[];
       };
 
       get_my_event_workspace: { Args: never; Returns: Json };
+      get_host_event_draft: { Args: { _event_id: string }; Returns: Json };
+      update_hosted_event: { Args: { _input: Json }; Returns: Json };
+      review_event_revision: {
+        Args: {
+          _event_id: string;
+          _expected_revision: number;
+          _approved: boolean;
+          _reason: string;
+        };
+        Returns: undefined;
+      };
       discover_events: {
         Args: {
           _chapter_id?: string;

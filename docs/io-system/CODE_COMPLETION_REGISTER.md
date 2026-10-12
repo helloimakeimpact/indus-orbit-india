@@ -1,10 +1,30 @@
 # Indus Orbit code completion register
 
-> Owner stop checkpoint, 3 October 2026: development and active verification stopped as requested. Source is saved locally without a push. Latest complete replay/types/browser refinements remain pending; see [the status report](PRODUCTION_STATUS_2026-10-03.md) and its evidence boundary before rollout.
+## Event review finalization — 13 October
+
+[The current handoff](PRODUCTION_STATUS_2026-10-13.md) adds revision/state checks to chapter and separate-admin event review, private revision audit and refusal of older unversioned commands. Withdrawal cancels the published invitation and queues guest mail; cancelled events cannot be republished. Other Content lifecycles remain supported. Exact local source gates are recorded in [current evidence](../release-evidence/finalization-2026-10-13/verification.md). Source contains 128 migration files and ten reviewed forward releases. The owner authorized committing/publishing completed source. Full production remains Partial; privacy execution still awaits the owner's alternative retention/inventory rules and hosted delivery is separate.
+
+## Retained verification and handoff — 12 October
+
+[The current handoff](PRODUCTION_STATUS_2026-10-12.md) records unchanged source hashes, 214 passing unit tests and the full app gate. The 8 October SQL suite remains 34 files / 1,092 assertions. Source increments are Verified locally; full public production remains Partial. Missing privacy export/purge/physical cleanup depends on the owner's alternative retention/inventory rules. Hosted delivery and genuine supplier/persona/recovery acceptance remain open.
+
+## Continued implementation — 8 October
+
+[Current finalization](PRODUCTION_STATUS_2026-10-08.md) supersedes older missing-source entries for event communications and education quarantine. Both are Verified locally: 127 migration files and 34 SQL files/1,092 assertions pass, including immutable provider payloads, signed-path reuse prevention and deleted-account denial. Final source quality and release boundaries are recorded separately. Privacy export/purge and physical orphan cleanup depend on the owner's alternative retention/inventory rules. No live mail, scanning, deletion or publication is inferred.
+
+## Status audit — 7 October
+
+Overall remains **Partial**. [The refreshed status report](PRODUCTION_STATUS_2026-10-07.md) records current local/GitHub/Supabase/site evidence: member checkpoint `e63290c` remains unpublished above remote `04e10e5`, event editing remains uncommitted, admin source trees match, and the hosted backend still lacks seven reviewed forward migrations plus `public-form-submit` and `event-guest-session`. OpenAI/DeepSeek routing remains disabled. All 125 migration and 32 database contract hashes match the final 3 October replay; no new full test gate, product source change or hosted delivery is claimed. The remaining six launch workstreams are unchanged. Older dated entries below retain their original checkpoints.
+
+## Resume update — 3 October
+
+Environment/domain, Resend, initial host/reviewer and OpenAI/DeepSeek selection are now resolved at the stated evidence boundary in [LAUNCH_SETUP_AND_CONNECTIONS.md](LAUNCH_SETUP_AND_CONNECTIONS.md). Event editing/rescheduling is implemented with private revision history and stale-edit/main-review controls; see [EVENT_EDITING_RUNBOOK.md](EVENT_EDITING_RUNBOOK.md). Current source is 125 migrations with seven pending forward releases. Exact final verification is in [resume evidence](../release-evidence/resume-2026-10-03/verification.md); automatic attendee communications, privacy execution, scanner and hosted/provider/operating acceptance remain Partial.
+
+> Resumed 3 October 2026: the owner confirmed indusorbit.com/Netlify, Resend, themselves as initial host/reviewer, and OpenAI/DeepSeek. See [verified connections and setup](LAUNCH_SETUP_AND_CONNECTIONS.md), [current status](PRODUCTION_STATUS_2026-10-03.md), and [resume evidence](../release-evidence/resume-2026-10-03/verification.md). The earlier stop checkpoint remains preserved in Git/evidence. New work stays local; hosted delivery remains pending.
 
 ## 3 October 2026 — native events and simpler verification
 
-The owner requested a simpler replacement for hCaptcha and adaptation of Luma-like website elements. Current source uses Cloudflare Turnstile and native Community event discovery, invitation, free registration, host review, capacity/waitlists and scoped guest operations. Original branding/assets are retained. Read [PRODUCTION_STATUS_2026-10-03.md](PRODUCTION_STATUS_2026-10-03.md), [EVENTS_RELEASE_RUNBOOK.md](EVENTS_RELEASE_RUNBOOK.md) and [PUBLIC_FORMS_TURNSTILE_RUNBOOK.md](PUBLIC_FORMS_TURNSTILE_RUNBOOK.md) for the current implementation, local evidence and six remaining launch workstreams. Six forward migrations and matching hosted delivery remain pending. Earlier dated hCaptcha/planned-event descriptions below are historical and superseded for these capabilities.
+The owner requested a simpler replacement for hCaptcha and adaptation of Luma-like website elements. Current source uses Cloudflare Turnstile and native Community event discovery, invitation, free registration, host review, capacity/waitlists, scoped guest operations and revision-protected editing/rescheduling. Original branding/assets are retained. Read [PRODUCTION_STATUS_2026-10-03.md](PRODUCTION_STATUS_2026-10-03.md), [EVENTS_RELEASE_RUNBOOK.md](EVENTS_RELEASE_RUNBOOK.md) and [PUBLIC_FORMS_TURNSTILE_RUNBOOK.md](PUBLIC_FORMS_TURNSTILE_RUNBOOK.md) for the current implementation, local evidence and six remaining launch workstreams. Seven forward migrations and matching hosted delivery remain pending. See [event editing](EVENT_EDITING_RUNBOOK.md) for the resumed increment. Earlier dated hCaptcha/planned-event descriptions below are historical and superseded for these capabilities.
 
 Status: whole-product code and release filing updated 2 October 2026. See `PHASED_COMPLETION_PLAN_2026-09-08.md` for the current handoff, `FINAL_CODE_LEVEL_AUDIT_2026-09-06.md` for the last full audit and `FULL_CODE_AUDIT_2026-08-19.md` for the cumulative record.
 

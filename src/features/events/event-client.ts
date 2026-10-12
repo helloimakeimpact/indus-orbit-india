@@ -145,6 +145,131 @@ export type EventDraft = {
   capacity: string;
   requiresApproval: boolean;
 };
+export type EventEdit = {
+  id: string;
+  revision: number;
+  draft: EventDraft;
+  history: { revision: number; changed_fields: string[]; created_at: string }[];
+};
+function localDateTime(value: string) {
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) throw new Error("Event dates could not load.");
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+export async function getHostEventDraft(eventId: string): Promise<EventEdit> {
+  const data = checked(await supabase.rpc("get_host_event_draft", { _event_id: eventId }));
+  if (
+    !data ||
+    typeof data !== "object" ||
+    Array.isArray(data) ||
+    data.id !== eventId ||
+    typeof data.revision !== "number" ||
+    !Number.isInteger(data.revision) ||
+    data.revision < 0 ||
+    !data.draft ||
+    typeof data.draft !== "object" ||
+    Array.isArray(data.draft) ||
+    !Array.isArray(data.history)
+  )
+    throw new Error("Event details could not load.");
+  const fields = data.draft;
+  const draft = fields as unknown as EventDraft;
+  if (
+    [
+      "title",
+      "description",
+      "startTime",
+      "endTime",
+      "timezone",
+      "locationType",
+      "location",
+      "link",
+      "publicLocation",
+      "chapterId",
+      "coverTemplate",
+      "visibility",
+      "registrationScope",
+      "capacity",
+    ].some((key) => typeof fields[key] !== "string") ||
+    typeof draft.requiresApproval !== "boolean"
+  )
+    throw new Error("Event details could not load.");
+  const history = data.history.map((value) => {
+    if (
+      !value ||
+      typeof value !== "object" ||
+      Array.isArray(value) ||
+      typeof value.revision !== "number" ||
+      typeof value.created_at !== "string" ||
+      !Array.isArray(value.changed_fields) ||
+      !value.changed_fields.every((field) => typeof field === "string")
+    )
+      throw new Error("Event history could not load.");
+    return {
+      revision: value.revision,
+      created_at: value.created_at,
+      changed_fields: value.changed_fields as string[],
+    };
+  });
+  return {
+    id: eventId,
+    revision: data.revision,
+    draft: {
+      ...draft,
+      startTime: localDateTime(draft.startTime),
+      endTime: localDateTime(draft.endTime),
+    },
+    history,
+  };
+}
+export async function updateEventDraft(
+  edit: EventEdit,
+  draft: EventDraft,
+  reason: string,
+  userId: string,
+  clientRequestId: string,
+) {
+  const {
+    title,
+    description,
+    timezone,
+    locationType,
+    location,
+    link,
+    publicLocation,
+    coverTemplate,
+  } = draft;
+  const data = checked(
+    await supabase.rpc("update_hosted_event", {
+      _input: {
+        eventId: edit.id,
+        expectedRevision: edit.revision,
+        expectedUserId: userId,
+        clientRequestId,
+        reason,
+        title,
+        description,
+        timezone,
+        locationType,
+        location,
+        link,
+        publicLocation,
+        coverTemplate,
+        startTime: new Date(draft.startTime).toISOString(),
+        endTime: new Date(draft.endTime).toISOString(),
+      },
+    }),
+  );
+  if (
+    !data ||
+    typeof data !== "object" ||
+    Array.isArray(data) ||
+    data.id !== edit.id ||
+    typeof data.revision !== "number"
+  )
+    throw new Error("Event change could not be confirmed.");
+}
 export async function submitEventDraft(draft: EventDraft, userId: string, clientRequestId: string) {
   const data = checked(
     await supabase.rpc("submit_my_event", {
@@ -173,6 +298,7 @@ export type HostedEvent = {
   status: string;
   start_time: string;
   lifecycle?: string;
+  revision?: number;
   organizer_id?: string;
   host_name?: string;
   description?: string;
@@ -214,14 +340,20 @@ export async function getEventWorkspace() {
     review: parse(data.review),
   };
 }
-export async function reviewEvent(eventId: string, approved: boolean) {
+export async function reviewEvent(
+  eventId: string,
+  approved: boolean,
+  revision: number | undefined,
+) {
+  if (revision === undefined || !Number.isSafeInteger(revision) || revision < 0)
+    throw new Error("Refresh the review before deciding on this event.");
   checked(
-    await (approved
-      ? supabase.rpc("lead_approve_event", { _event_id: eventId })
-      : supabase.rpc("lead_reject_event", {
-          _event_id: eventId,
-          _reason: "Declined in event review workspace",
-        })),
+    await supabase.rpc("review_event_revision", {
+      _event_id: eventId,
+      _expected_revision: revision,
+      _approved: approved,
+      _reason: approved ? "Approved after invitation review" : "Declined after invitation review",
+    }),
   );
 }
 export async function reviewHost(userId: string, approved: boolean, reason: string) {

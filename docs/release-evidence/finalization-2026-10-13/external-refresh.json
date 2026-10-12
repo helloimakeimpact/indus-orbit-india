@@ -1,0 +1,82 @@
+{
+  "observed": "2026-10-13",
+  "project_id": "jpwvgpnbkrktipwhvqss",
+  "project": {
+    "id": "jpwvgpnbkrktipwhvqss",
+    "name": "Indus Orbit",
+    "status": "ACTIVE_HEALTHY",
+    "region": "ap-south-1",
+    "database": "17.6.1.104"
+  },
+  "migrations": {
+    "count": 116,
+    "latest": {
+      "version": "20260907090226",
+      "name": "add_final_fk_covering_indexes"
+    }
+  },
+  "functions": [
+    {
+      "name": "resend-email-dispatcher",
+      "version": 16,
+      "status": "ACTIVE"
+    },
+    {
+      "name": "io-gateway",
+      "version": 28,
+      "status": "ACTIVE"
+    },
+    {
+      "name": "io-openai",
+      "version": 12,
+      "status": "ACTIVE"
+    },
+    {
+      "name": "io-provider-conformance",
+      "version": 3,
+      "status": "ACTIVE"
+    },
+    {
+      "name": "notification-email-worker",
+      "version": 2,
+      "status": "ACTIVE"
+    },
+    {
+      "name": "orbit-attachment-scan-webhook",
+      "version": 2,
+      "status": "ACTIVE"
+    },
+    {
+      "name": "io-payment-webhook",
+      "version": 2,
+      "status": "ACTIVE"
+    },
+    {
+      "name": "io-payments",
+      "version": 3,
+      "status": "ACTIVE"
+    },
+    {
+      "name": "orbit-attachment-scan-worker",
+      "version": 1,
+      "status": "ACTIVE"
+    },
+    {
+      "name": "io-health-probe",
+      "version": 1,
+      "status": "ACTIVE"
+    }
+  ],
+  "github": [
+    {
+      "repository": "helloimakeimpact/indus-orbit-india",
+      "branch": "main",
+      "sha": "04e10e5f754b219c6774a8da6b5159183e38fe7c"
+    },
+    {
+      "repository": "helloimakeimpact/admin-indus-orbit",
+      "branch": "main",
+      "sha": "20b594081394ecbfec41e9a053aaf7ea3f243ce1"
+    }
+  ]
+}

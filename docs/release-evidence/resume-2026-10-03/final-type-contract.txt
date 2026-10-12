@@ -1,0 +1,5 @@
+
+> check:supabase-types
+> node scripts/supabase/check-generated-types.mjs --generated /private/tmp/indus-resume-final.types.ts --replay-boundary
+
+Fresh replay matches the browser release contract plus 97 exact, hash-bound held Spaces differences.

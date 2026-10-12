@@ -1,6 +1,6 @@
 # Public event guest registration
 
-> Owner stop checkpoint, 3 October 2026: development and active verification stopped as requested. Source is saved locally without a push. Latest complete replay/types/browser refinements remain pending; see [the status report](PRODUCTION_STATUS_2026-10-03.md) and its evidence boundary before rollout.
+> Resumed 3 October 2026: the owner confirmed indusorbit.com/Netlify, Resend, themselves as initial host/reviewer, and OpenAI/DeepSeek. See [verified connections and setup](LAUNCH_SETUP_AND_CONNECTIONS.md), [current status](PRODUCTION_STATUS_2026-10-03.md), and [resume evidence](../release-evidence/resume-2026-10-03/verification.md). The earlier stop checkpoint remains preserved in Git/evidence. New work stays local; hosted delivery remains pending.
 
 Status: **Partial**, 3 October 2026. Source implements the owner's explicit choice: public name/email guest registration by default; hosts may require active Indus Orbit Community or chapter membership. This supersedes the earlier mandatory-membership decision. Actual email delivery and hosted deployment remain unverified.
 
