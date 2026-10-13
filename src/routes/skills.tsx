@@ -18,7 +18,6 @@ export const Route = createFileRoute("/skills")({
       },
       { property: "og:title", content: "Skills — Indus Orbit" },
       { property: "og:description", content: "Reusable, India-specific founder playbooks." },
-      { property: "og:url", content: "https://indus-spark-connect.lovable.app/skills" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],

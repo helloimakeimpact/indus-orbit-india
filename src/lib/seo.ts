@@ -1,4 +1,4 @@
-export const SITE_URL = "https://indus-spark-connect.lovable.app";
+export const SITE_URL = "https://indusorbit.com";
 
 /** Absolute URL for a site path, used for canonical + og:url. */
 export function siteUrl(path: string) {

@@ -47,7 +47,6 @@ export const Route = createFileRoute("/soda")({
         property: "og:description",
         content: "A living database of India-specific startup opportunities — refreshed daily.",
       },
-      { property: "og:url", content: "https://indus-spark-connect.lovable.app/soda" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "S.O.D.A — Startup Opportunities, Development & Action" },

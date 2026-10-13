@@ -1,5 +1,7 @@
 # Education upload quarantine and scanning
 
+13 October CI compatibility: the rollback-only synthetic contract scopes `storage.allow_delete_query` around its metadata DELETE tests and restores it immediately, matching the current Storage API context while retaining the vendor deletion guard. Real orphan/quarantine cleanup must use the Storage API after approved retention/holds; direct SQL metadata deletion is not a production cleanup mechanism. See [publication follow-up](SOURCE_PUBLICATION_2026-10-13.md).
+
 Implementation: **Verified locally**, 8 October 2026; production remains **Partial**. Source/contract evidence is in [finalization verification](../release-evidence/finalization-2026-10-08/verification.md). Real supplier configuration and hosted acceptance remain required.
 
 ## Source contract

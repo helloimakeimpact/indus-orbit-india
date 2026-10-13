@@ -1,5 +1,9 @@
 # Indus Orbit code completion register
 
+## Publication and CI follow-up — 13 October
+
+[The publication record](SOURCE_PUBLICATION_2026-10-13.md) records published member/admin source, the first CI failures and their remediation. Both dependency audits now report zero findings; full local gates pass 214 member and 33 admin units. Public metadata uses indusorbit.com. Storage fixture changes retain the production deletion guard and require the API for actual physical cleanup. Hosted delivery and privacy execution remain Partial.
+
 ## Event review finalization — 13 October
 
 [The current handoff](PRODUCTION_STATUS_2026-10-13.md) adds revision/state checks to chapter and separate-admin event review, private revision audit and refusal of older unversioned commands. Withdrawal cancels the published invitation and queues guest mail; cancelled events cannot be republished. Other Content lifecycles remain supported. Exact local source gates are recorded in [current evidence](../release-evidence/finalization-2026-10-13/verification.md). Source contains 128 migration files and ten reviewed forward releases. The owner authorized committing/publishing completed source. Full production remains Partial; privacy execution still awaits the owner's alternative retention/inventory rules and hosted delivery is separate.

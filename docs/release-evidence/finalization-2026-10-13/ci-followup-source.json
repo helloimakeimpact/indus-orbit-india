@@ -1,0 +1,33 @@
+{
+  "date": "2026-10-13",
+  "scope": "Dependency, approved-domain metadata and synthetic Storage fixture CI remediation",
+  "source_sha256": {
+    "package.json": "e534b959e3aef0fd6688b826ae13ffd15361b6cd9aee2f18b44da4c75127c3d0",
+    "package-lock.json": "0ab1d7d89e39f7ac183c3d22a85e78ed778e4378cbb9cd189ab9c276eddd6ef1",
+    "src/lib/seo.ts": "e52e8d55d366d53ca40f9cb9592321437227d309c7a56359954e7bf4a3e53b36",
+    "src/routes/skills.tsx": "1dc50d11aa8b6b60fadf1e7025e6a4415312b289f6314db74a830b5d266a07f4",
+    "src/routes/soda.tsx": "1dde1e11c9cf7821d45f9b02acf171fc335cc7650d614fa64d0a84142c63db16",
+    "public/robots.txt": "dca561838894990a00a94f3d16f94c1f4772b3cf3d550f8338137c25f3c21070",
+    "public/sitemap.xml": "f4520ec10e101e94de2250319ed03f0f8e3da5d7e2fdae3a445bb5d0cf6874f5",
+    "supabase/tests/database/education_upload_quarantine.test.sql": "e1f14ac186ffe7abc3ce58c8ef9fd71207fcec6f3559bc6544ef03902a5a1006"
+  },
+  "local_gates": {
+    "member_units": 214,
+    "full_verify": "passed",
+    "audit_findings": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 0,
+      "critical": 0,
+      "total": 0
+    },
+    "storage_guard_contract": "running; publication results recorded separately"
+  },
+  "initial_github_runs": {
+    "member_quality": 38323587365,
+    "database_quality": 38323587337,
+    "admin_quality": 38323748907
+  },
+  "hosted_operations": "none; no Supabase deployment, real mail, scan or deletion"
+}

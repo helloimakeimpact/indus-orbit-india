@@ -1,5 +1,9 @@
 # Indus Orbit living system record
 
+## Source publication and CI remediation — 13 October
+
+Read [the publication record](SOURCE_PUBLICATION_2026-10-13.md) for the published member/admin commits, dependency remediation, approved-domain metadata and Storage fixture compatibility. Full public production remains Partial. Earlier dated entries retain their original checkpoint boundaries.
+
 ## Current source finalization — 13 October 2026
 
 Read [the latest handoff](PRODUCTION_STATUS_2026-10-13.md). Chapter and separate admin event decisions now use inspected revisions; older commands cannot publish changed invitations. Withdrawal of a published invitation closes its lifecycle and queues guest cancellation mail. Source contains 128 migration files with ten reviewed forward releases awaiting hosted delivery. [Current verification](../release-evidence/finalization-2026-10-13/verification.md) separates local checks from hosted acceptance. The owner authorized commit/push of completed source; privacy export/deletion and physical cleanup still await their rules. Earlier dated checkpoints below retain their original evidence.

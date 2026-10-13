@@ -39,8 +39,13 @@ select is((select count(*)::integer from storage.objects where bucket_id='educat
 set local "request.jwt.claim.sub"='94700000-0000-4000-8000-000000000001';
 with changed as (update storage.objects set version='browser-replacement' where id='94900000-0000-4000-8000-000000000001' returning id)
 select is(count(*)::integer,0,'An editor cannot replace bytes behind an issued signed path') from changed;
+-- The Storage API enables this transaction flag for its SQL deletion. Keep
+-- the supplier guard installed and test our restrictive RLS under that same
+-- setting; direct SQL is used only for synthetic, rolled-back fixtures.
+set local "storage.allow_delete_query"='true';
 with removed as (delete from storage.objects where id='94900000-0000-4000-8000-000000000001' returning id)
 select is(count(*)::integer,0,'An editor cannot delete and reuse a previously signed path') from removed;
+set local "storage.allow_delete_query"='false';
 select throws_ok($$insert into storage.objects(bucket_id,name) values ('education','resources/94700000-0000-4000-8000-000000000001/check.pdf')$$,'23505',null,'Existing education paths cannot be reused by a new upload');
 reset role;
 delete from auth.users where id='94700000-0000-4000-8000-000000000003';
@@ -74,7 +79,11 @@ create temp table final_scan as select * from public.claim_education_scan_batch(
 update private.education_file_scans set attempt_count=5,leased_at=now()-interval '6 minutes';
 select lives_ok($$select * from public.claim_education_scan_batch(5)$$,'Crashed final leases are reconciled');
 select is((select state from private.education_file_scans where object_id='94900000-0000-4000-8000-000000000001'),'failed','Exhausted scans fail closed');
+-- Metadata-only fixture cleanup is not a production file-deletion recipe.
+-- Real cleanup must call Storage API after approved retention/hold checks.
+set local "storage.allow_delete_query"='true';
 delete from storage.objects where id='94900000-0000-4000-8000-000000000001';
+set local "storage.allow_delete_query"='false';
 select is((select count(*)::integer from private.education_file_scans),0,'Deleting an object removes its security metadata');
 select * from finish();
 rollback;

@@ -1,5 +1,7 @@
 # Production handoff — 13 October 2026
 
+Latest source publication and CI remediation: [the publication record](SOURCE_PUBLICATION_2026-10-13.md). The local/remote comparison below retains the pre-publication snapshot; completed member/admin source has since been published. Hosted acceptance remains Partial.
+
 Overall: **Partial** for full public production. The owner authorized committing and publishing the completed source on 13 October. This handoff records the included code and its local evidence. Hosted migrations, service activation and public production acceptance remain separate from source publication.
 
 ## What changed in this pass
