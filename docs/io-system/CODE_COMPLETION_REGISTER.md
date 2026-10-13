@@ -2,6 +2,8 @@
 
 ## Publication and CI follow-up — 13 October
 
+Final remediation commits are published and **Verified** by all three GitHub workflows: 214 member units, 33 admin units, 46 synthetic/public browser journeys across both apps, fresh 128-migration replay, exact types and 35 SQL files / 1,143 assertions. Exact source heads and logs are in [publication evidence](../release-evidence/finalization-2026-10-13/publication.json). Full production remains **Partial**.
+
 [The publication record](SOURCE_PUBLICATION_2026-10-13.md) records published member/admin source, the first CI failures and their remediation. Both dependency audits now report zero findings; full local gates pass 214 member and 33 admin units. Public metadata uses indusorbit.com. Storage fixture changes retain the production deletion guard and require the API for actual physical cleanup. Hosted delivery and privacy execution remain Partial.
 
 ## Event review finalization — 13 October

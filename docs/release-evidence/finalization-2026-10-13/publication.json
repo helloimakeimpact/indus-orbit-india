@@ -1,0 +1,80 @@
+{
+  "date": "2026-10-13",
+  "state": "Verified",
+  "production_state": "Partial",
+  "member": {
+    "commit": "26061682e88fa0ffbd901bf78411c9718a42a413",
+    "quality": {
+      "id": 38377550741,
+      "job_id": 115229629652,
+      "conclusion": "success",
+      "unit_tests": 214,
+      "public_browser": 20,
+      "guest_turnstile_browser": 4,
+      "member_browser": 11
+    },
+    "database": {
+      "id": 38377550910,
+      "job_id": 115229630293,
+      "conclusion": "success",
+      "migrations_replayed": 128,
+      "contract_files": 35,
+      "assertions": 1143,
+      "held_spaces_type_differences": 97,
+      "schema_lint": "passed"
+    }
+  },
+  "admin": {
+    "remote_commit": "bfdba274ff16ce7781febceeb0c28f5cd0d5c494",
+    "local_commit": "4fa8193904fb02a61fd9b04faf351e85395fc88b",
+    "matching_tree": "f9bbe57fa3fd9f4116a46caf78ae150d495f1953",
+    "quality": {
+      "id": 38377910498,
+      "job_id": 115230816864,
+      "conclusion": "success",
+      "unit_tests": 33,
+      "public_browser": 4,
+      "admin_mfa_browser": 7
+    }
+  },
+  "audits": {
+    "member_findings": 0,
+    "admin_findings": 0
+  },
+  "hosted": {
+    "project_ref": "jpwvgpnbkrktipwhvqss",
+    "recorded_migrations": 116,
+    "active_functions": 10,
+    "deployments_this_pass": 0,
+    "netlify_commit_acceptance": "not established by GitHub status API; no statuses returned"
+  },
+  "local_duplicate_storage_test": "Interrupted after 19 passing assertions due stalled dedicated runtime; exit137 while stopping container. No complete local32 assertion claim. Fresh GitHub suite passed entire education contract with current Storage guard.",
+  "member_quality_excerpt": [
+    "2026-10-13T09:36:58.8297847Z added 461 packages, and audited 462 packages in 10s",
+    "2026-10-13T09:36:58.8791705Z found 0 vulnerabilities",
+    "2026-10-13T09:36:59.4010805Z found 0 vulnerabilities",
+    "2026-10-13T09:37:07.1204085Z All matched files use Prettier code style!",
+    "2026-10-13T09:37:47.6592298Z # tests 214",
+    "2026-10-13T09:37:47.6592877Z # pass 214",
+    "2026-10-13T09:37:47.6593107Z # fail 0",
+    "2026-10-13T09:38:59.8856518Z   20 passed (42.7s)",
+    "2026-10-13T09:39:15.7572050Z   4 passed (15.2s)",
+    "2026-10-13T09:39:47.7093932Z   11 passed (31.4s)"
+  ],
+  "admin_quality_excerpt": [
+    "2026-10-13T09:39:58.9040562Z found 0 vulnerabilities",
+    "2026-10-13T09:39:59.7916470Z found 0 vulnerabilities",
+    "2026-10-13T09:40:27.9661191Z All matched files use Prettier code style!",
+    "2026-10-13T09:40:43.2842800Z # tests 33",
+    "2026-10-13T09:40:43.2871206Z # pass 33",
+    "2026-10-13T09:40:43.2891495Z # fail 0",
+    "2026-10-13T09:41:04.6208412Z   4 passed (11.5s)",
+    "2026-10-13T09:41:18.1502456Z   7 passed (12.7s)"
+  ],
+  "database_excerpt": [
+    "2026-10-13T09:39:16.0971244Z Fresh replay matches the browser release contract plus 97 exact, hash-bound held Spaces differences.",
+    "2026-10-13T09:39:22.4645462Z All tests successful.",
+    "2026-10-13T09:39:22.4646777Z Files=35, Tests=1143,  4 wallclock secs ( 0.16 usr  0.07 sys +  0.34 cusr  0.21 csys =  0.78 CPU)",
+    "2026-10-13T09:39:22.4648227Z Result: PASS"
+  ]
+}

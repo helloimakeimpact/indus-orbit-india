@@ -25,6 +25,16 @@ The synthetic rollback-only education contract sets `storage.allow_delete_query`
 
 ## Follow-up verification
 
+The remediation is published: member [2606168](https://github.com/helloimakeimpact/indus-orbit-india/commit/26061682e88fa0ffbd901bf78411c9718a42a413), admin [bfdba27](https://github.com/helloimakeimpact/admin-indus-orbit/commit/bfdba274ff16ce7781febceeb0c28f5cd0d5c494). Admin local 4fa8193 and remote bfdba27 have the identical tree `f9bbe57fa3fd9f4116a46caf78ae150d495f1953`; remote history remains preserved.
+
+All three GitHub workflows passed on those exact source commits:
+
+- [Member Quality](https://github.com/helloimakeimpact/indus-orbit-india/actions/runs/38377550741): zero audit findings, 214 units, 20 public/browser accessibility journeys, four guest/Turnstile journeys and 11 member continuity/review journeys, plus formatting, lint, types, production build and budgets.
+- [Database Quality](https://github.com/helloimakeimpact/indus-orbit-india/actions/runs/38377550910): fresh replay of all 128 migrations, the exact public type boundary plus 97 held Spaces differences, 35 SQL contracts / 1,143 assertions and zero-error public/private lint.
+- [Admin Quality](https://github.com/helloimakeimpact/admin-indus-orbit/actions/runs/38377910498): zero audit findings, 33 units, four public journeys and seven synthetic admin/MFA journeys, plus the full application gate.
+
+[Sanitized publication evidence](../release-evidence/finalization-2026-10-13/publication.json) records exact heads, jobs and excerpts. The slower duplicate local Storage guard test was interrupted after 19 passing assertions when stopping its stalled dedicated runtime; it is not claimed as a full local pass. The fresh GitHub database suite supplies the complete current-runtime Storage contract evidence. No live data was tested/deleted. The GitHub status API returned no Netlify acceptance status, so exact deployed frontend SHA remains unverified.
+
 The full member gate passes 214 unit tests, three package builds, formatting, lint, types and bundle budgets (1m40s). The full admin gate passes 33 unit tests, formatting, zero-warning lint, types, build and budgets (53.09s). Both dependency audits report zero findings. Exact follow-up source hashes, logs, Storage assertions and publication/CI outcomes are filed under `docs/release-evidence/finalization-2026-10-13/` separately from the initial source checkpoint.
 
 Privacy export/deletion workers and physical cleanup still await the owner's alternative retention/inventory rules. The proposed 90 days is not approved. Real suppliers, MFA/personas, staging delivery, recovery and public launch sign-off remain required; see [the handoff](PRODUCTION_STATUS_2026-10-13.md) and [owner actions](PRODUCTION_OWNER_ACTIONS.md).

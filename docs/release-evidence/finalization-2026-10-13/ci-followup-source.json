@@ -22,7 +22,7 @@
       "critical": 0,
       "total": 0
     },
-    "storage_guard_contract": "running; publication results recorded separately"
+    "storage_guard_contract": "Duplicate local run interrupted after 19 passing assertions on stalled isolated runtime; full current Storage contract passes in fresh GitHub 35-file/1143-assertion suite. See publication.json."
   },
   "initial_github_runs": {
     "member_quality": 38323587365,
