@@ -1,5 +1,7 @@
 # Production status — 18 October 2026
 
+Superseded for current publication/CI by [19 October status](PRODUCTION_STATUS_2026-10-19.md). This dated source checkpoint is retained.
+
 Overall **Partial** for full public production. This increment completes and verifies the bounded privacy source paths. It does not establish hosted release or whole-product production acceptance.
 
 ## Completed source

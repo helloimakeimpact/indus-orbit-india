@@ -1,0 +1,51 @@
+# Production status — 19 October 2026
+
+Source is committed and published; all three source workflows pass. See [exact commits and checks](SOURCE_PUBLICATION_2026-10-19.md). Overall **Partial** for full public production. This increment completes and verifies the bounded privacy source paths. It does not establish hosted release or whole-product production acceptance.
+
+## Completed source
+
+- Owner-delegated retention defaults replace the earlier pending worksheet. See [policy and exact limits](PRIVACY_EXECUTION_POLICY.md).
+- Service-only portable JSON exports over 34 explicit datasets, private seven-day artifacts, bounded five-minute links, request/version/lease checks, safe retry and assisted oversized requests.
+- Member Settings download, account-bound submission and late-link rejection after account changes; normal navigation/drafts survive tab return and token refresh.
+- MFA/capability/version-bound deletion approval, seven-day cancellation minimum, access freeze, ordinary-data erasure, confirmed physical Storage cleanup, then confirmed Auth soft deletion. Shared/legal/financial references retain a documented pseudonymous shell.
+- Subject/event holds with expiry/review date, audited placement/release and admin controls; started deletion recovery requires an explicit versioned decision.
+- Bounded guest identity/mail payload retention, expired export cleanup and orphan education-file cleanup. Retiring file paths cannot be replaced or newly referenced. Missing file/Auth confirmation never counts as completion.
+- Canonical documentation, generated RPC types and three new database contracts. Original brand/assets and **Intelligence, built together.** remain unchanged.
+
+## Verification
+
+Local and published source evidence: **236 member unit tests**, **35 admin unit tests**, **49 browser journeys** (13 member, 20 public, four configured guest/Turnstile, eight admin and four admin public), **38 SQL contracts / 1,237 assertions**, public/private schema lint, generated type boundary, application builds and bundle budgets. Privacy worker handlers contribute 20 unit checks. Edge entrypoints pass TypeScript against the installed pinned SDK with a minimal Deno declaration; this is not an actual deployed Edge invocation.
+
+All **130 source migrations** also pass a fresh managed Supabase replay in GitHub Database quality, with all 38 contracts / 1,237 assertions and zero-error schema lint. Types retain the existing **97 exact, hash-bound held Spaces differences**. Earlier local reconstruction of managed bootstrap objects was a synthetic checkpoint; the source CI follow-up now establishes the full managed-stack source gate. Production upgrade/real supplier/operator acceptance remains separate.
+
+Docker Desktop was restarted with explicit owner permission after its API hung. Only the isolated Indus database was manually started for these checks. No hosted migration/function or real data deletion was performed.
+
+## Security dependency refresh
+
+The 18 October audit found five critical dependency findings from [the TanStack reflected-XSS advisory](https://github.com/advisories/GHSA-qx66-fv34-fjm8). The source graph now pins patched Start 1.168.60/server-core 1.169.39 with router 1.170.41/plugin 1.168.42, preserving Vite 7 compatibility and one router context. Prettier remains pinned to the previously verified 3.8.2. Final audit and CI results belong to the publication evidence. The 19 October audit has zero findings; the router error component accepts the patched unknown-error contract and narrows debug rendering to Error instances.
+
+## External state — source 19 October; hosted snapshot 18 October
+
+- Member/backend code is published as `124de99`, with final managed-stack follow-up `3a8a3be`; admin code is published as `d765620` and matches the local `a130ff9` source tree exactly. All source workflows pass. Later commits record publication docs only. Branch metadata reports protection disabled; see [publication details](SOURCE_PUBLICATION_2026-10-19.md).
+- Correct Supabase project: **Indus Orbit / jpwvgpnbkrktipwhvqss**, ACTIVE_HEALTHY, ap-south-1, PostgreSQL 17.6.1.104. Read-only ledger still has **116 migrations**, latest `20260907090226`; **ten active functions**. The separately listed JRI Backup Replica is inactive; it is not an approved ready staging environment.
+- **Twelve explicitly reviewed forward migrations** and **seven new functions** await staged delivery. The seven are `public-form-submit`, `event-guest-session`, `event-email-worker`, `education-file-scan-worker`, `account-privacy-worker`, `privacy-retention-worker`, `account-deletion-worker`. Source count versus hosted count is not a deployment command.
+- Netlify/indusorbit.com remain the chosen public hosting path. A source push can trigger Netlify; exact deployed SHA and backend compatibility require acceptance.
+
+## Remaining work
+
+### Owner setup
+
+1. Arrange an approved separate staging backend/site and team access. Existing production identity is verified; no need to send database passwords in chat.
+2. Configure Turnstile for the approved domains, verify Resend `events@indusorbit.com`, and configure Auth SMTP/confirmation/recovery. Choose the upload malware scanner and region; OpenAI/DeepSeek do not replace that scanner.
+3. Onboard your real account with MFA as first host/reviewer; nominate a second independent root operator, admin hostname, privacy/support/incident/release owners and first real event schedule.
+4. Complete OpenAI/DeepSeek account, current model/data/commercial approvals and any finance scope actually exposed. Razorpay event tickets remain later scope.
+5. Participate in genuine member/host/admin, mobile/accessibility, supplier-failure and recovery acceptance, then approve launch.
+
+### Engineering and operations
+
+- Rehearse and deliver the twelve-file/seven-function backend release, pair both frontends, preserve existing hooks and verify Data API access closure, actual Auth/Storage cleanup, worker schedules and monitoring. Backfill legacy education scans before granting file access.
+- Complete assisted exports/deletions and documented handling of retained financial/security/case data; verify backup retention and restore replay. The ordinary JSON export excludes binary files and is not an automated full DSAR.
+- Deliver the applicable regulated retention/archive profile before **13 May 2027**; current code deliberately blocks automated closure from that date. Security/finance expiry remains reviewed operating work, not an implemented universal purge.
+- Verify provider/runtime/payment boundaries for exposed launch scope, branch protection, real operator recovery, exact Netlify deployment, public/legal claims and named sign-off.
+
+These are six launch workstreams: staging/delivery, service setup, operator acceptance, privacy/recovery, AI/runtime/finance, and final production sign-off. A defensible completion percentage cannot be inferred from test counts. Cohosts, QR check-in, follows, recurring series, uploaded covers and larger event paging are Planned product enhancements, separate from launch gates.

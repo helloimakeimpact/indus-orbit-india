@@ -2,7 +2,7 @@
 
 ## Current handoff — 18 October 2026
 
-The owner delegated retention choices on 15 October with **“use best practice”**. Earlier requests below to supply different rules are superseded. Read [the current status](PRODUCTION_STATUS_2026-10-18.md), [privacy policy](PRIVACY_EXECUTION_POLICY.md) and [delivery runbook](PRIVACY_EXECUTION_RUNBOOK.md). Bounded privacy source is locally Verified; full public production remains Partial. Twelve forward migrations, seven new functions, genuine service/operator acceptance and recovery delivery remain. No new retention worksheet is required from the owner.
+The owner delegated retention choices on 15 October with **“use best practice”**. Earlier requests below to supply different rules are superseded. Read [the current status](PRODUCTION_STATUS_2026-10-19.md), [privacy policy](PRIVACY_EXECUTION_POLICY.md) and [delivery runbook](PRIVACY_EXECUTION_RUNBOOK.md). Bounded privacy source is locally Verified; full public production remains Partial. Twelve forward migrations, seven new functions, genuine service/operator acceptance and recovery delivery remain. No new retention worksheet is required from the owner.
 
 ## Continued event review completion — 13 October 2026
 

@@ -28,3 +28,7 @@ The final compatible security-patched graph passes the complete member and admin
 The first published member/admin application workflows pass. Database CI successfully replays all 130 migrations and matches the exact type boundary, then exposes three fixture differences: profile table grants are absent in the clean stack, and current Storage blocks direct metadata DELETE. The follow-up tests grant only the inspected profile column inside their rollback transaction and model the Storage API’s transaction flag without removing its protection trigger (the same pattern already used by education quarantine tests). Production workers still use the Storage API exclusively.
 
 The closure migration now guards every active RLS table independently of table/column ACL defaults, while preserving the archived Loops zero-policy contract. This protects tables that gain scoped column access in the target environment. Hosted application of either privacy migration remains pending. Final managed-stack pass/fail is recorded only after the follow-up commit finishes CI.
+
+## Final source CI
+
+The follow-up member Quality (39252910174), Database quality (39252910170) and Admin quality (39222546225) all pass. The managed database job confirms Files=38, Tests=1237, Result=PASS after all 130 migrations and exact type generation. See `publication.json` and SOURCE_PUBLICATION_2026-10-19.md for exact tested commits and remaining hosted boundaries.

@@ -1,12 +1,16 @@
 # Indus Orbit living system record
 
+## Source publication — 19 October
+
+Completed source is committed/published; member Quality, Database quality and Admin quality all pass. [Exact publication](SOURCE_PUBLICATION_2026-10-19.md) records 130-migration managed replay, 1,237 SQL assertions, 271 units and 49 browser journeys. [Current production status](PRODUCTION_STATUS_2026-10-19.md) remains Partial until hosted service/operator/recovery acceptance.
+
 ## Final source checks — 19 October
 
-The final local gates pass 236 member units, 35 admin units and 49 browser journeys; dependency audits are clean after the TanStack security patch. [The current production report](PRODUCTION_STATUS_2026-10-18.md) and [exact evidence](../release-evidence/finalization-2026-10-18/verification.md) distinguish completed source from hosted delivery. Source publication/CI is recorded separately after verification.
+The final local gates pass 236 member units, 35 admin units and 49 browser journeys; dependency audits are clean after the TanStack security patch. [The current production report](PRODUCTION_STATUS_2026-10-19.md) and [exact evidence](../release-evidence/finalization-2026-10-18/verification.md) distinguish completed source from hosted delivery. Source publication/CI is recorded separately after verification.
 
 ## Current handoff — 18 October 2026
 
-The owner delegated retention choices on 15 October with **“use best practice”**. Earlier requests below to supply different rules are superseded. Read [the current status](PRODUCTION_STATUS_2026-10-18.md), [privacy policy](PRIVACY_EXECUTION_POLICY.md) and [delivery runbook](PRIVACY_EXECUTION_RUNBOOK.md). Bounded privacy source is locally Verified; full public production remains Partial. Twelve forward migrations, seven new functions, genuine service/operator acceptance and recovery delivery remain. No new retention worksheet is required from the owner.
+The owner delegated retention choices on 15 October with **“use best practice”**. Earlier requests below to supply different rules are superseded. Read [the current status](PRODUCTION_STATUS_2026-10-19.md), [privacy policy](PRIVACY_EXECUTION_POLICY.md) and [delivery runbook](PRIVACY_EXECUTION_RUNBOOK.md). Bounded privacy source is locally Verified; full public production remains Partial. Twelve forward migrations, seven new functions, genuine service/operator acceptance and recovery delivery remain. No new retention worksheet is required from the owner.
 
 ## Source publication and CI remediation — 13 October
 

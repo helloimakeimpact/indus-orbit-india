@@ -1,24 +1,11 @@
-# Privacy and retention rules to supply
+# Privacy policy decision record
 
-## Current handoff — 18 October 2026
+Status: **Verified** for the recorded owner decision and bounded source; hosted privacy operation **Partial**.
 
-The owner delegated retention choices on 15 October with **“use best practice”**. Earlier requests below to supply different rules are superseded. Read [the current status](PRODUCTION_STATUS_2026-10-18.md), [privacy policy](PRIVACY_EXECUTION_POLICY.md) and [delivery runbook](PRIVACY_EXECUTION_RUNBOOK.md). Bounded privacy source is locally Verified; full public production remains Partial. Twelve forward migrations, seven new functions, genuine service/operator acceptance and recovery delivery remain. No new retention worksheet is required from the owner.
+On 7 October the owner planned to provide different retention rules. On **15 October 2026**, the owner instead answered **“use best practice”**, delegating the selection. That later instruction supersedes the blank worksheet and repeated requests for different rules.
 
-The table below is a historical blank worksheet. The selected policy now lives in PRIVACY_EXECUTION_POLICY.md; it is not an unresolved prerequisite.
+The selected periods, processing clocks, legal floors, holds and coverage limits are now maintained in [PRIVACY_EXECUTION_POLICY.md](PRIVACY_EXECUTION_POLICY.md). Do not treat this file as an unanswered owner prerequisite or duplicate the policy here.
 
-Status: **Blocked** for production privacy execution: owner policy is required. On 7 October 2026 the owner chose “I’ll provide different retention rules” instead of approving the proposed 90-day event guest rule. No 90-day rule is approved or applied.
+Source implements bounded JSON export, reviewed deletion, subject/event holds and physical-file cleanup through trusted workers. [The delivery runbook](PRIVACY_EXECUTION_RUNBOOK.md) separates local/source verification from real Auth/Storage, backup, assisted requests, applicable archive requirements and hosted activation. The final [production report](PRODUCTION_STATUS_2026-10-19.md) and [owner actions](PRODUCTION_OWNER_ACTIONS.md) name the remaining work.
 
-Provide duration, starting point, deletion/anonymization action, export inclusion and safety/legal-hold treatment for each row. Engineering can then implement the exact rules and verify them with synthetic fixtures before any hosted execution.
-
-| Data family                                                          | Duration and starting point | End action     | Export inclusion | Holds/exceptions |
-| -------------------------------------------------------------------- | --------------------------- | -------------- | ---------------- | ---------------- |
-| Guest name/email and registration status                             | Awaiting owner              | Awaiting owner | Awaiting owner   | Awaiting owner   |
-| Attendance/check-in and event history                                | Awaiting owner              | Awaiting owner | Awaiting owner   | Awaiting owner   |
-| Transactional email recipient/payload/delivery evidence              | Awaiting owner              | Awaiting owner | Awaiting owner   | Awaiting owner   |
-| Account/profile/onboarding and location consent                      | Awaiting owner              | Awaiting owner | Awaiting owner   | Awaiting owner   |
-| Conversations, uploaded objects and scanner verdicts                 | Awaiting owner              | Awaiting owner | Awaiting owner   | Awaiting owner   |
-| I/O/terminal metadata, payment evidence and audit/moderation history | Awaiting owner              | Awaiting owner | Awaiting owner   | Awaiting owner   |
-
-Also specify who approves holds/releases, export format, identity verification, request response target and deletion verification. Existing secure credential expiry is separate from personal-data retention. Guest marketing subscription remains opt-in; event registration does not subscribe a guest.
-
-The current privacy request/review queue remains available. Export artifact creation and account/personal-data purge remain unfinished until this inventory and policy are approved. Production worker execution stays disabled; source development does not authorize deletion of real data.
+Future policy changes should update the canonical policy, implementation, versioned evidence and release plan together. No source decision authorizes deletion of real production data automatically.

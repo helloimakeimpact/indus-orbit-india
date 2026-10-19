@@ -1,0 +1,51 @@
+{
+  "observed_date": "2026-10-19",
+  "state": "Verified",
+  "scope": "Published source and CI; hosted backend activation remains Partial",
+  "member": {
+    "code_commit": "124de9969478a136d49d62a6041afc5c54800e2e",
+    "managed_stack_followup": "3a8a3bee5cf2fe8216dbc5e044005dadbc7dddbf",
+    "quality": {
+      "run": 39252910174,
+      "conclusion": "success",
+      "url": "https://github.com/helloimakeimpact/indus-orbit-india/actions/runs/39252910174"
+    },
+    "database": {
+      "run": 39252910170,
+      "conclusion": "success",
+      "url": "https://github.com/helloimakeimpact/indus-orbit-india/actions/runs/39252910170",
+      "migration_replay": 130,
+      "contracts": 38,
+      "assertions": 1237,
+      "type_boundary": "97 exact hash-bound held Spaces differences",
+      "schema_lint": "passed"
+    }
+  },
+  "admin": {
+    "local_code_commit": "a130ff993dc52b4444c2009c19d150f28f6df90f",
+    "published_code_commit": "d765620f44146f0b4e372532ebd6256a66a372cd",
+    "exact_tree": "56bc4dc1b2f84c765ee5eba8b82e36ccfe1b9fa1",
+    "publication": "GitHub app; parent c01358e950058916551b68684b57afc567af4280; expected-head non-forced update; local and remote trees identical",
+    "quality": {
+      "run": 39222546225,
+      "conclusion": "success",
+      "url": "https://github.com/helloimakeimpact/admin-indus-orbit/actions/runs/39222546225"
+    }
+  },
+  "verification": {
+    "member_units": 236,
+    "admin_units": 35,
+    "browser_journeys": 49,
+    "dependency_audits": "zero findings"
+  },
+  "hosted": {
+    "last_read_only_snapshot": "2026-10-18",
+    "project": "jpwvgpnbkrktipwhvqss",
+    "migrations": 116,
+    "active_functions": 10,
+    "pending_reviewed_forward_migrations": 12,
+    "pending_new_functions": 7,
+    "mutations_performed": false,
+    "netlify_deployed_sha": "not established; GitHub commit status API supplies no Netlify status"
+  }
+}
