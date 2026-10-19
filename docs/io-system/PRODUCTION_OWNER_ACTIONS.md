@@ -1,5 +1,11 @@
 # Full public production launch — owner actions
 
+## Current handoff — 18 October 2026
+
+The owner delegated retention choices on 15 October with **“use best practice”**. Earlier requests below to supply different rules are superseded. Read [the current status](PRODUCTION_STATUS_2026-10-18.md), [privacy policy](PRIVACY_EXECUTION_POLICY.md) and [delivery runbook](PRIVACY_EXECUTION_RUNBOOK.md). Bounded privacy source is locally Verified; full public production remains Partial. Twelve forward migrations, seven new functions, genuine service/operator acceptance and recovery delivery remain. No new retention worksheet is required from the owner.
+
+Your next actions are staging access, Turnstile/Resend/Auth SMTP and scanner setup, real host/MFA/second-root onboarding, provider/finance approvals for exposed scope, and launch acceptance. Engineering owns the reviewed rollout, real worker/supplier checks and recovery rehearsal.
+
 ## What you need to do next — 13 October
 
 Completed source is committed and published in both repositories; all three GitHub workflows pass. See [the exact publication and CI record](SOURCE_PUBLICATION_2026-10-13.md). You do not need to recommission the brand or write code. Full public launch remains Partial.

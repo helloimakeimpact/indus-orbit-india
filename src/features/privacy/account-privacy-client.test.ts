@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { parseAccountPrivacyRequests } from "./account-privacy-contract";
+import {
+  parseAccountPrivacyRequests,
+  parseAccountExportDownload,
+} from "./account-privacy-contract";
 
 describe("account privacy request contract", () => {
   it("keeps only complete caller-bound request projections", () => {
@@ -39,4 +42,34 @@ describe("account privacy request contract", () => {
       [],
     );
   });
+});
+
+const subject = "96900000-0000-4000-8000-000000000001";
+const request = "96900000-0000-4000-8000-000000000002";
+const exportProjection = {
+  bucket: "account-exports",
+  path: `${subject}/${request}/96900000-0000-4000-8000-000000000003.json`,
+  sha256: "a".repeat(64),
+  byte_size: 120,
+  expires_in: 300,
+};
+it("accepts only a short-lived export bound to this account and request", () => {
+  assert.equal(parseAccountExportDownload(exportProjection, subject, request).expiresIn, 300);
+  assert.throws(() => parseAccountExportDownload(exportProjection, request, request));
+  assert.throws(() => parseAccountExportDownload(exportProjection, subject, subject));
+});
+it("rejects untrusted export buckets, traversal, invalid digest, size and lifetime", () => {
+  for (const patch of [
+    { bucket: "education" },
+    { path: `${subject}/${request}/../secret.json` },
+    { sha256: "bad" },
+    { byte_size: 0 },
+    { byte_size: 5242881 },
+    { expires_in: 301 },
+    { expires_in: 0 },
+  ]) {
+    assert.throws(() =>
+      parseAccountExportDownload({ ...exportProjection, ...patch }, subject, request),
+    );
+  }
 });

@@ -6436,6 +6436,107 @@ export type Database = {
       };
     };
     Functions: {
+      enforce_account_access: { Args: never; Returns: undefined };
+      account_deletion_current: {
+        Args: { _lease_token: string; _request_id: string };
+        Returns: boolean;
+      };
+      account_export_current: {
+        Args: { _lease_token: string; _request_id: string };
+        Returns: boolean;
+      };
+      account_identity_removed: {
+        Args: { _lease_token: string; _request_id: string };
+        Returns: boolean;
+      };
+      admin_place_privacy_hold: {
+        Args: {
+          _event_id: string;
+          _held_until: string;
+          _id: string;
+          _reason: string;
+          _review_at: string;
+          _subject_user_id: string;
+        };
+        Returns: Json;
+      };
+      admin_privacy_hold_queue: { Args: never; Returns: Json };
+      admin_release_privacy_hold: {
+        Args: { _id: string; _reason: string };
+        Returns: Json;
+      };
+      advance_account_deletion: {
+        Args: { _lease_token: string; _request_id: string };
+        Returns: Json;
+      };
+      build_account_export: {
+        Args: { _lease_token: string; _request_id: string };
+        Returns: Json;
+      };
+      claim_account_deletion: { Args: never; Returns: Json };
+      claim_account_export: { Args: never; Returns: Json };
+      claim_privacy_file_cleanup: { Args: never; Returns: Json };
+      complete_account_deletion: {
+        Args: { _lease_token: string; _request_id: string };
+        Returns: boolean;
+      };
+      complete_account_export: {
+        Args: {
+          _byte_size: number;
+          _lease_token: string;
+          _request_id: string;
+          _sha256: string;
+        };
+        Returns: boolean;
+      };
+      complete_privacy_file_cleanup: {
+        Args: { _lease_token: string; _object_id: string; _succeeded: boolean };
+        Returns: boolean;
+      };
+      defer_account_deletion: {
+        Args: { _failed: boolean; _lease_token: string; _request_id: string };
+        Returns: boolean;
+      };
+      erase_closed_account_data: {
+        Args: { _lease_token: string; _request_id: string };
+        Returns: Json;
+      };
+      fail_account_export: {
+        Args: { _error_code: string; _lease_token: string; _request_id: string };
+        Returns: boolean;
+      };
+      get_my_account_export: { Args: { _request_id: string }; Returns: Json };
+      privacy_file_cleanup_current: {
+        Args: { _lease_token: string; _object_id: string };
+        Returns: boolean;
+      };
+      request_my_account_privacy_action_v2: {
+        Args: {
+          _client_request_id?: string;
+          _confirmation_text?: string;
+          _expected_user_id: string;
+          _member_note?: string;
+          _request_type: string;
+        };
+        Returns: Json;
+      };
+      retry_account_deletion: {
+        Args: {
+          _expected_version: number;
+          _reason: string;
+          _request_id: string;
+        };
+        Returns: Json;
+      };
+      run_privacy_retention_batch: { Args: never; Returns: Json };
+      schedule_account_deletion: {
+        Args: {
+          _expected_version: number;
+          _reason: string;
+          _request_id: string;
+        };
+        Returns: Json;
+      };
       admin_content_queue_revision: {
         Args: { _content_type?: string; _limit?: number; _status?: string };
         Returns: {

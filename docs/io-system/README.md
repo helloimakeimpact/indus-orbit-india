@@ -1,5 +1,13 @@
 # Indus Orbit living system record
 
+## Final source checks — 19 October
+
+The final local gates pass 236 member units, 35 admin units and 49 browser journeys; dependency audits are clean after the TanStack security patch. [The current production report](PRODUCTION_STATUS_2026-10-18.md) and [exact evidence](../release-evidence/finalization-2026-10-18/verification.md) distinguish completed source from hosted delivery. Source publication/CI is recorded separately after verification.
+
+## Current handoff — 18 October 2026
+
+The owner delegated retention choices on 15 October with **“use best practice”**. Earlier requests below to supply different rules are superseded. Read [the current status](PRODUCTION_STATUS_2026-10-18.md), [privacy policy](PRIVACY_EXECUTION_POLICY.md) and [delivery runbook](PRIVACY_EXECUTION_RUNBOOK.md). Bounded privacy source is locally Verified; full public production remains Partial. Twelve forward migrations, seven new functions, genuine service/operator acceptance and recovery delivery remain. No new retention worksheet is required from the owner.
+
 ## Source publication and CI remediation — 13 October
 
 Read [the publication record](SOURCE_PUBLICATION_2026-10-13.md) for the published member/admin commits, dependency remediation, approved-domain metadata and Storage fixture compatibility. Full public production remains Partial. Earlier dated entries retain their original checkpoint boundaries.

@@ -1,0 +1,39 @@
+{
+  "date": "2026-10-18",
+  "member_before": {
+    "info": 0,
+    "low": 0,
+    "moderate": 0,
+    "high": 0,
+    "critical": 5,
+    "total": 5
+  },
+  "admin": {
+    "info": 0,
+    "low": 0,
+    "moderate": 0,
+    "high": 0,
+    "critical": 0,
+    "total": 0
+  },
+  "remediation": {
+    "advisory": "https://github.com/advisories/GHSA-qx66-fv34-fjm8",
+    "react_start": "1.168.60",
+    "start_server_core": "1.169.39",
+    "react_router": "1.170.41",
+    "router_plugin": "1.168.42",
+    "formatter": "3.8.2",
+    "reason": "Patch critical reflected XSS; preserve Vite 7 compatibility, one router context and previous formatter."
+  },
+  "member_after": {
+    "observed_date": "2026-10-19",
+    "vulnerabilities": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 0,
+      "critical": 0,
+      "total": 0
+    }
+  }
+}

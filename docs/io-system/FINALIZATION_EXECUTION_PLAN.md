@@ -1,5 +1,9 @@
 # Indus Orbit full finalization execution plan
 
+## Current handoff — 18 October 2026
+
+The owner delegated retention choices on 15 October with **“use best practice”**. Earlier requests below to supply different rules are superseded. Read [the current status](PRODUCTION_STATUS_2026-10-18.md), [privacy policy](PRIVACY_EXECUTION_POLICY.md) and [delivery runbook](PRIVACY_EXECUTION_RUNBOOK.md). Bounded privacy source is locally Verified; full public production remains Partial. Twelve forward migrations, seven new functions, genuine service/operator acceptance and recovery delivery remain. No new retention worksheet is required from the owner.
+
 ## Continued event review completion — 13 October 2026
 
 [The latest handoff](PRODUCTION_STATUS_2026-10-13.md) closes the remaining chapter/separate-admin versionless event-decision paths and makes published-event withdrawal cancel/notify guests atomically. Source has 128 migration files and ten explicitly reviewed forward releases; backend delivery precedes activation of the new flows, and older event commands fail closed. The owner authorized source commit/push. Local source gates and real hosted/operator acceptance remain distinct. Privacy export/purge/physical cleanup still depends on the owner's actual retention/export/hold rules; 90 days is unapproved. Current release work is organized into the six remaining workstreams in the handoff. Earlier checkpoints below are historical.

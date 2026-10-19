@@ -1,5 +1,9 @@
 # Indus Orbit code completion register
 
+## Current handoff — 18 October 2026
+
+The owner delegated retention choices on 15 October with **“use best practice”**. Earlier requests below to supply different rules are superseded. Read [the current status](PRODUCTION_STATUS_2026-10-18.md), [privacy policy](PRIVACY_EXECUTION_POLICY.md) and [delivery runbook](PRIVACY_EXECUTION_RUNBOOK.md). Bounded privacy source is locally Verified; full public production remains Partial. Twelve forward migrations, seven new functions, genuine service/operator acceptance and recovery delivery remain. No new retention worksheet is required from the owner.
+
 ## Publication and CI follow-up — 13 October
 
 Final remediation commits are published and **Verified** by all three GitHub workflows: 214 member units, 33 admin units, 46 synthetic/public browser journeys across both apps, fresh 128-migration replay, exact types and 35 SQL files / 1,143 assertions. Exact source heads and logs are in [publication evidence](../release-evidence/finalization-2026-10-13/publication.json). Full production remains **Partial**.

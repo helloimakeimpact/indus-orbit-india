@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Download, Loader2, ShieldAlert, Trash2, X } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   cancelMyAccountPrivacyRequest,
+  getMyAccountExportDownload,
   listMyAccountPrivacyRequests,
   requestMyAccountPrivacyAction,
   type AccountPrivacyRequest,
@@ -16,20 +18,39 @@ import {
 const cancellableStates = new Set(["submitted", "reviewing", "blocked", "ready"]);
 
 export function AccountPrivacySettings() {
+  const { user } = useAuth();
+  return user ? <AccountPrivacySettingsForAccount key={user.id} userId={user.id} /> : null;
+}
+
+function AccountPrivacySettingsForAccount({ userId }: { userId: string }) {
+  const active = useRef(true);
+  useLayoutEffect(() => {
+    active.current = true;
+    return () => {
+      active.current = false;
+    };
+  }, []);
   const [requests, setRequests] = useState<AccountPrivacyRequest[]>([]);
   const [memberNote, setMemberNote] = useState("");
   const [deletionConfirmation, setDeletionConfirmation] = useState("");
   const [loading, setLoading] = useState(true);
+  const [observedAt, setObservedAt] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = window.setInterval(() => setObservedAt(Date.now()), 30000);
+    return () => window.clearInterval(timer);
+  }, []);
   const [busy, setBusy] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      setRequests(await listMyAccountPrivacyRequests());
+      const rows = await listMyAccountPrivacyRequests();
+      if (active.current) setRequests(rows);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Privacy requests could not load.");
+      if (active.current)
+        toast.error(error instanceof Error ? error.message : "Privacy requests could not load.");
     } finally {
-      setLoading(false);
+      if (active.current) setLoading(false);
     }
   }, []);
 
@@ -40,7 +61,7 @@ export function AccountPrivacySettings() {
   async function submit(type: AccountPrivacyRequestType) {
     if (busy) return;
     if (type === "deletion" && deletionConfirmation.trim() !== "DELETE MY ACCOUNT") {
-      toast.error("Type DELETE MY ACCOUNT exactly before requesting deletion.");
+      if (active.current) toast.error("Type DELETE MY ACCOUNT exactly before requesting deletion.");
       return;
     }
     const accepted = window.confirm(
@@ -52,18 +73,22 @@ export function AccountPrivacySettings() {
     setBusy(type);
     try {
       await requestMyAccountPrivacyAction({
+        expectedUserId: userId,
         type,
         memberNote,
         confirmationText: type === "deletion" ? deletionConfirmation : undefined,
       });
+      if (!active.current) return;
       setMemberNote("");
       setDeletionConfirmation("");
       await load();
-      toast.success(type === "export" ? "Data export requested." : "Account deletion requested.");
+      if (active.current)
+        toast.success(type === "export" ? "Data export requested." : "Account deletion requested.");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Privacy request failed.");
+      if (active.current)
+        toast.error(error instanceof Error ? error.message : "Privacy request failed.");
     } finally {
-      setBusy(null);
+      if (active.current) setBusy(null);
     }
   }
 
@@ -72,14 +97,40 @@ export function AccountPrivacySettings() {
     setBusy(request.id);
     try {
       await cancelMyAccountPrivacyRequest(request);
+      if (!active.current) return;
       await load();
-      toast.success("Privacy request cancelled.");
+      if (active.current) toast.success("Privacy request cancelled.");
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Privacy request could not be cancelled.",
-      );
+      if (active.current)
+        toast.error(
+          error instanceof Error ? error.message : "Privacy request could not be cancelled.",
+        );
     } finally {
-      setBusy(null);
+      if (active.current) setBusy(null);
+    }
+  }
+
+  async function download(request: AccountPrivacyRequest) {
+    if (busy) return;
+    setBusy(request.id);
+    try {
+      const href = await getMyAccountExportDownload(userId, request.id);
+      if (!active.current) return;
+      const anchor = document.createElement("a");
+      anchor.href = href;
+      anchor.download = "indus-orbit-account-export.json";
+      anchor.target = "_blank";
+      anchor.rel = "noopener noreferrer";
+      document.body.append(anchor);
+      anchor.click();
+      anchor.remove();
+    } catch (error) {
+      if (active.current)
+        toast.error(
+          error instanceof Error ? error.message : "Your download could not be prepared.",
+        );
+    } finally {
+      if (active.current) setBusy(null);
     }
   }
 
@@ -89,14 +140,17 @@ export function AccountPrivacySettings() {
         <div className="flex items-start gap-2">
           <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-[var(--saffron-deep)]" />
           <p>
-            Export and deletion use an auditable request instead of a destructive browser action.
-            Nothing is marked ready or deleted until an authorized worker completes the approved
-            data inventory and retention checks.
+            Your export includes account records and file details as JSON. File contents and some
+            financial or safety records may need help from our privacy team. Downloads expire after
+            seven days. Deletion is reviewed, with at least seven days from your request before
+            processing can begin. You can cancel until processing starts. Required financial and
+            safety records may be retained.
           </p>
         </div>
       </div>
 
       <Textarea
+        aria-label="Optional note for the privacy team"
         value={memberNote}
         onChange={(event) => setMemberNote(event.target.value)}
         maxLength={500}
@@ -160,6 +214,21 @@ export function AccountPrivacySettings() {
                   <Badge variant="outline" className="capitalize">
                     {request.state}
                   </Badge>
+                  {request.type === "export" &&
+                  request.state === "ready" &&
+                  request.artifactExpiresAt &&
+                  Date.parse(request.artifactExpiresAt) > observedAt ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={busy !== null}
+                      onClick={() => void download(request)}
+                    >
+                      {busy === request.id ? <Loader2 className="animate-spin" /> : <Download />}
+                      Download
+                    </Button>
+                  ) : null}
                   {cancellableStates.has(request.state) ? (
                     <Button
                       type="button"
@@ -174,6 +243,13 @@ export function AccountPrivacySettings() {
                   ) : null}
                 </div>
               </div>
+              {request.type === "export" &&
+              request.state === "ready" &&
+              request.artifactExpiresAt ? (
+                <p className="mt-2 text-muted-foreground">
+                  Download available until {new Date(request.artifactExpiresAt).toLocaleString()}.
+                </p>
+              ) : null}
               {request.operatorNote ? (
                 <p className="mt-2 rounded-lg bg-muted/45 p-2 text-muted-foreground">
                   Privacy team: {request.operatorNote}

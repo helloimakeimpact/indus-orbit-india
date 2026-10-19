@@ -1,0 +1,99 @@
+{
+  "observed_date": "2026-10-18",
+  "access": "Read-only metadata; no hosted mutations",
+  "project": {
+    "id": "jpwvgpnbkrktipwhvqss",
+    "ref": "jpwvgpnbkrktipwhvqss",
+    "organization_id": "tcjkqlnotjoiaicqxvpo",
+    "organization_slug": "tcjkqlnotjoiaicqxvpo",
+    "name": "Indus Orbit",
+    "region": "ap-south-1",
+    "status": "ACTIVE_HEALTHY",
+    "database": {
+      "host": "db.jpwvgpnbkrktipwhvqss.supabase.co",
+      "version": "17.6.1.104",
+      "postgres_engine": "17",
+      "release_channel": "ga"
+    },
+    "created_at": "2026-04-20T06:02:23.993363Z"
+  },
+  "other_projects": [
+    {
+      "id": "ghggdotolpmjkiqiecag",
+      "name": "JRI Backup Replica",
+      "status": "INACTIVE"
+    }
+  ],
+  "migration_count": 116,
+  "latest_migration": {
+    "version": "20260907090226",
+    "name": "add_final_fk_covering_indexes"
+  },
+  "functions": [
+    {
+      "slug": "resend-email-dispatcher",
+      "status": "ACTIVE",
+      "version": 16,
+      "verify_jwt": true
+    },
+    {
+      "slug": "io-gateway",
+      "status": "ACTIVE",
+      "version": 28,
+      "verify_jwt": true
+    },
+    {
+      "slug": "io-openai",
+      "status": "ACTIVE",
+      "version": 12,
+      "verify_jwt": false
+    },
+    {
+      "slug": "io-provider-conformance",
+      "status": "ACTIVE",
+      "version": 3,
+      "verify_jwt": false
+    },
+    {
+      "slug": "notification-email-worker",
+      "status": "ACTIVE",
+      "version": 2,
+      "verify_jwt": false
+    },
+    {
+      "slug": "orbit-attachment-scan-webhook",
+      "status": "ACTIVE",
+      "version": 2,
+      "verify_jwt": false
+    },
+    {
+      "slug": "io-payment-webhook",
+      "status": "ACTIVE",
+      "version": 2,
+      "verify_jwt": false
+    },
+    {
+      "slug": "io-payments",
+      "status": "ACTIVE",
+      "version": 3,
+      "verify_jwt": true
+    },
+    {
+      "slug": "orbit-attachment-scan-worker",
+      "status": "ACTIVE",
+      "version": 1,
+      "verify_jwt": true
+    },
+    {
+      "slug": "io-health-probe",
+      "status": "ACTIVE",
+      "version": 1,
+      "verify_jwt": true
+    }
+  ],
+  "github_before_publication": {
+    "member": "8780d026ecfde611a34979325995e28a9146ee51",
+    "admin": "c01358e950058916551b68684b57afc567af4280",
+    "branches_protected": false
+  }
+}

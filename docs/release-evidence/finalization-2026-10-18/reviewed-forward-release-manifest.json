@@ -1,0 +1,62 @@
+{
+  "scope": "Explicit forward source release; historical aliases and held Spaces require separate review. This is not authorization to apply hosted migrations.",
+  "migrations": [
+    {
+      "file": "20261002110000_reconcile_proposal_identity_and_retire_legacy_member_removal.sql",
+      "sha256": "8931255b42a6b1f2acfff8153efe2ca2e507ed84860a05e5273942c21aeb67b5"
+    },
+    {
+      "file": "20261002120000_trust_vouch_issuance_and_education_grading.sql",
+      "sha256": "738d2cb6c4cb89609e04aeecf9d36c37839c4cfdfbfedd15926578983b90c94b"
+    },
+    {
+      "file": "20261002130000_scope_private_education_files.sql",
+      "sha256": "64362a395313b7870fa0c6c19a98691ef1f10817b52f0334daf21e48b5983741"
+    },
+    {
+      "file": "20261002180809_require_verified_public_form_submissions.sql",
+      "sha256": "1b504528bb8e7c10e85c82adc226ad571ed4436fce6f0e3aeca4b4ae35e01071"
+    },
+    {
+      "file": "20261002201815_secure_community_event_discovery_and_registration.sql",
+      "sha256": "826ee4c7aedfa87e4fc5a70d755ba9ab26658542f13dd0d82546eb604dddcf2c"
+    },
+    {
+      "file": "20261002224602_public_event_guest_registration.sql",
+      "sha256": "33ba5e0b55f38515d2490b5a5c78e5eaf86d80e6ba448ef507bea7a3a970e479"
+    },
+    {
+      "file": "20261003100000_version_host_event_edits.sql",
+      "sha256": "1e99d2cf6485a12ac004c455b539f0de421d28d50e5562c5f48e79297a095c59"
+    },
+    {
+      "file": "20261007175816_durable_event_communications.sql",
+      "sha256": "5cd03756e31dac5b908136f9980599c15997bb0bd158dc73a2b6b354319ddffc"
+    },
+    {
+      "file": "20261008094623_education_upload_quarantine.sql",
+      "sha256": "72b5c48da9a2fd41072f243c473aa2b207e10d66a3cd1f77d699587305398214"
+    },
+    {
+      "file": "20261012220739_require_event_review_versions.sql",
+      "sha256": "1219bd6aed1c86a7a996df3c886cc8245fd004dc1c687ae08738de9e7b1228ac"
+    },
+    {
+      "file": "20261015114301_account_privacy_execution.sql",
+      "sha256": "dca1b880435755a05de54fee89676638ce45ccb726184bd933336d6ea8596a3f"
+    },
+    {
+      "file": "20261015115417_account_privacy_closure.sql",
+      "sha256": "238859cf109d133a6a49b64d02c27869d0ce4aad74e975fc9bc8fc0250bc04bd"
+    }
+  ],
+  "candidate_functions": [
+    "public-form-submit",
+    "event-guest-session",
+    "event-email-worker",
+    "education-file-scan-worker",
+    "account-privacy-worker",
+    "privacy-retention-worker",
+    "account-deletion-worker"
+  ]
+}

@@ -88,3 +88,35 @@ export function parseAccountPrivacyRequests(value: unknown): AccountPrivacyReque
     ];
   });
 }
+
+export function parseAccountExportDownload(value: unknown, userId: string, requestId: string) {
+  const row = record(value);
+  const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  const parts = typeof row?.path === "string" ? row.path.split("/") : [];
+  if (
+    !row ||
+    !uuid.test(userId) ||
+    !uuid.test(requestId) ||
+    row.bucket !== "account-exports" ||
+    parts.length !== 3 ||
+    parts[0] !== userId ||
+    parts[1] !== requestId ||
+    !parts[2].endsWith(".json") ||
+    !uuid.test(parts[2].slice(0, -5)) ||
+    typeof row.sha256 !== "string" ||
+    !/^[0-9a-f]{64}$/.test(row.sha256) ||
+    !Number.isInteger(row.byte_size) ||
+    (row.byte_size as number) < 1 ||
+    (row.byte_size as number) > 5 * 1024 * 1024 ||
+    !Number.isInteger(row.expires_in) ||
+    (row.expires_in as number) < 1 ||
+    (row.expires_in as number) > 300
+  ) {
+    throw new Error("Your export is unavailable. Refresh your request history and try again.");
+  }
+  return {
+    bucket: "account-exports",
+    path: row.path as string,
+    expiresIn: row.expires_in as number,
+  };
+}

@@ -1,0 +1,29 @@
+{
+  "verified_date": "2026-10-19",
+  "state": "Verified",
+  "environment": "local synthetic/intercepted; no hosted changes",
+  "member": {
+    "units": 236,
+    "member_browser": 13,
+    "public_browser": 20,
+    "configured_guest_browser": 4,
+    "verify": "passed; formatting/lint/types/three package builds/production build/budgets",
+    "audit_findings": 0
+  },
+  "admin": {
+    "units": 35,
+    "admin_browser": 8,
+    "public_browser": 4,
+    "verify": "passed; formatting/types/lint/build/budgets",
+    "audit_findings": 0
+  },
+  "database": {
+    "verified_date": "2026-10-18",
+    "contracts": 38,
+    "assertions": 1237,
+    "source_migrations": 130,
+    "boundary": "database-only synthetic replay with reconstructed managed bootstrap; production upgrade unverified"
+  },
+  "total_browser_journeys": 49,
+  "source_ci": "Pending publication checks; never inferred from local results"
+}

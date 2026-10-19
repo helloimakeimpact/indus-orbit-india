@@ -34,3 +34,13 @@ verify_jwt = false
 
 [functions.education-file-scan-worker]
 verify_jwt = false
+
+# Disabled until an operator configures the verified privacy environment.
+[functions.account-privacy-worker]
+verify_jwt = false
+
+[functions.privacy-retention-worker]
+verify_jwt = false
+
+[functions.account-deletion-worker]
+verify_jwt = false

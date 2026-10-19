@@ -1,0 +1,235 @@
+{
+  "environment": "isolated synthetic PostgreSQL 17.6; reconstructed managed bootstrap; no hosted writes",
+  "contracts": 38,
+  "assertions": 1237,
+  "results": [
+    {
+      "file": "account_privacy_closure.test.sql",
+      "passed": 39,
+      "exit": 0,
+      "failures": []
+    },
+    {
+      "file": "account_privacy_execution.test.sql",
+      "passed": 28,
+      "exit": 0,
+      "failures": []
+    },
+    {
+      "file": "admin_member_support_and_audit.test.sql",
+      "passed": 33,
+      "exit": 0,
+      "failures": []
+    },
+    {
+      "file": "admin_trust_report_commands.test.sql",
+      "passed": 19,
+      "exit": 0,
+      "failures": []
+    },
+    {
+      "file": "anonymous_definer_acl.test.sql",
+      "passed": 24,
+      "exit": 0,
+      "failures": []
+    },
+    {
+      "file": "chapter_mission_space_foundation.test.sql",
+      "passed": 57,
+      "exit": 0,
+      "failures": []
+    },
+    {
+      "file": "community_events.test.sql",
+      "passed": 49,
+      "exit": 0,
+      "failures": []
+    },
+    {
+      "file": "direct_message_rpc.test.sql",
+      "passed": 47,
+      "exit": 0,
+      "failures": []
+    },
+    {
+      "file": "education_storage_visibility.test.sql",
+      "passed": 11,
+      "exit": 0,
+      "failures": []
+    },
+    {
+      "file": "education_upload_quarantine.test.sql",
+      "passed": 32,
+      "exit": 0,
+      "failures": []
+    },
+    {
+      "file": "event_communications.test.sql",
+      "passed": 46,
+      "exit": 0,
+      "failures": []
+    },
+    {
+      "file": "event_edit_history.test.sql",
+      "passed": 35,
+      "exit": 0,
+      "failures": []
+    },
+    {
+      "file": "event_review_versions.test.sql",
+      "passed": 51,
+      "exit": 0,
+      "failures": []
+    },
+    {
+      "file": "io_endpoint_eligibility.test.sql",
+      "passed": 43,
+      "exit": 0,
+      "failures": []
+    },
+    {
+      "file": "io_finance_razorpay_fx_contract.test.sql",
+      "passed": 23,
+      "exit": 0,
+      "failures": []
+    },
+    {
+      "file": "io_openai_api_foundation.test.sql",
+      "passed": 24,
+      "exit": 0,
+      "failures": []
+    },
+    {
+      "file": "io_operational_core.test.sql",
+      "passed": 46,
+      "exit": 0,
+      "failures": []
+    },
+    {
+      "file": "io_provider_policy_and_conformance.test.sql",
+      "passed": 50,
+      "exit": 0,
+      "failures": []
+    },
+    {
+      "file": "io_service_fee_and_commercial_gate.test.sql",
+      "passed": 26,
+      "exit": 0,
+      "failures": []
+    },
+    {
+      "file": "io_terminal_session_foundation.test.sql",
+      "passed": 24,
+      "exit": 0,
+      "failures": []
+    },
+    {
+      "file": "io_terminal_timeline_and_approval.test.sql",
+      "passed": 30,
+      "exit": 0,
+      "failures": []
+    },
+    {
+      "file": "loops_archive_contract.test.sql",
+      "passed": 12,
+      "exit": 0,
+      "failures": []
+    },
+    {
+      "file": "member_block_and_dm_broadcast.test.sql",
+      "passed": 26,
+      "exit": 0,
+      "failures": []
+    },
+    {
+      "file": "member_location_foundation.test.sql",
+      "passed": 54,
+      "exit": 0,
+      "failures": []
+    },
+    {
+      "file": "notification_acl.test.sql",
+      "passed": 30,
+      "exit": 0,
+      "failures": []
+    },
+    {
+      "file": "operational_function_schema_drift.test.sql",
+      "passed": 11,
+      "exit": 0,
+      "failures": []
+    },
+    {
+      "file": "orbit_collaboration_controls.test.sql",
+      "passed": 44,
+      "exit": 0,
+      "failures": []
+    },
+    {
+      "file": "orbit_dm_reconnect_presence.test.sql",
+      "passed": 4,
+      "exit": 0,
+      "failures": []
+    },
+    {
+      "file": "orbit_member_safety_controls.test.sql",
+      "passed": 15,
+      "exit": 0,
+      "failures": []
+    },
+    {
+      "file": "privacy_retention.test.sql",
+      "passed": 27,
+      "exit": 0,
+      "failures": []
+    },
+    {
+      "file": "product_access_separation.test.sql",
+      "passed": 50,
+      "exit": 0,
+      "failures": []
+    },
+    {
+      "file": "proposal_identity_and_legacy_membership.test.sql",
+      "passed": 9,
+      "exit": 0,
+      "failures": []
+    },
+    {
+      "file": "public_event_guests.test.sql",
+      "passed": 37,
+      "exit": 0,
+      "failures": []
+    },
+    {
+      "file": "public_form_submission_boundary.test.sql",
+      "passed": 10,
+      "exit": 0,
+      "failures": []
+    },
+    {
+      "file": "schema_contract.test.sql",
+      "passed": 29,
+      "exit": 0,
+      "failures": []
+    },
+    {
+      "file": "trusted_product_events.test.sql",
+      "passed": 83,
+      "exit": 0,
+      "failures": []
+    },
+    {
+      "file": "trusted_vouch_and_quiz.test.sql",
+      "passed": 33,
+      "exit": 0,
+      "failures": []
+    },
+    {
+      "file": "vouch_function_contract.test.sql",
+      "passed": 26,
+      "exit": 0,
+      "failures": []
+    }
+  ]
+}

@@ -1,5 +1,11 @@
 # Privacy and retention rules to supply
 
+## Current handoff — 18 October 2026
+
+The owner delegated retention choices on 15 October with **“use best practice”**. Earlier requests below to supply different rules are superseded. Read [the current status](PRODUCTION_STATUS_2026-10-18.md), [privacy policy](PRIVACY_EXECUTION_POLICY.md) and [delivery runbook](PRIVACY_EXECUTION_RUNBOOK.md). Bounded privacy source is locally Verified; full public production remains Partial. Twelve forward migrations, seven new functions, genuine service/operator acceptance and recovery delivery remain. No new retention worksheet is required from the owner.
+
+The table below is a historical blank worksheet. The selected policy now lives in PRIVACY_EXECUTION_POLICY.md; it is not an unresolved prerequisite.
+
 Status: **Blocked** for production privacy execution: owner policy is required. On 7 October 2026 the owner chose “I’ll provide different retention rules” instead of approving the proposed 90-day event guest rule. No 90-day rule is approved or applied.
 
 Provide duration, starting point, deletion/anonymization action, export inclusion and safety/legal-hold treatment for each row. Engineering can then implement the exact rules and verify them with synthetic fixtures before any hosted execution.
