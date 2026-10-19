@@ -53,10 +53,13 @@ create temp table close_job as select public.claim_account_deletion() as job;
 select is((select job->>'phase' from close_job),'frozen','Claim closes access before erasure');
 select ok(public.is_suspended('96900000-0000-4000-8000-000000000001'),'Existing suspension checks also close the account');
 select is((select is_public from public.profiles where user_id='96900000-0000-4000-8000-000000000001'),false,'Public profile is hidden immediately');
+-- The clean CLI stack may have no default browser table grants. Grant only
+-- the tested column inside this rolled-back fixture to exercise RLS itself.
+grant select(user_id) on public.profiles to authenticated;
 set local role authenticated;
 set local "request.jwt.claim.sub"='96900000-0000-4000-8000-000000000001';
 set local "request.jwt.claims"='{"role":"authenticated"}';
-select is((select count(*)::integer from public.profiles),0,'An old JWT cannot read even its own table rows');
+select is((select count(user_id)::integer from public.profiles),0,'An old JWT cannot read even its own table rows');
 select throws_ok($$select public.enforce_account_access()$$,'42501',null,'Data API guard rejects a cryptographically valid old identity');
 select throws_ok($$select public.cancel_my_account_privacy_request((select (result->>'id')::uuid from close_request),4)$$,'55000',null,'A started irreversible closure cannot be cancelled');
 reset role;

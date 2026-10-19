@@ -1383,11 +1383,11 @@
     },
     {
       "file": "supabase/tests/database/account_privacy_closure.test.sql",
-      "sha256": "7e7fd67279e5d3bc0b10ddbd94b331d226ede825ad8fcce9d179f26a6e3e4e36"
+      "sha256": "deb7a68f61ea1d4fbcb6a4815168d3b453a4e52a2f3edce873ad7198c6eac738"
     },
     {
       "file": "supabase/tests/database/account_privacy_execution.test.sql",
-      "sha256": "48e44fa6d99b072607618e9228fe36e328b7db894dca7a6e9472b071a0d5d92b"
+      "sha256": "16c89fbd64235761c59335af9ff12fc6e7268df5650d23296ebd0ac64a5150fc"
     },
     {
       "file": "supabase/tests/database/admin_member_support_and_audit.test.sql",
@@ -1499,7 +1499,7 @@
     },
     {
       "file": "supabase/tests/database/privacy_retention.test.sql",
-      "sha256": "c4113e3b38f3b8056f16557395db89171f3e70ebb216dc910818db176be8d0b0"
+      "sha256": "4341e5453253e6890ed2936aaf926ee447e43175f6d4fcc36c07e7b0f6288d63"
     },
     {
       "file": "supabase/tests/database/product_access_separation.test.sql",

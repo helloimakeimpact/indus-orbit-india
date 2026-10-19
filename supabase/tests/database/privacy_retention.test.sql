@@ -59,7 +59,9 @@ update private.privacy_file_cleanup set due_at=now()-interval '1 second' where o
 update cleanup_job set job=public.claim_privacy_file_cleanup();
 select ok((select public.privacy_file_cleanup_current((job->>'object_id')::uuid,(job->>'lease_token')::uuid) from cleanup_job),'Release permits a fresh cleanup lease');
 -- Synthetic rollback-only API confirmation; no real object bytes are deleted.
+set local "storage.allow_delete_query"='true';
 delete from storage.objects where id='97900000-0000-4000-8000-000000000041';
+set local "storage.allow_delete_query"='false';
 select ok((select public.complete_privacy_file_cleanup((job->>'object_id')::uuid,(job->>'lease_token')::uuid,true) from cleanup_job),'Confirmed missing object can settle exactly its lease');
 select is((select state from private.privacy_file_cleanup where object_id='97900000-0000-4000-8000-000000000041'),'deleted','Cleanup records confirmed completion');
 select ok(not (select public.complete_privacy_file_cleanup((job->>'object_id')::uuid,(job->>'lease_token')::uuid,true) from cleanup_job),'Old lease cannot settle twice');

@@ -55,8 +55,9 @@ declare relation record;
 begin
   for relation in select n.nspname,c.relname from pg_catalog.pg_class c join pg_catalog.pg_namespace n on n.oid=c.relnamespace
     where c.relkind in ('r','p') and c.relrowsecurity
-      and (pg_catalog.has_table_privilege('authenticated',c.oid,'SELECT') or pg_catalog.has_table_privilege('authenticated',c.oid,'INSERT')
-        or pg_catalog.has_table_privilege('authenticated',c.oid,'UPDATE') or pg_catalog.has_table_privilege('authenticated',c.oid,'DELETE'))
+      -- Active RLS relations receive the guard independently of environment
+      -- default/column grants. The retired archive has a zero-policy contract.
+      and not (n.nspname='public' and c.relname='loops')
       and (n.nspname='public' or (n.nspname in ('storage','realtime') and c.relname in ('objects','messages'))) loop
     execute format('create policy "Closed accounts cannot access data" on %I.%I as restrictive for all to authenticated using ((select private.account_access_open())) with check ((select private.account_access_open()))',relation.nspname,relation.relname);
   end loop;

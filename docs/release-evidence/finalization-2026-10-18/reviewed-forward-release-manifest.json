@@ -47,7 +47,7 @@
     },
     {
       "file": "20261015115417_account_privacy_closure.sql",
-      "sha256": "238859cf109d133a6a49b64d02c27869d0ce4aad74e975fc9bc8fc0250bc04bd"
+      "sha256": "8ac2a23deca168bc741cd4ec407a5aec7ad3b879ccaa5589b7109f4b75aaa025"
     }
   ],
   "candidate_functions": [

@@ -39,7 +39,11 @@ set local role authenticated;
 set local "request.jwt.claims"='{"role":"authenticated"}';
 select is((select count(*)::integer from storage.objects where bucket_id='account-exports'),1,'Owner can read their current artifact');
 select is((public.get_my_account_export((select (result->>'id')::uuid from export_request))->>'expires_in')::integer,300,'Download proof is bounded to five minutes');
+-- Model the Storage API transaction flag while keeping its protection
+-- trigger installed. This tests restrictive RLS, not direct SQL permission.
+set local "storage.allow_delete_query"='true';
 with removed as (delete from storage.objects where bucket_id='account-exports' returning id) select is(count(*)::integer,0,'Browser cannot delete an immutable export') from removed;
+set local "storage.allow_delete_query"='false';
 set local "request.jwt.claim.sub"='95900000-0000-4000-8000-000000000002';
 select is((select count(*)::integer from storage.objects where bucket_id='account-exports'),0,'Another member cannot read the artifact');
 select throws_ok($$select public.get_my_account_export((select (result->>'id')::uuid from export_request))$$,'42501',null,'Another member cannot mint download details');
