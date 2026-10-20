@@ -1,6 +1,6 @@
 # Full public production launch — owner actions
 
-Updated **19 October 2026**. Overall launch state: **Partial**. Read [the current status](PRODUCTION_STATUS_2026-10-19.md), [privacy policy](PRIVACY_EXECUTION_POLICY.md) and [delivery runbook](PRIVACY_EXECUTION_RUNBOOK.md). Exact source commits and CI results are recorded in the release evidence; a GitHub push does not establish hosted backend readiness.
+Updated **20 October 2026**. Overall launch state: **Partial**. Read [the current status](PRODUCTION_STATUS_2026-10-20.md), [privacy policy](PRIVACY_EXECUTION_POLICY.md) and [delivery runbook](PRIVACY_EXECUTION_RUNBOOK.md). Exact source commits and CI results are recorded in the release evidence; a GitHub push does not establish hosted backend readiness.
 
 ## Decisions already resolved
 

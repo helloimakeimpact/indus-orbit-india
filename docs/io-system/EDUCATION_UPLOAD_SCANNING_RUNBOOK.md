@@ -34,4 +34,4 @@ Deploy the worker with internal secret authentication, gateway JWT verification 
 
 Promotion requires a clean/blocked/failure fixture accepted by the actual supplier, correct hash/version binding, no direct download bypass, replacement during a scan, editor/member/suspended personas, retry/dead-letter handling and treatment of existing published files. Because the migration quarantines legacy objects, coordinate supplier setup/backfill before exposing the revised education download surface.
 
-The pending policy matrix must cover uploaded objects, security verdicts, scan/provider evidence and deletion of orphaned/quarantined files. No retention purge or physical file deletion is activated automatically here.
+The owner delegated the retention choice on 15 October. [The selected privacy policy](PRIVACY_EXECUTION_POLICY.md) and [execution runbook](PRIVACY_EXECUTION_RUNBOOK.md) now cover bounded physical cleanup and holds; actual worker/scanner/Storage activation remains pending. No purge or physical deletion is activated automatically. Security/financial retention and assisted work retain their explicit operating limits.

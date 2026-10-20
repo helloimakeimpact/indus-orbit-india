@@ -1,0 +1,130 @@
+{
+  "observed_date": "2026-10-20",
+  "scope": "Read-only GitHub/Supabase status plus documentation refresh; no hosted mutations",
+  "source": {
+    "member": {
+      "head": "f659553fb33b42d0afdddc43e658c08829367614",
+      "tree": "eb422f5c1c3798e7075534d8757d6c7ee5b2ecc0",
+      "protected": false
+    },
+    "admin": {
+      "head": "e30a3eca30fbc49524e04af5e894b91902f8af0f",
+      "tree": "b8cbe23fbd3b98bb8c0fad1fbd030075624b50cb",
+      "local_commit": "220f0649bd5dad9f37fcc42c50d3839ff78a25d0",
+      "tree_matches_local": true,
+      "protected": false
+    }
+  },
+  "ci": {
+    "member": [
+      {
+        "id": 39253652684,
+        "head": "f659553fb33b42d0afdddc43e658c08829367614",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/helloimakeimpact/indus-orbit-india/actions/runs/39253652684"
+      }
+    ],
+    "admin": [
+      {
+        "id": 39253745412,
+        "head": "e30a3eca30fbc49524e04af5e894b91902f8af0f",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/helloimakeimpact/admin-indus-orbit/actions/runs/39253745412"
+      }
+    ],
+    "database": {
+      "id": 39252910170,
+      "head": "3a8a3bee5cf2fe8216dbc5e044005dadbc7dddbf",
+      "conclusion": "success",
+      "url": "https://github.com/helloimakeimpact/indus-orbit-india/actions/runs/39252910170"
+    }
+  },
+  "hosted": {
+    "project": {
+      "id": "jpwvgpnbkrktipwhvqss",
+      "name": "Indus Orbit",
+      "status": "ACTIVE_HEALTHY",
+      "region": "ap-south-1",
+      "version": "17.6.1.104"
+    },
+    "migration_count": 116,
+    "latest_migration": {
+      "version": "20260907090226",
+      "name": "add_final_fk_covering_indexes"
+    },
+    "functions": [
+      {
+        "slug": "resend-email-dispatcher",
+        "status": "ACTIVE",
+        "version": 16
+      },
+      {
+        "slug": "io-gateway",
+        "status": "ACTIVE",
+        "version": 28
+      },
+      {
+        "slug": "io-openai",
+        "status": "ACTIVE",
+        "version": 12
+      },
+      {
+        "slug": "io-provider-conformance",
+        "status": "ACTIVE",
+        "version": 3
+      },
+      {
+        "slug": "notification-email-worker",
+        "status": "ACTIVE",
+        "version": 2
+      },
+      {
+        "slug": "orbit-attachment-scan-webhook",
+        "status": "ACTIVE",
+        "version": 2
+      },
+      {
+        "slug": "io-payment-webhook",
+        "status": "ACTIVE",
+        "version": 2
+      },
+      {
+        "slug": "io-payments",
+        "status": "ACTIVE",
+        "version": 3
+      },
+      {
+        "slug": "orbit-attachment-scan-worker",
+        "status": "ACTIVE",
+        "version": 1
+      },
+      {
+        "slug": "io-health-probe",
+        "status": "ACTIVE",
+        "version": 1
+      }
+    ],
+    "other_projects": [
+      {
+        "id": "ghggdotolpmjkiqiecag",
+        "name": "JRI Backup Replica",
+        "status": "INACTIVE"
+      }
+    ],
+    "pending_forward_migrations": 12,
+    "pending_new_functions": 7
+  },
+  "implementation_evidence": {
+    "member_units": 236,
+    "admin_units": 35,
+    "browser_journeys": 49,
+    "source_migrations": 130,
+    "sql_contracts": 38,
+    "sql_assertions": 1237,
+    "evidence_date": "2026-10-19 CI; unchanged product files checked 2026-10-20",
+    "fresh_whole_suite_rerun": false
+  },
+  "netlify_deployed_sha": "Not established by this read-only repository/backend check"
+}

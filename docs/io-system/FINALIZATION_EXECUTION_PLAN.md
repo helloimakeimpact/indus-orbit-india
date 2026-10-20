@@ -1,5 +1,9 @@
 # Indus Orbit full finalization execution plan
 
+## Current consolidated status — 20 October 2026
+
+[The detailed whole-product report](PRODUCTION_STATUS_2026-10-20.md) consolidates completed brand/UI, continuity, events, communication, education safety, privacy, admin and I/O foundations. Both source trees match published GitHub and their recorded CI passes. Today’s hosted read remains healthy at 116 migrations/ten functions; twelve reviewed forward migrations and seven functions still need staged delivery. Full production remains **Partial**. The older dated checkpoints below retain their original evidence.
+
 ## Current handoff — 18 October 2026
 
 The owner delegated retention choices on 15 October with **“use best practice”**. Earlier requests below to supply different rules are superseded. Read [the current status](PRODUCTION_STATUS_2026-10-19.md), [privacy policy](PRIVACY_EXECUTION_POLICY.md) and [delivery runbook](PRIVACY_EXECUTION_RUNBOOK.md). Bounded privacy source is locally Verified; full public production remains Partial. Twelve forward migrations, seven new functions, genuine service/operator acceptance and recovery delivery remain. No new retention worksheet is required from the owner.

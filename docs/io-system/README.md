@@ -1,5 +1,9 @@
 # Indus Orbit living system record
 
+## Current consolidated status — 20 October 2026
+
+[The detailed whole-product report](PRODUCTION_STATUS_2026-10-20.md) consolidates completed brand/UI, continuity, events, communication, education safety, privacy, admin and I/O foundations. Both source trees match published GitHub and their recorded CI passes. Today’s hosted read remains healthy at 116 migrations/ten functions; twelve reviewed forward migrations and seven functions still need staged delivery. Full production remains **Partial**. The older dated checkpoints below retain their original evidence.
+
 ## Source publication — 19 October
 
 Completed source is committed/published; member Quality, Database quality and Admin quality all pass. [Exact publication](SOURCE_PUBLICATION_2026-10-19.md) records 130-migration managed replay, 1,237 SQL assertions, 271 units and 49 browser journeys. [Current production status](PRODUCTION_STATUS_2026-10-19.md) remains Partial until hosted service/operator/recovery acceptance.

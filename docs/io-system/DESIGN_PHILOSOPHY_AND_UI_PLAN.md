@@ -1,5 +1,9 @@
 # Indus Orbit design philosophy and UI execution plan
 
+## Current implementation boundary — 20 October
+
+The core identity/specification is finalized. Public/member continuity and accessibility fixes plus native event surfaces are Verified in the recorded source gates. Broader premium design-system rollout, real-device/user evaluation and complete visual acceptance remain **Partial**; Planned items below must not be reported as already applied everywhere. The source is published; historical local-only wording below describes its dated checkpoints. See [the consolidated report](PRODUCTION_STATUS_2026-10-20.md).
+
 > Resumed 3 October 2026: the owner confirmed indusorbit.com/Netlify, Resend, themselves as initial host/reviewer, and OpenAI/DeepSeek. See [verified connections and setup](LAUNCH_SETUP_AND_CONNECTIONS.md), [current status](PRODUCTION_STATUS_2026-10-03.md), and [resume evidence](../release-evidence/resume-2026-10-03/verification.md). The earlier stop checkpoint remains preserved in Git/evidence. New work stays local; hosted delivery remains pending.
 
 ## 3 October 2026 — native events and simpler verification
