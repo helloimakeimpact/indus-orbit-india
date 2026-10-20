@@ -1,6 +1,10 @@
 # Indus Orbit conversation and Discord-like system plan
 
-Status: active code-level plan, updated 21 August 2026. Direct messages, caller-owned blocking, trusted events, private Broadcast, caller-bound keyset history/Load earlier and the Chapter/Mission Space foundation are Released. The clean database replay passes 75 migrations/676 assertions; 55 member tests and typecheck pass for this slice. Threads UI, browser personas, shared cache and wider collaboration remain Partial or Planned. This extends the existing conversation product; it does not authorize a Discord clone or replacement social system.
+## Current plan — 20 October 2026
+
+[Lightweight chat finalization](LIGHTWEIGHT_CHAT_FINALIZATION_PLAN.md) supersedes this older spatial plan for current execution order, evidence and remaining work. The owner approved private messages plus event/community groups, with E2EE planned separately. Retry/outbox/reconnect/typing now have useful implementations, but shared queue authority, account isolation, visible reads, full catch-up, inbox summaries and event membership remain incomplete. The new plan records these exact boundaries and the two repaired merge regressions. September/August counts and future-tense entries below retain their historical meaning; they are not the current completion report.
+
+Historical status, 21 August 2026: Direct messages, caller-owned blocking, trusted events, private Broadcast, caller-bound keyset history/Load earlier and the Chapter/Mission Space foundation were Released. The clean database replay passed 75 migrations/676 assertions; 55 member tests and typecheck passed for that slice. This extends the existing conversation product; it does not authorize a Discord clone or replacement social system.
 
 ## Current Chapter/Mission Space addendum
 

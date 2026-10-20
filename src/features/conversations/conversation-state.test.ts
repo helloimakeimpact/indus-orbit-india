@@ -81,6 +81,30 @@ describe("conversation state", () => {
     assert.deepEqual(mergeConversationMessages([durable], [optimistic]), [durable]);
   });
 
+  it("shows a newly queued message before any durable acknowledgement", () => {
+    const optimistic: DirectMessage = {
+      ...message("pending:req-1", "a", "b", "2026-01-02T00:00:00Z"),
+      client_request_id: "req-1",
+      delivery_state: "queued",
+    };
+    const earlier = message("earlier", "b", "a", "2026-01-01T00:00:00Z");
+
+    assert.deepEqual(mergeConversationMessages([], [optimistic]), [optimistic]);
+    assert.deepEqual(mergeConversationMessages([earlier], [optimistic]), [earlier, optimistic]);
+    assert.deepEqual(
+      mergeConversationMessages([optimistic], [{ ...optimistic, delivery_state: "failed" }]),
+      [{ ...optimistic, delivery_state: "failed" }],
+    );
+  });
+
+  it("keeps a confirmed read receipt when an older history response arrives", () => {
+    const unread = message("durable", "a", "b", "2026-01-01T00:00:00Z");
+    const read = { ...unread, read_at: "2026-01-02T00:00:00Z" };
+
+    assert.deepEqual(mergeConversationMessages([read], [unread]), [read]);
+    assert.deepEqual(mergeConversationMessages([unread], [read]), [read]);
+  });
+
   it("restores only the expected account's bounded replay-safe outbox", () => {
     const requestId = "10000000-0000-4000-8000-000000000001";
     const recipientId = "20000000-0000-4000-8000-000000000001";

@@ -2,6 +2,10 @@
 
 Updated **20 October 2026**. Overall launch state: **Partial**. Read [the current status](PRODUCTION_STATUS_2026-10-20.md), [privacy policy](PRIVACY_EXECUTION_POLICY.md) and [delivery runbook](PRIVACY_EXECUTION_RUNBOOK.md). Exact source commits and CI results are recorded in the release evidence; a GitHub push does not establish hosted backend readiness.
 
+## Added chat scope and eventual acceptance
+
+The owner approved **private messages plus event/community groups**, retaining the current security model with E2EE planned separately. [The implementation plan](conversation-system/LIGHTWEIGHT_CHAT_FINALIZATION_PLAN.md) keeps the remaining engineering work with engineering; the current product is not yet code-complete for this expanded scope. After the source is ready, the owner will need two connected test members/two devices plus host, eligible attendee, guest and outsider personas for a short genuine chat/mobile/revocation rehearsal. Public guest registration continues independently; entering event chat requires verified sign-in/linking. No new retention worksheet is needed.
+
 ## Decisions already resolved
 
 - Full public launch is the target. Core identity: **The General Intelligence Company of India**; short line: **Intelligence, built together.** Original dawn/lotus/banyan/pixel artwork and Indus Orbit design remain.

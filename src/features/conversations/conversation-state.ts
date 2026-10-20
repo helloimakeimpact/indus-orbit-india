@@ -72,8 +72,10 @@ export function mergeConversationMessages(current: DirectMessage[], incoming: Di
     const existing = byId.get(key);
     // A durable server row replaces its optimistic browser projection. A late
     // optimistic state must never replace already-reconciled database evidence.
-    if (!existing?.delivery_state && message.delivery_state) continue;
-    byId.set(key, message);
+    if (existing && !existing.delivery_state && message.delivery_state) continue;
+    // History and Broadcast may arrive out of order. A stale history snapshot
+    // cannot undo read evidence already received for this immutable message.
+    byId.set(key, { ...message, read_at: existing?.read_at ?? message.read_at });
   }
 
   return [...byId.values()].sort((left, right) => {

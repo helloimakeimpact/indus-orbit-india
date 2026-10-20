@@ -1,5 +1,9 @@
 # Indus Orbit living system record
 
+## Lightweight chat scope — 20 October 2026
+
+[The current conversation plan](conversation-system/LIGHTWEIGHT_CHAT_FINALIZATION_PLAN.md) records the owner's approved private-message/event/community-group scope, three independent audits, two repaired merge regressions and the remaining source/release gates. Overall chat remains **Partial**; E2EE is planned separately. The source/CI checkpoint below precedes this new work. Read the chat plan alongside the whole-product status and owner actions.
+
 ## Current consolidated status — 20 October 2026
 
 [The detailed whole-product report](PRODUCTION_STATUS_2026-10-20.md) consolidates completed brand/UI, continuity, events, communication, education safety, privacy, admin and I/O foundations. Both source trees match published GitHub and their recorded CI passes. Today’s hosted read remains healthy at 116 migrations/ten functions; twelve reviewed forward migrations and seven functions still need staged delivery. Full production remains **Partial**. The older dated checkpoints below retain their original evidence.
@@ -78,7 +82,7 @@ Every completion entry must name its state, environment and evidence. Git histor
 4. `io-port-system/README.md` — current I/O Port gateway, registry, providers, pricing, safety, and next gates.
 5. `io-port-system/PRODUCTION_API_COMMERCIAL_AND_PROVIDER_POLICY.md` — production addresses, key boundary, 5.5% price rule and first-provider evidence.
 6. `terminal-system/README.md` — I/O Terminal/OpenCode boundary and remaining advanced terminal work.
-7. `conversation-system/README.md` — current direct-message foundation and branded Discord-like spatial system.
+7. `conversation-system/README.md` and `conversation-system/LIGHTWEIGHT_CHAT_FINALIZATION_PLAN.md` — current messaging foundation and approved lightweight private/event/community chat finalization.
 8. `conversation-system/CHAPTER_MISSION_SPACE_SYSTEM_PLAN.md` — exact Space schema/UI delivered in code, safe hosted rollout and remaining collaboration work.
 9. `admin-system/README.md` — separate admin control plane, super-admin boundary, scoped team duties and remaining domain migrations.
 10. `platform-system/README.md` — the rest of the Indus Orbit platform and cross-system work.

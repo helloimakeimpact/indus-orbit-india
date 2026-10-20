@@ -1,5 +1,9 @@
 # Indus Orbit code completion register
 
+## New approved chat scope — 20 October 2026
+
+The owner's lightweight WhatsApp-like chat request adds source work before public launch: **private messages plus event/community groups**, with the current security model and E2EE planned separately. [The current chat plan](conversation-system/LIGHTWEIGHT_CHAT_FINALIZATION_PLAN.md) records three independent reviews, existing foundations, account/queue/read/reconnect defects, event membership, performance gates and C0–C6 delivery. The capability is **Partial**. Two merge defects are repaired locally with 12 focused tests; shared state/inbox/UI/event work remains. The source-publication statement below describes the pre-chat checkpoint. Previous aggregate passes do not prove these new interactions.
+
 ## Current consolidated status — 20 October 2026
 
 [The detailed whole-product report](PRODUCTION_STATUS_2026-10-20.md) consolidates completed brand/UI, continuity, events, communication, education safety, privacy, admin and I/O foundations. Both source trees match published GitHub and their recorded CI passes. Today’s hosted read remains healthy at 116 migrations/ten functions; twelve reviewed forward migrations and seven functions still need staged delivery. Full production remains **Partial**. The older dated checkpoints below retain their original evidence.

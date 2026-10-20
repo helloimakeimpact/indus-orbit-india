@@ -1,8 +1,16 @@
 # Conversation and branded spatial system record
 
-Status: core direct messages, Space collaboration and member-safety controls are Released to demo; structured Boards/Rooms/roles/saved work are locally Verified and Blocked from hosted apply pending explicit owner approval, updated 7 September 2026.
+Status: **Partial** for the approved lightweight private/event/community chat experience, updated **20 October 2026**. Core direct messages, Space collaboration and member-safety controls retain their recorded demo release. Structured Boards/Rooms/roles/saved work remain locally Verified and held from hosted apply.
 
-## Current truth
+## Current execution plan — 20 October
+
+[Lightweight chat finalization](LIGHTWEIGHT_CHAT_FINALIZATION_PLAN.md) is the current plan. The owner approved private messages plus event/community groups and keeping the current security model, with E2EE planned separately. Existing direct-message and Room histories remain authoritative. Event membership/verified guest-account linking requires a new explicit contract; public registration alone does not grant chat access.
+
+Three independent reviews found competing page/sheet outboxes, missing stale-account guards, hidden-tab read acknowledgements, incomplete reconnect catch-up beyond fifty missed messages, cross-recipient drafts and missing recent-chat summaries. These are source work, not only hosted acceptance. The root Orbit store shares attention/connectivity; it does **not** yet provide one shared conversation cache/dispatcher. Two merge regressions are repaired locally with 12 focused tests: fresh queued rows appear immediately, and stale history cannot undo read evidence.
+
+The last whole-product gate before this chat increment was 236 member units, 35 admin units, 49 browser journeys and 38 SQL files/1,237 assertions across 130 source migrations. These counts do not establish the new chat interactions. See [the whole-product report](../PRODUCTION_STATUS_2026-10-20.md) and the current plan's release evidence. Older counts below remain historical.
+
+## Existing implementation inventory
 
 Implemented:
 
@@ -43,20 +51,20 @@ Implemented:
 - manager-configured, database-enforced Room slow mode with exact retry evidence, idempotent retry preservation and a visible active-policy badge;
 - a private 10 MB quarantine-first attachment bucket, author-owned reservation/upload/finalization, MIME/size reconciliation and short signed downloads only for authorized objects;
 - rolling schema compatibility so the frontend can release before the hosted migration without hiding genuine authorization or validation errors.
-- one root Orbit connectivity/attention store across Messages, Chapters, Missions, Spaces and I/O, with a bounded account-scoped DM outbox that survives same-tab reload while preserving its replay key, fails safely under corrupt/disabled storage, clears on root sign-out/account change, reconciles reconnect/focus/visibility, refreshes unread state across tabs and keeps typing private and expiring;
+- one root Orbit connectivity/attention store across Messages, Chapters, Missions, Spaces and I/O; each DM hook currently owns its own replay-safe session outbox and reconnect logic. Single-surface reload recovery and cross-tab attention exist, but shared queue ownership, throwing storage getters, complete catch-up and stale-account results need the current plan's fixes;
 - locally Verified forum-style Board topics, manager Room create/reorder/archive, source-role inheritance/effective-permission explanation and private saved-work search/export;
 - hosted scanner lease/retry/dead-letter and redacted notification queue operator controls, plus a deployed outbound scanner worker that remains fail-closed until provider configuration.
 - manager-only active/removed roster, canonical source-membership remove/restore, bounded Space timeouts, elevated-role protection and database-enforced burst/hourly/repeated-message limits through hosted migration 113; migration 114 serializes concurrent timeout replays.
 
-Still left:
+Still left (read alongside the current plan):
 
 - configure an approved sender domain and schedule the fixed-template email worker; redacted retry/dead-letter controls are Released;
-- run two-device authenticated reconnect/offline/multi-device unread evidence for the Released/Verified shared store; same-tab reload recovery is covered locally, while server state remains authoritative across devices;
+- implement shared conversation state/queue, account binding, visible read-through, full catch-up, bounded inbox and draft continuity before genuine two-device reconnect/offline/unread acceptance; server state remains authoritative across devices;
 - run hosted authenticated browser personas across proposal/approval, Chapter/Mission lifecycle, membership, Room send/read and outsider privacy;
 - explicitly approve and apply the broad structured-Spaces authorization migration before treating Boards, source-role hierarchy/explanation, manager Room lifecycle and saved work as Released;
 - privacy-aware exact-pair typing is Released/Verified; trusted scanner provider configuration and worker scheduling remain;
-- the export/deletion request and admin-review boundary is Released; actual export/purge workers await approved retention/legal-hold rules. Additional automated spam classification needs a reviewed policy and appeal path;
+- the export/deletion request and admin-review boundary is Released; bounded export/deletion/retention workers are Verified in source under the owner's delegated best-practice rules. Hosted API/scheduler/backup and assisted-privacy acceptance remain; new chat records need explicit inventory coverage. Additional automated spam classification needs a reviewed policy and appeal path;
 - one reusable Indus Orbit rail/sidebar/workspace/inspector shell across product systems;
 - I/O session collaboration that never leaks prompts, terminal output, files or tools through human messaging.
 
-The core collaboration and migration-113/114 member-safety boundaries are Released to hosted Indus Orbit with RLS, explicit grants and synchronized client contracts. The structured-Spaces migration is only locally Verified because its persistent apply was refused pending explicit authorization. The integrated member unit suite passes 159/159; the full clean local chain passes 25 database files/830 assertions and scoped schema lint. Migration `20260906120000_fix_operational_function_schema_drift.sql` also removes both ambiguous structured Room-admin replay references when this pending release is applied. Exact current behavior and limits are in `ORBIT_COLLABORATION_RELEASE.md`. The original delivery split is in `CHAPTER_MISSION_SPACE_SYSTEM_PLAN.md`; the wider engineering plan remains in `CONVERSATION_SYSTEM_IMPLEMENTATION_PLAN.md`.
+The core collaboration and migration-113/114 member-safety boundaries have a recorded hosted demo release with RLS, explicit grants and synchronized client contracts. The structured-Spaces migration is only locally Verified because its persistent apply was refused pending explicit authorization. The **7 September historical checkpoint** was 159 member units and 25 database files/830 assertions; use the current plan and whole-product report for later evidence. Migration `20260906120000_fix_operational_function_schema_drift.sql` also removes both ambiguous structured Room-admin replay references when this pending release is applied. Existing collaboration limits are in `ORBIT_COLLABORATION_RELEASE.md`. The original delivery split is in `CHAPTER_MISSION_SPACE_SYSTEM_PLAN.md`; the older spatial plan is `CONVERSATION_SYSTEM_IMPLEMENTATION_PLAN.md`, superseded for the current chat increment by `LIGHTWEIGHT_CHAT_FINALIZATION_PLAN.md`.

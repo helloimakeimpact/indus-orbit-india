@@ -1,5 +1,9 @@
 # Indus Orbit full finalization execution plan
 
+## Added source phase: lightweight chat — 20 October 2026
+
+Complete [the approved chat plan](conversation-system/LIGHTWEIGHT_CHAT_FINALIZATION_PLAN.md) before calling the newly requested product scope code-complete: private messages and event/community groups, shared account-bound state, reliable queue/read/catch-up, a bounded inbox and the common premium mobile/desktop interface. The current security model remains; E2EE is separate. Two merge regressions are repaired with focused local evidence; C1–C5 source work and C6 hosted acceptance remain. The six existing whole-product launch workstreams continue. The prior twelve-migration/seven-function release count must be revised if this increment adds contracts; it is not a final chat rollout manifest.
+
 ## Current consolidated status — 20 October 2026
 
 [The detailed whole-product report](PRODUCTION_STATUS_2026-10-20.md) consolidates completed brand/UI, continuity, events, communication, education safety, privacy, admin and I/O foundations. Both source trees match published GitHub and their recorded CI passes. Today’s hosted read remains healthy at 116 migrations/ten functions; twelve reviewed forward migrations and seven functions still need staged delivery. Full production remains **Partial**. The older dated checkpoints below retain their original evidence.
