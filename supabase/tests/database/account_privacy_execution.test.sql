@@ -30,6 +30,8 @@ select is((select jsonb_array_length(body->'datasets'->'public.profiles') from e
 select is((select body->'datasets'->'public.profiles'->0->>'display_name' from export_body),'Export owner','Own data is exported');
 select ok((select body::text not like '%Other private person%' from export_body),'Other private profile is excluded');
 select ok((select not (body->'datasets' ? 'auth.users') from export_body),'Auth password/session records are excluded');
+select is((select count(*)::integer from export_body, lateral jsonb_object_keys(body->'datasets')),35,'Portable account export uses thirty-five explicit reviewed datasets');
+select ok((select body->'datasets' ? 'public.conversation_space_memberships' from export_body),'Own group opt-in is included in portable account coverage');
 select ok((select body::text not like '%"key_hash"%' from export_body),'API key credentials are excluded');
 select throws_ok($$select public.complete_account_export((job->>'request_id')::uuid,(job->>'lease_token')::uuid,repeat('a',64),100) from export_job$$,'22023',null,'Cannot claim an artifact before upload confirmation');
 insert into storage.objects(bucket_id,name,metadata) select 'account-exports',job->>'artifact_path','{"size":100,"mimetype":"application/json"}' from export_job;

@@ -144,6 +144,13 @@ export async function prepareMemberBrowser(context: BrowserContext, baseURL: str
     (url) => url.host === apiHost,
     (socket) => {
       socket.onMessage((message) => {
+        // Current Realtime encodes user broadcasts (including ephemeral typing)
+        // as binary kind 3. These do not request a mock acknowledgement; joins,
+        // heartbeats and leaves retain the JSON Phoenix envelope below.
+        if (typeof message !== "string") {
+          if (message[0] !== 3) throw new Error("Unexpected synthetic Realtime binary frame");
+          return;
+        }
         const [joinRef, ref, topic, event, payload] = JSON.parse(String(message));
         if (event === "phx_join" || event === "heartbeat" || event === "phx_leave") {
           socket.send(

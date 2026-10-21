@@ -395,6 +395,19 @@
         "updated_at",
         "completed_at"
       ]
+    },
+    "public.conversation_space_memberships": {
+      "predicate": "user_id = $1",
+      "columns": [
+        "space_id",
+        "user_id",
+        "domain_role",
+        "membership_state",
+        "source_membership_version",
+        "joined_at",
+        "left_at",
+        "synced_at"
+      ]
     }
   },
   "scope": "Portable account-provided data and bounded operational metadata. Financial/case/access supplements require operator review; binary attachments are represented by metadata, never automatically rehydrated."

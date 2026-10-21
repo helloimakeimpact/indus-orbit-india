@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import {
   CalendarDays,
   MapPin,
@@ -11,6 +11,9 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+const EventDiscussionPanel = lazy(() =>
+  import("./EventDiscussionPanel").then((module) => ({ default: module.EventDiscussionPanel })),
+);
 import { Button } from "@/components/ui/button";
 import { GuestRegistrationCard } from "./GuestRegistrationCard";
 import { EventCover } from "./EventCover";
@@ -433,6 +436,11 @@ function InvitationContent({
             <h2>About this gathering</h2>
             <p>{event.description}</p>
           </section>
+          {userId && (
+            <Suspense fallback={<p role="status">Opening event discussion…</p>}>
+              <EventDiscussionPanel eventId={id} userId={userId} />
+            </Suspense>
+          )}
           {registration?.canManage && (
             <section className="event-host-tools">
               <h2>Host workspace</h2>

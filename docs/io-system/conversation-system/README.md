@@ -1,5 +1,9 @@
 # Conversation and branded spatial system record
 
+## Candidate implementation — 21 October
+
+[The current candidate](CHAT_RELEASE_CANDIDATE.md) implements shared lightweight private messaging, bounded inbox/recovery, premium common UI and event/community discussion integration. Local application and focused tests are recorded separately from the pending full managed database/schema gate. The release remains **Partial**; source is being prepared on a release branch because frontend/database delivery must be coordinated.
+
 Status: **Partial** for the approved lightweight private/event/community chat experience, updated **20 October 2026**. Core direct messages, Space collaboration and member-safety controls retain their recorded demo release. Structured Boards/Rooms/roles/saved work remain locally Verified and held from hosted apply.
 
 ## Current execution plan — 20 October

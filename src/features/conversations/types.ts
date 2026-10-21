@@ -5,6 +5,14 @@ export type ConversationContact = {
   headline: string | null;
 };
 
+export type InboxContact = ConversationContact & {
+  last_message_id: string | null;
+  last_message_content: string | null;
+  last_message_at: string | null;
+  last_sender_id: string | null;
+  unread_count: number;
+};
+
 export type DirectMessage = {
   id: string;
   sender_id: string;

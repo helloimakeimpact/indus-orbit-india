@@ -1,0 +1,65 @@
+{
+  "date": "2026-10-21",
+  "status": "Verified",
+  "environment": "Local Vite development server; intercepted Supabase HTTP and WebSocket traffic; invalid synthetic sessions only",
+  "command": "PLAYWRIGHT_BASE_URL=http://127.0.0.1:4190 npx playwright test tests/e2e/chat.spec.ts tests/e2e/member-continuity.spec.ts --project member-ui-regression --workers=1",
+  "passed": 14,
+  "chatJourneys": 7,
+  "continuityJourneys": 7,
+  "checks": [
+    "Optimistic enqueue and repeated Enter/IME protection",
+    "Later typing survives delayed acknowledgement",
+    "Per-person drafts and quick-sheet to full-page continuation",
+    "Account changes clear private drafts",
+    "Failed quick-chat retry reuses original request ID",
+    "Hidden document does not mark read; visible latest does",
+    "320px no horizontal overflow and no serious/critical axe findings",
+    "Full outbox retains draft and exposes in-viewport recovery",
+    "Existing member and I/O continuity suite",
+    "Exactly 200-row history window retains its first row and viewport offset during focus recovery of incoming row 201; explicit Back to latest displays new row.",
+    "Groups and connection picker use optional lazy chunks. Groups makes no community-link request in the default inbox, then navigates to the existing event discussion on selection."
+  ],
+  "visualInspection": {
+    "desktop": "1280×720; inspected calm hierarchy, readable incoming/outgoing messages, visible send state, draft and controls",
+    "mobile": "320×600; inspected one-pane chat, visible composer/back/send, no clipping or horizontal overflow"
+  },
+  "screenshots": [
+    {
+      "path": "docs/release-evidence/chat-2026-10-21/chat-desktop.png",
+      "sha256": "d998f9695c9dc7b7f918aad5907645872b23623ea6db0c32a4c5b03163eed513"
+    },
+    {
+      "path": "docs/release-evidence/chat-2026-10-21/chat-mobile.png",
+      "sha256": "d6863af582ad32c6ec2ca464bf6085c12e52f1f48cfb1d0681e4971f935e42bc"
+    }
+  ],
+  "limitations": [
+    "Not genuine hosted Auth/RLS/Realtime evidence",
+    "Not actual mobile keyboard, sleep/wake or multi-device acceptance",
+    "Not a production bundle browser test; parent release gates must establish build evidence separately"
+  ],
+  "verificationScope": "14 distinct journeys passed: final seven-chat batch after progressive-disclosure splitting, plus the seven continuity journeys verified in the earlier run and isolated I/O rerun. This is not one final 14/14 batch.",
+  "finalRuns": [
+    {
+      "command": "PLAYWRIGHT_BASE_URL=http://127.0.0.1:4190 npx playwright test tests/e2e/chat.spec.ts tests/e2e/member-continuity.spec.ts --project member-ui-regression --workers=1",
+      "result": "11 passed; 2 failed: history-cursor bug discovered and fixed, plus a cold-loading I/O timing failure. Five other chat and six other continuity journeys passed."
+    },
+    {
+      "command": "PLAYWRIGHT_BASE_URL=http://127.0.0.1:4190 npx playwright test tests/e2e/member-continuity.spec.ts --project member-ui-regression --workers=1 --grep \"I/O-only access\" --output=test-results/chat-ui-continuity",
+      "result": "1 passed (8.7s total)."
+    },
+    {
+      "command": "PLAYWRIGHT_BASE_URL=http://127.0.0.1:4190 npx playwright test tests/e2e/chat.spec.ts --project member-ui-regression --workers=1 --grep \"incoming recovery\" --output=test-results/chat-ui-history",
+      "result": "1 passed after explicit history initialization/cursor fix (3.7s total)."
+    },
+    {
+      "command": "PLAYWRIGHT_BASE_URL=http://127.0.0.1:4190 npx playwright test tests/e2e/chat.spec.ts --project member-ui-regression --workers=1 --output=test-results/chat-ui-optimized",
+      "result": "7/7 passed (21.6s total), including Groups lazy discovery/navigation and all six existing chat journeys."
+    }
+  ],
+  "sourceChecks": [
+    "Changed UI ESLint passed",
+    "Changed UI formatting passed",
+    "Whole member source TypeScript check passed"
+  ]
+}

@@ -12,6 +12,7 @@ export default defineConfig({
     tsconfigPaths(),
   ],
   build: {
+    manifest: true,
     rollupOptions: {
       output: {
         manualChunks(id) {

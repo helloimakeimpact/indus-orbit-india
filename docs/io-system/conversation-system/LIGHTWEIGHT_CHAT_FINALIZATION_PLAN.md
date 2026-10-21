@@ -1,5 +1,7 @@
 # Lightweight chat finalization plan
 
+[21 October implementation candidate](CHAT_RELEASE_CANDIDATE.md) records the code now written for this plan, local evidence and the remaining managed schema/release gates. The original 20 October phase states below describe the audit checkpoint; they must be read with the candidate update.
+
 Updated **20 October 2026** after independent architecture, interface/performance and release/privacy reviews. Overall capability state: **Partial**. This is the current execution plan for the owner's request for a lightweight WhatsApp-like chat within Indus Orbit. The older spatial plans remain useful for their dated implementation evidence.
 
 [This increment's verification](../../release-evidence/chat-2026-10-20/verification.md) records the two repaired regressions, 12 focused tests and the passing full member source gate with **238 units**, types, lint, formatting, builds and existing bundle limits. It does not establish the unimplemented chat phases below.

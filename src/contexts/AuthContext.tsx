@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useRef, useState, type ReactNode 
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { transitionConversationOutboxOwner } from "@/features/conversations/conversation-state";
+import { transitionConversationAccount } from "@/features/conversations/conversation-lifecycle";
 
 type AuthContextValue = {
   session: Session | null;
@@ -133,6 +134,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!active) return;
       const refreshVersion = ++accessRefreshVersion;
       const nextUserId = newSession?.user.id ?? null;
+      transitionConversationAccount(nextUserId);
       const sameUser = nextUserId !== null && activeUserId.current === nextUserId;
       activeUserId.current = nextUserId;
       const isCurrentRefresh = () =>
