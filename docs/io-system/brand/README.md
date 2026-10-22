@@ -38,3 +38,7 @@ The refreshed DeepSeek Harness is a separately versioned native Terminal preview
 `build_brand_book.py` uses ReportLab, local source art and the bundled font files to generate the PDF and page index under `output/pdf/`. The page index identifies the two moodboards. The PDF was rendered with Poppler and every page inspected; selected pages were exported directly as moodboard PNGs. PDF rendering/review files are outside the Git source tree.
 
 Fraunces and Inter come from the official Google Fonts repository. Their OFL license files are included under `fonts/`. The five static/variable font sources support the HTML/book; this folder does not change the production application font configuration. A machine-readable asset manifest records hashes, dimensions and provenance. Preserve the originals and label proposals separately.
+
+## Review evidence
+
+The final desktop home/portal comparison and 320px Home, Terminal/download and About changes have been inspected. Unchanged Messaging/Explore views also have 320px evidence; no horizontal overflow was observed. The local Terminal source download completed through the browser and its SHA-256 matched the archive. [The scoped verification and screenshots](../../release-evidence/brand-terminal-2026-10-22/verification.json) preserve the result. This does not qualify native Harness compilation, a signed installer or production deployment.
