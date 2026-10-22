@@ -63,9 +63,13 @@ $$;
 
 create function private.event_discussion_safety_action(_event_id uuid,_expected_user_id uuid,_message_id uuid,_action text,_category text,_reason text,_client_request_id uuid)
 returns jsonb language plpgsql security definer set search_path='' as $$
-declare rid uuid; report public.conversation_reports%rowtype;
+declare rid uuid; report public.conversation_reports%rowtype; moderation private.conversation_moderation_actions%rowtype; result jsonb;
 begin
  if auth.uid() is null or auth.uid() is distinct from _expected_user_id or _client_request_id is null then raise exception using errcode='42501',message='Account changed; reopen this discussion'; end if;
+ -- Serialize this wrapper's retries. Legacy shared callers do not take this
+ -- lock, so persisted payload validation after delegation is also required.
+ perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(
+ 'event-safety:'||auth.uid()::text||':'||_client_request_id::text,0));
  select room_id into rid from private.event_discussions where event_id=_event_id and enabled;
  if rid is null or not private.can_access_conversation_room(rid) or not exists(select 1 from public.conversation_messages where id=_message_id and room_id=rid and thread_id is null) then
  raise exception using errcode='42501',message='Message access is required'; end if;
@@ -73,7 +77,11 @@ begin
  if exists(select 1 from public.conversation_reports r where r.reporter_id=auth.uid() and r.client_request_id=_client_request_id
  and (r.message_id is distinct from _message_id or r.category is distinct from _category or r.description is distinct from btrim(_reason))) then
  raise exception using errcode='22023',message='Safety request ID was used for another report'; end if;
- select * into report from public.report_my_conversation_message(_message_id,_category,_reason,_client_request_id);
+ perform public.report_my_conversation_message(_message_id,_category,_reason,_client_request_id);
+ select * into report from public.conversation_reports r where r.reporter_id=auth.uid() and r.client_request_id=_client_request_id;
+ if not found or report.message_id is distinct from _message_id or report.category is distinct from _category
+ or report.description is distinct from btrim(_reason) then
+ raise exception using errcode='22023',message='Safety request ID was used for another report'; end if;
  return jsonb_build_object('action','reported','id',report.id);
  elsif _action in ('content_restrict','restore') then
  if not private.event_discussion_host(_event_id) then raise exception using errcode='42501',message='Event host moderation required'; end if;
@@ -82,7 +90,12 @@ begin
  if exists(select 1 from private.conversation_moderation_actions a where a.actor_id=auth.uid() and a.client_request_id=_client_request_id
  and (a.target_message_id is distinct from _message_id or a.action_type is distinct from _action or a.reason is distinct from btrim(_reason))) then
  raise exception using errcode='22023',message='Safety request ID was used for another action'; end if;
- return public.moderate_conversation_message(_message_id,_action,_reason,_client_request_id);
+ result:=public.moderate_conversation_message(_message_id,_action,_reason,_client_request_id);
+ select * into moderation from private.conversation_moderation_actions a where a.actor_id=auth.uid() and a.client_request_id=_client_request_id;
+ if not found or moderation.target_message_id is distinct from _message_id or moderation.action_type is distinct from _action
+ or moderation.reason is distinct from btrim(_reason) then
+ raise exception using errcode='22023',message='Safety request ID was used for another action'; end if;
+ return result;
  end if;
  raise exception using errcode='22023',message='Invalid discussion safety action';
 end;

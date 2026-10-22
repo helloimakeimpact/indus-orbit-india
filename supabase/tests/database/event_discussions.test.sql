@@ -76,6 +76,56 @@ select is(public.list_event_discussion_feed('97300000-0000-4000-8000-00000000001
 set local "request.jwt.claim.sub"='97300000-0000-4000-8000-000000000001';
 select is(public.event_discussion_safety_action('97300000-0000-4000-8000-000000000011','97300000-0000-4000-8000-000000000001',(select id from event_message),'restore','safety','Reviewed content may be restored','97300000-0000-4000-8000-000000000043')->>'action','restore','Host restoration is an explicit audited action');
 set local "request.jwt.claim.sub"='97300000-0000-4000-8000-000000000002';
+-- Deterministically model a legacy shared caller committing a conflicting
+-- request after the event wrapper's precheck but before delegated replay. The
+-- shim is transaction-local and restored before ordinary tests. Preserve TAP
+-- state: do not roll back a savepoint containing emitted assertions.
+reset role;
+create temp table event_safety_delegate_fixture(definition text not null);
+insert into event_safety_delegate_fixture(definition) values
+ (pg_get_functiondef('public.report_my_conversation_message(uuid,text,text,uuid)'::regprocedure)),
+ (pg_get_functiondef('public.moderate_conversation_message(uuid,text,text,uuid)'::regprocedure));
+create or replace function public.report_my_conversation_message(_message_id uuid,_category text,_description text,_client_request_id uuid)
+returns public.conversation_reports language plpgsql security definer set search_path='' as $$
+declare result public.conversation_reports%rowtype;
+begin
+ insert into public.conversation_reports(reporter_id,space_id,room_id,message_id,category,description,client_request_id)
+ select auth.uid(),r.space_id,m.room_id,m.id,_category,btrim(_description)||' different persisted reason',_client_request_id
+ from public.conversation_messages m join public.conversation_rooms r on r.id=m.room_id where m.id=_message_id returning * into result;
+ return result;
+end;
+$$;
+set local role authenticated;
+set local "request.jwt.claim.sub"='97300000-0000-4000-8000-000000000003';
+select throws_ok($$select public.event_discussion_safety_action('97300000-0000-4000-8000-000000000011','97300000-0000-4000-8000-000000000003',(select id from event_message),'report','safety','Expected report reason after precheck','97300000-0000-4000-8000-000000000044')$$,'22023',null,'A raced shared report with different persisted payload cannot acknowledge the requested report');
+reset role;
+select is((select count(*)::integer from public.conversation_reports where client_request_id='97300000-0000-4000-8000-000000000044'),0,'Rejected report replay rolls back its conflicting mutation');
+create or replace function public.moderate_conversation_message(_message_id uuid,_action text,_reason text,_client_request_id uuid)
+returns jsonb language plpgsql security definer set search_path='' as $$
+declare raced_action text:=case when _action='restore' then 'content_restrict' else 'restore' end;
+begin
+ insert into private.conversation_moderation_actions(space_id,target_user_id,target_message_id,action_type,reason,actor_id,client_request_id)
+ select r.space_id,m.author_id,m.id,raced_action,btrim(_reason),auth.uid(),_client_request_id
+ from public.conversation_messages m join public.conversation_rooms r on r.id=m.room_id where m.id=_message_id;
+ return jsonb_build_object('action',raced_action);
+end;
+$$;
+set local role authenticated;
+set local "request.jwt.claim.sub"='97300000-0000-4000-8000-000000000001';
+select throws_ok($$select public.event_discussion_safety_action('97300000-0000-4000-8000-000000000011','97300000-0000-4000-8000-000000000001',(select id from event_message),'content_restrict','safety','Expected moderation action after precheck','97300000-0000-4000-8000-000000000045')$$,'22023',null,'A raced shared moderation action cannot acknowledge a different requested action');
+reset role;
+select is((select count(*)::integer from private.conversation_moderation_actions where client_request_id='97300000-0000-4000-8000-000000000045'),0,'Rejected moderation replay rolls back its conflicting audit mutation');
+do $restore_delegates$
+declare saved record;
+begin
+ for saved in select definition from event_safety_delegate_fixture loop
+  execute saved.definition;
+ end loop;
+end;
+$restore_delegates$;
+drop table event_safety_delegate_fixture;
+set local role authenticated;
+set local "request.jwt.claim.sub"='97300000-0000-4000-8000-000000000002';
 -- A long reconnect uses stable keyset pages; an older viewport refresh is
 -- anchored inclusively and never splices an unknown latest-page gap.
 reset role;

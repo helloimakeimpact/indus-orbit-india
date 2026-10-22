@@ -1,6 +1,6 @@
 # Event discussion delivery and operating boundary
 
-Updated **22 October 2026**. State: **Partial**. The shared Room foundation and the first fifty event SQL assertions are **Verified** on a synthetic local database. Nineteen focused event units, five intercepted browser journeys from the prior source, TypeScript and scoped lint pass; final browser acceptance is rerun for the typed transport increment. All 133 source migrations have replayed successfully in managed CI. The final safety/export increment extends the event SQL contract to sixty-seven assertions; Docker's local API stalled before its targeted execution, so the complete SQL/type/schema gate must pass on the final candidate before that expanded contract is marked Verified. No hosted event discussion has been activated by this work.
+Updated **22 October 2026**. State: **Partial**. The shared Room foundation and the first fifty event SQL assertions are **Verified** on a synthetic local database. Nineteen focused event units, all five intercepted browser journeys on the final typed-transport source, TypeScript and scoped lint pass. The browser run completed on 22 October in 17.7 seconds against the isolated local server; these are synthetic UI personas, not hosted Auth/Realtime proof. All 133 source migrations have replayed successfully in managed CI. The final safety/export increment extends the event SQL contract to sixty-seven assertions; Docker's local API stalled before its targeted execution, so the complete SQL/type/schema gate must pass on the final candidate before that expanded contract is marked Verified. No hosted event discussion has been activated by this work.
 
 ## Product and authority
 
@@ -51,3 +51,13 @@ Account erasure revokes the person's group membership, removes authored text/rev
 5. Configure the existing safety queue's responsible operators and escalation/recovery process. Prove account export/deletion/hold, actual Storage/Auth cleanup and backup restore under the broader privacy runbook. Activate only after named release sign-off.
 
 The owner still provides staging/team access, real MFA/operator personas and service setup through dashboards. Engineering owns the source, exact release manifest, genuine supplier/Realtime rehearsal and recovery evidence. Choosing a visual chat reference does not replace those checks.
+
+### Safety request replay validation — 22 October 2026
+
+Event safety actions serialize the same actor/request key and validate the exact
+persisted target, action/category and trimmed reason after the shared RPC returns.
+The post-call check also protects against historical shared callers that do not
+acquire the event wrapper's lock. A conflicting replay raises `22023`; it cannot
+acknowledge another action as successful. Rollback-only SQL regression fixtures
+simulate a shared caller appearing between the precheck and delegated replay for
+both reports and moderation, and assert conflicting mutations roll back.
