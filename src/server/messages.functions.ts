@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import {
   boundedDirectMessageRequest,
   DIRECT_MESSAGE_SESSION_TIMEOUT_MS,
@@ -44,24 +45,37 @@ async function account(expectedUserId: string | undefined, guard: () => void) {
   return data.session.user.id;
 }
 
-// This narrow cast is temporary until the local candidate types are regenerated.
+type DirectMessageRpcName =
+  | "list_my_direct_inbox_v2"
+  | "list_my_direct_contacts_v2"
+  | "list_my_blocked_direct_contacts_v2"
+  | "block_my_member_v2"
+  | "unblock_my_member_v2"
+  | "list_my_direct_conversation_v2"
+  | "list_my_direct_conversation_after_v2"
+  | "send_my_direct_message_v2"
+  | "mark_my_direct_conversation_read_v2";
+type DirectMessageRpcArgs<Name extends DirectMessageRpcName> =
+  Database["public"]["Functions"][Name]["Args"];
+
+// The generated public contract validates names and arguments at every call.
 // Every browser operation calls an expected-account RPC, without legacy fallback.
-const rpc = (name: string, args: Record<string, unknown>, guard: () => void) => {
+const rpc = <Name extends DirectMessageRpcName>(
+  name: Name,
+  args: DirectMessageRpcArgs<Name>,
+  guard: () => void,
+) => {
   guard();
   return boundedDirectMessageRequest((signal) => {
     guard();
-    return supabase
-      .rpc(name as never, args as never)
-      .abortSignal(signal) as unknown as PromiseLike<{
-      data: unknown;
-      error: { message: string; code?: string } | null;
-    }>;
+    return supabase.rpc(name, args).abortSignal(signal);
   });
 };
 
 export async function getInbox(expectedUserId: string, before?: InboxCursor) {
   const guard = captureDirectMessageAccount(expectedUserId);
-  const call = (name: string, args: Record<string, unknown>) => rpc(name, args, guard);
+  const call = <Name extends DirectMessageRpcName>(name: Name, args: DirectMessageRpcArgs<Name>) =>
+    rpc(name, args, guard);
   await account(expectedUserId, guard);
   const { data, error } = await call("list_my_direct_inbox_v2", {
     _expected_user_id: expectedUserId,
@@ -94,7 +108,8 @@ export async function listConversationContacts(
   after?: ConversationContactsCursor,
 ) {
   const guard = captureDirectMessageAccount(expectedUserId);
-  const call = (name: string, args: Record<string, unknown>) => rpc(name, args, guard);
+  const call = <Name extends DirectMessageRpcName>(name: Name, args: DirectMessageRpcArgs<Name>) =>
+    rpc(name, args, guard);
   await account(expectedUserId, guard);
   const { data, error } = await call("list_my_direct_contacts_v2", {
     _expected_user_id: expectedUserId,
@@ -128,7 +143,8 @@ export async function getConnections(expectedUserId?: string) {
 
 export async function getConversationContact(expectedUserId: string, peerId: string) {
   const guard = captureDirectMessageAccount(expectedUserId);
-  const call = (name: string, args: Record<string, unknown>) => rpc(name, args, guard);
+  const call = <Name extends DirectMessageRpcName>(name: Name, args: DirectMessageRpcArgs<Name>) =>
+    rpc(name, args, guard);
   await account(expectedUserId, guard);
   const { data, error } = await call("list_my_direct_contacts_v2", {
     _expected_user_id: expectedUserId,
@@ -146,7 +162,8 @@ export async function getConversationContact(expectedUserId: string, peerId: str
 
 export async function getBlockedConnections(expectedUserId?: string) {
   const guard = captureDirectMessageAccount(expectedUserId);
-  const call = (name: string, args: Record<string, unknown>) => rpc(name, args, guard);
+  const call = <Name extends DirectMessageRpcName>(name: Name, args: DirectMessageRpcArgs<Name>) =>
+    rpc(name, args, guard);
   const owner = await account(expectedUserId, guard);
   const { data, error } = await call("list_my_blocked_direct_contacts_v2", {
     _expected_user_id: owner,
@@ -162,7 +179,8 @@ export async function blockMember(
   expectedUserId?: string,
 ) {
   const guard = captureDirectMessageAccount(expectedUserId);
-  const call = (name: string, args: Record<string, unknown>) => rpc(name, args, guard);
+  const call = <Name extends DirectMessageRpcName>(name: Name, args: DirectMessageRpcArgs<Name>) =>
+    rpc(name, args, guard);
   const owner = await account(expectedUserId, guard);
   const { error } = await call("block_my_member_v2", {
     _expected_user_id: owner,
@@ -175,7 +193,8 @@ export async function blockMember(
 
 export async function unblockMember(userId: string, expectedUserId?: string) {
   const guard = captureDirectMessageAccount(expectedUserId);
-  const call = (name: string, args: Record<string, unknown>) => rpc(name, args, guard);
+  const call = <Name extends DirectMessageRpcName>(name: Name, args: DirectMessageRpcArgs<Name>) =>
+    rpc(name, args, guard);
   const owner = await account(expectedUserId, guard);
   const { error } = await call("unblock_my_member_v2", {
     _expected_user_id: owner,
@@ -191,7 +210,8 @@ export async function getConversation(
   expectedUserId?: string,
 ) {
   const guard = captureDirectMessageAccount(expectedUserId);
-  const call = (name: string, args: Record<string, unknown>) => rpc(name, args, guard);
+  const call = <Name extends DirectMessageRpcName>(name: Name, args: DirectMessageRpcArgs<Name>) =>
+    rpc(name, args, guard);
   const owner = await account(expectedUserId, guard);
   const { data, error } = await call("list_my_direct_conversation_v2", {
     _expected_user_id: owner,
@@ -211,7 +231,8 @@ export async function getConversationAfter(
   expectedUserId: string,
 ) {
   const guard = captureDirectMessageAccount(expectedUserId);
-  const call = (name: string, args: Record<string, unknown>) => rpc(name, args, guard);
+  const call = <Name extends DirectMessageRpcName>(name: Name, args: DirectMessageRpcArgs<Name>) =>
+    rpc(name, args, guard);
   await account(expectedUserId, guard);
   const { data, error } = await call("list_my_direct_conversation_after_v2", {
     _expected_user_id: expectedUserId,
@@ -232,7 +253,8 @@ export async function sendMessage(
   expectedUserId?: string,
 ) {
   const guard = captureDirectMessageAccount(expectedUserId);
-  const call = (name: string, args: Record<string, unknown>) => rpc(name, args, guard);
+  const call = <Name extends DirectMessageRpcName>(name: Name, args: DirectMessageRpcArgs<Name>) =>
+    rpc(name, args, guard);
   const owner = await account(expectedUserId, guard);
   if (recipientId === owner) throw new Error("You cannot message yourself.");
   const message = content.trim();
@@ -263,7 +285,8 @@ export async function markConversationRead(
   expectedUserId: string,
 ) {
   const guard = captureDirectMessageAccount(expectedUserId);
-  const call = (name: string, args: Record<string, unknown>) => rpc(name, args, guard);
+  const call = <Name extends DirectMessageRpcName>(name: Name, args: DirectMessageRpcArgs<Name>) =>
+    rpc(name, args, guard);
   await account(expectedUserId, guard);
   const { error } = await call("mark_my_direct_conversation_read_v2", {
     _expected_user_id: expectedUserId,

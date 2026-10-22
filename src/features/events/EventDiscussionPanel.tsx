@@ -9,6 +9,10 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  boundedDirectMessageRequest,
+  DIRECT_MESSAGE_SESSION_TIMEOUT_MS,
+} from "@/server/direct-message-request";
 import type { SpaceFeedCursor, SpaceMessage } from "@/features/spaces/space-feed";
 import {
   getEventDiscussion,
@@ -104,8 +108,16 @@ function DiscussionContent({ eventId, userId }: { eventId: string; userId: strin
   }, [userId, accountGeneration]);
   const currentAccount = useCallback(async () => {
     if (!validAccount()) return false;
-    const { data } = await supabase.auth.getSession();
-    return validAccount() && data.session?.user.id === userId;
+    try {
+      const { data, error: sessionError } = await boundedDirectMessageRequest(
+        () => supabase.auth.getSession(),
+        DIRECT_MESSAGE_SESSION_TIMEOUT_MS,
+      );
+      return validAccount() && !sessionError && data.session?.user.id === userId;
+    } catch {
+      if (validAccount()) setError("Couldn’t confirm this session. Please try again.");
+      return false;
+    }
   }, [userId, validAccount]);
   const applyHistory = useCallback((next: History, bottom = false) => {
     const node = timeline.current;
@@ -296,7 +308,10 @@ function DiscussionContent({ eventId, userId }: { eventId: string; userId: strin
       return;
     lastRead.current = last.id;
     void currentAccount()
-      .then((valid) => (valid ? markEventDiscussionRead(eventId, userId, last.id) : undefined))
+      .then((valid) => {
+        if (valid) return markEventDiscussionRead(eventId, userId, last.id);
+        if (lastRead.current === last.id) lastRead.current = null;
+      })
       .catch(() => {
         if (lastRead.current === last.id) lastRead.current = null;
       });

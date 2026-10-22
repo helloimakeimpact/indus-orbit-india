@@ -1506,6 +1506,7 @@ export type Database = {
           created_by: string | null;
           description: string;
           display_name: string;
+          event_id: string | null;
           id: string;
           join_policy: string;
           lifecycle_state: string;
@@ -1523,6 +1524,7 @@ export type Database = {
           created_by?: string | null;
           description?: string;
           display_name: string;
+          event_id?: string | null;
           id?: string;
           join_policy?: string;
           lifecycle_state?: string;
@@ -1540,6 +1542,7 @@ export type Database = {
           created_by?: string | null;
           description?: string;
           display_name?: string;
+          event_id?: string | null;
           id?: string;
           join_policy?: string;
           lifecycle_state?: string;
@@ -1562,6 +1565,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "profiles";
             referencedColumns: ["user_id"];
+          },
+          {
+            foreignKeyName: "conversation_spaces_event_id_fkey";
+            columns: ["event_id"];
+            isOneToOne: true;
+            referencedRelation: "events";
+            referencedColumns: ["id"];
           },
           {
             foreignKeyName: "conversation_spaces_mission_id_fkey";
@@ -6436,6 +6446,26 @@ export type Database = {
       };
     };
     Functions: {
+      block_my_member_v2: {
+        Args: {
+          _blocked_user_id: string;
+          _expected_user_id: string;
+          _reason_category?: string;
+        };
+        Returns: {
+          blocked_user_id: string;
+          blocker_id: string;
+          created_at: string;
+          reason_category: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "member_blocks";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+
       enforce_account_access: { Args: never; Returns: undefined };
       account_deletion_current: {
         Args: { _lease_token: string; _request_id: string };
@@ -6501,11 +6531,162 @@ export type Database = {
         Args: { _lease_token: string; _request_id: string };
         Returns: Json;
       };
+      event_discussion_safety_action: {
+        Args: {
+          _action: string;
+          _category: string;
+          _client_request_id: string;
+          _event_id: string;
+          _expected_user_id: string;
+          _message_id: string;
+          _reason: string;
+        };
+        Returns: Json;
+      };
+
       fail_account_export: {
         Args: { _error_code: string; _lease_token: string; _request_id: string };
         Returns: boolean;
       };
+      get_event_discussion: { Args: { _event_id: string }; Returns: Json };
+
       get_my_account_export: { Args: { _request_id: string }; Returns: Json };
+      mark_my_direct_conversation_read_v2: {
+        Args: {
+          _expected_user_id: string;
+          _other_user_id: string;
+          _through_id: string;
+        };
+        Returns: number;
+      };
+
+      mark_event_discussion_read: {
+        Args: {
+          _event_id: string;
+          _expected_user_id: string;
+          _message_id: string;
+        };
+        Returns: undefined;
+      };
+
+      list_my_direct_inbox_v2: {
+        Args: {
+          _before_created_at?: string;
+          _before_id?: string;
+          _before_peer_id?: string;
+          _expected_user_id: string;
+          _limit?: number;
+        };
+        Returns: {
+          avatar_url: string;
+          display_name: string;
+          headline: string;
+          last_message_at: string;
+          last_message_content: string;
+          last_message_id: string;
+          last_sender_id: string;
+          unread_count: number;
+          user_id: string;
+        }[];
+      };
+
+      list_my_direct_conversation_v2: {
+        Args: {
+          _before_created_at?: string;
+          _before_id?: string;
+          _expected_user_id: string;
+          _limit?: number;
+          _other_user_id: string;
+        };
+        Returns: {
+          client_request_id: string | null;
+          content: string;
+          created_at: string;
+          id: string;
+          read_at: string | null;
+          recipient_id: string;
+          sender_id: string;
+        }[];
+        SetofOptions: {
+          from: "*";
+          to: "direct_messages";
+          isOneToOne: false;
+          isSetofReturn: true;
+        };
+      };
+
+      list_my_direct_conversation_after_v2: {
+        Args: {
+          _after_created_at: string;
+          _after_id: string;
+          _expected_user_id: string;
+          _limit?: number;
+          _other_user_id: string;
+        };
+        Returns: {
+          client_request_id: string | null;
+          content: string;
+          created_at: string;
+          id: string;
+          read_at: string | null;
+          recipient_id: string;
+          sender_id: string;
+        }[];
+        SetofOptions: {
+          from: "*";
+          to: "direct_messages";
+          isOneToOne: false;
+          isSetofReturn: true;
+        };
+      };
+
+      list_my_direct_contacts_v2: {
+        Args: {
+          _after_display_name?: string;
+          _after_user_id?: string;
+          _expected_user_id: string;
+          _limit?: number;
+          _only_user_id?: string;
+          _search?: string;
+        };
+        Returns: {
+          avatar_url: string;
+          display_name: string;
+          headline: string;
+          user_id: string;
+        }[];
+      };
+
+      list_my_community_chat_links: { Args: never; Returns: Json };
+
+      list_my_blocked_direct_contacts_v2: {
+        Args: { _expected_user_id: string };
+        Returns: {
+          avatar_url: string;
+          display_name: string;
+          headline: string;
+          user_id: string;
+        }[];
+      };
+
+      list_event_discussion_feed: {
+        Args: {
+          _before_created_at?: string;
+          _before_id?: string;
+          _event_id: string;
+          _expected_user_id: string;
+          _limit?: number;
+          _through_created_at?: string;
+          _through_id?: string;
+        };
+        Returns: Json;
+      };
+
+      join_event_discussion: {
+        Args: { _event_id: string; _expected_user_id: string };
+        Returns: Json;
+      };
+
       privacy_file_cleanup_current: {
         Args: { _lease_token: string; _object_id: string };
         Returns: boolean;
@@ -6652,6 +6833,55 @@ export type Database = {
 
       get_my_event_workspace: { Args: never; Returns: Json };
       get_host_event_draft: { Args: { _event_id: string }; Returns: Json };
+      unblock_my_member_v2: {
+        Args: { _blocked_user_id: string; _expected_user_id: string };
+        Returns: boolean;
+      };
+
+      set_event_discussion: {
+        Args: {
+          _enabled: boolean;
+          _event_id: string;
+          _expected_user_id: string;
+          _expected_version: number;
+        };
+        Returns: Json;
+      };
+
+      send_my_direct_message_v2: {
+        Args: {
+          _client_request_id: string;
+          _content: string;
+          _expected_user_id: string;
+          _recipient_id: string;
+        };
+        Returns: {
+          client_request_id: string | null;
+          content: string;
+          created_at: string;
+          id: string;
+          read_at: string | null;
+          recipient_id: string;
+          sender_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "direct_messages";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+
+      send_event_discussion_message: {
+        Args: {
+          _client_request_id: string;
+          _content: string;
+          _event_id: string;
+          _expected_user_id: string;
+        };
+        Returns: string;
+      };
+
       update_hosted_event: { Args: { _input: Json }; Returns: Json };
       review_event_revision: {
         Args: {

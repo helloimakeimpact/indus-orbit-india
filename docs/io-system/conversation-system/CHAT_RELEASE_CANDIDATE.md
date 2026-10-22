@@ -1,6 +1,6 @@
 # Lightweight chat release candidate
 
-Updated **21 October 2026**. Overall release state: **Partial**. This continues the approved private-message/event/community-group scope in [the execution plan](LIGHTWEIGHT_CHAT_FINALIZATION_PLAN.md). E2EE remains a separate future design; current source retains authenticated server access and encrypted connections.
+Updated **22 October 2026**. Overall release state: **Partial**. This continues the approved private-message/event/community-group scope in [the execution plan](LIGHTWEIGHT_CHAT_FINALIZATION_PLAN.md). E2EE remains a separate future design; current source retains authenticated server access and encrypted connections.
 
 ## Implemented candidate source
 
@@ -22,7 +22,11 @@ The new manifest-aware bundle gate measures unique static dependency graphs, inc
 
 Direct-message SQL contracts pass 61 new assertions plus 77 existing DM/block/typing assertions on an isolated synthetic database. The event foundation passes 50 assertions; the subsequent privacy/safety additions need the complete candidate database gate. Local Docker became unresponsive again during full replay after the approved restart; this is not a passing fresh-stack result.
 
-**Remaining candidate gate:** managed-stack CI must replay all 133 migrations, regenerate the public schema, preserve the 97 exact held-Spaces differences, run the full SQL suite and complete the final application checks. The generated schema artifact is retained for explicit review; candidate browser declarations must be updated from that evidence before merge. Do not infer release from this candidate source.
+The [first managed-stack candidate run](https://github.com/helloimakeimpact/indus-orbit-india/actions/runs/39618910952) successfully started Supabase, replayed all **133 migrations** from empty and generated the public schema. Its type gate correctly rejected the unintegrated new contracts. On 22 October, the retained artifact was reviewed: **17 chat RPCs** and the event Space relationship were imported, preserving all **97 exact hash-bound held-Spaces differences**. The local replay-boundary check and generated-contract-typed direct-message requests pass. This does not change the held migration or silently expose its APIs.
+
+The parallel Quality run exposed newly reported Vite findings. Both member and admin now pin compatible **Vite 7.3.7** and their refreshed dependency audits report zero vulnerabilities. The [official patch release](https://github.com/vitejs/vite/releases/tag/v7.3.7) is recorded as source evidence. Member application verification passes **280 units**, types, formatting, lint, builds and bundle checks; separate admin verification passes **35 units**. Event requests also use generated name/argument contracts, real 20-second RPC abort signals, 10-second Auth waits and account-generation checks on success/failure; 19 focused event unit tests pass. The five final event browser journeys are running separately.
+
+**Remaining candidate gate:** rerun managed CI with the reviewed browser types and patched lockfile, then pass the full SQL contracts/schema lint and final browser checks. Earlier Docker fixture failures are not counted as passing integration evidence. Do not infer hosted release from this candidate source.
 
 ## Delivery and owner actions
 
