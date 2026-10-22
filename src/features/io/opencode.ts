@@ -195,6 +195,9 @@ async function requestOpenCode(
   signal: AbortSignal | undefined,
   timeoutMs: number,
 ) {
+  // A caller can stop while a preceding lifecycle callback is awaiting cloud
+  // metadata. Do not dispatch the next daemon request after that cancellation.
+  if (signal?.aborted) throw new OpenCodeStoppedError();
   const controller = new AbortController();
   let timedOut = false;
   const timeout = globalThis.setTimeout(() => {
@@ -424,15 +427,15 @@ export async function runOpenCodeSession(input: {
         ? healthRecord.version
         : null,
   };
-  await input.onSessionCreated?.(reference);
-  await input.onMetadataEvent?.(reference, {
-    type: "runtime.connected",
-    payload: { runtimeVersionKnown: reference.serverVersion !== null },
-  });
-
   let content: string;
   let changedFileCount: number | null;
   try {
+    await input.onSessionCreated?.(reference);
+    if (input.signal?.aborted) throw new OpenCodeStoppedError();
+    await input.onMetadataEvent?.(reference, {
+      type: "runtime.connected",
+      payload: { runtimeVersionKnown: reference.serverVersion !== null },
+    });
     const message = await requestOpenCode(
       `${baseUrl}/session/${encodeURIComponent(sessionId)}/message`,
       {

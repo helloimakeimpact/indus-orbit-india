@@ -1,0 +1,76 @@
+{
+  "date": "2026-10-22",
+  "state": "Verified",
+  "scope": "Source checkpoint and review artifacts; full production remains Partial",
+  "baseCommit": "cea18921b544e375e399dddde94365d41e4920f9",
+  "member": {
+    "command": "npm run verify",
+    "exitCode": 0,
+    "unitTests": 295,
+    "libraryBuilds": 3,
+    "productionBuild": "passed",
+    "bundleBudgets": "passed",
+    "formatLintTypes": "passed",
+    "afterExecutionGate": "Passed; final wording-only copy adjusted while typecheck was running, before production build. Standalone formatting also passed.",
+    "log": "member-verify.txt"
+  },
+  "focusedBrowser": {
+    "state": "Verified",
+    "scope": "Controlled synthetic accounts and intercepted HTTP/Realtime",
+    "eventRuns": 6,
+    "terminalDenialRuns": 1,
+    "notes": [
+      "Six community-events public desktop/mobile and member scenarios pass",
+      "Terminal mode choices Observe/Plan/Build/Run remain disabled with known workspace, prompt and credentials; no loopback request or execution metadata mutation",
+      "Session-list POST RPC is mocked as an inspection read",
+      "These checks do not prove hosted Auth, daemon policy or a real provider"
+    ]
+  },
+  "database": {
+    "changed": false,
+    "evidenceBoundary": "Prior exact candidate managed CI:133 migrations,40 SQL files,1371 assertions;97 unchanged hash-bound held Spaces differences",
+    "newReplayClaim": false
+  },
+  "brand": {
+    "bookPages": 34,
+    "reviewState": "Planned",
+    "generatedPictures": 4,
+    "moodboards": 2,
+    "rasterInventory": 41,
+    "prototypeViews": ["Home", "Messaging", "Terminal", "Explore", "About"],
+    "visualChecks": "Desktop home/Terminal inspected; four detail views inspected at320px with scrollWidth320 and no broken images before final quote/download update. Final update browser review pending locked Mac.",
+    "selectedPortal": "docs/io-system/brand/assets/portal-quote-selective-focus-v1.png",
+    "blurRule": "Only portal interior blurred; world/person/frame/quote sharp",
+    "allPagesInspected": true,
+    "repairedPages": [11],
+    "bookSha256": "89f7a407828d217257b1b185a2476df30933b83c601b40d49a66f09c51987393"
+  },
+  "harness": {
+    "base": "687f282e8625c6b8d11ff58211a90524be2e4317",
+    "tag": "dsh-v0.2.1-rc.2",
+    "state": "Partial",
+    "focusedTests": 53,
+    "completeBuild": false,
+    "assembledBrowser": false,
+    "publication": "local source preview only",
+    "sourceZipSha256": "67fca9c88904746e8b48ce417f36f05fcf9feddb7247994f1ebe3223882944d6",
+    "sourceZipBytes": 45257993,
+    "originalCheckoutPreserved": true,
+    "requiredPrePushGates": "Incomplete; no bypass or source-branch push"
+  },
+  "resourceIncident": {
+    "diskAvailableAtStop": "392MiB,100% capacity",
+    "action": "Stopped owned harness lanes; removed only newly generated dependencies/build output in isolated harness checkout",
+    "preserved": [
+      "Original checkout",
+      "Original four branding files",
+      "Shared pnpm store",
+      "User source/assets"
+    ],
+    "diskAvailableAfterCleanup": "About6GiB; varies with other local work",
+    "failedAttemptsNotCountedAsPass": true
+  },
+  "productionMutation": false,
+  "providerCalls": false,
+  "installerPublished": false
+}

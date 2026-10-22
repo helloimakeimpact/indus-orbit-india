@@ -1,0 +1,97 @@
+{
+  "schemaVersion": 1,
+  "reviewDate": "2026-10-22",
+  "book": "output/pdf/indus-orbit-brand-book-and-redesign-proposal-v1.pdf",
+  "selectedPortal": "docs/io-system/brand/assets/portal-quote-selective-focus-v1.png",
+  "pictureCreationTool": "imagegen",
+  "productionRollout": "Planned",
+  "notes": [
+    "Original source assets preserved",
+    "Generated people are illustrative",
+    "Only portal interior blur is selected; globally blurred study superseded",
+    "No Instagram media downloaded",
+    "OFL font licenses included in fonts"
+  ],
+  "assets": [
+    {
+      "path": "docs/io-system/brand/assets/mirror-soft-dawn-study-v1.png",
+      "bytes": 2039107,
+      "sha256": "347727a43b0d21e88c2e9b944d0db683f3f885f4278780b961b2aae2ff8a93dd",
+      "width": 1254,
+      "height": 1254,
+      "role": "AI-generated light study",
+      "provenance": "Original public/wiki-hero.jpg plus existing dawn reference; separately named interpretation",
+      "implementationState": "Planned"
+    },
+    {
+      "path": "docs/io-system/brand/assets/portal-quote-selective-focus-v1.png",
+      "bytes": 2039225,
+      "sha256": "bbdda54db2f2172186fbbb292e941c02cbbea6482256d0cacca0f36a4c6bd1fe",
+      "width": 1254,
+      "height": 1254,
+      "role": "Owner-directed selective-focus quote study",
+      "provenance": "Sharp light study and quote layout; blur confined to portal interior, quote exactly Intelligence, built together.",
+      "implementationState": "Planned"
+    },
+    {
+      "path": "docs/io-system/brand/assets/messaging-opportunity-study-v1.png",
+      "bytes": 2398072,
+      "sha256": "57090736fa26d28cde13afc3a129c64964b099227a065991bfcb146d69572979",
+      "width": 1536,
+      "height": 1024,
+      "role": "AI-generated Messaging illustration",
+      "provenance": "Confirmed portal and existing rooftop/dawn references; imagined people, not documentary evidence",
+      "implementationState": "Planned"
+    },
+    {
+      "path": "docs/io-system/brand/assets/terminal-opportunity-study-v1.png",
+      "bytes": 2271989,
+      "sha256": "93d8714c7b8b30785e2b9dacc82aef749b8e7d764ca9f9f0aaad27274e607f48",
+      "width": 1536,
+      "height": 1024,
+      "role": "AI-generated Terminal illustration",
+      "provenance": "Confirmed portal and existing earthly dawn references; conceptual useful work, not executed product evidence",
+      "implementationState": "Planned"
+    },
+    {
+      "path": "docs/io-system/brand/assets/moodboard-roots-v1.png",
+      "bytes": 977407,
+      "sha256": "209e5378cb014a63dfbf470b1d43a869784728046904302e453e9d1337296a44",
+      "width": 1800,
+      "height": 1350,
+      "role": "PDF page export",
+      "provenance": "Book page8; original earthly art and proposed palette",
+      "implementationState": "Planned"
+    },
+    {
+      "path": "docs/io-system/brand/assets/moodboard-soft-dawn-v1.png",
+      "bytes": 1558499,
+      "sha256": "564e2b5fca152676025e0c648a82924f8273de45be6aa03f8b20a9ea44fb5e8f",
+      "width": 1800,
+      "height": 1350,
+      "role": "PDF page export",
+      "provenance": "Book page9; proposed Messaging, Terminal and light-study family",
+      "implementationState": "Planned"
+    },
+    {
+      "path": "public/wiki-hero.jpg",
+      "bytes": 476361,
+      "sha256": "87d9eb8565e67188cf2b54039ba1ee4ddc6f9df7068f1030dc243499c1a3983c",
+      "width": 1024,
+      "height": 1024,
+      "role": "Preserved existing source master",
+      "implementationState": "Verified",
+      "provenance": "Existing repository asset, unchanged in this increment"
+    },
+    {
+      "path": "src/assets/indus-orbit-logo.png",
+      "bytes": 43607,
+      "sha256": "e24c72d57e28f9c0c77263db98cea372f3834514a078bc132212cb991e267987",
+      "width": 512,
+      "height": 512,
+      "role": "Preserved existing source master",
+      "implementationState": "Verified",
+      "provenance": "Existing repository asset, unchanged in this increment"
+    }
+  ]
+}

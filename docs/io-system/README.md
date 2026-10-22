@@ -1,5 +1,9 @@
 # Indus Orbit living system record
 
+## 22 October deep audit and brand/harness follow-up
+
+**Overall state: Partial. All code work is not complete.** The [code-level remainder](CODE_LEVEL_REMAINDER_2026-10-22.md) supersedes earlier mode-enforcement and configuration-only completion summaries. Four concrete connector/event defects are fixed; the web connector pauses execution until actual runtime permissions are bound and verified. Real OpenAPI/diff compatibility, pairing/distribution, assisted privacy/retention and the reviewed site redesign remain engineering work. The approved hierarchy is **Messaging + Terminal**, with the other experiences as extensions. See the [brand guidelines](brand/BRAND_PHILOSOPHY_AND_GUIDELINES_2026-10-22.md), [full redesign proposal](brand/SITE_SIMPLIFICATION_PROPOSAL_2026-10-22.md) and [review artifact index](brand/README.md). The native DeepSeek Harness refresh is pinned to the official prerelease and is separate from OpenCode web compatibility. Source previews are not signed installers or a production release.
+
 ## Current source finalization — 22 October 2026
 
 [The current whole-product report](PRODUCTION_STATUS_2026-10-22.md) and [chat candidate](conversation-system/CHAT_RELEASE_CANDIDATE.md) supersede the earlier implementation-plan states below. Private messages, the shared premium interface and community/event discussions are implemented; local member verification passes 285 units, admin 35, and final managed CI passes **133-migration replay, 40 SQL files / 1,371 assertions, exact types and schema lint**, including the safety-retry correction. Exact source/hash evidence is under `../release-evidence/chat-2026-10-22/`.

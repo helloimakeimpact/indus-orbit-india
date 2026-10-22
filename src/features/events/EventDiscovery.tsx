@@ -211,7 +211,11 @@ export function EventDiscovery({
                             ? "Cancelled"
                             : event.requires_approval
                               ? "Host approval"
-                              : "Free · Members"}
+                              : event.registration_scope === "public"
+                                ? "Free · Everyone"
+                                : event.registration_scope === "chapter"
+                                  ? "Free · Chapter members"
+                                  : "Free · Community members"}
                         </span>
                       </div>
                     </div>

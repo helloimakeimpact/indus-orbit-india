@@ -1,0 +1,192 @@
+{
+  "file": "output/pdf/indus-orbit-brand-book-and-redesign-proposal-v1.pdf",
+  "pages": [
+    {
+      "page": 1,
+      "section": "Brand book / review edition 01",
+      "title": "Indus Orbit"
+    },
+    {
+      "page": 2,
+      "section": "01 / Direction",
+      "title": "Two offerings. One shared purpose."
+    },
+    {
+      "page": 3,
+      "section": "02 / Philosophy",
+      "title": "People become more capable<br/>when possibility is shared."
+    },
+    {
+      "page": 4,
+      "section": "03 / Values",
+      "title": "The established pillars,<br/>expressed through behaviour."
+    },
+    {
+      "page": 5,
+      "section": "04 / Architecture",
+      "title": "The company is the umbrella."
+    },
+    {
+      "page": 6,
+      "section": "05 / Signature metaphor",
+      "title": "A portal of opportunity."
+    },
+    {
+      "page": 7,
+      "section": "06 / Portal series",
+      "title": "One grammar.<br/>Many people and possibilities."
+    },
+    {
+      "page": 8,
+      "section": "07 / Moodboard A",
+      "title": "Rooted. Human. Full of possibility."
+    },
+    {
+      "page": 9,
+      "section": "08 / Moodboard B",
+      "title": "Soft dawn. Clear intention."
+    },
+    {
+      "page": 10,
+      "section": "09 / Light study",
+      "title": "Original to soft dawn."
+    },
+    {
+      "page": 11,
+      "section": "09A / Portal focus",
+      "title": "Only the opening is dreamlike."
+    },
+    {
+      "page": 12,
+      "section": "10 / Messaging art",
+      "title": "A conversation opens a possibility."
+    },
+    {
+      "page": 13,
+      "section": "11 / Terminal art",
+      "title": "Useful intelligence meets human agency."
+    },
+    {
+      "page": 14,
+      "section": "12 / Character system",
+      "title": "A coherent cast,<br/>with room for real variety."
+    },
+    {
+      "page": 15,
+      "section": "13 / Colour",
+      "title": "Bright surfaces. Deep anchors."
+    },
+    {
+      "page": 16,
+      "section": "14 / Typography",
+      "title": "Editorial warmth.<br/>Working clarity."
+    },
+    {
+      "page": 17,
+      "section": "15 / Mark",
+      "title": "Use the actual pixel master."
+    },
+    {
+      "page": 18,
+      "section": "16 / Voice",
+      "title": "Warm, lucid, rooted and exact."
+    },
+    {
+      "page": 19,
+      "section": "17 / Instagram",
+      "title": "Register what is already happening."
+    },
+    {
+      "page": 20,
+      "section": "18 / Social system",
+      "title": "Three clear cover families."
+    },
+    {
+      "page": 21,
+      "section": "19 / Website audit",
+      "title": "The problem is competing hierarchy."
+    },
+    {
+      "page": 22,
+      "section": "20 / Homepage proposal",
+      "title": "One company. Two doors. Five sections."
+    },
+    {
+      "page": 23,
+      "section": "21 / Navigation",
+      "title": "A smaller menu,<br/>a complete company."
+    },
+    {
+      "page": 24,
+      "section": "22 / Messaging surfaces",
+      "title": "Keep the new conversation system."
+    },
+    {
+      "page": 25,
+      "section": "23 / Terminal + download",
+      "title": "A clear entry to useful work."
+    },
+    {
+      "page": 26,
+      "section": "24 / Full redesign plan",
+      "title": "A finite sequence,<br/>with clear review gates."
+    },
+    {
+      "page": 27,
+      "section": "25 / Acceptance",
+      "title": "Minimal in hierarchy.<br/>Complete in responsibility."
+    },
+    {
+      "page": 28,
+      "section": "26 / Source and status",
+      "title": "A reviewable direction,<br/>with an honest delivery boundary."
+    },
+    {
+      "page": 29,
+      "section": "27 / References",
+      "title": "What informed this edition."
+    },
+    {
+      "page": 30,
+      "section": "Appendix / complete curation",
+      "title": "Every existing raster has a role."
+    },
+    {
+      "page": 31,
+      "section": "Appendix / complete curation",
+      "title": "Every existing raster has a role."
+    },
+    {
+      "page": 32,
+      "section": "Appendix / complete curation",
+      "title": "Every existing raster has a role."
+    },
+    {
+      "page": 33,
+      "section": "Appendix / complete curation",
+      "title": "Every existing raster has a role."
+    },
+    {
+      "page": 34,
+      "section": "Appendix / complete curation",
+      "title": "Every existing raster has a role."
+    }
+  ],
+  "page_count": 34,
+  "state": "Planned",
+  "review_date": "2026-10-22",
+  "moodboard_pages": [
+    {
+      "page": 8,
+      "section": "07 / Moodboard A",
+      "title": "Rooted. Human. Full of possibility."
+    },
+    {
+      "page": 9,
+      "section": "08 / Moodboard B",
+      "title": "Soft dawn. Clear intention."
+    }
+  ],
+  "source_guideline": "docs/io-system/brand/BRAND_PHILOSOPHY_AND_GUIDELINES_2026-10-22.md",
+  "asset_inventory_count": 41
+}

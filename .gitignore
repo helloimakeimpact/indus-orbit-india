@@ -21,6 +21,10 @@ test-results/
 playwright-report/
 playwright/.auth/
 
+# Local review/download bundles; source and the rendered brand book are tracked.
+/output/brand/
+/output/terminal/
+
 # Wrangler / Cloudflare
 .wrangler/
 .dev.vars
