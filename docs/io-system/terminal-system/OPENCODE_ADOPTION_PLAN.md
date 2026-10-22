@@ -1,6 +1,6 @@
 # OpenCode adoption plan for I/O Terminal
 
-Status: implementation and remaining compatibility plan, updated 26 August 2026.
+Status: historical implementation and compatibility plan, originally updated 26 August 2026. **Superseded for current readiness by the [22 October code audit](../CODE_LEVEL_REMAINDER_2026-10-22.md).** The browser permission filter does not establish runtime mode enforcement. Web execution/mutations are paused until that is implemented and verified. Official v1.18.30 path/diff contracts also need adapter work. The newly refreshed native DeepSeek Harness is a separate runtime workstream. Historical matrix rows below retain their original source-fixture claims; they are not present release guarantees.
 
 ## Adoption decision
 

@@ -60,6 +60,7 @@ test("@public event discovery, search, invitation and community links fit 320px"
   await page.goto("/events");
   await expect(page.getByRole("heading", { name: "Find your next gathering." })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Builders at dawn" })).toBeVisible();
+  await expect(page.getByText("Free · Community members", { exact: true })).toBeVisible();
   await page.getByLabel("Search events by title, city or community").fill("No matches");
   await expect(
     page.getByRole("heading", { name: "No gatherings match your search." }),
@@ -187,6 +188,9 @@ test("@public open events offer name/email registration without membership or ac
       });
     },
   );
+  await page.goto("/events");
+  await expect(page.getByText("Free · Everyone", { exact: true })).toBeVisible();
+  await expect(page.getByText("Free · Community members", { exact: true })).toHaveCount(0);
   await page.goto(`/events/${eventId}`);
   await expect(
     page.getByText("Register with your name and email. No Indus Orbit account is needed."),

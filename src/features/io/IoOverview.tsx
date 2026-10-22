@@ -53,6 +53,7 @@ import { IO_WORKSPACE_VIEW_META } from "@/features/io/io-workspace-view";
 import { useIoWorkspaceView } from "@/features/io/io-workspace-view-context";
 import { apiKeyLifecycle, usagePercent } from "@/features/io/api-key-usage";
 import {
+  OPENCODE_EXECUTION_READINESS,
   TERMINAL_MODE_POLICIES,
   terminalCredentialLease,
   terminalPermissionPolicy,
@@ -982,6 +983,7 @@ export function IoOverview() {
 
   async function runSession() {
     if (!workspace || !prompt.trim()) return;
+    if (executionPath === "terminal" && !allowLocalExecution()) return;
     setRunning(true);
     setPartnerResult(null);
     setTerminalResult(null);
@@ -1271,6 +1273,7 @@ export function IoOverview() {
   }
 
   async function continueLocalTerminal(session: IoTerminalSession) {
+    if (!allowLocalExecution()) return;
     if (
       typeof window === "undefined" ||
       !workspace ||
@@ -1356,6 +1359,7 @@ export function IoOverview() {
     decision: "once" | "reject",
   ) {
     if (typeof window === "undefined" || terminalPermissionBusy) return;
+    if (decision === "once" && !allowLocalExecution()) return;
     const policy = terminalPermissionPolicy({
       mode: session.mode,
       permission: permission.permission,
@@ -1372,21 +1376,25 @@ export function IoOverview() {
     }
     setTerminalPermissionBusy(permission.id);
     try {
-      const expiresInMs = permission.risk === "critical" ? 4 * 60_000 : 15 * 60_000;
-      const cloudRequest = await requestMyIoTerminalApproval({
-        sessionId: session.id,
-        permissionKind: policy.kind,
-        riskClass: permission.risk,
-        reason: policy.reason,
-        expiresAt: approvalExpiryFromNow(expiresInMs),
-      });
-      await decideMyIoTerminalApproval(
-        cloudRequest.requestId,
-        decision === "once" ? "approved" : "rejected",
-        decision === "once"
-          ? "Member approved this exact request once."
-          : "Member rejected this exact request.",
-      );
+      // Unsupported names have no cloud permission category. They are already
+      // reject-only above; never mislabel them as an approved read operation.
+      if (policy.kind !== "unknown") {
+        const expiresInMs = permission.risk === "critical" ? 4 * 60_000 : 15 * 60_000;
+        const cloudRequest = await requestMyIoTerminalApproval({
+          sessionId: session.id,
+          permissionKind: policy.kind,
+          riskClass: permission.risk,
+          reason: policy.reason,
+          expiresAt: approvalExpiryFromNow(expiresInMs),
+        });
+        await decideMyIoTerminalApproval(
+          cloudRequest.requestId,
+          decision === "once" ? "approved" : "rejected",
+          decision === "once"
+            ? "Member approved this exact request once."
+            : "Member rejected this exact request.",
+        );
+      }
       const client = new IOPortOpenCodeClient({
         origin: binding.connectorOrigin,
         password: openCodePassword,
@@ -1409,6 +1417,7 @@ export function IoOverview() {
   }
 
   async function forkLocalTerminal(session: IoTerminalSession, messageId?: string) {
+    if (!allowLocalExecution()) return;
     if (typeof window === "undefined" || !workspace || terminalForkBusy) return;
     const binding = loadOpenCodeLocalBinding(window.localStorage, session.id);
     if (!binding) {
@@ -1482,6 +1491,7 @@ export function IoOverview() {
   }
 
   async function revertLocalTerminal(session: IoTerminalSession, messageId: string) {
+    if (!allowLocalExecution()) return;
     if (typeof window === "undefined" || terminalRevertBusy) return;
     const binding = loadOpenCodeLocalBinding(window.localStorage, session.id);
     if (!binding) {
@@ -1520,6 +1530,7 @@ export function IoOverview() {
   }
 
   async function restoreLocalTerminal(session: IoTerminalSession) {
+    if (!allowLocalExecution()) return;
     if (typeof window === "undefined" || terminalRevertBusy) return;
     const binding = loadOpenCodeLocalBinding(window.localStorage, session.id);
     if (!binding) {
@@ -1549,6 +1560,7 @@ export function IoOverview() {
   }
 
   async function runReviewedLocalCommand(session: IoTerminalSession) {
+    if (!allowLocalExecution()) return;
     if (
       typeof window === "undefined" ||
       terminalCommandBusy ||
@@ -1689,10 +1701,17 @@ export function IoOverview() {
     !catalogLoading &&
     (routeStrategy !== "explicit_model" || Boolean(requestedModelId));
   const openCodeCredentialLease = terminalCredentialLease(openCodeCredentialEnteredAt);
-  const canRunTerminal =
+  function allowLocalExecution() {
+    if (OPENCODE_EXECUTION_READINESS.allowed) return true;
+    toast.error(OPENCODE_EXECUTION_READINESS.reason);
+    return false;
+  }
+
+  const canInspectTerminal =
     openCodeCredentialLease.valid &&
     openCodePassword.length >= 16 &&
     openCodePassword.length <= 1_024;
+  const canRunTerminal = canInspectTerminal && OPENCODE_EXECUTION_READINESS.allowed;
   const routeSignals = [
     { label: "Registry evidence", value: "Enforced", icon: FileCheck2 },
     {
@@ -1761,13 +1780,13 @@ opencode auth login
     activeView === "sessions" || activeView === "terminal" || activeView === "routes";
   const sessionHeading =
     activeView === "terminal"
-      ? "Run on this device"
+      ? "Inspect work on this device"
       : activeView === "routes"
         ? "Prepare a provider route"
         : "Start a session";
   const sessionDescription =
     activeView === "terminal"
-      ? "Connect to a local OpenCode server; prompts, output, code and passwords stay on this device."
+      ? "Inspect an existing local OpenCode session. Execution is paused until runtime permissions are verified."
       : activeView === "routes"
         ? "Review eligibility, residency, capacity and price evidence before any provider call."
         : "Select the execution boundary before any work is sent.";
@@ -1876,9 +1895,17 @@ opencode auth login
             </div>
           </div>
           <p className="mt-2 text-[10px] text-muted-foreground" role="status">
-            <strong>{TERMINAL_MODE_POLICIES[mode].label} policy:</strong>{" "}
+            <strong>{TERMINAL_MODE_POLICIES[mode].label}:</strong>{" "}
             {TERMINAL_MODE_POLICIES[mode].summary}
           </p>
+          {executionPath === "terminal" && !OPENCODE_EXECUTION_READINESS.allowed ? (
+            <p
+              className="mt-3 rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-950"
+              role="status"
+            >
+              {OPENCODE_EXECUTION_READINESS.reason}
+            </p>
+          ) : null}
 
           {workspace ? (
             <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border/65 bg-background/40 px-3 py-2">
@@ -2556,7 +2583,7 @@ opencode auth login
                     variant="ghost"
                     size="sm"
                     className="h-7 px-2 text-[10px]"
-                    disabled={terminalReconnectBusy !== null || !canRunTerminal}
+                    disabled={terminalReconnectBusy !== null || !canInspectTerminal}
                     onClick={() => void reconnectLocalTerminal(session)}
                   >
                     {terminalReconnectBusy === session.id ? (
@@ -2681,8 +2708,8 @@ opencode auth login
                             </p>
                             <p className="mt-1 text-[10px] text-muted-foreground">
                               Only commands and visible agents advertised by this daemon are
-                              accepted. File, shell and network permissions remain separately
-                              reviewed once.
+                              accepted. Execution is paused until runtime permission enforcement is
+                              verified.
                             </p>
                           </div>
                           <Badge variant="outline" className="text-[9px]">
@@ -2845,7 +2872,7 @@ opencode auth login
                                   mode={session.mode}
                                   permission={permission}
                                   busy={terminalPermissionBusy !== null}
-                                  canRun={canRunTerminal}
+                                  canRun={canInspectTerminal}
                                   onDecision={(decision) =>
                                     void answerLocalPermission(session, permission, decision)
                                   }
@@ -2912,6 +2939,7 @@ opencode auth login
                                     className="h-7 text-[9px]"
                                     disabled={
                                       terminalForkBusy ||
+                                      !canRunTerminal ||
                                       terminalInspection.capabilities?.fork !== true
                                     }
                                     onClick={() => void forkLocalTerminal(session, entry.messageId)}
@@ -2925,6 +2953,7 @@ opencode auth login
                                     className="h-7 text-[9px] text-amber-800"
                                     disabled={
                                       terminalRevertBusy !== null ||
+                                      !canRunTerminal ||
                                       terminalInspection.capabilities?.revert !== true
                                     }
                                     onClick={() =>
@@ -3069,8 +3098,9 @@ opencode auth login
             </div>
           ) : (
             <div className="rounded-2xl border border-dashed border-border bg-card/60 p-5 text-sm text-muted-foreground">
-              No capacity is assigned to this workspace yet. Local OpenCode remains available on
-              your own device; partner and sponsored pools need an approved workspace grant.
+              No capacity is assigned to this workspace yet. You can inspect existing local
+              sessions; execution is paused until runtime permissions are verified. Partner and
+              sponsored pools need an approved workspace grant.
             </div>
           )}
         </section>
@@ -3660,7 +3690,7 @@ function PermissionDecisionCard({
           type="button"
           size="sm"
           className="h-7 text-[10px]"
-          disabled={busy || !canRun || !policy.allowed}
+          disabled={busy || !canRun || !policy.allowed || !OPENCODE_EXECUTION_READINESS.allowed}
           onClick={() => onDecision("once")}
         >
           Approve once

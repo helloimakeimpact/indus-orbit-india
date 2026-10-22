@@ -101,7 +101,13 @@ export function NotificationSheet() {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative h-10 w-10 text-foreground">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="relative h-11 w-11 text-foreground"
+          aria-label={`Open notifications${unreadCount ? `, ${unreadCount} unread` : ""}`}
+        >
           {unreadCount > 0 ? (
             <>
               <BellDot className="h-5 w-5" />

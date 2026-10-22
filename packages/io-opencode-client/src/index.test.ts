@@ -35,6 +35,140 @@ describe("packaged OpenCode client", () => {
     assert.equal("password" in pairing, false);
   });
 
+  it("bounds an abort-ignoring fetch and permits a separate later request", async () => {
+    const calls: Array<{ url: string; signal: AbortSignal | null | undefined }> = [];
+    const client = new IOPortOpenCodeClient({
+      origin: "http://127.0.0.1:4096",
+      password: "a-strong-local-password",
+      requestTimeoutMs: 20,
+      fetch: async (input, init) => {
+        calls.push({ url: String(input), signal: init?.signal });
+        if (calls.length === 1) return new Promise<Response>(() => {});
+        return Response.json(true);
+      },
+    });
+    await assert.rejects(client.abortSession("root"), /safety timeout/);
+    assert.equal(calls.length, 1, "a timed-out mutation must not retry automatically");
+    assert.equal(calls[0].signal?.aborted, true);
+    assert.equal(await client.abortSession("root"), true);
+    assert.equal(calls.length, 2);
+    assert.notEqual(calls[0].signal, calls[1].signal);
+    assert.equal(calls[1].signal?.aborted, false);
+  });
+
+  it(
+    "cancels a response arriving after the deadline without replaying a prompt",
+    { timeout: 1_000 },
+    async () => {
+      let deliver!: (value: Response) => void;
+      let cancelled!: () => void;
+      const cancellation = new Promise<void>((resolve) => {
+        cancelled = resolve;
+      });
+      const calls: Array<{ url: string; body: string | null }> = [];
+      const client = new IOPortOpenCodeClient({
+        origin: "http://127.0.0.1:4096",
+        password: "a-strong-local-password",
+        requestTimeoutMs: 20,
+        fetch: async (input, init) => {
+          calls.push({
+            url: String(input),
+            body: typeof init?.body === "string" ? init.body : null,
+          });
+          return new Promise<Response>((resolve) => {
+            deliver = resolve;
+          });
+        },
+      });
+      await assert.rejects(
+        client.continuePrompt("original-session", "original prompt"),
+        /safety timeout/,
+      );
+      const response = new Response(
+        new ReadableStream<Uint8Array>({
+          cancel() {
+            cancelled();
+          },
+        }),
+      );
+      deliver(response);
+      await cancellation;
+      assert.deepEqual(calls, [
+        {
+          url: "http://127.0.0.1:4096/session/original-session/message",
+          body: JSON.stringify({ parts: [{ type: "text", text: "original prompt" }] }),
+        },
+      ]);
+      assert.equal(response.body?.locked, false);
+    },
+  );
+
+  it("includes stalled body reads in the deadline and releases their reader", async () => {
+    let cancelled = 0;
+    const response = new Response(
+      new ReadableStream<Uint8Array>({
+        cancel() {
+          cancelled += 1;
+          // Even an underlying cancellation that never acknowledges must not
+          // retain the caller or the response's reader lock.
+          return new Promise<void>(() => {});
+        },
+      }),
+    );
+    const client = new IOPortOpenCodeClient({
+      origin: "http://127.0.0.1:4096",
+      password: "a-strong-local-password",
+      requestTimeoutMs: 20,
+      fetch: async () => response,
+    });
+    await assert.rejects(client.abortSession("root"), /safety timeout/);
+    await new Promise<void>((resolve) => queueMicrotask(resolve));
+    assert.equal(cancelled, 1);
+    assert.equal(response.body?.locked, false);
+  });
+
+  it("propagates caller cancellation even when fetch ignores abort", async () => {
+    const controller = new AbortController();
+    let signal: AbortSignal | null | undefined;
+    let calls = 0;
+    const client = new IOPortOpenCodeClient({
+      origin: "http://127.0.0.1:4096",
+      password: "a-strong-local-password",
+      requestTimeoutMs: 500,
+      fetch: async (_input, init) => {
+        calls += 1;
+        signal = init?.signal;
+        return new Promise<Response>(() => {});
+      },
+    });
+    const pending = client.continuePrompt("root", "Continue", controller.signal);
+    const reason = new DOMException("Member cancelled", "AbortError");
+    controller.abort(reason);
+    await assert.rejects(pending, (error) => error === reason);
+    assert.equal(signal?.aborted, true);
+    await assert.rejects(
+      client.continuePrompt("root", "Continue", controller.signal),
+      (error) => error === reason,
+    );
+    assert.equal(calls, 1, "an already-aborted request must not reach fetch");
+  });
+
+  it("clears a completed request deadline instead of aborting its signal later", async () => {
+    let signal: AbortSignal | null | undefined;
+    const client = new IOPortOpenCodeClient({
+      origin: "http://127.0.0.1:4096",
+      password: "a-strong-local-password",
+      requestTimeoutMs: 20,
+      fetch: async (_input, init) => {
+        signal = init?.signal;
+        return Response.json(true);
+      },
+    });
+    assert.equal(await client.abortSession("root"), true);
+    await new Promise<void>((resolve) => setTimeout(resolve, 30));
+    assert.equal(signal?.aborted, false);
+  });
+
   it("decodes split SSE frames and rejects an unconfirmed permission reply", async () => {
     const decoder = new OpenCodeSseDecoder();
     assert.deepEqual(decoder.feed('id: evt_1\ndata: {"type":"session.'), []);
@@ -65,6 +199,60 @@ describe("packaged OpenCode client", () => {
       }),
       /not confirmed/,
     );
+  });
+
+  it("marks unknown permissions critical and rejects once without sending a reply", async () => {
+    const writes: { response?: string }[] = [];
+    const client = new IOPortOpenCodeClient({
+      origin: "http://127.0.0.1:4096",
+      password: "a-strong-local-password",
+      fetch: async (_input, init) => {
+        if (init?.method === "POST") {
+          writes.push(JSON.parse(String(init.body)));
+          return Response.json(true);
+        }
+        return Response.json([
+          { id: "unknown-1", sessionID: "session-1", permission: "read.execute", patterns: [] },
+          { id: "known-read", sessionID: "session-1", permission: "grep", patterns: [] },
+          { id: "known-edit", sessionID: "session-1", permission: "apply_patch", patterns: [] },
+          { id: "safety-guard", sessionID: "session-1", permission: "doom_loop", patterns: [] },
+        ]);
+      },
+    });
+    const permissions = await client.listPendingPermissions("session-1");
+    assert.deepEqual(
+      permissions.map(({ risk }) => risk),
+      ["critical", "low", "high", "critical"],
+    );
+    await assert.rejects(
+      client.replyPermission({
+        request: { ...permissions[0], risk: "low" }, // caller cannot downgrade an unknown name
+        decision: "once",
+        confirmationId: permissions[0].id,
+      }),
+      /not eligible/,
+    );
+    await assert.rejects(
+      client.replyPermission({
+        request: permissions[3],
+        decision: "once",
+        confirmationId: permissions[3].id,
+      }),
+      /not eligible/,
+    );
+    assert.equal(writes.length, 0);
+    await client.replyPermission({
+      request: permissions[0],
+      decision: "reject",
+      confirmationId: permissions[0].id,
+    });
+    assert.deepEqual(writes, [{ response: "reject", remember: false }]);
+    await client.replyPermission({
+      request: permissions[1],
+      decision: "once",
+      confirmationId: permissions[1].id,
+    });
+    assert.equal(writes.at(-1)?.response, "once");
   });
 
   it("loads bounded task trees, full diffs and continued prompts", async () => {

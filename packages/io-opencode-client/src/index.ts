@@ -4,6 +4,7 @@ const MAX_DIFF_BYTES = 4 * 1_024 * 1_024;
 const MAX_PROMPT_CHARACTERS = 24_000;
 const MAX_COMMAND_ARGUMENT_CHARACTERS = 8_000;
 const COMMAND_REVIEW_LEASE_MS = 5 * 60_000;
+const DEFAULT_REQUEST_TIMEOUT_MS = 45_000;
 
 type JsonRecord = Record<string, unknown>;
 
@@ -210,9 +211,10 @@ async function sha256(value: string) {
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
-async function readBoundedText(response: Response, maximum = MAX_JSON_BYTES) {
+async function readBoundedText(response: Response, maximum = MAX_JSON_BYTES, signal?: AbortSignal) {
   const declared = Number(response.headers.get("content-length"));
   if (Number.isFinite(declared) && declared > maximum) {
+    void response.body?.cancel().catch(() => undefined);
     throw new OpenCodeClientError("OpenCode returned a response above the local safety limit.");
   }
   if (!response.body) return "";
@@ -220,17 +222,72 @@ async function readBoundedText(response: Response, maximum = MAX_JSON_BYTES) {
   const decoder = new TextDecoder();
   let text = "";
   let bytes = 0;
-  while (true) {
-    const { value, done } = await reader.read();
-    if (done) break;
-    bytes += value.byteLength;
-    if (bytes > maximum) {
-      await reader.cancel();
-      throw new OpenCodeClientError("OpenCode returned a response above the local safety limit.");
+  let finished = false;
+  const cancel = () => {
+    void reader.cancel().catch(() => undefined);
+  };
+  signal?.addEventListener("abort", cancel, { once: true });
+  try {
+    while (true) {
+      signal?.throwIfAborted();
+      const { value, done } = await reader.read();
+      signal?.throwIfAborted();
+      if (done) {
+        finished = true;
+        break;
+      }
+      bytes += value.byteLength;
+      if (bytes > maximum) {
+        throw new OpenCodeClientError("OpenCode returned a response above the local safety limit.");
+      }
+      text += decoder.decode(value, { stream: true });
     }
-    text += decoder.decode(value, { stream: true });
+    return text + decoder.decode();
+  } finally {
+    signal?.removeEventListener("abort", cancel);
+    if (!finished) cancel();
+    reader.releaseLock();
   }
-  return text + decoder.decode();
+}
+
+function withRequestDeadline<T>(
+  start: (signal: AbortSignal) => Promise<T>,
+  timeoutMs: number,
+  callerSignal?: AbortSignal | null,
+): Promise<T> {
+  if (callerSignal?.aborted) return Promise.reject(callerSignal.reason);
+  return new Promise<T>((resolve, reject) => {
+    const controller = new AbortController();
+    let settled = false;
+    const finish = (complete: () => void) => {
+      if (settled) return;
+      settled = true;
+      globalThis.clearTimeout(timer);
+      callerSignal?.removeEventListener("abort", stop);
+      complete();
+    };
+    const stop = () => {
+      const error = callerSignal?.reason ?? new DOMException("Stopped", "AbortError");
+      finish(() => reject(error));
+      controller.abort(error);
+    };
+    const timer = globalThis.setTimeout(() => {
+      const error = new OpenCodeClientError(
+        "OpenCode did not respond within the local safety timeout.",
+      );
+      finish(() => reject(error));
+      controller.abort(error);
+    }, timeoutMs);
+    callerSignal?.addEventListener("abort", stop, { once: true });
+    try {
+      Promise.resolve(start(controller.signal)).then(
+        (value) => finish(() => resolve(value)),
+        (error: unknown) => finish(() => reject(error)),
+      );
+    } catch (error) {
+      finish(() => reject(error));
+    }
+  });
 }
 
 function parseJson(text: string, status: number) {
@@ -288,24 +345,83 @@ export class OpenCodeSseDecoder {
   }
 }
 
-function permissionRisk(permission: string): OpenCodePermission["risk"] {
-  const normalized = permission.toLowerCase();
-  if (/delete|sudo|production|credential|secret/.test(normalized)) return "critical";
-  if (/shell|bash|network|external|write|edit/.test(normalized)) return "high";
-  if (/web|task|mcp/.test(normalized)) return "moderate";
-  return "low";
+export type OpenCodePermissionKind =
+  | "read"
+  | "edit"
+  | "shell"
+  | "network"
+  | "task"
+  | "web"
+  | "mcp"
+  | "external_directory"
+  | "unknown";
+
+/** Reviewed against OpenCode's official permissions/tools registry, 22 Oct 2026.
+ * Tool parameters are not part of the name. Custom names and safety guards
+ * with an unspecified underlying action cannot inherit read-only authority. */
+export function classifyOpenCodePermission(permission: string): {
+  kind: OpenCodePermissionKind;
+  risk: OpenCodePermission["risk"];
+} {
+  switch (permission.trim().toLowerCase()) {
+    case "read":
+    case "file.read":
+    case "glob":
+    case "grep":
+    case "list":
+    case "lsp":
+    case "skill":
+    case "question":
+      return { kind: "read", risk: "low" };
+    case "edit":
+    case "write":
+    case "patch":
+    case "apply_patch":
+    case "file.edit":
+    case "file.write":
+    case "file.patch":
+      return { kind: "edit", risk: "high" };
+    case "shell":
+    case "bash":
+      return { kind: "shell", risk: "high" };
+    case "network":
+      return { kind: "network", risk: "high" };
+    case "web":
+    case "webfetch":
+    case "websearch":
+      return { kind: "web", risk: "moderate" };
+    case "task":
+      return { kind: "task", risk: "moderate" };
+    case "mcp":
+      return { kind: "mcp", risk: "moderate" };
+    case "external_directory":
+      return { kind: "external_directory", risk: "high" };
+    default:
+      return { kind: "unknown", risk: "critical" };
+  }
 }
 
 export class IOPortOpenCodeClient {
   readonly origin: string;
   readonly #authorization: string;
   readonly #fetch: typeof fetch;
+  readonly #requestTimeoutMs: number;
   readonly #commandReviews = new Map<string, string>();
 
-  constructor(input: { origin: string; password: string; fetch?: typeof fetch }) {
+  constructor(input: {
+    origin: string;
+    password: string;
+    fetch?: typeof fetch;
+    requestTimeoutMs?: number;
+  }) {
     this.origin = normalizeOpenCodeLoopbackOrigin(input.origin);
     this.#authorization = basicAuthorization(input.password);
     this.#fetch = input.fetch ?? globalThis.fetch.bind(globalThis);
+    const timeout = input.requestTimeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS;
+    if (!Number.isInteger(timeout) || timeout < 1 || timeout > 120_000) {
+      throw new OpenCodeClientError("The OpenCode request timeout is invalid.");
+    }
+    this.#requestTimeoutMs = timeout;
   }
 
   #headers(json = true) {
@@ -317,19 +433,33 @@ export class IOPortOpenCodeClient {
   }
 
   async #request(path: string, init: RequestInit = {}) {
-    const response = await this.#fetch(`${this.origin}${path}`, {
-      ...init,
-      headers: { ...this.#headers(init.body !== undefined), ...(init.headers ?? {}) },
-    });
-    const text = await readBoundedText(response);
-    if (!response.ok) {
-      const detail = text.trim().slice(0, 500);
-      throw new OpenCodeClientError(
-        detail || `OpenCode returned ${response.status}.`,
-        response.status,
-      );
-    }
-    return parseJson(text, response.status);
+    return withRequestDeadline(
+      async (signal) => {
+        const response = await this.#fetch(`${this.origin}${path}`, {
+          ...init,
+          headers: { ...this.#headers(init.body !== undefined), ...(init.headers ?? {}) },
+          signal,
+        });
+        if (signal.aborted) {
+          // An injected/noncompliant fetch may return after the deadline. Close
+          // its body instead of consuming private output or leaving a reader.
+          void response.body?.cancel().catch(() => undefined);
+          signal.throwIfAborted();
+        }
+        const text = await readBoundedText(response, MAX_JSON_BYTES, signal);
+        signal.throwIfAborted();
+        if (!response.ok) {
+          const detail = text.trim().slice(0, 500);
+          throw new OpenCodeClientError(
+            detail || `OpenCode returned ${response.status}.`,
+            response.status,
+          );
+        }
+        return parseJson(text, response.status);
+      },
+      this.#requestTimeoutMs,
+      init.signal,
+    );
   }
 
   async pair(): Promise<OpenCodePairing> {
@@ -767,7 +897,7 @@ export class IOPortOpenCodeClient {
           permission: permissionName,
           patterns,
           metadata: asRecord(permission.metadata) ?? {},
-          risk: permissionRisk(permissionName),
+          risk: classifyOpenCodePermission(permissionName).risk,
         },
       ];
     });
@@ -782,6 +912,16 @@ export class IOPortOpenCodeClient {
       throw new OpenCodeClientError(
         "The permission reply was not confirmed for this exact request.",
       );
+    }
+    const classification = classifyOpenCodePermission(input.request.permission);
+    if (
+      input.decision === "once" &&
+      (classification.kind === "unknown" ||
+        classification.kind === "external_directory" ||
+        classification.risk === "critical" ||
+        input.request.risk === "critical")
+    ) {
+      throw new OpenCodeClientError("This permission is not eligible for one-time approval.");
     }
     const body = JSON.stringify({
       response: input.decision === "reject" ? "reject" : "once",

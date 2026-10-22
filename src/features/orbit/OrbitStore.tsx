@@ -11,9 +11,9 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { getUnreadMessageCount } from "@/server/messages.functions";
+import { getConversationAccount } from "@/features/conversations/conversation-lifecycle";
 
 export type OrbitConnectionState = "online" | "offline" | "reconnecting";
-
 type OrbitStoreValue = {
   connectionState: OrbitConnectionState;
   lastRecoveredAt: string | null;
@@ -21,112 +21,178 @@ type OrbitStoreValue = {
   refreshAttention: () => Promise<void>;
   notifyAttentionChanged: () => void;
 };
-
 const OrbitStoreContext = createContext<OrbitStoreValue | null>(null);
-const attentionChannelName = "indus-orbit:attention";
-
 function browserIsOnline() {
   return typeof navigator === "undefined" || navigator.onLine;
 }
 
 export function OrbitStoreProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
+  const owner = user?.id;
   const [connectionState, setConnectionState] = useState<OrbitConnectionState>(() =>
     browserIsOnline() ? "reconnecting" : "offline",
   );
   const [lastRecoveredAt, setLastRecoveredAt] = useState<string | null>(null);
-  const [unreadDirectMessages, setUnreadDirectMessages] = useState(0);
+  const [attention, setAttention] = useState<{ owner?: string; count: number }>({ count: 0 });
   const attentionChannel = useRef<BroadcastChannel | null>(null);
+  const pending = useRef<{
+    owner: string;
+    generation: number;
+    again: boolean;
+    promise: Promise<void>;
+  } | null>(null);
+  const attentionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const announce = useRef(false);
 
-  const refreshAttention = useCallback(async () => {
-    if (!user) {
-      setUnreadDirectMessages(0);
-      return;
+  const refreshAttention = useCallback((): Promise<void> => {
+    if (!owner) return Promise.resolve();
+    const account = getConversationAccount();
+    if (account.owner !== owner) return Promise.resolve();
+    const current = () => {
+      const active = getConversationAccount();
+      return active.owner === owner && active.generation === account.generation;
+    };
+    if (pending.current?.owner === owner && pending.current.generation === account.generation) {
+      pending.current.again = true;
+      return pending.current.promise;
     }
-    try {
-      setUnreadDirectMessages(await getUnreadMessageCount());
-    } catch {
-      // A failed attention refresh must not erase the last reconciled value.
-    }
-  }, [user]);
+    const request = {
+      owner,
+      generation: account.generation,
+      again: false,
+      promise: Promise.resolve(),
+    };
+    request.promise = (async () => {
+      // A burst has one running request and one coalesced invalidation. There
+      // is no idle polling and obsolete account results cannot update attention.
+      do {
+        request.again = false;
+        try {
+          const count = await getUnreadMessageCount(owner);
+          if (current()) setAttention({ owner, count });
+        } catch {
+          /* Preserve the last reconciled count on a transient failure. */
+        }
+      } while (request.again && current());
+    })().finally(() => {
+      if (pending.current === request) pending.current = null;
+    });
+    pending.current = request;
+    return request.promise;
+  }, [owner]);
 
-  const notifyAttentionChanged = useCallback(() => {
-    void refreshAttention();
-    attentionChannel.current?.postMessage({ type: "refresh", at: Date.now() });
-  }, [refreshAttention]);
+  const scheduleAttention = useCallback(
+    (broadcast = false) => {
+      if (!owner) return;
+      announce.current ||= broadcast;
+      if (attentionTimer.current !== null) return;
+      attentionTimer.current = setTimeout(() => {
+        attentionTimer.current = null;
+        if (getConversationAccount().owner !== owner) return;
+        void refreshAttention();
+        if (announce.current)
+          attentionChannel.current?.postMessage({ type: "refresh", owner, at: Date.now() });
+        announce.current = false;
+      }, 150);
+    },
+    [owner, refreshAttention],
+  );
+  const notifyAttentionChanged = useCallback(() => scheduleAttention(true), [scheduleAttention]);
 
   useEffect(() => {
-    if (typeof BroadcastChannel === "undefined") return;
-    const channel = new BroadcastChannel(attentionChannelName);
+    if (!owner || typeof BroadcastChannel === "undefined") return;
+    const channel = new BroadcastChannel(`indus-orbit:attention:${owner}`);
     attentionChannel.current = channel;
     channel.onmessage = (event) => {
-      if (event.data?.type === "refresh") void refreshAttention();
+      if (event.data?.type === "refresh" && event.data.owner === owner) scheduleAttention();
     };
     return () => {
-      attentionChannel.current = null;
+      if (attentionChannel.current === channel) attentionChannel.current = null;
       channel.close();
     };
-  }, [refreshAttention]);
+  }, [owner, scheduleAttention]);
 
   useEffect(() => {
     let active = true;
     let channel: ReturnType<typeof supabase.channel> | null = null;
-
     const recover = () => {
-      if (!browserIsOnline()) {
-        setConnectionState("offline");
-        return;
-      }
-      setConnectionState(!user || channel?.state === "joined" ? "online" : "reconnecting");
-      void refreshAttention();
+      if (!active) return;
+      setConnectionState(
+        !browserIsOnline()
+          ? "offline"
+          : !owner || channel?.state === "joined"
+            ? "online"
+            : "reconnecting",
+      );
+      if (browserIsOnline()) scheduleAttention();
     };
-    const markOffline = () => setConnectionState("offline");
-    const reconcileVisibleState = () => {
+    const hidden = () => {
       if (document.visibilityState === "visible") recover();
     };
-
+    const changed = (event: Event) => {
+      const detail = (event as CustomEvent<{ owner?: string }>).detail;
+      if (!detail?.owner || detail.owner === owner) notifyAttentionChanged();
+    };
     window.addEventListener("online", recover);
-    window.addEventListener("offline", markOffline);
+    window.addEventListener("offline", recover);
     window.addEventListener("focus", recover);
-    document.addEventListener("visibilitychange", reconcileVisibleState);
-
+    document.addEventListener("visibilitychange", hidden);
+    window.addEventListener("indus-orbit:dm-changed", changed);
     void Promise.resolve().then(async () => {
-      if (!active || !user) {
-        setUnreadDirectMessages(0);
+      if (!active) return;
+      if (!owner) {
         setConnectionState(browserIsOnline() ? "online" : "offline");
         return;
       }
-
-      await supabase.realtime.setAuth();
-      if (!active) return;
-      channel = supabase
-        .channel(`orbit:${user.id}:attention`)
-        .on("postgres_changes", { event: "*", schema: "public", table: "direct_messages" }, () =>
-          notifyAttentionChanged(),
-        )
-        .subscribe((status) => {
-          if (!active) return;
-          if (status === "SUBSCRIBED") {
-            setConnectionState("online");
-            setLastRecoveredAt(new Date().toISOString());
-            void refreshAttention();
-          } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
-            setConnectionState(browserIsOnline() ? "reconnecting" : "offline");
-          }
-        });
-      void refreshAttention();
+      try {
+        await supabase.realtime.setAuth();
+        if (!active) return;
+        channel = supabase
+          .channel(`orbit:${owner}:attention`)
+          .on(
+            "postgres_changes",
+            {
+              event: "*",
+              schema: "public",
+              table: "direct_messages",
+              filter: `recipient_id=eq.${owner}`,
+            },
+            notifyAttentionChanged,
+          )
+          .subscribe((status) => {
+            if (!active) return;
+            if (status === "SUBSCRIBED") {
+              setConnectionState("online");
+              setLastRecoveredAt(new Date().toISOString());
+              scheduleAttention();
+            } else if (
+              status === "CHANNEL_ERROR" ||
+              status === "TIMED_OUT" ||
+              status === "CLOSED"
+            ) {
+              setConnectionState(browserIsOnline() ? "reconnecting" : "offline");
+            }
+          });
+        scheduleAttention();
+      } catch {
+        if (active) setConnectionState(browserIsOnline() ? "reconnecting" : "offline");
+      }
     });
-
     return () => {
       active = false;
       window.removeEventListener("online", recover);
-      window.removeEventListener("offline", markOffline);
+      window.removeEventListener("offline", recover);
       window.removeEventListener("focus", recover);
-      document.removeEventListener("visibilitychange", reconcileVisibleState);
+      document.removeEventListener("visibilitychange", hidden);
+      window.removeEventListener("indus-orbit:dm-changed", changed);
+      if (attentionTimer.current !== null) clearTimeout(attentionTimer.current);
+      attentionTimer.current = null;
+      announce.current = false;
       if (channel) void supabase.removeChannel(channel);
     };
-  }, [notifyAttentionChanged, refreshAttention, user]);
+  }, [notifyAttentionChanged, owner, scheduleAttention]);
 
+  const unreadDirectMessages = attention.owner === owner ? attention.count : 0;
   const value = useMemo<OrbitStoreValue>(
     () => ({
       connectionState,
@@ -138,17 +204,14 @@ export function OrbitStoreProvider({ children }: { children: ReactNode }) {
     [
       connectionState,
       lastRecoveredAt,
-      notifyAttentionChanged,
-      refreshAttention,
       unreadDirectMessages,
+      refreshAttention,
+      notifyAttentionChanged,
     ],
   );
-
   return <OrbitStoreContext.Provider value={value}>{children}</OrbitStoreContext.Provider>;
 }
 
-// The provider and its hook intentionally share this module so the context
-// cannot be imported without the owning product boundary.
 // eslint-disable-next-line react-refresh/only-export-components
 export function useOrbitStore() {
   const context = useContext(OrbitStoreContext);

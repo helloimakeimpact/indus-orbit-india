@@ -60,6 +60,65 @@ describe("I/O terminal mode policy", () => {
     );
   });
 
+  it("denies unknown, composite and safety-guard permissions in every mode", () => {
+    for (const permission of [
+      "unknown.mutate",
+      "file.remove",
+      "read.execute",
+      "web-shell",
+      "mcp_custom_tool",
+      "doom_loop",
+      "",
+    ]) {
+      assert.equal(classifyTerminalPermission(permission), "unknown");
+      for (const mode of ["observe", "plan", "build", "run"] as const) {
+        assert.equal(
+          terminalPermissionPolicy({ mode, permission, risk: "low" }).allowed,
+          false,
+          `${mode} must not approve ${permission || "an empty permission"}`,
+        );
+      }
+    }
+  });
+
+  it("retains reviewed official read, edit, web and shell aliases", () => {
+    for (const permission of [
+      "read",
+      "file.read",
+      "glob",
+      "grep",
+      "list",
+      "lsp",
+      "skill",
+      "question",
+    ]) {
+      assert.equal(classifyTerminalPermission(permission), "read");
+    }
+    for (const permission of [
+      "edit",
+      "write",
+      "patch",
+      "apply_patch",
+      "file.edit",
+      "file.write",
+      "file.patch",
+    ]) {
+      assert.equal(classifyTerminalPermission(permission), "edit");
+      assert.equal(
+        terminalPermissionPolicy({ mode: "observe", permission, risk: "high" }).allowed,
+        false,
+      );
+      assert.equal(
+        terminalPermissionPolicy({ mode: "build", permission, risk: "high" }).allowed,
+        true,
+      );
+    }
+    assert.equal(classifyTerminalPermission("webfetch"), "web");
+    assert.equal(classifyTerminalPermission("websearch"), "web");
+    assert.equal(classifyTerminalPermission("bash"), "shell");
+    assert.equal(classifyTerminalPermission("shell"), "shell");
+  });
+
   it("expires the in-memory daemon credential after fifteen minutes", () => {
     const enteredAt = Date.parse("2026-08-27T12:00:00Z");
     assert.deepEqual(terminalCredentialLease(enteredAt, enteredAt + 14 * 60_000), {

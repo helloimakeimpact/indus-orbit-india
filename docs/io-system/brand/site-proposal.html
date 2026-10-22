@@ -1,0 +1,1172 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Indus Orbit - a simpler way forward</title>
+    <style>
+      @font-face {
+        font-family: Inter;
+        src: url("./fonts/inter-400.ttf");
+      }
+      @font-face {
+        font-family: Inter;
+        src: url("./fonts/inter-600.ttf");
+        font-weight: 600;
+      }
+      @font-face {
+        font-family: Fraunces;
+        src: url("./fonts/fraunces-400.ttf");
+      }
+      :root {
+        --ink: #20234e;
+        --paper: #fbf7ec;
+        --white: #fffdf7;
+        --saffron: #efad45;
+        --amber: #875000;
+        --green: #316b53;
+        --sky: #dfeaf1;
+        --peach: #f9d8be;
+        --muted: #57596c;
+        --line: #d4d1c8;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: Inter, Arial, sans-serif;
+        line-height: 1.6;
+      }
+      button,
+      a {
+        font: inherit;
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+      button {
+        color: inherit;
+        cursor: pointer;
+      }
+      button:focus-visible,
+      a:focus-visible,
+      select:focus-visible {
+        outline: 3px solid var(--ink);
+        outline-offset: 5px;
+      }
+      .skip {
+        position: absolute;
+        top: -100px;
+        background: white;
+        padding: 10px;
+        z-index: 5;
+      }
+      .skip:focus {
+        top: 10px;
+      }
+      .review {
+        padding: 9px 5%;
+        background: #f1e7d4;
+        font-size: 11px;
+        display: flex;
+        gap: 16px;
+        justify-content: space-between;
+        color: #494658;
+      }
+      .review strong {
+        font-weight: 600;
+      }
+      .wrap {
+        max-width: 1180px;
+        margin: auto;
+        padding: 0 32px;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        gap: 32px;
+        padding: 26px 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-family: Fraunces, Georgia, serif;
+        font-size: 25px;
+        white-space: nowrap;
+      }
+      .logo img {
+        width: 40px;
+        height: 40px;
+        object-fit: contain;
+        image-rendering: pixelated;
+      }
+      nav {
+        margin-left: auto;
+        display: flex;
+        gap: 24px;
+        align-items: center;
+      }
+      nav button,
+      .text-button {
+        border: 0;
+        background: none;
+        padding: 10px 0;
+        font-size: 13px;
+        min-height: 44px;
+      }
+      nav button[aria-current="page"] {
+        text-decoration: underline;
+        text-underline-offset: 8px;
+      }
+      nav button:hover,
+      .text-button:hover {
+        color: var(--amber);
+      }
+      .sign-in {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 10px 17px;
+        background: var(--white);
+        font-size: 12px;
+        min-height: 44px;
+      }
+      .page[hidden] {
+        display: none;
+      }
+      .hero {
+        display: grid;
+        grid-template-columns: 1.03fr 1fr;
+        align-items: center;
+        gap: 55px;
+        padding: 62px 0 68px;
+      }
+      .eyebrow {
+        font-size: 11px;
+        letter-spacing: 0.11em;
+        text-transform: uppercase;
+        color: var(--amber);
+        font-weight: 600;
+        margin: 0 0 20px;
+      }
+      h1,
+      h2,
+      h3 {
+        font-family: Fraunces, Georgia, serif;
+        font-weight: 400;
+        line-height: 1.08;
+        letter-spacing: -0.035em;
+      }
+      h1 {
+        font-size: clamp(44px, 5.3vw, 68px);
+        margin: 0 0 25px;
+      }
+      h2 {
+        font-size: clamp(30px, 3.7vw, 43px);
+        margin: 0 0 18px;
+      }
+      h3 {
+        font-size: 27px;
+        margin: 0 0 13px;
+      }
+      .lead {
+        font-size: 16px;
+        color: var(--muted);
+        max-width: 480px;
+      }
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+        margin-top: 26px;
+      }
+      .button {
+        border: 1px solid var(--ink);
+        border-radius: 10px;
+        background: var(--ink);
+        color: var(--white);
+        padding: 12px 18px;
+        display: inline-flex;
+        gap: 12px;
+        align-items: center;
+        font-size: 13px;
+        min-height: 46px;
+      }
+      .button.secondary {
+        background: transparent;
+        color: var(--ink);
+        border-color: #9895a4;
+      }
+      .button:hover {
+        background: #353969;
+        color: var(--white);
+      }
+      .button.secondary:hover {
+        background: #f0ece4;
+        color: var(--ink);
+      }
+      .art {
+        margin: 0;
+        position: relative;
+      }
+      .art:before {
+        content: "";
+        position: absolute;
+        inset: -18px;
+        background: radial-gradient(ellipse at 70% 30%, var(--peach), transparent 70%);
+        z-index: -1;
+      }
+      .art img {
+        display: block;
+        width: 100%;
+        aspect-ratio: 1;
+        object-fit: cover;
+        border-radius: 18px;
+      }
+      .art figcaption {
+        font-size: 10px;
+        color: var(--muted);
+        margin-top: 10px;
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+      }
+      .art select {
+        font: inherit;
+        color: var(--ink);
+        background: var(--white);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        min-height: 32px;
+      }
+      .quiet-note {
+        font-size: 11px;
+        color: var(--muted);
+        margin-top: 24px;
+      }
+      .section {
+        padding: 58px 0;
+        border-top: 1px solid var(--line);
+      }
+      .section-head {
+        display: flex;
+        align-items: end;
+        gap: 30px;
+        justify-content: space-between;
+        margin-bottom: 26px;
+      }
+      .section-head p {
+        max-width: 380px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .two {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 22px;
+      }
+      .offering {
+        padding: 30px;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: var(--white);
+      }
+      .offering .number {
+        font-size: 11px;
+        color: var(--amber);
+        letter-spacing: 0.1em;
+      }
+      .offering h3 {
+        font-size: 34px;
+        margin-top: 14px;
+      }
+      .offering p {
+        font-size: 14px;
+        color: var(--muted);
+      }
+      .preview {
+        border-radius: 12px;
+        background: #f4f0e8;
+        border: 1px solid var(--line);
+        padding: 18px;
+        margin-top: 24px;
+        font-size: 12px;
+      }
+      .preview .bar {
+        display: flex;
+        justify-content: space-between;
+        border-bottom: 1px solid var(--line);
+        padding-bottom: 10px;
+        font-size: 10px;
+        color: var(--muted);
+      }
+      .bubble {
+        padding: 10px 13px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: var(--white);
+        max-width: 90%;
+        margin-top: 14px;
+      }
+      .bubble.outgoing {
+        margin-left: auto;
+        background: var(--sky);
+        border-color: #bdcbd6;
+      }
+      .terminal {
+        background: var(--ink);
+        color: var(--white);
+        border: 0;
+        font-family: Inter, sans-serif;
+      }
+      .terminal .bar {
+        color: #d0d3e8;
+        border-color: #666984;
+      }
+      .terminal .prompt {
+        padding-top: 19px;
+        line-height: 1.7;
+      }
+      .terminal .caret {
+        color: #f7ca7a;
+      }
+      .terminal small {
+        display: block;
+        color: #d0d3e8;
+        margin-top: 16px;
+      }
+      .extension-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0 27px;
+      }
+      .extension {
+        padding: 24px 0;
+        border-top: 1px solid var(--line);
+      }
+      .extension h3 {
+        font-family: Inter, sans-serif;
+        font-size: 15px;
+        font-weight: 600;
+        letter-spacing: 0;
+        line-height: 1.4;
+      }
+      .extension p {
+        font-size: 12px;
+        color: var(--muted);
+        margin-bottom: 9px;
+      }
+      .extension span {
+        font-size: 10px;
+        color: var(--amber);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      .values {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 30px;
+        margin-top: 35px;
+      }
+      .values p {
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .end {
+        padding: 46px;
+        border-radius: 18px;
+        background: var(--sky);
+        display: flex;
+        gap: 26px;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .end h2 {
+        font-size: 34px;
+        margin: 0;
+      }
+      .end p {
+        font-size: 13px;
+        color: var(--muted);
+        max-width: 420px;
+      }
+      footer {
+        padding: 35px 0 45px;
+        margin-top: 44px;
+        border-top: 1px solid var(--line);
+        display: flex;
+        gap: 30px;
+        justify-content: space-between;
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .footer-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+      }
+      footer strong {
+        color: var(--ink);
+      }
+      .detail-head {
+        padding: 65px 0 36px;
+        max-width: 750px;
+      }
+      .detail-head h1 {
+        font-size: 55px;
+      }
+      .detail-head p {
+        max-width: 610px;
+        color: var(--muted);
+      }
+      .wide-card {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 40px;
+        padding: 35px;
+        background: var(--white);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        margin-bottom: 45px;
+        align-items: center;
+      }
+      .feature-list {
+        padding: 0;
+        list-style: none;
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .feature-list li {
+        padding: 13px 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .status {
+        padding: 18px;
+        background: #f1e7d4;
+        font-size: 12px;
+        border-radius: 10px;
+        margin: 24px 0;
+      }
+      .member-shell {
+        display: grid;
+        grid-template-columns: 150px 1fr;
+        min-height: 360px;
+        border: 1px solid var(--line);
+        border-radius: 15px;
+        overflow: hidden;
+        background: var(--white);
+        margin: 20px 0 45px;
+      }
+      .member-nav {
+        padding: 22px;
+        background: #f2eee5;
+        border-right: 1px solid var(--line);
+        font-size: 12px;
+      }
+      .member-nav div {
+        padding: 11px 0;
+      }
+      .member-nav .selected {
+        font-weight: 600;
+        color: var(--amber);
+      }
+      .member-body {
+        padding: 26px;
+      }
+      .member-body h3 {
+        font-size: 29px;
+      }
+      .product-label {
+        font-size: 10px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      .study-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 22px;
+      }
+      .study-grid img {
+        width: 100%;
+        border-radius: 12px;
+      }
+      .study-grid figcaption {
+        font-size: 12px;
+        margin-top: 10px;
+      }
+      .study-grid figure {
+        margin: 0;
+      }
+      .study-explain {
+        max-width: 720px;
+        font-size: 14px;
+        color: var(--muted);
+        margin: 25px 0 45px;
+      }
+      .scope-label {
+        display: inline-block;
+        padding: 5px 9px;
+        font-size: 10px;
+        border-radius: 5px;
+        background: var(--sky);
+        margin: 4px 5px 0 0;
+      }
+      #review-message {
+        padding: 12px 20px;
+        border-radius: 8px;
+        background: var(--sky);
+        font-size: 12px;
+        margin-top: 15px;
+      }
+      #review-message:empty {
+        display: none;
+      }
+      @media (max-width: 760px) {
+        .review {
+          font-size: 9px;
+          gap: 8px;
+        }
+        .wrap {
+          padding: 0 20px;
+        }
+        header {
+          gap: 12px;
+          padding: 20px 0;
+          flex-wrap: wrap;
+        }
+        .logo {
+          font-size: 22px;
+        }
+        nav {
+          width: 100%;
+          margin: 0;
+          gap: 24px;
+          justify-content: space-between;
+          order: 3;
+        }
+        nav button {
+          font-size: 12px;
+        }
+        .sign-in {
+          margin-left: auto;
+          font-size: 11px;
+        }
+        .hero {
+          grid-template-columns: 1fr;
+          gap: 30px;
+          padding: 36px 0 45px;
+        }
+        .hero h1 {
+          font-size: 47px;
+        }
+        .lead {
+          font-size: 15px;
+        }
+        .eyebrow {
+          font-size: 9px;
+          margin-bottom: 16px;
+        }
+        .art {
+          max-width: 530px;
+        }
+        .section {
+          padding: 38px 0;
+        }
+        .section-head {
+          display: block;
+        }
+        .two,
+        .wide-card,
+        .study-grid {
+          grid-template-columns: 1fr;
+        }
+        .offering {
+          padding: 23px;
+        }
+        .extension-grid {
+          grid-template-columns: 1fr 1fr;
+          gap: 0 20px;
+        }
+        .values {
+          grid-template-columns: 1fr;
+          gap: 14px;
+        }
+        .values h3 {
+          font-size: 25px;
+        }
+        .end {
+          display: block;
+          padding: 26px;
+        }
+        .end h2 {
+          font-size: 31px;
+        }
+        .end .button {
+          margin-top: 16px;
+        }
+        footer {
+          display: block;
+        }
+        .footer-links {
+          margin-top: 22px;
+          gap: 17px;
+        }
+        .detail-head {
+          padding: 37px 0 24px;
+        }
+        .detail-head h1 {
+          font-size: 43px;
+        }
+        .wide-card {
+          padding: 24px;
+          gap: 20px;
+        }
+        .member-shell {
+          grid-template-columns: 105px 1fr;
+        }
+        .member-nav {
+          padding: 15px;
+          font-size: 10px;
+        }
+        .member-body {
+          padding: 18px;
+        }
+        .member-body h3 {
+          font-size: 25px;
+        }
+        .member-body .preview {
+          padding: 12px;
+          font-size: 10px;
+        }
+        .member-body .bar {
+          font-size: 9px;
+        }
+        .art figcaption {
+          flex-wrap: wrap;
+        }
+        .study-explain {
+          font-size: 13px;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+        * {
+          animation: none !important;
+          transition: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip" href="#content">Skip to content</a>
+    <div class="review">
+      <strong>INDUS ORBIT / DESIGN PROPOSAL 01</strong
+      ><span>22 October 2026 · Illustrative interfaces · No live registration or execution</span>
+    </div>
+    <div class="wrap">
+      <header>
+        <a class="logo" href="#home" data-page="home"
+          ><img src="../../../src/assets/indus-orbit-logo.png" alt="" />Indus Orbit</a
+        >
+        <nav aria-label="Proposed primary navigation">
+          <button data-page="messaging">Messaging</button
+          ><button data-page="terminal">Terminal</button><button data-page="explore">Explore</button
+          ><button data-page="about">About</button>
+        </nav>
+        <button
+          class="sign-in"
+          data-notice="Sign-in is represented here for review. The live Messaging and Terminal access flows retain their separate account and onboarding rules."
+        >
+          Sign in
+        </button>
+      </header>
+      <main id="content">
+        <div class="page" data-view="home">
+          <section class="hero">
+            <div>
+              <p class="eyebrow">The General Intelligence Company of India</p>
+              <h1>Intelligence,<br />built together.</h1>
+              <p class="lead">
+                Connect with people. Turn ideas into useful work. Messaging and Terminal are your
+                two starting points.
+              </p>
+              <div class="actions">
+                <button class="button" data-page="messaging">
+                  Explore Messaging <span aria-hidden="true">↗</span></button
+                ><button class="button secondary" data-page="terminal">
+                  Explore Terminal <span aria-hidden="true">↗</span>
+                </button>
+              </div>
+              <p class="quiet-note">People, possibility and a better society.</p>
+            </div>
+            <figure class="art">
+              <img
+                class="hero-art"
+                src="assets/mirror-soft-dawn-study-v1.png"
+                alt="A traveller faces a frame of warm sky in a mountain village, suggesting a portal of opportunity."
+              />
+              <figcaption>
+                <span>A portal of opportunity</span
+                ><label
+                  >Art treatment
+                  <select id="art-treatment">
+                    <option value="soft">Soft dawn study</option>
+                    <option value="original">Original artwork</option>
+                    <option value="focus">Portal focus + quote</option>
+                  </select></label
+                >
+              </figcaption>
+            </figure>
+          </section>
+          <section class="section" id="offerings">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Two offerings</p>
+                <h2>Begin with a connection.<br />Carry it into action.</h2>
+              </div>
+              <p>
+                One shared identity. Two focused places to do the work. The wider Orbit grows around
+                them.
+              </p>
+            </div>
+            <div class="two">
+              <article class="offering">
+                <span class="number">01 / PEOPLE</span>
+                <h3>Messaging</h3>
+                <p>
+                  A calm place for private conversations and community or event groups. Keep the
+                  people and context that matter close.
+                </p>
+                <button class="text-button" data-page="messaging">
+                  See Messaging <span aria-hidden="true">→</span>
+                </button>
+                <div class="preview">
+                  <div class="bar">
+                    <span>Community conversation</span><span>Interface example</span>
+                  </div>
+                  <div class="bubble">What should we make possible next?</div>
+                  <div class="bubble outgoing">Let's bring a few people together.</div>
+                </div>
+              </article>
+              <article class="offering">
+                <span class="number">02 / USEFUL INTELLIGENCE</span>
+                <h3>Terminal</h3>
+                <p>
+                  A focused place to work with intelligence, explore an idea and move toward a
+                  useful result, with clear permissions and control.
+                </p>
+                <button class="text-button" data-page="terminal">
+                  See Terminal <span aria-hidden="true">→</span>
+                </button>
+                <div class="preview terminal">
+                  <div class="bar">
+                    <span>New session / Plan</span><span>Interface example</span>
+                  </div>
+                  <div class="prompt">
+                    <span class="caret">&gt;</span> Help me turn this idea into a clear first step.
+                  </div>
+                  <small>Review the work. Understand the authority.</small>
+                </div>
+              </article>
+            </div>
+          </section>
+          <section class="section">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Around the two</p>
+                <h2>More ways to take part.</h2>
+              </div>
+              <p>
+                Events, communities, learning, programmes and research give connection and useful
+                work a place to grow.
+              </p>
+            </div>
+            <div class="extension-grid">
+              <article class="extension">
+                <h3>Events</h3>
+                <p>Gather around an idea, meet people and continue the conversation.</p>
+                <span>Extends Messaging</span>
+              </article>
+              <article class="extension">
+                <h3>Communities</h3>
+                <p>Stay connected through a shared place, purpose or piece of work.</p>
+                <span>Extends Messaging</span>
+              </article>
+              <article class="extension">
+                <h3>Learning &amp; skills</h3>
+                <p>Build understanding and put useful knowledge into practice.</p>
+                <span>Connects both</span>
+              </article>
+              <article class="extension">
+                <h3>Programmes &amp; S.O.D.A</h3>
+                <p>Explore opportunities and structured ways to get involved.</p>
+                <span>Connects both</span>
+              </article>
+              <article class="extension">
+                <h3>Research &amp; writing</h3>
+                <p>Find ideas, evidence and perspectives that help the next step.</p>
+                <span>Supports Terminal and shared work</span>
+              </article>
+              <article class="extension">
+                <h3>Shared work</h3>
+                <p>Carry a worthwhile intention toward something others can use.</p>
+                <span>Connects both</span>
+              </article>
+            </div>
+            <button class="text-button" data-page="explore">
+              Explore the wider Orbit <span aria-hidden="true">→</span>
+            </button>
+          </section>
+          <section class="section">
+            <p class="eyebrow">The way we work</p>
+            <h2>Opportunity becomes meaningful<br />when more people can take part.</h2>
+            <div class="values">
+              <div>
+                <h3>Connection</h3>
+                <p>
+                  Find one another with purpose. Make it easy to understand where you belong and how
+                  to contribute.
+                </p>
+              </div>
+              <div>
+                <h3>Synergy</h3>
+                <p>
+                  Make more together. Combine human judgment, shared effort and useful intelligence.
+                </p>
+              </div>
+              <div>
+                <h3>Society</h3>
+                <p>
+                  Let the benefit reach further. Design for different people, places, abilities and
+                  starting points.
+                </p>
+              </div>
+            </div>
+          </section>
+          <section class="section">
+            <div class="end">
+              <div>
+                <h2>A worthwhile next step.</h2>
+                <p>
+                  Start with a conversation or explore what you can build. You do not need to learn
+                  the whole platform first.
+                </p>
+              </div>
+              <div class="actions">
+                <button class="button" data-page="messaging">Messaging</button
+                ><button class="button secondary" data-page="terminal">Terminal</button>
+              </div>
+            </div>
+          </section>
+        </div>
+        <div class="page" data-view="messaging" hidden>
+          <section class="detail-head">
+            <p class="eyebrow">01 / Messaging</p>
+            <h1>Good work begins<br />with a conversation.</h1>
+            <p>
+              Private messages between accepted connections, plus community and event groups. A
+              familiar, lightweight place to keep the conversation going.
+            </p>
+            <div class="actions">
+              <button
+                class="button"
+                data-notice="In the live product, Messaging requires sign-in and the relevant Community access. Private messages require accepted connections; groups retain their membership rules."
+              >
+                Join the conversation</button
+              ><button class="text-button" data-page="explore">Find your community →</button>
+            </div>
+          </section>
+          <div class="member-shell">
+            <aside class="member-nav" aria-label="Illustrative member navigation">
+              <div class="selected">Messages</div>
+              <div>Communities</div>
+              <div>Events</div>
+              <div>More</div>
+              <div>Switch to Terminal</div>
+            </aside>
+            <section class="member-body">
+              <p class="product-label">Illustrative product surface</p>
+              <h3>Your conversations.</h3>
+              <div class="preview">
+                <div class="bar">
+                  <span>Chats &nbsp; Connections &nbsp; Groups</span
+                  ><span>Context stays with you</span>
+                </div>
+                <div class="bubble">I have an idea for our next gathering.</div>
+                <div class="bubble outgoing">Let's share it with the group.</div>
+                <p class="quiet-note">Private conversation / community group / event discussion</p>
+              </div>
+            </section>
+          </div>
+          <div class="two">
+            <article class="offering">
+              <h3>Easy to return to.</h3>
+              <ul class="feature-list">
+                <li>Shared drafts across full-page and quick chat</li>
+                <li>Reliable retry and clear message states</li>
+                <li>Unread information and anchored history</li>
+              </ul>
+            </article>
+            <article class="offering">
+              <h3>A wider circle.</h3>
+              <ul class="feature-list">
+                <li>Events bring people into the conversation</li>
+                <li>Communities give relationships continuity</li>
+                <li>Membership and host controls stay explicit</li>
+              </ul>
+            </article>
+          </div>
+        </div>
+        <div class="page" data-view="terminal" hidden>
+          <section class="detail-head">
+            <p class="eyebrow">02 / Terminal</p>
+            <h1>Bring an idea.<br />Work toward something useful.</h1>
+            <p>
+              A focused working environment for useful intelligence. Make the task clear, understand
+              the permissions and keep the person in control.
+            </p>
+          </section>
+          <div class="wide-card">
+            <div>
+              <h3>One clear working surface.</h3>
+              <p class="lead">
+                Start with the task. Bring advanced models, tools, approvals and receipts into view
+                when they become relevant.
+              </p>
+              <ul class="feature-list">
+                <li>Plain task and connection state</li>
+                <li>Explicit authority and consequential-action review</li>
+                <li>Inspectable outcomes and recovery</li>
+              </ul>
+            </div>
+            <div class="preview terminal">
+              <div class="bar">
+                <span>Terminal / Local runtime</span><span>Design example</span>
+              </div>
+              <div class="prompt">
+                <span class="caret">&gt;</span> Explore an idea.<br /><span class="caret"
+                  >&gt;</span
+                >
+                Make a practical plan.<br /><span class="caret">&gt;</span> Review the work before
+                acting.
+              </div>
+              <small>Execution depends on verified runtime policy.</small>
+            </div>
+          </div>
+          <div class="status">
+            <strong>Current launch boundary:</strong> the native Terminal source preview is based on
+            DeepSeek Harness dsh-v0.2.1-rc.2. Its build, platform acceptance and signed distribution
+            remain unfinished. The existing OpenCode web connector is a separate protocol; its
+            execution controls are paused pending verified runtime policy.
+          </div>
+          <div class="actions">
+            <a
+              class="button"
+              href="../../../output/terminal/indus-orbit-terminal-0.2.1-rc.2-source-preview.zip"
+              download
+            >
+              Download local source preview ↗</a
+            >
+            <button
+              class="button secondary"
+              data-notice="This is a design proposal. The live Terminal setup, execution-policy and provider availability must be verified before production activation."
+            >
+              Understand setup</button
+            ><button class="text-button" data-page="explore">See the extensions →</button>
+          </div>
+          <p class="fine">
+            Local review download · Source ZIP, not an installer · Unsigned and unpublished. A
+            public install button will require a verified release artifact and owned download URL.
+            <a
+              href="../../../output/terminal/indus-orbit-terminal-0.2.1-rc.2-source-preview.manifest.json"
+              >Version and checks</a
+            >
+          </p>
+        </div>
+        <div class="page" data-view="explore" hidden>
+          <section class="detail-head">
+            <p class="eyebrow">Extensions of Messaging and Terminal</p>
+            <h1>One Orbit.<br />More ways forward.</h1>
+            <p>
+              A complete company overview without a crowded menu. Choose the context that matters;
+              discover the detail when you need it.
+            </p>
+          </section>
+          <div class="extension-grid">
+            <article class="extension">
+              <h3>Events</h3>
+              <p>
+                Discovery, invitations, free guest registration and eligible attendee discussion.
+              </p>
+              <span class="scope-label">Public guests</span
+              ><span class="scope-label">Restricted events explicit</span>
+            </article>
+            <article class="extension">
+              <h3>Communities &amp; people</h3>
+              <p>Chapters, missions, connections, conversation and ongoing contribution.</p>
+              <span>Messaging context</span>
+            </article>
+            <article class="extension">
+              <h3>Learning &amp; skills</h3>
+              <p>
+                Academy, practical resources and learning progress, reached through a simple next
+                step.
+              </p>
+              <span>Connects both</span>
+            </article>
+            <article class="extension">
+              <h3>S.O.D.A programmes</h3>
+              <p>
+                The existing Instagram application campaign and the opportunity catalogue need
+                clearly separate descriptions and current availability.
+              </p>
+              <span>Campaign recorded / status to verify</span>
+            </article>
+            <article class="extension">
+              <h3>Research &amp; writing</h3>
+              <p>
+                Specific ideas, sources and work. Model comparisons belong here as reviewed
+                resources.
+              </p>
+              <span>Evidence, not unsupported claims</span>
+            </article>
+            <article class="extension">
+              <h3>I/O and useful tools</h3>
+              <p>
+                Model access, costs, capabilities and receipts support Terminal work. Availability
+                must remain accurate.
+              </p>
+              <span>Explicit setup and governance</span>
+            </article>
+          </div>
+          <div class="status">
+            Examples describe existing source areas and proposed organisation. They are not evidence
+            that every capability, programme intake or provider is publicly active.
+          </div>
+        </div>
+        <div class="page" data-view="about" hidden>
+          <section class="detail-head">
+            <p class="eyebrow">The General Intelligence Company of India</p>
+            <h1>People become more capable<br />when possibility is shared.</h1>
+            <p>
+              Indus Orbit brings meaningful connection and useful intelligence into the same
+              purpose. Messaging helps people find and work with one another. Terminal helps carry
+              intention into useful action. The wider community gives both meaning.
+            </p>
+          </section>
+          <div class="values">
+            <div>
+              <h3>Connection</h3>
+              <p>A worthwhile person, conversation or introduction.</p>
+            </div>
+            <div>
+              <h3>Synergy</h3>
+              <p>Knowledge and effort that become more useful together.</p>
+            </div>
+            <div>
+              <h3>Society</h3>
+              <p>Benefits that reach beyond the person already at the centre.</p>
+            </div>
+          </div>
+          <section class="section">
+            <h2>The portal is an opportunity.</h2>
+            <p class="study-explain">
+              A familiar frame opens onto what someone could learn, make or contribute. Different
+              people and places can carry the metaphor. Earth-rooted settings, human agency and
+              shared benefit keep it coherent; the story does not depend on planets or
+              extraterrestrial worlds.
+            </p>
+            <div class="study-grid">
+              <figure>
+                <img
+                  src="../../../public/wiki-hero.jpg"
+                  alt="Original traveller-and-frame artwork in a warm mountain village."
+                />
+                <figcaption>Original / preserved master</figcaption>
+              </figure>
+              <figure>
+                <img
+                  src="assets/portal-quote-selective-focus-v1.png"
+                  alt="Intelligence, built together. Only the sky inside the portal is blurred; the traveller, frame and surrounding pixel landscape stay sharp."
+                />
+                <figcaption>Selected focus treatment / blur only inside the portal</figcaption>
+              </figure>
+            </div>
+            <p class="study-explain">
+              The selected campaign picture keeps the approved quote crisp. The world, person and
+              frame stay sharp; only the opening is dreamlike. It is a separately named generated
+              derivative. The original remains preserved, and essential website wording stays
+              accessible as live text.
+            </p>
+          </section>
+        </div>
+        <p id="review-message" role="status" aria-live="polite"></p>
+      </main>
+      <footer>
+        <div><strong>Indus Orbit</strong><br />Intelligence, built together.</div>
+        <div class="footer-links">
+          <button class="text-button" data-page="about">Our story</button
+          ><button class="text-button" data-page="explore">Explore</button
+          ><a href="https://www.instagram.com/indusorbit/" target="_blank" rel="noreferrer"
+            >Instagram ↗</a
+          ><a href="BRAND_PHILOSOPHY_AND_GUIDELINES_2026-10-22.md">Brand specification</a>
+        </div>
+      </footer>
+    </div>
+    <script>
+      const views = [...document.querySelectorAll("[data-view]")];
+      function showPage(name, scroll = true) {
+        if (!views.some((v) => v.dataset.view === name)) name = "home";
+        views.forEach((v) => (v.hidden = v.dataset.view !== name));
+        document.querySelectorAll("nav [data-page]").forEach((b) => {
+          if (b.dataset.page === name) b.setAttribute("aria-current", "page");
+          else b.removeAttribute("aria-current");
+        });
+        document.querySelector("#review-message").textContent = "";
+        if (scroll) window.scrollTo({ top: 0, behavior: "instant" });
+        history.replaceState(null, "", "#" + name);
+        document.title =
+          "Indus Orbit / " + name.charAt(0).toUpperCase() + name.slice(1) + " proposal";
+      }
+      document.querySelectorAll("[data-page]").forEach((b) =>
+        b.addEventListener("click", (e) => {
+          e.preventDefault();
+          showPage(b.dataset.page);
+        }),
+      );
+      document.querySelectorAll("[data-notice]").forEach((b) =>
+        b.addEventListener("click", () => {
+          const status = document.querySelector("#review-message");
+          status.textContent = b.dataset.notice;
+          status.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        }),
+      );
+      document.querySelector("#art-treatment").addEventListener("change", (e) => {
+        const img = document.querySelector(".hero-art");
+        const art = {
+          original: "../../../public/wiki-hero.jpg",
+          soft: "assets/mirror-soft-dawn-study-v1.png",
+          focus: "assets/portal-quote-selective-focus-v1.png",
+        };
+        img.src = art[e.target.value] || art.soft;
+        img.alt =
+          e.target.value === "focus"
+            ? "Intelligence, built together. The traveller and pixel landscape remain sharp; only the sky within the portal is blurred."
+            : "A traveller faces a frame of warm sky in a mountain village, suggesting a portal of opportunity.";
+      });
+      showPage(location.hash.slice(1) || "home", false);
+    </script>
+  </body>
+</html>

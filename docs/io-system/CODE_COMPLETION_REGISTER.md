@@ -1,5 +1,15 @@
 # Indus Orbit code completion register
 
+## 22 October deep audit and brand/harness follow-up
+
+**Overall state: Partial. All code work is not complete.** The [code-level remainder](CODE_LEVEL_REMAINDER_2026-10-22.md) supersedes earlier mode-enforcement and configuration-only completion summaries. Four concrete connector/event defects are fixed; the web connector pauses execution until actual runtime permissions are bound and verified. Real OpenAPI/diff compatibility, pairing/distribution, assisted privacy/retention and the reviewed site redesign remain engineering work. The approved hierarchy is **Messaging + Terminal**, with the other experiences as extensions. See the [brand guidelines](brand/BRAND_PHILOSOPHY_AND_GUIDELINES_2026-10-22.md), [full redesign proposal](brand/SITE_SIMPLIFICATION_PROPOSAL_2026-10-22.md) and [review artifact index](brand/README.md). The native DeepSeek Harness refresh is pinned to the official prerelease and is separate from OpenCode web compatibility. Source previews are not signed installers or a production release.
+
+## Current source boundary — 22 October 2026
+
+[The current report](PRODUCTION_STATUS_2026-10-22.md) supersedes the pre-implementation chat descriptions below. The approved private-message/community/event-group candidate is implemented, with generated RPC contracts, bounded shared state/retries, visible reads, complete catch-up, mobile/shared surfaces, event eligibility/moderation and 35-dataset privacy coverage. Member source verification passes 295 units in the deep-audit follow-up, admin 35, and final managed replay/types/lint plus 40 SQL files/1,371 assertions pass. The reviewed safety replay race and four additional SQL assertions also pass final CI: **40 files / 1,371 assertions** total.
+
+Candidate source is published in [draft PR #2](https://github.com/helloimakeimpact/indus-orbit-india/pull/2). Overall production is **Partial**: the matched 15-migration/seven-function package, real services/personas/devices, operators, assisted privacy/recovery, provider acceptance and release sign-off remain. Do not classify genuine integration or the dated retention/archive engineering as owner configuration. Earlier C1–C5 “unimplemented” statements below describe the 20 October audit; the candidate and current report are authoritative.
+
 ## New approved chat scope — 20 October 2026
 
 The owner's lightweight WhatsApp-like chat request adds source work before public launch: **private messages plus event/community groups**, with the current security model and E2EE planned separately. [The current chat plan](conversation-system/LIGHTWEIGHT_CHAT_FINALIZATION_PLAN.md) records three independent reviews, existing foundations, account/queue/read/reconnect defects, event membership, performance gates and C0–C6 delivery. The capability is **Partial**. Two merge defects are repaired locally with 12 focused tests; shared state/inbox/UI/event work remains. The source-publication statement below describes the pre-chat checkpoint. Previous aggregate passes do not prove these new interactions.

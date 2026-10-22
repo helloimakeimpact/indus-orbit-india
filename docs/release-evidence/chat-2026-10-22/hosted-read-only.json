@@ -1,0 +1,83 @@
+{
+  "observed_date": "2026-10-22",
+  "scope": "Read-only connected Supabase inspection; no schema, function, data or secret mutation",
+  "project": {
+    "ref": "jpwvgpnbkrktipwhvqss",
+    "name": "Indus Orbit",
+    "status": "ACTIVE_HEALTHY",
+    "region": "ap-south-1",
+    "database_version": "17.6.1.104"
+  },
+  "migration_count": 116,
+  "latest_migration": {
+    "version": "20260907090226",
+    "name": "add_final_fk_covering_indexes"
+  },
+  "functions": [
+    {
+      "slug": "resend-email-dispatcher",
+      "status": "ACTIVE",
+      "version": 16
+    },
+    {
+      "slug": "io-gateway",
+      "status": "ACTIVE",
+      "version": 28
+    },
+    {
+      "slug": "io-openai",
+      "status": "ACTIVE",
+      "version": 12
+    },
+    {
+      "slug": "io-provider-conformance",
+      "status": "ACTIVE",
+      "version": 3
+    },
+    {
+      "slug": "notification-email-worker",
+      "status": "ACTIVE",
+      "version": 2
+    },
+    {
+      "slug": "orbit-attachment-scan-webhook",
+      "status": "ACTIVE",
+      "version": 2
+    },
+    {
+      "slug": "io-payment-webhook",
+      "status": "ACTIVE",
+      "version": 2
+    },
+    {
+      "slug": "io-payments",
+      "status": "ACTIVE",
+      "version": 3
+    },
+    {
+      "slug": "orbit-attachment-scan-worker",
+      "status": "ACTIVE",
+      "version": 1
+    },
+    {
+      "slug": "io-health-probe",
+      "status": "ACTIVE",
+      "version": 1
+    }
+  ],
+  "reviewed_forward_migrations": 15,
+  "pending_new_functions": [
+    "public-form-submit",
+    "event-guest-session",
+    "event-email-worker",
+    "education-file-scan-worker",
+    "account-privacy-worker",
+    "privacy-retention-worker",
+    "account-deletion-worker"
+  ],
+  "limitations": [
+    "No staging environment selected",
+    "Not a hosted upgrade or application/supplier acceptance check",
+    "Exact Netlify deployed SHA not established"
+  ]
+}

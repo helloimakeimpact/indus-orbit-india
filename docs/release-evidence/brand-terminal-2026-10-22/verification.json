@@ -1,0 +1,128 @@
+{
+  "date": "2026-10-22",
+  "state": "Verified",
+  "scope": "Source checkpoint and review artifacts; full production remains Partial",
+  "baseCommit": "cea18921b544e375e399dddde94365d41e4920f9",
+  "member": {
+    "command": "npm run verify",
+    "exitCode": 0,
+    "unitTests": 295,
+    "libraryBuilds": 3,
+    "productionBuild": "passed",
+    "bundleBudgets": "passed",
+    "formatLintTypes": "passed",
+    "afterExecutionGate": "Passed; final wording-only copy adjusted while typecheck was running, before production build. Standalone formatting also passed.",
+    "log": "member-verify.txt"
+  },
+  "focusedBrowser": {
+    "state": "Verified",
+    "scope": "Controlled synthetic accounts and intercepted HTTP/Realtime",
+    "eventRuns": 6,
+    "terminalDenialRuns": 1,
+    "notes": [
+      "Six community-events public desktop/mobile and member scenarios pass",
+      "Terminal mode choices Observe/Plan/Build/Run remain disabled with known workspace, prompt and credentials; no loopback request or execution metadata mutation",
+      "Session-list POST RPC is mocked as an inspection read",
+      "These checks do not prove hosted Auth, daemon policy or a real provider"
+    ]
+  },
+  "database": {
+    "changed": false,
+    "evidenceBoundary": "Prior exact candidate managed CI:133 migrations,40 SQL files,1371 assertions;97 unchanged hash-bound held Spaces differences",
+    "newReplayClaim": false
+  },
+  "brand": {
+    "bookPages": 34,
+    "reviewState": "Planned",
+    "generatedPictures": 4,
+    "moodboards": 2,
+    "rasterInventory": 41,
+    "prototypeViews": ["Home", "Messaging", "Terminal", "Explore", "About"],
+    "visualChecks": "Desktop Home and portal comparison visually inspected. All five views have 320px layout evidence; final Home/selective-focus, Terminal/download and About checks show scrollWidth320 and loaded images. Temporary viewport reset.",
+    "selectedPortal": "docs/io-system/brand/assets/portal-quote-selective-focus-v1.png",
+    "blurRule": "Only portal interior blurred; world/person/frame/quote sharp",
+    "allPagesInspected": true,
+    "repairedPages": [11],
+    "bookSha256": "89f7a407828d217257b1b185a2476df30933b83c601b40d49a66f09c51987393",
+    "screenshots": [
+      {
+        "path": "home-desktop.jpg",
+        "bytes": 110556,
+        "sha256": "b883ea5699ff468d03dcb3a11f190ca2bee5e6f9219106f486438b65878acdbc"
+      },
+      {
+        "path": "portal-selection-desktop.jpg",
+        "bytes": 162268,
+        "sha256": "19098c3cd06baa95e861e6d4b28e3f65b1048a6b79b3c890752151acfc5f8299"
+      },
+      {
+        "path": "terminal-mobile.jpg",
+        "bytes": 100421,
+        "sha256": "50ed4b3d18e367ff40e484e73ac9a3e20c9406404a85f009d1f09e02cd83c1a1"
+      }
+    ],
+    "sourcePreviewDownload": {
+      "state": "Verified",
+      "scope": "Local review link, not public release",
+      "bytes": 45257993,
+      "sha256": "67fca9c88904746e8b48ce417f36f05fcf9feddb7247994f1ebe3223882944d6",
+      "browserDownloadMatches": true
+    }
+  },
+  "harness": {
+    "base": "687f282e8625c6b8d11ff58211a90524be2e4317",
+    "tag": "dsh-v0.2.1-rc.2",
+    "state": "Partial",
+    "focusedTests": 53,
+    "completeBuild": false,
+    "assembledBrowser": false,
+    "publication": "local source preview only",
+    "sourceZipSha256": "67fca9c88904746e8b48ce417f36f05fcf9feddb7247994f1ebe3223882944d6",
+    "sourceZipBytes": 45257993,
+    "originalCheckoutPreserved": true,
+    "requiredPrePushGates": "Incomplete; no bypass or source-branch push"
+  },
+  "resourceIncident": {
+    "diskAvailableAtStop": "392MiB,100% capacity",
+    "action": "Stopped owned harness lanes; removed only newly generated dependencies/build output in isolated harness checkout",
+    "preserved": [
+      "Original checkout",
+      "Original four branding files",
+      "Shared pnpm store",
+      "User source/assets"
+    ],
+    "diskAvailableAfterCleanup": "About6GiB; varies with other local work",
+    "failedAttemptsNotCountedAsPass": true
+  },
+  "productionMutation": false,
+  "providerCalls": false,
+  "installerPublished": false,
+  "publication": {
+    "codeCommit": "fa20f30f68cef0b56ea24ee81a098f93ec2ac4a2",
+    "codeTree": "a2e78069d0595b87ca52507d997bd12326208ad5",
+    "branch": "codex/lightweight-chat-release",
+    "pullRequest": "https://github.com/helloimakeimpact/indus-orbit-india/pull/2",
+    "state": "draft;notmerged",
+    "mainUnchanged": "0b31c314d7dfcdbf8709b2237afbf1e2b7e1adb3",
+    "quality": {
+      "run": 39828073798,
+      "job": 119996573264,
+      "conclusion": "success",
+      "unitTests": 295,
+      "publicBrowser": 20,
+      "configuredBrowser": 4,
+      "memberBrowser": 26
+    },
+    "database": {
+      "run": 39828073789,
+      "job": 119996573630,
+      "conclusion": "success",
+      "sourceMigrations": 133,
+      "sqlFiles": 40,
+      "sqlAssertions": 1371,
+      "exactHeldSpacesDifferences": 97,
+      "publicPrivateLint": "pass"
+    },
+    "subsequentFiling": "Documentation and screenshots only; application/SQL inputs unchanged"
+  }
+}

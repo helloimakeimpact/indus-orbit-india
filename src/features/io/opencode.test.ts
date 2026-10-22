@@ -277,6 +277,93 @@ describe("runOpenCodeSession", { concurrency: false }, () => {
     }
   });
 
+  it("does not start a prompt after cancellation during either awaited lifecycle callback", async () => {
+    const originalFetch = globalThis.fetch;
+    try {
+      for (const stopDuring of ["created", "connected"] as const) {
+        const controller = new AbortController();
+        const paths: string[] = [];
+        const lifecycle: string[] = [];
+        globalThis.fetch = async (input) => {
+          const path = new URL(String(input)).pathname;
+          paths.push(path);
+          if (path.endsWith("/global/health")) return Response.json({ version: "1" });
+          if (path.endsWith("/session")) return Response.json({ id: "already-stopped" });
+          if (path.endsWith("/abort")) return Response.json(true);
+          throw new Error("A stopped run must not dispatch a prompt or diff request");
+        };
+        await assert.rejects(
+          runOpenCodeSession({
+            serverUrl: "http://127.0.0.1:4096",
+            password: "a-strong-local-password",
+            title: "I/O test",
+            prompt: "Do not execute after stop",
+            signal: controller.signal,
+            onSessionCreated: async () => {
+              lifecycle.push("created");
+              await Promise.resolve();
+              if (stopDuring === "created") controller.abort();
+            },
+            onMetadataEvent: async () => {
+              await Promise.resolve();
+              if (stopDuring === "connected") controller.abort();
+            },
+            onSessionSettled: async (session, state) => {
+              assert.equal(session.sessionId, "already-stopped");
+              lifecycle.push(state);
+            },
+          }),
+          OpenCodeStoppedError,
+        );
+        assert.deepEqual(paths, ["/global/health", "/session", "/session/already-stopped/abort"]);
+        assert.deepEqual(lifecycle, ["created", "stopped"]);
+      }
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it("keeps a pre-prompt stop unconfirmed when the known daemon session refuses abort", async () => {
+    const originalFetch = globalThis.fetch;
+    const controller = new AbortController();
+    const lifecycle: string[] = [];
+    const paths: string[] = [];
+    globalThis.fetch = async (input) => {
+      const path = new URL(String(input)).pathname;
+      paths.push(path);
+      if (path.endsWith("/global/health")) return Response.json({ version: "1" });
+      if (path.endsWith("/session")) return Response.json({ id: "unconfirmed-before-prompt" });
+      if (path.endsWith("/abort")) return Response.json(false);
+      throw new Error("A stopped run must not dispatch a prompt");
+    };
+    try {
+      await assert.rejects(
+        runOpenCodeSession({
+          serverUrl: "http://127.0.0.1:4096",
+          password: "a-strong-local-password",
+          title: "I/O test",
+          prompt: "Do not execute after stop",
+          signal: controller.signal,
+          onSessionCreated: async () => {
+            controller.abort();
+          },
+          onSessionSettled: async (_session, state) => {
+            lifecycle.push(state);
+          },
+        }),
+        /did not acknowledge the local abort/,
+      );
+      assert.deepEqual(paths, [
+        "/global/health",
+        "/session",
+        "/session/unconfirmed-before-prompt/abort",
+      ]);
+      assert.deepEqual(lifecycle, ["failed"]);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
   it("does not record stopped when the daemon fails to acknowledge abort", async () => {
     const originalFetch = globalThis.fetch;
     const controller = new AbortController();

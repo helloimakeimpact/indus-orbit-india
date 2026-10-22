@@ -1,5 +1,15 @@
 # Indus Orbit design philosophy and UI execution plan
 
+## 22 October deep audit and brand/harness follow-up
+
+**Overall state: Partial. All code work is not complete.** The [code-level remainder](CODE_LEVEL_REMAINDER_2026-10-22.md) supersedes earlier mode-enforcement and configuration-only completion summaries. Four concrete connector/event defects are fixed; the web connector pauses execution until actual runtime permissions are bound and verified. Real OpenAPI/diff compatibility, pairing/distribution, assisted privacy/retention and the reviewed site redesign remain engineering work. The approved hierarchy is **Messaging + Terminal**, with the other experiences as extensions. See the [brand guidelines](brand/BRAND_PHILOSOPHY_AND_GUIDELINES_2026-10-22.md), [full redesign proposal](brand/SITE_SIMPLIFICATION_PROPOSAL_2026-10-22.md) and [review artifact index](brand/README.md). The native DeepSeek Harness refresh is pinned to the official prerelease and is separate from OpenCode web compatibility. Source previews are not signed installers or a production release.
+
+## Messaging implementation — 22 October 2026
+
+The [shared chat candidate](conversation-system/CHAT_RELEASE_CANDIDATE.md) now implements the inbox/row/timeline/composer, private unread/preview/time, lazy connections/groups, mobile one-pane navigation, anchored history, explicit retry/storage feedback and accessible controls. Seven chat journeys, seven existing continuity journeys and five event discussion journeys have controlled local evidence. The incremental Messages/quick-chat graphs are about 8.7 KiB gzip each under the 15 KiB target. Real devices, keyboard/sleep-wake, genuine sessions and whole-product usability acceptance remain **Partial**.
+
+This supersedes the 20 October “not yet implemented” description below. Core branding remains **The General Intelligence Company of India / Intelligence, built together.**, original art and the indigo/parchment/saffron design. Familiar event and messaging interaction patterns do not change that identity. Broader planned design changes below are not claimed as applied everywhere.
+
 ## Messaging direction — 20 October
 
 [The approved lightweight chat plan](conversation-system/LIGHTWEIGHT_CHAT_FINALIZATION_PLAN.md) adds familiar messaging behaviour to private messages and event/community groups while retaining the Indus Orbit brand. Shared inbox/timeline/composer, parchment/indigo surfaces, restrained saffron attention, Inter information typography, anchored reading and accessible mobile controls are **Planned**. Existing queued-message and read-state merge regressions are repaired locally; the redesigned common surface is not yet implemented. The plan includes measurable transfer, subscription, queue and rendering gates. E2EE is a separate future design phase.

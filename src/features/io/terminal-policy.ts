@@ -1,15 +1,22 @@
+import {
+  classifyOpenCodePermission,
+  type OpenCodePermissionKind,
+} from "../../../packages/io-opencode-client/src/index";
+
 export type TerminalMode = "observe" | "plan" | "build" | "run";
-export type TerminalPermissionKind =
-  | "read"
-  | "edit"
-  | "shell"
-  | "network"
-  | "task"
-  | "web"
-  | "mcp"
-  | "external_directory";
+export type TerminalPermissionKind = OpenCodePermissionKind;
 export type TerminalPermissionRisk = "low" | "moderate" | "high" | "critical";
 export const TERMINAL_CREDENTIAL_LEASE_MS = 15 * 60_000;
+
+// A browser-side approval filter cannot constrain tools the daemon already
+// allows. Re-enable only after a pinned runtime binds and verifies the full
+// session policy, including child tasks, commands and forked sessions.
+export const OPENCODE_EXECUTION_READINESS: Readonly<{ allowed: boolean; reason: string }> =
+  Object.freeze({
+    allowed: false,
+    reason:
+      "Local execution is paused while runtime permission enforcement is verified. You can inspect existing sessions and reject pending requests.",
+  });
 
 export const TERMINAL_MODE_POLICIES: Record<
   TerminalMode,
@@ -17,37 +24,31 @@ export const TERMINAL_MODE_POLICIES: Record<
 > = {
   observe: {
     label: "Observe",
-    summary: "Read-only inspection. Changes, tools and network actions stay blocked.",
+    summary:
+      "Intended policy: read-only inspection, with changes, tools and network actions blocked.",
     allowedKinds: ["read"],
   },
   plan: {
     label: "Plan",
-    summary: "Read, research and task planning only. Repository changes stay blocked.",
+    summary: "Intended policy: read, research and task planning, with repository changes blocked.",
     allowedKinds: ["read", "web", "task"],
   },
   build: {
     label: "Build",
-    summary: "Reviewed reads, edits, research and tasks. Shell and external access stay blocked.",
+    summary:
+      "Intended policy: reviewed reads, edits, research and tasks, with shell and external access blocked.",
     allowedKinds: ["read", "edit", "web", "task"],
   },
   run: {
     label: "Run",
     summary:
-      "Reviewed one-time local actions. Critical and external-directory access stay blocked.",
+      "Intended policy: reviewed one-time local actions, with critical and external-directory access blocked.",
     allowedKinds: ["read", "edit", "shell", "network", "task", "web", "mcp"],
   },
 };
 
 export function classifyTerminalPermission(permission: string): TerminalPermissionKind {
-  const value = permission.toLowerCase();
-  if (value.includes("external")) return "external_directory";
-  if (value.includes("shell") || value.includes("bash")) return "shell";
-  if (value.includes("network")) return "network";
-  if (value.includes("web")) return "web";
-  if (value.includes("mcp")) return "mcp";
-  if (value.includes("task")) return "task";
-  if (value.includes("write") || value.includes("edit")) return "edit";
-  return "read";
+  return classifyOpenCodePermission(permission).kind;
 }
 
 export function terminalPermissionPolicy(input: {
@@ -57,6 +58,13 @@ export function terminalPermissionPolicy(input: {
 }) {
   const kind = classifyTerminalPermission(input.permission);
   const profile = TERMINAL_MODE_POLICIES[input.mode];
+  if (kind === "unknown") {
+    return {
+      allowed: false,
+      kind,
+      reason: "This local permission is not recognized and remains blocked.",
+    };
+  }
   if (input.risk === "critical") {
     return {
       allowed: false,

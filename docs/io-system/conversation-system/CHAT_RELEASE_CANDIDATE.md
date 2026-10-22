@@ -1,0 +1,37 @@
+# Lightweight chat release candidate
+
+Updated **22 October 2026**. Overall release state: **Partial**. This continues the approved private-message/event/community-group scope in [the execution plan](LIGHTWEIGHT_CHAT_FINALIZATION_PLAN.md). E2EE remains a separate future design; current source retains authenticated server access and encrypted connections.
+
+## Implemented candidate source
+
+- One account-scoped conversation client owns queue, drafts, bounded histories and subscriptions for the full page and quick sheet. Synchronous account generations reject obsolete A→B→A work.
+- Original request IDs survive uncertain sends/retries and same-tab queue recovery. Queue capacity is 100; storage failures and full capacity are visible without losing the draft. New typing survives older delivery completion.
+- Fifty-row history and inbox pages, a paginated accepted-connection picker, per-chat unread/preview/time, caller-bound read-through and forward reconnect recovery replace directory-only messaging.
+- Shared premium inbox/timeline/composer with mobile navigation, keyboard/IME handling, anchored history, visible-only reads, accurate Queued/Sending/Sent/Read/Failed states, retry/discard and group navigation.
+- The 200-row history window preserves a reader's current row; returning to latest is explicit. Private-channel join and initial history are coalesced, with an HTTP fallback when Realtime cannot join promptly. Late acknowledgements cannot restore revoked history.
+- Requests are bounded: 20-second RPC/table reads with actual abort signals, 10-second session waits. Uncertain sends retain their original retry ID.
+- Chapter/Mission group links reuse existing Room authority. Optional event discussions reuse Room history, with host opt-in, verified account/registration linking, current eligibility/revocation, seven-day post-event posting and authorized read-only archives.
+- Event discussion safety actions reuse member reporting and host restrict/restore. Same-tab event retry recovery is bounded and cleared on account changes. The explicit privacy export includes the caller's group opt-in as its 35th dataset, under the existing row/byte/hold limits.
+- No new chat SDK, message database, phone sync, calls, stories or E2EE implementation is introduced.
+
+## Verification boundary
+
+Final member and separate-admin application gates pass locally and in published CI at the recorded source snapshots. Shared-client regression tests cover long reconnect gaps, duplicates, uncertain responses, stale accounts, hidden reads, exact-cap reading continuity and revoked-cache restoration. UI evidence in [the current evidence folder](../../release-evidence/chat-2026-10-21/ui-verification.json) records controlled localhost journeys and screenshots; these are synthetic sessions/HTTP/Realtime, not real-device production acceptance.
+
+The new manifest-aware bundle gate measures unique static dependency graphs, including the lazy quick-chat entry roots, against a separately built `0b31c314d7dfcdbf8709b2237afbf1e2b7e1adb3` reference with the same dependencies/public build configuration; rebuilding the reference with patched Vite 7.3.7 reproduces every recorded baseline asset/byte count. Current text-chat increments are about 8.7 KiB gzip for Messages and quick chat locally (about 8.5 KiB with CI placeholder configuration), within the 15 KiB target. This is incremental JavaScript transfer, not an end-to-end latency SLA or the entire application's download size. Connections and group links load on demand.
+
+Final managed CI passes **133 source migrations, 40 SQL files / 1,371 assertions, exact generated types and public/private schema lint**, including the 61 new DM assertions and 71 event discussion/privacy/safety assertions. Local Docker became unresponsive during earlier fixture attempts after the approved restart; those attempts are not counted as passing fresh-stack evidence.
+
+The [first managed-stack candidate run](https://github.com/helloimakeimpact/indus-orbit-india/actions/runs/39618910952) successfully started Supabase, replayed all **133 migrations** from empty and generated the public schema. Its type gate correctly rejected the unintegrated new contracts. On 22 October, the retained artifact was reviewed: **17 chat RPCs** and the event Space relationship were imported, preserving all **97 exact hash-bound held-Spaces differences**. The local replay-boundary check and generated-contract-typed direct-message requests pass. This does not change the held migration or silently expose its APIs.
+
+The parallel Quality run exposed newly reported Vite findings. Both member and admin now pin compatible **Vite 7.3.7** and their refreshed dependency audits report zero vulnerabilities. The [official patch release](https://github.com/vitejs/vite/releases/tag/v7.3.7) is recorded as source evidence. Member application verification passes **285 units**, types, formatting, lint, builds and bundle checks; separate admin verification passes **35 units**. Event requests also use generated name/argument contracts, real 20-second RPC abort signals, 10-second Auth waits and account-generation checks on success/failure; 19 focused event unit tests pass. All five final event browser journeys pass. Final published CI passes **61 browser journeys across both applications**, including seven direct-chat and five event-discussion journeys.
+
+**Candidate source gates are Verified:** final code `9fdd4becccb7dba39745222ebe0074c65e9c18af` passes [Quality](https://github.com/helloimakeimpact/indus-orbit-india/actions/runs/39770406042) and [Database quality](https://github.com/helloimakeimpact/indus-orbit-india/actions/runs/39770406129); the separate [Admin quality](https://github.com/helloimakeimpact/admin-indus-orbit/actions/runs/39769488587) also passes. The final review fixed a concurrent safety retry race by serializing actor/request retries and revalidating the persisted payload after shared dispatch; four regression assertions prove rejection and rollback. [Exact source manifests and verification](../../release-evidence/chat-2026-10-22/verification.json) bind this evidence. Do not infer hosted release from source checks.
+
+## Delivery and owner actions
+
+Use a release branch/draft PR for candidate CI because the new frontend requires the matching backend contracts. The existing GitHub-to-Netlify production path needs a coordinated backend/frontend release after staging acceptance. No hosted Supabase migration/function, real mail, scanning, payment, paid model call or deletion is part of this source pass.
+
+The three new chat migrations add to the previously reviewed twelve forward releases: **fifteen reviewed forward migrations**, with the separate structured-Spaces hold still preserved. Seven previously pending new Edge Functions remain; chat adds database/browser contracts rather than a new messaging service.
+
+Engineering owns staging rehearsal, matched delivery, real supplier/device acceptance, recovery and safe deployment order. The candidate application/SQL gates, exact types and source manifests are complete at the stated boundary. The owner's launch actions remain in [the owner handoff](../PRODUCTION_OWNER_ACTIONS.md): safe staging access, Turnstile/Resend/Auth email/scanner configuration, real MFA host/reviewer and a second independent root, admin hostname/support ownership, provider commercial approvals, real personas/two devices, recovery evidence and final release sign-off. Code completion does not establish those operating conditions.

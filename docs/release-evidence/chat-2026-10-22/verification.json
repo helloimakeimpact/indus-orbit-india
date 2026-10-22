@@ -1,0 +1,155 @@
+{
+  "observed_date": "2026-10-22",
+  "state": "Verified",
+  "scope": "Bounded candidate source, controlled browser/SQL integration and source publication; public production remains Partial",
+  "member": {
+    "repository": "helloimakeimpact/indus-orbit-india",
+    "branch": "codex/lightweight-chat-release",
+    "pull_request": "https://github.com/helloimakeimpact/indus-orbit-india/pull/2",
+    "candidate_code_commit": "9fdd4becccb7dba39745222ebe0074c65e9c18af",
+    "candidate_code_tree": "65c983850a6ba69427ee39b28000b7a8e3170f93",
+    "production_branch_head_observed": "0b31c314d7dfcdbf8709b2237afbf1e2b7e1adb3",
+    "local_verify": {
+      "result": "pass",
+      "units": 285,
+      "checks": [
+        "formatting",
+        "lint",
+        "TypeScript",
+        "three package builds",
+        "production application build",
+        "per-asset budgets",
+        "unique chat dependency-graph budgets"
+      ]
+    },
+    "quality_workflow": {
+      "url": "https://github.com/helloimakeimpact/indus-orbit-india/actions/runs/39770406042",
+      "job_id": 119796205734,
+      "result": "success",
+      "units": 285,
+      "public_browser_journeys": 20,
+      "configured_guest_form_journeys": 4,
+      "member_chat_event_journeys": 25
+    },
+    "database_workflow": {
+      "url": "https://github.com/helloimakeimpact/indus-orbit-india/actions/runs/39770406129",
+      "job_id": 119796206922,
+      "result": "success",
+      "fresh_migrations": 133,
+      "contract_files": 40,
+      "assertions": 1371,
+      "exact_held_type_differences": 97,
+      "public_private_schema_lint": "pass",
+      "direct_message_new_assertions": 61,
+      "event_discussion_assertions": 71
+    }
+  },
+  "admin": {
+    "repository": "helloimakeimpact/admin-indus-orbit",
+    "published_commit": "a6bd2cc398e77d0a7cf0abd44bb38bbe52fe76a0",
+    "local_commit": "13df8117dd070eefd9d00d3b51abe85db5bd23d0",
+    "identical_tree": "8d4bed4dcad61711cdb6dff20a6361011d72d3f6",
+    "publication": "Remote parent preserved, expected-head non-force update",
+    "local_verify": "pass",
+    "quality_workflow": {
+      "url": "https://github.com/helloimakeimpact/admin-indus-orbit/actions/runs/39769488587",
+      "job_id": 119793138722,
+      "result": "success",
+      "units": 35,
+      "public_journeys": 4,
+      "admin_mfa_journeys": 8
+    }
+  },
+  "browser_total": 61,
+  "browser_boundary": "Synthetic invalid session identities and intercepted HTTP/Realtime, plus public routes; not genuine Auth/Realtime/service/device acceptance",
+  "dependency_audits": {
+    "member_total_vulnerabilities": 0,
+    "admin_total_vulnerabilities": 0,
+    "vite_exact_version_both": "7.3.7",
+    "official_release": "https://github.com/vitejs/vite/releases/tag/v7.3.7"
+  },
+  "schema_review": {
+    "original_artifact_run": 39618910952,
+    "artifact_id": 12354212284,
+    "original_generated_types_sha256": "4b9d42a85537c1589befbb092da88b9cff205c3cbfca88741b23128c55416dee",
+    "imported_rpcs": 17,
+    "table_change": "conversation_spaces event_id and foreign-key relationship",
+    "held_contract_file": "scripts/supabase/replay-type-boundary.json",
+    "held_contract_sha256": "2047405127295f7a542bcecff0379636199b1fa7eed71d4f3193ac59c2a28f44",
+    "held_difference_count": 97,
+    "final_managed_type_gate": "pass"
+  },
+  "bundle": {
+    "measurement": "Unique static dependency graph, separately gzip-compressed JS assets; unrelated dynamic routes/CSS excluded",
+    "reference_commit": "0b31c314d7dfcdbf8709b2237afbf1e2b7e1adb3",
+    "maximum_incremental_gzip_bytes": 15360,
+    "local_report": "chat-bundle-report.json",
+    "local_messages_increment_gzip_bytes": 8958,
+    "local_quick_chat_increment_gzip_bytes": 8887,
+    "ci_messages_increment_kib_gzip": 8.54,
+    "ci_quick_chat_increment_kib_gzip": 8.47,
+    "configuration_difference": "Local real public Supabase configuration; CI uses documented placeholders. Both pass fixed baseline.",
+    "reference_vite737_rebuild": "All asset names, raw byte and gzip byte counts exactly reproduce the recorded reference after patched Vite7.3.7 rebuild; baseline not rewritten.",
+    "baseline_sha256": "f4a92c55f4778f345c9a454413fd308c4d42332de9f9f08c3db80db5cb5febea"
+  },
+  "review_fixes": [
+    "Imported actual replay-generated public contracts without enabling held Spaces",
+    "Pinned Vite7.3.7 after initial dependency gate rejection",
+    "Typed expected-account DM and event calls; bounded RPC/Auth waits",
+    "Serialized safety actor/request and revalidated persisted payload after shared dispatch; four raced-payload/rollback regressions pass"
+  ],
+  "local_event_browser": {
+    "date": "2026-10-22",
+    "passed": 5,
+    "duration_seconds": 17.7,
+    "command": "PLAYWRIGHT_BASE_URL=http://127.0.0.1:4190 npx playwright test tests/e2e/event-discussion.spec.ts --project member-ui-regression --workers=1 --output=test-results/event-discussion-final",
+    "scope": [
+      "host open/close",
+      "anchored200row history and65missed-message recovery",
+      "same-tab stable-ID retry",
+      "320px revocation/sign-out cleanup",
+      "member report and host restrict/restore"
+    ]
+  },
+  "previous_ui_evidence": "../chat-2026-10-21/ui-verification.json",
+  "manifests": [
+    {
+      "file": "migration-source-manifest.json",
+      "sha256": "42b229ba570764d576d0bcd2558b3a40ad0a249b41684a38b27a9b374ab75d61"
+    },
+    {
+      "file": "contract-source-manifest.json",
+      "sha256": "ca3d1cfbef0cfd22697aa3e8798c4871a55225ca483a0bb19d2b34e534bf6de0"
+    },
+    {
+      "file": "application-source-manifest.json",
+      "sha256": "851cc9fb62a61b5056a40ab554950f8fb0790ed79b533247ad12ccc4844665e5"
+    },
+    {
+      "file": "reviewed-forward-release-manifest.json",
+      "sha256": "74c1bf87d5bea89c19918a0fd8d541dffc95e5b0ba4d3ec790d03d7792593aff"
+    },
+    {
+      "file": "hosted-read-only.json",
+      "sha256": "7a3d6b066d77d924f055407e93aa368d9415073287263b6da6862f6b971d09f6"
+    },
+    {
+      "file": "chat-bundle-report.json",
+      "sha256": "fc4e06710c22d72416cdcbd62a72aaa2e58187f7012521cb754d01de3dd51ff3"
+    }
+  ],
+  "remaining": [
+    "Safe distinct staging and representative hosted upgrade/rollback",
+    "15 reviewed forward migrations plus7new functions and matched frontend delivery",
+    "Real services/operators/devices/Realtime/backup/privacy/provider acceptance",
+    "Assisted privacy and retained-record/archive operating/engineering obligations",
+    "Production deployed-version verification, sign-off and observation"
+  ],
+  "limitations": [
+    "No hosted schema/function/data/secret change",
+    "No real mail, scan, deletion, payment or paid model call",
+    "No E2EE/device-delivered/production latency claim",
+    "Local Docker stalled; complete fresh-stack result is managed CI",
+    "Documentation-only publication may follow the code commit; manifests bind unchanged application/SQL inputs"
+  ]
+}
