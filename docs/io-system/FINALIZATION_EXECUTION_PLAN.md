@@ -1,5 +1,11 @@
 # Indus Orbit full finalization execution plan
 
+## Current execution boundary — 22 October 2026
+
+The approved chat source is implemented and locally **Verified**: shared account state/queue/drafts, generated expected-user RPCs, bounded inbox/history/reconnect, premium full-page/quick surfaces, and Chapter/Mission/event groups with safety/privacy coverage. [Current report](PRODUCTION_STATUS_2026-10-22.md) and [candidate evidence](conversation-system/CHAT_RELEASE_CANDIDATE.md) supersede the earlier unimplemented phase descriptions below. Member application gates pass 285 units; final managed 133-migration replay/types/lint and 1,371 SQL assertions pass. Final safety retry regression CI also passes: **40 SQL files / 1,371 assertions** total. All three published workflows are green.
+
+Next engineering sequence: pass final candidate gates → bind the exact **15 reviewed forward migrations/seven new functions** → rehearse representative staging upgrade/rollback and matched frontends → genuine supplier/Auth/Storage/Realtime/device/operator acceptance → reviewed production promotion/observation. The held structured-Spaces boundary remains separate. Full production remains **Partial**; owner setup and engineering/operating obligations are separated in [the handoff](PRODUCTION_OWNER_ACTIONS.md).
+
 ## Added source phase: lightweight chat — 20 October 2026
 
 Complete [the approved chat plan](conversation-system/LIGHTWEIGHT_CHAT_FINALIZATION_PLAN.md) before calling the newly requested product scope code-complete: private messages and event/community groups, shared account-bound state, reliable queue/read/catch-up, a bounded inbox and the common premium mobile/desktop interface. The current security model remains; E2EE is separate. Two merge regressions are repaired with focused local evidence; C1–C5 source work and C6 hosted acceptance remain. The six existing whole-product launch workstreams continue. The prior twelve-migration/seven-function release count must be revised if this increment adds contracts; it is not a final chat rollout manifest.

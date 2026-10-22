@@ -1,5 +1,11 @@
 # Indus Orbit design philosophy and UI execution plan
 
+## Messaging implementation — 22 October 2026
+
+The [shared chat candidate](conversation-system/CHAT_RELEASE_CANDIDATE.md) now implements the inbox/row/timeline/composer, private unread/preview/time, lazy connections/groups, mobile one-pane navigation, anchored history, explicit retry/storage feedback and accessible controls. Seven chat journeys, seven existing continuity journeys and five event discussion journeys have controlled local evidence. The incremental Messages/quick-chat graphs are about 8.7 KiB gzip each under the 15 KiB target. Real devices, keyboard/sleep-wake, genuine sessions and whole-product usability acceptance remain **Partial**.
+
+This supersedes the 20 October “not yet implemented” description below. Core branding remains **The General Intelligence Company of India / Intelligence, built together.**, original art and the indigo/parchment/saffron design. Familiar event and messaging interaction patterns do not change that identity. Broader planned design changes below are not claimed as applied everywhere.
+
 ## Messaging direction — 20 October
 
 [The approved lightweight chat plan](conversation-system/LIGHTWEIGHT_CHAT_FINALIZATION_PLAN.md) adds familiar messaging behaviour to private messages and event/community groups while retaining the Indus Orbit brand. Shared inbox/timeline/composer, parchment/indigo surfaces, restrained saffron attention, Inter information typography, anchored reading and accessible mobile controls are **Planned**. Existing queued-message and read-state merge regressions are repaired locally; the redesigned common surface is not yet implemented. The plan includes measurable transfer, subscription, queue and rendering gates. E2EE is a separate future design phase.

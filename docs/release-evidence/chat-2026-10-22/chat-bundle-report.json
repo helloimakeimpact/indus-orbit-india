@@ -1,0 +1,234 @@
+{
+  "schemaVersion": 1,
+  "measurement": "Sum of each separately gzip-compressed JavaScript asset in the unique static dependency graph; explicit quick-chat lazy roots included. No unrelated dynamic routes or CSS included.",
+  "modes": {
+    "messages": {
+      "entries": [
+        "index.html",
+        "src/routes/app.tsx?tsr-split=component",
+        "src/routes/app.messages.tsx?tsr-split=component"
+      ],
+      "javascriptAssets": 21,
+      "javascriptBytes": 933584,
+      "javascriptGzipBytes": 282101,
+      "assets": [
+        {
+          "file": "assets/AppShell-DatSNAyM.js",
+          "bytes": 19716,
+          "gzipBytes": 6177
+        },
+        {
+          "file": "assets/ConversationList-R-AWNbZ4.js",
+          "bytes": 9463,
+          "gzipBytes": 3386
+        },
+        {
+          "file": "assets/ConversationSurface-BPW2Y9e9.js",
+          "bytes": 28694,
+          "gzipBytes": 9196
+        },
+        {
+          "file": "assets/alert-dialog-4Ncid3eA.js",
+          "bytes": 2106,
+          "gzipBytes": 777
+        },
+        {
+          "file": "assets/app-CAOp2-GW.js",
+          "bytes": 2941,
+          "gzipBytes": 1351
+        },
+        {
+          "file": "assets/app.messages-L9hBaJq-.js",
+          "bytes": 3057,
+          "gzipBytes": 1479
+        },
+        {
+          "file": "assets/avatar-DaZU25RS.js",
+          "bytes": 683,
+          "gzipBytes": 342
+        },
+        {
+          "file": "assets/button-1sYVkRMP.js",
+          "bytes": 1386,
+          "gzipBytes": 684
+        },
+        {
+          "file": "assets/errors-B5wX_5qV.js",
+          "bytes": 123,
+          "gzipBytes": 125
+        },
+        {
+          "file": "assets/icons-vendor-Dsa8Xknh.js",
+          "bytes": 42467,
+          "gzipBytes": 14018
+        },
+        {
+          "file": "assets/index-LHNt3CwB.js",
+          "bytes": 699,
+          "gzipBytes": 425
+        },
+        {
+          "file": "assets/index-eG80X4D9.js",
+          "bytes": 159086,
+          "gzipBytes": 44307
+        },
+        {
+          "file": "assets/indus-orbit-logo-a0WOYav1.js",
+          "bytes": 64,
+          "gzipBytes": 84
+        },
+        {
+          "file": "assets/notification.functions-DEA7jOqR.js",
+          "bytes": 727,
+          "gzipBytes": 323
+        },
+        {
+          "file": "assets/product-access-CypDf83I.js",
+          "bytes": 1982,
+          "gzipBytes": 692
+        },
+        {
+          "file": "assets/radix-vendor-CKxFkj8R.js",
+          "bytes": 139901,
+          "gzipBytes": 42589
+        },
+        {
+          "file": "assets/react-vendor-DNGLO5Hs.js",
+          "bytes": 193080,
+          "gzipBytes": 60581
+        },
+        {
+          "file": "assets/sheet-DJIEcreA.js",
+          "bytes": 2595,
+          "gzipBytes": 1019
+        },
+        {
+          "file": "assets/supabase-vendor-C-jn6JqG.js",
+          "bytes": 215976,
+          "gzipBytes": 56823
+        },
+        {
+          "file": "assets/tanstack-vendor-CUzeCOnx.js",
+          "bytes": 82153,
+          "gzipBytes": 29301
+        },
+        {
+          "file": "assets/utils-BQHNewu7.js",
+          "bytes": 26685,
+          "gzipBytes": 8422
+        }
+      ],
+      "incrementalGzipBytes": 8958
+    },
+    "quickChat": {
+      "entries": [
+        "index.html",
+        "src/routes/app.tsx?tsr-split=component",
+        "src/features/conversations/ConversationSurface.tsx"
+      ],
+      "javascriptAssets": 19,
+      "javascriptBytes": 921064,
+      "javascriptGzipBytes": 277236,
+      "assets": [
+        {
+          "file": "assets/AppShell-DatSNAyM.js",
+          "bytes": 19716,
+          "gzipBytes": 6177
+        },
+        {
+          "file": "assets/ConversationSurface-BPW2Y9e9.js",
+          "bytes": 28694,
+          "gzipBytes": 9196
+        },
+        {
+          "file": "assets/alert-dialog-4Ncid3eA.js",
+          "bytes": 2106,
+          "gzipBytes": 777
+        },
+        {
+          "file": "assets/app-CAOp2-GW.js",
+          "bytes": 2941,
+          "gzipBytes": 1351
+        },
+        {
+          "file": "assets/avatar-DaZU25RS.js",
+          "bytes": 683,
+          "gzipBytes": 342
+        },
+        {
+          "file": "assets/button-1sYVkRMP.js",
+          "bytes": 1386,
+          "gzipBytes": 684
+        },
+        {
+          "file": "assets/errors-B5wX_5qV.js",
+          "bytes": 123,
+          "gzipBytes": 125
+        },
+        {
+          "file": "assets/icons-vendor-Dsa8Xknh.js",
+          "bytes": 42467,
+          "gzipBytes": 14018
+        },
+        {
+          "file": "assets/index-LHNt3CwB.js",
+          "bytes": 699,
+          "gzipBytes": 425
+        },
+        {
+          "file": "assets/index-eG80X4D9.js",
+          "bytes": 159086,
+          "gzipBytes": 44307
+        },
+        {
+          "file": "assets/indus-orbit-logo-a0WOYav1.js",
+          "bytes": 64,
+          "gzipBytes": 84
+        },
+        {
+          "file": "assets/notification.functions-DEA7jOqR.js",
+          "bytes": 727,
+          "gzipBytes": 323
+        },
+        {
+          "file": "assets/product-access-CypDf83I.js",
+          "bytes": 1982,
+          "gzipBytes": 692
+        },
+        {
+          "file": "assets/radix-vendor-CKxFkj8R.js",
+          "bytes": 139901,
+          "gzipBytes": 42589
+        },
+        {
+          "file": "assets/react-vendor-DNGLO5Hs.js",
+          "bytes": 193080,
+          "gzipBytes": 60581
+        },
+        {
+          "file": "assets/sheet-DJIEcreA.js",
+          "bytes": 2595,
+          "gzipBytes": 1019
+        },
+        {
+          "file": "assets/supabase-vendor-C-jn6JqG.js",
+          "bytes": 215976,
+          "gzipBytes": 56823
+        },
+        {
+          "file": "assets/tanstack-vendor-CUzeCOnx.js",
+          "bytes": 82153,
+          "gzipBytes": 29301
+        },
+        {
+          "file": "assets/utils-BQHNewu7.js",
+          "bytes": 26685,
+          "gzipBytes": 8422
+        }
+      ],
+      "incrementalGzipBytes": 8887
+    }
+  },
+  "referenceCommit": "0b31c314d7dfcdbf8709b2237afbf1e2b7e1adb3",
+  "maximumIncrementalGzipBytes": 15360
+}

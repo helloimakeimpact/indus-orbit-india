@@ -34,7 +34,7 @@ Service execution is disabled unless an operator explicitly configures the priva
 
 ## Implemented coverage and assisted work
 
-The JSON snapshot contains 34 explicitly projected datasets, capped at 10,000 records per dataset and a five MiB artifact (the SQL snapshot has a conservative five-million-byte bound). New columns are not automatically exported. Binary files, financial/security/case supplements and oversized requests require identity-verified assisted delivery. This is a portable account export, not a claim to fulfil every access request automatically.
+The candidate JSON snapshot contains 35 explicitly projected datasets (the event discussion release adds the caller’s own `conversation_space_memberships` opt-in; the earlier 34-dataset release remains the pre-chat boundary), capped at 10,000 records per dataset and a five MiB artifact (the SQL snapshot has a conservative five-million-byte bound). New columns are not automatically exported. Binary files, financial/security/case supplements and oversized requests require identity-verified assisted delivery. This is a portable account export, not a claim to fulfil every access request automatically.
 
 Deletion removes ordinary authored records and direct identity, closes browser access, removes owned file bytes through Storage, then confirms managed Auth soft deletion. Shared replies, required financial/governance evidence and a pseudonymous UUID shell remain. This is not irreversible anonymization of every linked record. Ownership transfer, open safety work and published learning content require operator review. No browser can mark delivery or deletion complete.
 

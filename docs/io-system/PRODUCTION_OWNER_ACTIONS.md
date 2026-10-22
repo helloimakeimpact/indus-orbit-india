@@ -1,10 +1,10 @@
 # Full public production launch — owner actions
 
-Updated **20 October 2026**. Overall launch state: **Partial**. Read [the current status](PRODUCTION_STATUS_2026-10-20.md), [privacy policy](PRIVACY_EXECUTION_POLICY.md) and [delivery runbook](PRIVACY_EXECUTION_RUNBOOK.md). Exact source commits and CI results are recorded in the release evidence; a GitHub push does not establish hosted backend readiness.
+Updated **22 October 2026**. Overall launch state: **Partial**. Read [the current status](PRODUCTION_STATUS_2026-10-22.md), [privacy policy](PRIVACY_EXECUTION_POLICY.md) and [delivery runbook](PRIVACY_EXECUTION_RUNBOOK.md). Exact source commits and CI results are recorded in the release evidence; a GitHub push does not establish hosted backend readiness.
 
 ## Added chat scope and eventual acceptance
 
-The owner approved **private messages plus event/community groups**, retaining the current security model with E2EE planned separately. [The implementation plan](conversation-system/LIGHTWEIGHT_CHAT_FINALIZATION_PLAN.md) keeps the remaining engineering work with engineering; the current product is not yet code-complete for this expanded scope. After the source is ready, the owner will need two connected test members/two devices plus host, eligible attendee, guest and outsider personas for a short genuine chat/mobile/revocation rehearsal. Public guest registration continues independently; entering event chat requires verified sign-in/linking. No new retention worksheet is needed.
+The owner approved **private messages plus event/community groups**, retaining the current security model with E2EE planned separately. [The implemented candidate](conversation-system/CHAT_RELEASE_CANDIDATE.md) has passing local application/browser evidence and the reviewed typed candidate passes the complete managed database gate; the final safety retry regression CI also passes (40 SQL files / 1,371 assertions). The source is published in draft PR #2, pending matched hosted delivery. The owner will need two connected test members/two devices plus host, confirmed attendee, guest, waitlisted/removed attendee and outsider personas for a genuine chat/mobile/revocation rehearsal. Public guest registration continues independently; entering event chat requires verified sign-in/linking. No new retention worksheet is needed.
 
 ## Decisions already resolved
 
@@ -21,7 +21,7 @@ The owner approved **private messages plus event/community groups**, retaining t
 
 Staging is a separate test backend/site where we rehearse the release before touching live member data. Provide the approved staging project/site identity and team access through the service dashboards. The existing production identity is already known. The inactive JRI Backup Replica is not assumed to be a ready staging project.
 
-Engineering prepares the exact twelve-migration/seven-function release, proves upgrade/rollback and presents the concrete promotion plan. Do not use blanket database push/history repair to reconcile historical aliases or held Spaces.
+Engineering prepares the exact fifteen-migration/seven-function release, proves upgrade/rollback and presents the concrete promotion plan. Do not use blanket database push/history repair to reconcile historical aliases or held Spaces.
 
 ### 2. Finish service setup
 

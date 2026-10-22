@@ -1,5 +1,11 @@
 # Indus Orbit living system record
 
+## Current source finalization — 22 October 2026
+
+[The current whole-product report](PRODUCTION_STATUS_2026-10-22.md) and [chat candidate](conversation-system/CHAT_RELEASE_CANDIDATE.md) supersede the earlier implementation-plan states below. Private messages, the shared premium interface and community/event discussions are implemented; local member verification passes 285 units, admin 35, and final managed CI passes **133-migration replay, 40 SQL files / 1,371 assertions, exact types and schema lint**, including the safety-retry correction. Exact source/hash evidence is under `../release-evidence/chat-2026-10-22/`.
+
+Full public production remains **Partial**. The 22 October read-only check confirms the correct healthy hosted project still has 116 migrations/ten functions; **15 reviewed forward migrations and seven new functions** require staged delivery. Member changes are published in [draft PR #2](https://github.com/helloimakeimpact/indus-orbit-india/pull/2); they are not yet promoted to the Netlify production branch. [Owner actions](PRODUCTION_OWNER_ACTIONS.md) separate setup/sign-off from engineering's remaining integration/recovery obligations. The dated checkpoints below preserve their original evidence.
+
 ## Lightweight chat scope — 20 October 2026
 
 [The current conversation plan](conversation-system/LIGHTWEIGHT_CHAT_FINALIZATION_PLAN.md) records the owner's approved private-message/event/community-group scope, three independent audits, two repaired merge regressions and the remaining source/release gates. Overall chat remains **Partial**; E2EE is planned separately. The source/CI checkpoint below precedes this new work. Read the chat plan alongside the whole-product status and owner actions.
